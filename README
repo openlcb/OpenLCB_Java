@@ -1,0 +1,8 @@
+List of tests and simulations you can run:
+
+./runtest.csh NodeIDCollisions
+    Various probability calculations
+
+ant run
+    full test suite
+    

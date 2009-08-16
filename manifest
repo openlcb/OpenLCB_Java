@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Main-Class: AllTest
+Class-Path: lib/junit.jar
+
+Name: org.nmra.nmranet
+Specification-Title: “NMRAnet”
+Specification-Version: “0.0”
+Specification-Vendor: “NMRAnet WG"
+Package-Title: “nmranet”
+Package-Version: “0.0”
+Package-Vendor: “NMRAnet WG”
+ 
