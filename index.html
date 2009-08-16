@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>NMRAnet: Java Prototypes Directory</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Unix)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
+	<META NAME="CHANGED" CONTENT="20090125;8234600">
+	<META NAME="Info 1" CONTENT="">
+	<META NAME="Info 2" CONTENT="">
+	<META NAME="Info 3" CONTENT="">
+	<META NAME="Info 4" CONTENT="">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
+	<!-- $Id$ -->
+</HEAD>
+<BODY LANG="en-US" DIR="LTR">
+<H1>9.6 Proposal Java Prototypes Directory</H1>
+<P>This directory contains prototype implementation(s) in Java of the
+S9.6 proposed NMRAnet specification. 
+</P>
+<P>These are primarily intended for testing proposed algorithms, not
+as a first implementation for use. 
+</P>
+<P>Major subdirectories:</P>
+<DL>
+	<DT>src 
+	</DT><DD>
+	Contains NMRAnet source in the org.nmra.net package, and source for
+	NMRAnet CAN wire protocol in the org.nmra.net.can package. 
+	</DD><DT>
+	test 
+	</DT><DD STYLE="margin-bottom: 0.5cm">
+	contains test code of several types in subpackages: 
+	</DD></DL>
+<UL>
+	<LI><DD STYLE="margin-bottom: 0.5cm">
+	org.nmra.net – unit tests for the implementation code</DD><LI><DD STYLE="margin-bottom: 0.5cm">
+	tools – various non-NMRAnet implementation for testing, including
+	a small CAN segment simulator</DD><LI><DD STYLE="margin-bottom: 0.5cm">
+	scenarios – tests of operation of multiple NMRAnet classes
+	simulating various NMRAnet use scenarios</DD></UL>
+<P>For example, <A HREF="test/scenarios/TwoBusesFiltered.java">test/scenarios/TwoBusesFiltered.java</A>
+contains a scenario where two NMRAnet CAN segments are connected via
+a TCP/IP link and filtering gateways. The NMRA net implementation is
+tested to make sure that P/C event reports are properly routed to
+nodes needing them, event reports are not routed when not needed,
+etc.</P>
+<H2>Building and Running</H2>
+<P>Java 1.5 and Ant are the standard way to build and run this code.</P>
+<PRE STYLE="margin-bottom: 0.5cm">ant run</PRE><P>
+will do any needed compilations and run the complete set of tests
+using the JUnit GUI.</P>
+<P>To create JavaDocs in the doc/ directory, 
+</P>
+<PRE STYLE="margin-bottom: 0.5cm">ant javadoc</PRE><P>
+(We don't keep JavaDoc files in SVN yet, but that might eventually be
+a good idea)</P>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>
