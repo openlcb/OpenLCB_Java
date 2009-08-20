@@ -14,18 +14,36 @@ public class IdentifyConsumersMessageTest extends TestCase {
     
     public void testEqualsSame() {
         Message m1 = new IdentifyConsumersMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
+
         Message m2 = new IdentifyConsumersMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
     
         Assert.assertTrue(m1.equals(m2));
     }
 
-    public void testNotEqualsDifferent() {
+    public void testNotEqualsDifferentNode() {
         Message m1 = new IdentifyConsumersMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{99,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
+
         Message m2 = new IdentifyConsumersMessage(
-                                            new NodeID(new byte[]{1,3,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+
+    public void testNotEqualsDifferentEvent() {
+        Message m1 = new IdentifyConsumersMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{99,2,3,4,5,6,7,8}));
+
+        Message m2 = new IdentifyConsumersMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -39,7 +57,8 @@ public class IdentifyConsumersMessageTest extends TestCase {
             }
         };
         Message m = new IdentifyConsumersMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new EventID(new byte[]{1,2,3,4,5,6,7,8}));
         
         n.put(m, null);
         
