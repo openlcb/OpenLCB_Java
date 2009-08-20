@@ -4,10 +4,10 @@ import org.nmra.net.*;
 import org.nmra.net.implementations.*;
 import org.nmra.net.swing.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+//import junit.framework.Assert;
+//import junit.framework.Test;
+//import junit.framework.TestCase;
+//import junit.framework.TestSuite;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,10 +17,12 @@ import java.util.*;
  * Simulate 6 nodes interacting on a single gather/scatter
  * for testing blue/gold programming.
  *
+ * Not JUnit, so can be run standalone easily.
+ 
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class BlueGoldCheck extends TestCase {
+public class BlueGoldCheck /* extends TestCase */ {
     
     ScatterGather sg;
     
@@ -103,7 +105,7 @@ public class BlueGoldCheck extends TestCase {
     // from here down is testing infrastructure
   
     public BlueGoldCheck(String s) {
-        super(s);
+        //super(s);
     }
 
     // Main entry point
@@ -111,6 +113,10 @@ public class BlueGoldCheck extends TestCase {
         String[] testCaseName = {BlueGoldCheck.class.getName()};
         //junit.swingui.TestRunner.main(testCaseName);
         
+        runTest();
+    }
+    
+    static public void runTest() throws Exception {
         // run manually
         BlueGoldCheck g = new BlueGoldCheck("standalone");
         g.setUp();
@@ -120,10 +126,10 @@ public class BlueGoldCheck extends TestCase {
     }
 
     // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(BlueGoldCheck.class);
-        return suite;
-    }
+    //public static Test suite() {
+    //    TestSuite suite = new TestSuite(BlueGoldCheck.class);
+    //    return suite;
+    //}
 
     // frame starting positions
     int hPos = 500;

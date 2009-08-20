@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Main-Class: AllTest
+Main-Class: scenarios.BlueGoldCheck
 Class-Path: lib/junit.jar
 
 Name: org.nmra.nmranet
