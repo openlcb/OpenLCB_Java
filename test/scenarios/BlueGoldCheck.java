@@ -21,22 +21,6 @@ import java.util.*;
  * @version $Revision$
  */
 public class BlueGoldCheck extends TestCase {
-
-    NodeID id1 = new NodeID(new byte[]{0,0,0,0,0,1});
-    NodeID id2 = new NodeID(new byte[]{0,0,0,0,0,2});
-    NodeID id3 = new NodeID(new byte[]{0,0,0,0,0,3});
-    NodeID id4 = new NodeID(new byte[]{0,0,0,0,0,4});
-    NodeID id5 = new NodeID(new byte[]{0,0,0,0,0,5});
-    NodeID id6 = new NodeID(new byte[]{0,0,0,0,0,6});
-
-    EventID event0 = new EventID(new byte[]{0,0,0,0,0,0,0,0});
-    
-    SingleProducerNode node1;
-    SingleProducerNode node2;
-    SingleProducerNode node3;
-    SingleConsumerNode node4;
-    SingleConsumerNode node5;
-    SingleConsumerNode node6;
     
     ScatterGather sg;
     
@@ -54,57 +38,68 @@ public class BlueGoldCheck extends TestCase {
 
         sg.register(m.getConnection());
 
-        // create and connect the nodes
-        node1 = new SingleProducerNode(id1, sg.getConnection(), event0);
-        sg.register(node1);
-        
-        node2 = new SingleProducerNode(id2, sg.getConnection(), event0);
-        sg.register(node2);
-        
-        node3 = new SingleProducerNode(id3, sg.getConnection(), event0);
-        sg.register(node3);
-        
-        
-        node4 = new SingleConsumerNode(id4, sg.getConnection(), event0);
-        sg.register(node4);
-        
-        node5 = new SingleConsumerNode(id5, sg.getConnection(), event0);
-        sg.register(node5);
-        
-        node6 = new SingleConsumerNode(id6, sg.getConnection(), event0);
-        sg.register(node6);
-        
-        node1.initialize();
-        node2.initialize();
-        node3.initialize();
-        node4.initialize();
-        node5.initialize();
-        node6.initialize();
-        
-        
-        // composite GUI
-        java.util.List<SingleProducerNode> producers 
-            = new ArrayList<SingleProducerNode>();
-        producers.add(node1);
-        producers.add(node2);
-        producers.add(node3);
+        createSampleNode(1);
+        createSampleNode(2);
+        createSampleNode(3);
+        createSampleNode(4);
+    }
+    
+    void createSampleNode(int index) throws Exception {
+        NodeID id = new NodeID(new byte[]{0,0,0,0,0,(byte)index});
 
-        java.util.List<SingleConsumerNode> consumers 
-            = new ArrayList<SingleConsumerNode>();
-        consumers.add(node4);
-        consumers.add(node5);
-        consumers.add(node6);
-        f = new BGnodeFrame("BG simulated node 1", producers, consumers, id1);
+        SingleProducer producer11;
+        SingleProducer producer12;
+        SingleProducer producer13;
+        SingleConsumer consumer11;
+        SingleConsumer consumer12;
+        SingleConsumer consumer13;
+        
+        // create and connect the nodes
+        producer11 = new SingleProducer(id, sg.getConnection(), 
+                                        new EventID(id, index, 1));
+        sg.register(producer11);
+        
+        producer12 = new SingleProducer(id, sg.getConnection(), 
+                                        new EventID(id, index, 2));
+        sg.register(producer12);
+        
+        producer13 = new SingleProducer(id, sg.getConnection(), 
+                                        new EventID(id, index, 3));
+        sg.register(producer13);
+        
+        
+        consumer11 = new SingleConsumer(id, sg.getConnection(), 
+                                        new EventID(id, index, 1));
+        sg.register(consumer11);
+        
+        consumer12 = new SingleConsumer(id, sg.getConnection(), 
+                                        new EventID(id, index, 2));
+        sg.register(consumer12);
+        
+        consumer13 = new SingleConsumer(id, sg.getConnection(), 
+                                        new EventID(id, index, 3));
+        sg.register(consumer13);
+                
+        // composite GUI
+        java.util.List<SingleProducer> producers 
+            = new ArrayList<SingleProducer>();
+        producers.add(producer11);
+        producers.add(producer12);
+        producers.add(producer13);
+
+        java.util.List<SingleConsumer> consumers 
+            = new ArrayList<SingleConsumer>();
+        consumers.add(consumer11);
+        consumers.add(consumer12);
+        consumers.add(consumer13);
+        JFrame f = new BGnodeFrame("BG simulated node "+index, producers, consumers, id, sg);
         f.pack();
         f.setVisible(true);
     }
     
+    public void testSetup() {}
     public void tearDown() {}
-    
-    public void testSetup() {
-        // just run the setup to make sure it works
-    }
-    
+        
     // from here down is testing infrastructure
   
     public BlueGoldCheck(String s) {
@@ -112,9 +107,16 @@ public class BlueGoldCheck extends TestCase {
     }
 
     // Main entry point
-    static public void main(String[] args) {
+    static public void main(String[] args) throws Exception {
         String[] testCaseName = {BlueGoldCheck.class.getName()};
-        junit.swingui.TestRunner.main(testCaseName);
+        //junit.swingui.TestRunner.main(testCaseName);
+        
+        // run manually
+        BlueGoldCheck g = new BlueGoldCheck("standalone");
+        g.setUp();
+        g.testSetup();
+        g.tearDown();
+        
     }
 
     // test suite from all defined tests
@@ -123,27 +125,34 @@ public class BlueGoldCheck extends TestCase {
         return suite;
     }
 
+    // frame starting positions
+    int hPos = 500;
+    int vPos = 0;
+    
     /** 
      * Captive class to demonstrate B-G protocol, will 
      * probably need to go elsewhere after seperating 
      * algorithm and Swing display.
      */
      class BGnodeFrame extends JFrame {
-        public BGnodeFrame(String name, 
-                java.util.List<SingleProducerNode> producers,
-                java.util.List<SingleConsumerNode> consumers,
-                NodeID nid) throws Exception {
+        public BGnodeFrame(String name,
+                java.util.List<SingleProducer> producers,
+                java.util.List<SingleConsumer> consumers,
+                NodeID nid,
+                ScatterGather sg) throws Exception {
             super(name);
 
-            BGnodePanel b = new BGnodePanel(nid);
+            BGnodePanel b = new BGnodePanel(nid, producers, consumers, sg);
             getContentPane().add( b );
             getContentPane().setLayout(new FlowLayout());
     
+            for (int i = 0; i<consumers.size(); i++)
+                b.addConsumer(consumers.get(i), "     C"+i+"     ");
             for (int i = 0; i<producers.size(); i++)
                 b.addProducer(producers.get(i), "P"+i);
     
-            for (int i = 0; i<consumers.size(); i++)
-                b.addConsumer(consumers.get(i), "C"+i, sg);
+            this.setLocation(hPos, vPos);
+            vPos+= 200;
         }
      }
 
@@ -154,33 +163,33 @@ public class BlueGoldCheck extends TestCase {
      */
      class BGnodePanel extends JPanel {
      
-        public BGnodePanel(NodeID nid) {
+        public BGnodePanel(NodeID nid,
+                        java.util.List<SingleProducer> producers,
+                        java.util.List<SingleConsumer> consumers,
+                        ScatterGather sg) {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            this.add(consumerPanel);
-            this.add(producerPanel);
+            buttons = new JPanel();
+            buttons.setLayout(new GridLayout(2, Math.max(consumers.size(), producers.size())));
+            this.add(buttons);
             this.add(new JSeparator());
-            
-            // add controls
-            JPanel p = new JPanel();
-            p.setLayout(new FlowLayout());
-            this.add(p);
-            
-            JPanel p1;
-            p.setLayout(new FlowLayout());
+                        
+            JPanel p1 = new JPanel();
+            p1.setLayout(new FlowLayout());
+            this.add (p1);
             
             blueButton = new JButton("Blue");
-            p.add(blueButton);
+            p1.add(blueButton);
             blueLabel = new JLabel("   ");
             setBlueOn(false);
-            p.add(blueLabel);
+            p1.add(blueLabel);
             
             goldButton = new JButton("Gold");
-            p.add(goldButton);
+            p1.add(goldButton);
             goldLabel = new JLabel("   ");
             setGoldOn(false);
-            p.add(goldLabel);
+            p1.add(goldLabel);
             
-            engine = new BlueGoldEngine(nid, sg) {
+            engine = new BlueGoldEngine(nid, sg, producers, consumers) {
                 public void setBlueLightOn(boolean f) {
                     setBlueOn(f);
                 }
@@ -189,6 +198,8 @@ public class BlueGoldCheck extends TestCase {
                     setGoldOn(f);
                 }
             };
+            
+            sg.register(engine);
             
             blueButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -202,6 +213,7 @@ public class BlueGoldCheck extends TestCase {
             });
         }
         
+        JPanel buttons;
         JButton blueButton;
         JButton goldButton;
         JLabel blueLabel;
@@ -225,7 +237,7 @@ public class BlueGoldCheck extends TestCase {
                 goldLabel.setBackground(java.awt.Color.lightGray);
         }
 
-        ArrayList<SingleProducerNode> producers = new ArrayList<SingleProducerNode>();
+        ArrayList<SingleProducer> producers = new ArrayList<SingleProducer>();
         JPanel producerPanel = new JPanel();
         
         /**
@@ -233,12 +245,12 @@ public class BlueGoldCheck extends TestCase {
          * Note this should be a working producer, 
          * already registered, etc
          */
-         public void addProducer(SingleProducerNode n, String name) throws Exception {
+         public void addProducer(SingleProducer n, String name) throws Exception {
             producers.add(n);
-            producerPanel.add(new ProducerPane(name, n));
+            buttons.add(new ProducerPane(name, n));
          }
 
-        ArrayList<SingleConsumerNode> consumers = new ArrayList<SingleConsumerNode>();
+        ArrayList<SingleConsumer> consumers = new ArrayList<SingleConsumer>();
         JPanel consumerPanel = new JPanel();
         
         /**
@@ -246,11 +258,10 @@ public class BlueGoldCheck extends TestCase {
          * Note this should be a working consumer, 
          * already registered, etc
          */
-         public void addConsumer(SingleConsumerNode n, String name, ScatterGather sg) throws Exception {
+         public void addConsumer(SingleConsumer n, String name) throws Exception {
             consumers.add(n);
-            ConsumerPane cp = new ConsumerPane(name);
-            sg.register(cp.getConnection());
-            consumerPanel.add(cp);
+            ConsumerPane cp = new ConsumerPane(name, n);
+            buttons.add(cp);
          }
      }
      
