@@ -37,4 +37,10 @@ public class ProducerConsumerEventReportMessage extends Message {
         ProducerConsumerEventReportMessage p = (ProducerConsumerEventReportMessage) o;
         return eventID.equals(p.eventID);
     } 
+    
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" Producer/Consumer Event Report with "+eventID.toString();     
+    }
+    
 }
