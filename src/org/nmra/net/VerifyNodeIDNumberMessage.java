@@ -23,4 +23,9 @@ public class VerifyNodeIDNumberMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleVerifyNodeIDNumber(this, sender);
      }
+
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" PVerify Node ID number";     
+    }
 }

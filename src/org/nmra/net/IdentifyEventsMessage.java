@@ -23,4 +23,8 @@ public class IdentifyEventsMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleIdentifyEvents(this, sender);
      }
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" Identify Events ";   
+    }
 }
