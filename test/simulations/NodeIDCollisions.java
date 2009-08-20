@@ -1,3 +1,5 @@
+package simulations;
+
 /**
  * Simple class for doing calculations/simulations
  * on NodeID number collisions. 
@@ -19,26 +21,53 @@ public class NodeIDCollisions {
   static long random16() { return randomNbits(16); }
   static long random48() { return randomNbits(48); }
   
-  static long seed(long id) {
-    long t5 = (id>>40)&0xffl; // MSB
-    long t4 = (id>>32)&0xffl;
-    long t3 = (id>>24)&0xffl;
-    long t2 = (id>>16)&0xffl;
-    long t1 = (id>>8)&0xffl;
-    long t0 = id&0xff;        // LSB
+  /** 
+   * Seed generator from a 48-bit value, and
+   * return the 1st alias using some algorithm
+   */
+  static long seed(long nid) {
+    byte[] id = new byte[6];
+    id[5] = (byte)((nid>>40)&0xffl); // MSB
+    id[4] = (byte)((nid>>32)&0xffl);
+    id[3] = (byte)((nid>>24)&0xffl);
+    id[2] = (byte)((nid>>16)&0xffl);
+    id[1] = (byte)((nid>>8)&0xffl);
+    id[0] = (byte)(nid&0xff);        // LSB
     
-    // long lfsr = t0 ^ (t1 <<5) ^ (t2 <<10) ^ (t3 <<15) ^ (t4 << 20) ^ (t5 << 24);
-    long lfsr = t0 ^ (t1 <<5) ^ (t2 <<10) ^ (t3 <<15) ^ (t4 << 20) ^ (t5 << 24) ^ ((t3^t4^t5)<<8);
-
-    if (lfsr == 0)
-      lfsr = (t0 << 23)+(t1 << 19)+(t2 << 15)+(t3 << 11)+(t4 << 7)+t5;
-    if (lfsr == 0)
-      lfsr = 0xAC01;
+    long reg;  // generator state
+    
+    // Seeding 
+    
+    // prototype v1 seed algorithm
+    reg = id[0] ^ id[1] <<5 ^ id[2] <<10 ^ id[3] <<15 ^ id[4] << 20 ^ id[5] << 24;
+    if (reg == 0)
+        reg = ( id[0] << 23)+(id[1] << 19)+(id[2] << 15)+(id[3] << 11)+(id[4] << 7)+id[5];
+    if (reg == 0)
+        reg = 0xAC01;
       
+    // prototype v2
+    reg = id[0] ^ (id[1] <<5) ^ (id[2] <<10) ^ (id[3] <<15) 
+                ^ (id[4] << 20) ^ (id[5] << 24) 
+                ^ ((id[3]^id[4]^id[5])<<8);
+
+    // prototype v3: xor 3 16-bit quantities
+    reg = (id[0]<<8 | id[1]) ^ (id[2]<<8 | id[3])  
+                ^ (id[4]<<8 | id[5]);
+
     // first step
-    lfsr = (lfsr >> 1) ^ (-(lfsr & 1) & 0xd0000001);
     
-    return (lfsr^(lfsr>>16))&0xFFFF;
+    // prototype V1 stepped
+    // see <http://en.wikipedia.org/wiki/Linear_feedback_shift_register> example 2
+    reg = (reg >> 1) ^ (-(reg & 1) & 0xd0000001); 
+    
+    // create alias
+    int retval;
+    
+    //prototype v1
+    retval = (int) ( (reg ^ (reg >>16) ) & 0xFFFF);
+    if (retval == 0) retval = 1;
+    
+    return retval;
   }
   
   static long arrayMax(long[] a) {
@@ -73,32 +102,46 @@ public class NodeIDCollisions {
   
   public static void main(String[] args) {
 
-    //singleCollisionCheck(16, 10, 10*1000*1000);
-    //singleCollisionCheck(16, 25, 1000*1000);
-    //singleCollisionCheck(16, 100, 300*1000);
-    //singleCollisionCheck(16, 250, 300*300);
-    //singleCollisionCheck(16, 1000, 100*300);
+    singleCollisionCheck(16, 10, 10*1000*1000);
+    singleCollisionCheck(16, 25, 1000*1000);
+    singleCollisionCheck(16, 100, 300*1000);
+    singleCollisionCheck(16, 250, 300*300);
+    singleCollisionCheck(16, 1000, 100*300);
+    System.out.println("");
 
-    // checkSeedCollisions();
+    checkSeedCollisions();
+    System.out.println("");
         
-    //checkMfgNumberedGroups(10, 2, 100, 300*300, false);
-    //checkMfgNumberedGroups(5, 5, 100, 300*300, false);
+    checkMfgNumberedGroups(10, 2, 100, 300*300, false);
+    checkMfgNumberedGroups(5, 5, 100, 300*300, false);
     checkMfgNumberedGroups(5, 20, 100, 300*300, false);
-    //checkMfgNumberedGroups(5, 5, 1000, 300*300, false);
+    System.out.println("");
+    
+    checkMfgNumberedGroups(10, 2, 1000, 300*300, false);
+    checkMfgNumberedGroups(5, 5, 1000, 300*300, false);
+    checkMfgNumberedGroups(5, 20, 1000, 300*300, false);
+    System.out.println("");
 
-    //checkMfgNumberedGroups(10, 2, 100, 300*300, true);
-    //checkMfgNumberedGroups(5, 5, 100, 300*300, true);
+    checkMfgNumberedGroups(10, 2, 100, 300*300, true);
+    checkMfgNumberedGroups(5, 5, 100, 300*300, true);
     checkMfgNumberedGroups(5, 20, 100, 300*300, true);
-    //checkMfgNumberedGroups(5, 5, 1000, 300*300, true);
+    System.out.println("");
+
+    checkMfgNumberedGroups(10, 2, 1000, 300*300, true);
+    checkMfgNumberedGroups(5, 5, 1000, 300*300, true);
+    checkMfgNumberedGroups(5, 20, 1000, 300*300, true);
+    System.out.println("");
 
 
-    //checkMfgNumberedGroups(10, 2, 65535, 100*300, false);
-    //checkMfgNumberedGroups(5, 5, 65535, 100*300, false);
-    //checkMfgNumberedGroups(50, 2, 65535, 100*300, false);
+    checkMfgNumberedGroups(10, 2, 65535, 100*300, false);
+    checkMfgNumberedGroups(5, 5, 65535, 100*300, false);
+    checkMfgNumberedGroups(50, 2, 65535, 100*300, false);
+    System.out.println("");
 
-    //checkMfgNumberedGroups(10, 2, 65535, 100*300, true);
-    //checkMfgNumberedGroups(5, 5, 65535, 100*300, true);
-    //checkMfgNumberedGroups(50, 2, 65535, 100*300, true);
+    checkMfgNumberedGroups(10, 2, 65535, 100*300, true);
+    checkMfgNumberedGroups(5, 5, 65535, 100*300, true);
+    checkMfgNumberedGroups(50, 2, 65535, 100*300, true);
+    System.out.println("");
   }
   
   static void singleCollisionCheck(int nBits, int nNodes, int nRuns) {
@@ -173,14 +216,14 @@ public class NodeIDCollisions {
             for (int j = 0; j < nMfg; j++) {
                 // concatenate low values from the five sets of boards
                 temp = chooseNfromM(nNodes,nBoards);
-                for (int i = 0; i< temp.length; i++) samples[k++] = seed(temp[i]+(seeded? (1<<24)*j: 0));
+                for (int i = 0; i< temp.length; i++) samples[k++] = seed(temp[i]+(seeded? (3<<24)*(j+1): 0));
             }        
             long n = countCollisions(samples);
             hitnodes += n;
             if (n>0) hitruns++;
             run++;
         }   
-        System.out.println("16 bit ID in "+nNodes+" nodes from each of "+nMfg+" vendors first "+nBoards+" production "
+        System.out.println("16 bit "+(seeded?" seeded ":"")+" ID in "+nNodes+" nodes from each of "+nMfg+" vendors first "+nBoards+" production "
                                 +" net collision rate "+((double)hitruns)/((double)nRuns)
                                 +" node collision rate "+((double)hitnodes)/((double)nRuns)/((double)nNodes));
     }  

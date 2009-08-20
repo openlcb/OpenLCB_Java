@@ -39,20 +39,19 @@ public class NIDaAlgorithm {
         if (f == null) return; // as a convenience, ignore
         
         if (f.getNodeIDa() != nida.getNIDa()) return;  // not us
-        if (f.isCIM()) {
-            // CIM with our alias
-            // reset and start over
-            index = 0;
-            cancelTimer();
-            nida.nextAlias();
-        } else if (f.isRIM()) {
-            // RIM with our alias
-            // reset and start over
-            index = 0;
-            cancelTimer();
-            nida.nextAlias();
+        if (f.isCIM() || f.isRIM()) {
+            // CIM or RIM with our alias
+            if (complete) {
+                // complete, so alias is ours;: send RIM
+                index = 6;
+            } else {
+                // reset and start over
+                index = 0;
+                cancelTimer();
+            }    nida.nextAlias();
         } else {
-            // other frame with our alias
+            // other frame with our alias: send RIM
+            index = 6;
         }
     }
     

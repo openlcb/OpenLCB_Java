@@ -54,4 +54,14 @@ public class NodeID {
             retval[i] = contents[i];
         return retval;
     }
+
+    public String toString() {
+        return "NodeID:"
+                +contents[0]+","
+                +contents[1]+","
+                +contents[2]+","
+                +contents[3]+","
+                +contents[4]+","
+                +contents[5];
+    }
 }
