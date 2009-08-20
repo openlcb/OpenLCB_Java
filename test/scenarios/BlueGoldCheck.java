@@ -147,9 +147,9 @@ public class BlueGoldCheck extends TestCase {
             getContentPane().setLayout(new FlowLayout());
     
             for (int i = 0; i<consumers.size(); i++)
-                b.addConsumer(consumers.get(i), "     C"+i+"     ");
+                b.addConsumer(consumers.get(i), null);  // null means autolabel
             for (int i = 0; i<producers.size(); i++)
-                b.addProducer(producers.get(i), "P"+i);
+                b.addProducer(producers.get(i), null);  // null means autolabel
     
             this.setLocation(hPos, vPos);
             vPos+= 200;

@@ -19,7 +19,10 @@ public class SingleProducerNode extends SingleLinkNode {
         
     EventID eventID;
     public EventID getEventID() { return eventID; }
-    public void setEventID(EventID eid) { eventID = eid; }  // must do notifies?
+    public void setEventID(EventID eid) { 
+        eventID = eid; 
+        firePropertyChange("EventID", null, eventID);
+    }
     
     /**
      * Initialize this node and put it in operation
@@ -38,4 +41,13 @@ public class SingleProducerNode extends SingleLinkNode {
                 = new ProducerConsumerEventReportMessage(nodeID, eventID);
         connection.put(p, this);
     }
+
+    java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
+    public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
+        pcs.addPropertyChangeListener(l);
+    }
+    public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
+        pcs.removePropertyChangeListener(l);
+    }
+    protected void firePropertyChange(String p, Object old, Object n) { pcs.firePropertyChange(p,old,n);}
 }

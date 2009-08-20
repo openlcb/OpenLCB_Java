@@ -21,7 +21,10 @@ public class ConsumerPane extends JPanel  {
     final static int DELAY = 2000;
     
     public ConsumerPane(String name, SingleConsumerNode node) throws Exception {
-        sendLabel.setText(name);
+        this.name = name;
+        if (name != null) sendLabel.setText(name);
+        else sendLabel.setText(node.getEventID().toString());
+        
         sendLabel.setVisible(true);
         sendLabel.setOpaque(true);
 
@@ -39,12 +42,16 @@ public class ConsumerPane extends JPanel  {
                     sendLabel.setBackground(java.awt.Color.gray);
                     sendLabel.repaint();
                     timer.start();
+                } else if (e.getPropertyName().equals("EventID")) {
+                    if (ConsumerPane.this.name == null) sendLabel.setText(e.getNewValue().toString());
+                    System.out.println("new "+e.getNewValue().toString());
                 }
             }
         });
 
     }
     
+    String name;
     protected JLabel sendLabel = new JLabel();
 		
 	javax.swing.Timer timer = new javax.swing.Timer(DELAY, 
