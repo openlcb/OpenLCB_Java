@@ -19,7 +19,8 @@ public class NIDaTest extends TestCase {
     
     // not really checking the sequence, just checking for differences.
     public void testPRNGdiffers() {
-        int first = 0;
+        int first = na.getNIDa();
+        na.nextAlias();
         int last = na.getNIDa();
         Assert.assertTrue("1", first!=last);
         first = last; 
@@ -39,18 +40,7 @@ public class NIDaTest extends TestCase {
         last = na.getNIDa();
         Assert.assertTrue("5", first!=last);
     }
-    
-    public void testGetNIDa() {
-        int nida = na.getNIDa();
-        Assert.assertTrue("NIDa 1 not zero", nida!=0);
-        // based on special starting value in NodeID
-        Assert.assertEquals("NIDa 1 using special seed ", 1, nida);
-        na.nextAlias();
-        nida = na.getNIDa();
-        Assert.assertTrue("NIDa 2 not zero", nida!=0);
-        Assert.assertEquals("NIDa 2 using special seed ", 32768, nida);
-    }
-        
+            
     // test takes a couple minutes, not normally done
     public void XtestAltPRNG() {
       // http://en.wikipedia.org/wiki/Linear_feedback_shift_register
@@ -71,7 +61,7 @@ public class NIDaTest extends TestCase {
     NIDa na;
 
     public void setUp() {
-        node = new NodeID(new byte[]{0,0,0,0,0,2});  // special case, PRGN = 1
+        node = new NodeID(new byte[]{0,0,0,1,0,2}); 
         na = new NIDa(node);
     }
 
