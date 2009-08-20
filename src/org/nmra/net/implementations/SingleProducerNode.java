@@ -18,6 +18,8 @@ public class SingleProducerNode extends SingleLinkNode {
     }
         
     EventID eventID;
+    public EventID getEventID() { return eventID; }
+    public void setEventID(EventID eid) { eventID = eid; }  // must do notifies?
     
     /**
      * Initialize this node and put it in operation

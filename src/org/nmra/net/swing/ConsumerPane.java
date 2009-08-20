@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.text.*;
 
 import org.nmra.net.*;
+import org.nmra.net.implementations.*;
 
 /**
  * Pane provides simple GUI for consumer: A button.
@@ -19,56 +20,38 @@ public class ConsumerPane extends JPanel  {
 
     final static int DELAY = 2000;
     
-    public ConsumerPane(String name) throws Exception {
-        sendButton.setText(name);
-        sendButton.setVisible(true);
-        sendButton.setToolTipText("Button shows event");
+    public ConsumerPane(String name, SingleConsumerNode node) throws Exception {
+        sendLabel.setText(name);
+        sendLabel.setVisible(true);
+        sendLabel.setOpaque(true);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // add items to GUI
-        add(sendButton);
-
-        // connect actions to buttons
-        sendButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    sendButtonActionPerformed(e);
-                }
-            });
+        add(sendLabel);
 
         timer.setRepeats(false);
+        
+        // listen to node for event
+        node.addPropertyChangeListener(new java.beans.PropertyChangeListener(){
+            public void propertyChange(java.beans.PropertyChangeEvent e) {
+                if (e.getPropertyName().equals("Event")) {
+                    sendLabel.setBackground(java.awt.Color.gray);
+                    sendLabel.repaint();
+                    timer.start();
+                }
+            }
+        });
 
     }
     
-    protected JButton sendButton = new JButton();
-
-    public synchronized void sendButtonActionPerformed(java.awt.event.ActionEvent e) {
-    }
-	
-	public Connection getConnection(){ return new InputLink(); }
-	
+    protected JLabel sendLabel = new JLabel();
+		
 	javax.swing.Timer timer = new javax.swing.Timer(DELAY, 
 	        new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent e) {
-                        sendButton.setSelected(false);
+                        sendLabel.setBackground(new JLabel().getBackground());
+                        sendLabel.repaint();
                     }
-                });
-
-	
-	/** Captive class to capture data.
-	 * <p>
-	 * Not a node by itself, this just listens to a Connection.
-	 * <p>
-	 * This implementation doesn't distinguish the source of a message, but it could.
-	 */
-	class InputLink implements Connection {
-	    public InputLink() {
-	    }
-	    
-	    public void put(Message msg, Connection sender) {
-            sendButton.setSelected(true);
-            timer.start();
-	    }
-	}
-	
+                });	
 }

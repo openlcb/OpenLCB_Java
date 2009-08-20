@@ -1,9 +1,9 @@
 package org.nmra.net;
 
 /**
- * Base for all NRMAnet node implementations.
+ * Default base for NRMAnet node implementations.
  * <p>
- * A Node includes a Connection for incoming Messages.
+ * Provides a Connection for incoming Messages.
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$

@@ -15,6 +15,11 @@ public class LearnEventMessage extends Message {
         
     EventID eventID;
     
+    // because EventID is immutable, can directly return object
+    public EventID getEventID() {
+        return eventID;
+    }
+
     /**
      * Implement message-type-specific
      * processing when this message

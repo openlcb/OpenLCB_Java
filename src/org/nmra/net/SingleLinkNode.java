@@ -7,7 +7,7 @@ package org.nmra.net;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class SingleLinkNode extends Node implements Connection {
+public class SingleLinkNode extends Node {
 
     public SingleLinkNode(NodeID node, Connection connection) {
         super(node);
