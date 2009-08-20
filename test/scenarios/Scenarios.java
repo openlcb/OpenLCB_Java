@@ -13,6 +13,11 @@ public class Scenarios extends TestCase {
     public void testStart() {
     }
     
+    // BlueGoldCheck not JUnit so can run standalone
+    public void testBlueGold() throws Exception {
+        BlueGoldCheck.runTest();
+    }
+    
     // from here down is testing infrastructure
     
     public Scenarios(String s) {
@@ -33,10 +38,10 @@ public class Scenarios extends TestCase {
         suite.addTest(TwoBuses.suite());
         suite.addTest(TwoBusesFiltered.suite());
 
-        suite.addTest(BlueGoldCheck.suite());
-        
         suite.addTest(scenarios.can.CanScenarios.suite());
 
+        // BlueGoldCheck done above
+        
         return suite;
     }
 }
