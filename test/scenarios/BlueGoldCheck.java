@@ -80,54 +80,21 @@ public class BlueGoldCheck extends TestCase {
         node4.initialize();
         node5.initialize();
         node6.initialize();
-
-        // and hook up the GUI
-        f = new JFrame();
-        f.setTitle("Blue-Gold Check");
-        JPanel p = new JPanel();
-        f.getContentPane().add( p );
-        f.getContentPane().setLayout(new FlowLayout());
         
-        p.setLayout(new GridLayout(2,3));
         
-        ConsumerPane cp;
-        cp = new ConsumerPane("C1");
-        sg.register(cp.getConnection());
-        p.add(cp);
-        cp = new ConsumerPane("C2");
-        sg.register(cp.getConnection());
-        p.add(cp);
-        cp = new ConsumerPane("C3");
-        sg.register(cp.getConnection());
-        p.add(cp);
-
-        ProducerPane pp;
-        pp = new ProducerPane("P1", node1);
-        p.add(pp);
-        pp = new ProducerPane("P2", node2);
-        p.add(pp);
-        pp = new ProducerPane("P3", node3);
-        p.add(pp);
-        
-        f.pack();
-        f.setVisible(true);
-
         // composite GUI
-        f = new JFrame();
-        f.setTitle("Blue-Gold Check test node");
-        f.setTitle("BG Node Simulation");
-        BGnodePanel b = new BGnodePanel();
-        f.getContentPane().add( b );
-        f.getContentPane().setLayout(new FlowLayout());
+        java.util.List<SingleProducerNode> producers 
+            = new ArrayList<SingleProducerNode>();
+        producers.add(node1);
+        producers.add(node2);
+        producers.add(node3);
 
-        b.addProducer(node1, "P1");
-        b.addProducer(node2, "P2");
-        b.addProducer(node3, "P3");
-
-        b.addConsumer(node4, "C1", sg);
-        b.addConsumer(node5, "C2", sg);
-        b.addConsumer(node6, "C3", sg);
-
+        java.util.List<SingleConsumerNode> consumers 
+            = new ArrayList<SingleConsumerNode>();
+        consumers.add(node4);
+        consumers.add(node5);
+        consumers.add(node6);
+        f = new BGnodeFrame("BG simulated node 1", producers, consumers, id1);
         f.pack();
         f.setVisible(true);
     }
@@ -139,7 +106,7 @@ public class BlueGoldCheck extends TestCase {
     }
     
     // from here down is testing infrastructure
-    
+  
     public BlueGoldCheck(String s) {
         super(s);
     }
@@ -161,9 +128,33 @@ public class BlueGoldCheck extends TestCase {
      * probably need to go elsewhere after seperating 
      * algorithm and Swing display.
      */
+     class BGnodeFrame extends JFrame {
+        public BGnodeFrame(String name, 
+                java.util.List<SingleProducerNode> producers,
+                java.util.List<SingleConsumerNode> consumers,
+                NodeID nid) throws Exception {
+            super(name);
+
+            BGnodePanel b = new BGnodePanel(nid);
+            getContentPane().add( b );
+            getContentPane().setLayout(new FlowLayout());
+    
+            for (int i = 0; i<producers.size(); i++)
+                b.addProducer(producers.get(i), "P"+i);
+    
+            for (int i = 0; i<consumers.size(); i++)
+                b.addConsumer(consumers.get(i), "C"+i, sg);
+        }
+     }
+
+    /** 
+     * Captive class to demonstrate B-G protocol, will 
+     * probably need to go elsewhere after seperating 
+     * algorithm and Swing display.
+     */
      class BGnodePanel extends JPanel {
      
-        public BGnodePanel() {
+        public BGnodePanel(NodeID nid) {
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             this.add(consumerPanel);
             this.add(producerPanel);
@@ -174,14 +165,66 @@ public class BlueGoldCheck extends TestCase {
             p.setLayout(new FlowLayout());
             this.add(p);
             
-            JButton b;
-            b = new JButton("Blue");
-            p.add(b);
-            b = new JButton("Gold");
-            p.add(b);
+            JPanel p1;
+            p.setLayout(new FlowLayout());
             
+            blueButton = new JButton("Blue");
+            p.add(blueButton);
+            blueLabel = new JLabel("   ");
+            setBlueOn(false);
+            p.add(blueLabel);
+            
+            goldButton = new JButton("Gold");
+            p.add(goldButton);
+            goldLabel = new JLabel("   ");
+            setGoldOn(false);
+            p.add(goldLabel);
+            
+            engine = new BlueGoldEngine(nid, sg) {
+                public void setBlueLightOn(boolean f) {
+                    setBlueOn(f);
+                }
+                
+                public void setGoldLightOn(boolean f) {
+                    setGoldOn(f);
+                }
+            };
+            
+            blueButton.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    engine.blueClick();
+                }
+            });
+           goldButton.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    engine.goldClick();
+                }
+            });
         }
         
+        JButton blueButton;
+        JButton goldButton;
+        JLabel blueLabel;
+        JLabel goldLabel;
+        
+        BlueGoldEngine engine;
+        
+        public void setBlueOn(boolean t) {
+            blueLabel.setOpaque(true);
+            if (t)
+                blueLabel.setBackground(java.awt.Color.blue.brighter());
+            else
+                blueLabel.setBackground(java.awt.Color.lightGray);
+        }
+        
+        public void setGoldOn(boolean t) {
+            goldLabel.setOpaque(true);
+            if (t)
+                goldLabel.setBackground(java.awt.Color.yellow);
+            else
+                goldLabel.setBackground(java.awt.Color.lightGray);
+        }
+
         ArrayList<SingleProducerNode> producers = new ArrayList<SingleProducerNode>();
         JPanel producerPanel = new JPanel();
         
