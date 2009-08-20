@@ -95,5 +95,17 @@ public class MessageDecoder {
     public void handleLearnPending(LearnPendingMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
+    /**
+     * Handle "Learn Cancel" message
+     */
+    public void handleLearnCancel(LearnCancelMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Learn Event" message
+     */
+    public void handleLearnEvent(LearnEventMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
 
 }
