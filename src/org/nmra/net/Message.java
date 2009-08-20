@@ -4,9 +4,13 @@ package org.nmra.net;
  * Base for all NRMAnet message types
  *<p>
  * Messages (and therefore all subtypes) are immutable once created.
+ *<p>
+ * A Message works with a {@link MessageDecoder} object in a double dispatch
+ * pattern to do message specific-processing in e.g. a node implementation.
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
+ * @see MessageDecoder
  */
 public class Message {
 
@@ -18,6 +22,8 @@ public class Message {
     private Message() {}
     
     NodeID sourceNodeID;
+    
+    public NodeID getSourceNodeID() { return sourceNodeID; }
     
     /**
      * Implement message-type-specific
