@@ -39,4 +39,8 @@ public class ConsumerIdentifiedMessage extends Message {
         ConsumerIdentifiedMessage p = (ConsumerIdentifiedMessage) o;
         return eventID.equals(p.eventID);
     } 
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" Consumer identified for "+eventID.toString();     
+    }
 }

@@ -8,10 +8,12 @@ package org.nmra.net;
  */
 public class IdentifyProducersMessage extends Message {
     
-    public IdentifyProducersMessage(NodeID source) {
+    public IdentifyProducersMessage(NodeID source, EventID eventID) {
         super(source);
+        this.eventID = eventID;
     }
         
+    EventID eventID;
     /**
      * Implement message-type-specific
      * processing when this message
@@ -23,4 +25,22 @@ public class IdentifyProducersMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleIdentifyProducers(this, sender);
      }
+
+     /**
+      * To be equal, messages have to have the
+      * same type and content
+      */
+     @Override
+     public boolean equals(Object o) {
+        if (!super.equals(o)) return false; // also checks type
+        IdentifyProducersMessage msg = (IdentifyProducersMessage) o;
+        if (! this.eventID.equals(msg.eventID))
+            return false;
+        return true;
+     }
+
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" Identify Producers with "+eventID.toString();     
+    }
 }

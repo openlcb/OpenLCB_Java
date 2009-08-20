@@ -23,4 +23,8 @@ public class InitializationCompleteMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleInitializationComplete(this, sender);
      }
+    public String toString() {
+        return getSourceNodeID().toString()
+                +" Initialization Complete";    
+    }
 }
