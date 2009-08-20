@@ -47,6 +47,7 @@ public class NetTest extends TestCase {
         suite.addTest(ProducerIdentifiedMessageTest.suite());
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
         suite.addTest(VerifyNodeIDNumberMessageTest.suite());
+        suite.addTest(LearnPendingMessageTest.suite());
         
         suite.addTest(SingleLinkNodeTest.suite());
 
@@ -54,6 +55,7 @@ public class NetTest extends TestCase {
 
         // test implementation classes
         suite.addTest(org.nmra.net.implementations.ImplementationsTest.suite());
+        suite.addTest(org.nmra.net.swing.SwingTest.suite());
         
         // test CAN classes
         suite.addTest(org.nmra.net.can.CanTest.suite());
