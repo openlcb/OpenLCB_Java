@@ -89,5 +89,11 @@ public class MessageDecoder {
     public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
+    /**
+     * Handle "Learn Pending" message
+     */
+    public void handleLearnPending(LearnPendingMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
 
 }
