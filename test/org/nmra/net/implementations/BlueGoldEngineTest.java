@@ -1,5 +1,7 @@
 package org.nmra.net.implementations;
 
+import org.nmra.net.*;
+
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -9,34 +11,26 @@ import junit.framework.TestSuite;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class ImplementationsTest extends TestCase {
-    public void testStart() {
-    }
+public class BlueGoldEngineTest extends TestCase {
     
+    public void testStart() {}
+    
+
     // from here down is testing infrastructure
     
-    public ImplementationsTest(String s) {
+    public BlueGoldEngineTest(String s) {
         super(s);
     }
 
     // Main entry point
     static public void main(String[] args) {
-        String[] testCaseName = {ImplementationsTest.class.getName()};
+        String[] testCaseName = {BlueGoldEngineTest.class.getName()};
         junit.swingui.TestRunner.main(testCaseName);
     }
 
     // test suite from all defined tests
     public static Test suite() {
-        TestSuite suite = new TestSuite(ImplementationsTest.class);
-
-        suite.addTest(SingleConsumerNodeTest.suite());
-        suite.addTest(SingleProducerNodeTest.suite());
-
-        suite.addTest(ScatterGatherTest.suite());
-        suite.addTest(EventFilterGatewayTest.suite());
-
-        suite.addTest(BlueGoldEngineTest.suite());
-
+        TestSuite suite = new TestSuite(BlueGoldEngineTest.class);
         return suite;
     }
 }
