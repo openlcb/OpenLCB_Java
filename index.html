@@ -3,17 +3,14 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>NMRAnet: Java Prototypes Directory</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Unix)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Unix)">
 	<META NAME="CREATED" CONTENT="0;0">
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
-	<META NAME="CHANGED" CONTENT="20090125;8234600">
+	<META NAME="CHANGED" CONTENT="20090819;5410400">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
 	<META NAME="Info 4" CONTENT="">
-	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
-	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
-	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
 	<!-- $Id$ -->
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
@@ -58,6 +55,13 @@ using the JUnit GUI.</P>
 <PRE STYLE="margin-bottom: 0.5cm">ant javadoc</PRE><P>
 (We don't keep JavaDoc files in SVN yet, but that might eventually be
 a good idea)</P>
+<P>To create an nmranet.jar file containing the currently compiled
+code,</P>
+<PRE>ant jar
+</PRE><P>
+Note that you might want to do an “ant clean debug” first so only
+the prototype classes are put in the jar, and the test code is
+omitted.</P>
 <P><BR><BR>
 </P>
 </BODY>

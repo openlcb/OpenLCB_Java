@@ -12,8 +12,13 @@ public class EventID {
 
     static final int BYTECOUNT = 8;
     
-    public EventID(NodeID node) {
-        this (node.contents);
+    public EventID(NodeID node, int b7, int b8) {
+        this.contents = new byte[BYTECOUNT];
+        for (int i = 0; i < BYTECOUNT-2; i++)
+            this.contents[i] = node.contents[i];
+            
+        this.contents[6] = (byte)b7;
+        this.contents[7] = (byte)b8;
     }
     
     public EventID(byte[] contents) {
