@@ -23,7 +23,10 @@ public class SingleConsumerNode extends SingleLinkNode {
         
     EventID eventID;
     public EventID getEventID() { return eventID; }
-    public void setEventID(EventID eid) { eventID = eid; }  // must do notifies?
+    public void setEventID(EventID eid) { 
+        eventID = eid; 
+        firePropertyChange("EventID", null, eventID);
+    }
 
     /**
      * Initialize this node and put it in operation
@@ -43,7 +46,7 @@ public class SingleConsumerNode extends SingleLinkNode {
                     ProducerConsumerEventReportMessage msg, Connection sender) {
         if (msg.getEventID().equals(eventID)) {
             received = true;
-            firePropertyChange("Event", msg, null);
+            firePropertyChange("Event", null, msg);
         }
     }
     

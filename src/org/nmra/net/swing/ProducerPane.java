@@ -19,7 +19,10 @@ public class ProducerPane extends JPanel  {
     public ProducerPane(String name, SingleProducerNode node) throws Exception {
         this.node = node;
 
-        sendButton.setText(name);
+        this.name = name;
+        if (name != null) sendButton.setText(name);
+        else sendButton.setText(node.getEventID().toString());
+
         sendButton.setVisible(true);
         sendButton.setToolTipText("Click to fire event");
 
@@ -34,8 +37,19 @@ public class ProducerPane extends JPanel  {
                     sendButtonActionPerformed(e);
                 }
             });
+
+        // listen to node for eventID change
+        node.addPropertyChangeListener(new java.beans.PropertyChangeListener(){
+            public void propertyChange(java.beans.PropertyChangeEvent e) {
+                if (e.getPropertyName().equals("EventID")) {
+                    if (ProducerPane.this.name == null) sendButton.setText(e.getNewValue().toString());
+                    System.out.println("new "+e.getNewValue().toString());
+                }
+            }
+        });
     }
  
+    String name;
     protected JButton sendButton = new JButton();
     protected SingleProducerNode node;
     
