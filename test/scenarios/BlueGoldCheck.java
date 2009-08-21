@@ -200,9 +200,18 @@ public class BlueGoldCheck /* extends TestCase */ {
                     setBlueOn(f);
                 }
                 
+                public void setBlueLightBlink() {
+                    setBlueBlink();
+                }
+
                 public void setGoldLightOn(boolean f) {
                     setGoldOn(f);
                 }
+
+                public void setGoldLightBlink() {
+                    setGoldBlink();
+                }
+
             };
             
             sg.register(engine);
@@ -230,17 +239,27 @@ public class BlueGoldCheck /* extends TestCase */ {
         public void setBlueOn(boolean t) {
             blueLabel.setOpaque(true);
             if (t)
-                blueLabel.setBackground(java.awt.Color.blue.brighter());
+                blueLabel.setBackground(java.awt.Color.blue.brighter().brighter());
             else
                 blueLabel.setBackground(java.awt.Color.lightGray);
         }
         
+        public void setBlueBlink() {
+            blueLabel.setOpaque(true);
+            blueLabel.setBackground(java.awt.Color.blue.darker().darker());
+        }
+
         public void setGoldOn(boolean t) {
             goldLabel.setOpaque(true);
             if (t)
                 goldLabel.setBackground(java.awt.Color.yellow);
             else
                 goldLabel.setBackground(java.awt.Color.lightGray);
+        }
+
+        public void setGoldBlink() {
+            goldLabel.setOpaque(true);
+            goldLabel.setBackground(java.awt.Color.yellow.darker());
         }
 
         ArrayList<SingleProducer> producers = new ArrayList<SingleProducer>();
