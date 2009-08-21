@@ -121,7 +121,7 @@
 
 
   <target name="javadoc" depends="init" description="create JavaDocs">
-    <javadoc packagenames="org.*, tools.*"
+    <javadoc packagenames="org.*, tools.*, simulations.*, scenarios.*"
            maxmemory="512m"
            sourcepath="${source}:${test}"
            overview="src/overview.html"
@@ -131,7 +131,7 @@
            author="true"
            version="false"
            use="true"
-           windowtitle="NMRAnet API">
+           windowtitle="NMRAnet S9.6">
       <group title="Core" packages="org.nmra.net"/>
 	  
       <classpath refid="project.class.path"    />

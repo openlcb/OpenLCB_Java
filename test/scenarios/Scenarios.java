@@ -6,6 +6,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
+ * Primary test runner for this package.
+ *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
