@@ -200,7 +200,7 @@ public class BlueGoldCheck /* extends TestCase */ {
                     setBlueOn(f);
                 }
                 
-                public void setBlueLightBlink() {
+                public void setBlueLightBlink(int dwell) {
                     setBlueBlink();
                 }
 
@@ -208,7 +208,7 @@ public class BlueGoldCheck /* extends TestCase */ {
                     setGoldOn(f);
                 }
 
-                public void setGoldLightBlink() {
+                public void setGoldLightBlink(int dwell) {
                     setGoldBlink();
                 }
 
