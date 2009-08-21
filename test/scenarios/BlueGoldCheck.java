@@ -201,7 +201,7 @@ public class BlueGoldCheck /* extends TestCase */ {
                 }
                 
                 public void setBlueLightBlink(int dwell) {
-                    setBlueBlink();
+                    setBlueBlink(dwell);
                 }
 
                 public void setGoldLightOn(boolean f) {
@@ -209,7 +209,7 @@ public class BlueGoldCheck /* extends TestCase */ {
                 }
 
                 public void setGoldLightBlink(int dwell) {
-                    setGoldBlink();
+                    setGoldBlink(dwell);
                 }
 
             };
@@ -233,35 +233,90 @@ public class BlueGoldCheck /* extends TestCase */ {
         JButton goldButton;
         JLabel blueLabel;
         JLabel goldLabel;
-        
+        boolean blueOn;
+        boolean blueBlink;
+        javax.swing.Timer blueTimer = new javax.swing.Timer(500,
+                    new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
+                            blueOn = ! blueOn;
+                            if (blueOn)
+                                colorBlueOn();
+                            else
+                                colorBlueOff();
+                       }
+                    });     
+                
+        boolean goldOn;
+        boolean goldBlink;
+        javax.swing.Timer goldTimer = new javax.swing.Timer(500,
+                    new java.awt.event.ActionListener() {
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
+                            goldOn = ! goldOn;
+                            if (goldOn)
+                                colorGoldOn();
+                            else
+                                colorGoldOff();
+                       }
+                    });     
+                
         BlueGoldEngine engine;
         
         public void setBlueOn(boolean t) {
+            blueBlink = false;
+            blueOn = t;
+            blueTimer.stop();
             blueLabel.setOpaque(true);
             if (t)
-                blueLabel.setBackground(java.awt.Color.blue.brighter().brighter());
+                colorBlueOn();
             else
-                blueLabel.setBackground(java.awt.Color.lightGray);
+                colorBlueOff();
         }
         
-        public void setBlueBlink() {
+        public void setBlueBlink(int dwell) {
+            blueBlink = true;
+            blueOn = true;
+            blueTimer.stop();
+            blueTimer.setInitialDelay(dwell);
+            blueTimer.setDelay(dwell);
+            blueTimer.start();
             blueLabel.setOpaque(true);
-            blueLabel.setBackground(java.awt.Color.blue.darker().darker());
+            colorBlueOn();
+        }
+        void colorBlueOff() {
+                blueLabel.setBackground(java.awt.Color.lightGray);
+        }
+        void colorBlueOn() {
+                blueLabel.setBackground(java.awt.Color.blue.brighter().brighter());
         }
 
         public void setGoldOn(boolean t) {
+            goldBlink = false;
+            goldOn = t;
+            goldTimer.stop();
             goldLabel.setOpaque(true);
             if (t)
-                goldLabel.setBackground(java.awt.Color.yellow);
+                colorGoldOn();
             else
+                colorGoldOff();
+        }
+
+        public void setGoldBlink(int dwell) {
+            goldBlink = true;
+            goldOn = true;
+            goldTimer.stop();
+            goldTimer.setInitialDelay(dwell);
+            goldTimer.setDelay(dwell);
+            goldTimer.start();
+            goldLabel.setOpaque(true);
+            colorGoldOn();
+        }
+
+        void colorGoldOff() {
                 goldLabel.setBackground(java.awt.Color.lightGray);
         }
-
-        public void setGoldBlink() {
-            goldLabel.setOpaque(true);
-            goldLabel.setBackground(java.awt.Color.yellow.darker());
+        void colorGoldOn() {
+                goldLabel.setBackground(java.awt.Color.yellow.brighter().brighter());
         }
-
         ArrayList<SingleProducer> producers = new ArrayList<SingleProducer>();
         JPanel producerPanel = new JPanel();
         
