@@ -125,13 +125,13 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
     public void setBlueLightOn(boolean f) {
     }
     
-    public void setBlueLightBlink() {
+    public void setBlueLightBlink(int dwell) {
     }
     
     public void setGoldLightOn(boolean f) {
     }
 
-    public void setGoldLightBlink() {
+    public void setGoldLightBlink(int dwell) {
     }
 
     // ctors, local code and variables, etc
