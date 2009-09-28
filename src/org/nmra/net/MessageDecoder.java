@@ -13,7 +13,7 @@ package org.nmra.net;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class MessageDecoder {
+public class MessageDecoder implements Connection {
     
     /**
      * Process message.
@@ -105,6 +105,54 @@ public class MessageDecoder {
      * Handle "Learn Event" message
      */
     public void handleLearnEvent(LearnEventMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Datagram" message
+     */
+    public void handleDatagram(DatagramMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Datagram Rejected" message
+     */
+    public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Datagram Acknowledged" message
+     */
+    public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Stream Init Request" message
+     */
+    public void handleStreamInitRequest(StreamInitRequestMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Stream Init Reply" message
+     */
+    public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Stream Data Send" message
+     */
+    public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Stream Data Proceed" message
+     */
+    public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Stream Data Complete" message
+     */
+    public void handleStreamDataComplete(StreamDataCompleteMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
 
