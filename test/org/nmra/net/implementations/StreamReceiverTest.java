@@ -34,13 +34,13 @@ public class StreamReceiverTest extends TestCase {
         Assert.assertTrue(messagesReceived.size() == 0); // no startup messages
         
         // start operation
-        Message m = new StreamInitRequestMessage(farID, hereID, 64);
+        Message m = new StreamInitRequestMessage(farID, hereID, 64, 11);
         
         rcv.put(m, null);
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitReplyMessage(hereID, farID, 64)));
+                           .equals(new StreamInitReplyMessage(hereID, farID, 64, 11, 3)));
     }
 
     public void testShortStream() {
@@ -57,23 +57,23 @@ public class StreamReceiverTest extends TestCase {
         Assert.assertTrue(messagesReceived.size() == 0); // no startup messages
         
         // start operation
-        Message m = new StreamInitRequestMessage(farID, hereID, 64);
+        Message m = new StreamInitRequestMessage(farID, hereID, 64, 12);
         
         rcv.put(m, null);
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitReplyMessage(hereID, farID, 64)));
+                           .equals(new StreamInitReplyMessage(hereID, farID, 64, 12, 3)));
 
         // send one data message
         messagesReceived = new java.util.ArrayList<Message>();
-        m = new StreamDataSendMessage(farID, hereID, new int[256]);
+        m = new StreamDataSendMessage(farID, hereID, new int[64], 0);
         
         rcv.put(m, null);
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataProceedMessage(hereID, farID)));
+                           .equals(new StreamDataProceedMessage(hereID, farID, 12, 3)));
     }
 
     // from here down is testing infrastructure

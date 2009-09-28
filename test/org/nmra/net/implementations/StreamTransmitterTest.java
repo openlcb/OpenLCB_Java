@@ -34,7 +34,7 @@ public class StreamTransmitterTest extends TestCase {
                                                     
         Assert.assertTrue(messagesReceived.size() == 1); // startup message
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitRequestMessage(hereID, farID, 64)));
+                           .equals(new StreamInitRequestMessage(hereID, farID, 64, 0)));
     }
     
     public void testShortStream() {
@@ -54,19 +54,19 @@ public class StreamTransmitterTest extends TestCase {
                                                     
         Assert.assertEquals("init messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitRequestMessage(hereID, farID, 256)));
+                           .equals(new StreamInitRequestMessage(hereID, farID, 256, 0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitReplyMessage(farID, hereID, 256);
+        Message m = new StreamInitReplyMessage(farID, hereID, 256, 0, 0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
 
         Assert.assertEquals("1st messages", 2, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data)));
+                           .equals(new StreamDataSendMessage(hereID, farID, data, 0)));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID)));
+                           .equals(new StreamDataCompleteMessage(hereID, farID, 0, 0)));
     }
     
     public void testTwoMsgStream() {
@@ -86,10 +86,10 @@ public class StreamTransmitterTest extends TestCase {
                                                     
         Assert.assertEquals("init messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitRequestMessage(hereID, farID, 256)));
+                           .equals(new StreamInitRequestMessage(hereID, farID, 256, 0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitReplyMessage(farID, hereID, 256);
+        Message m = new StreamInitReplyMessage(farID, hereID, 256, 0, 0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -97,10 +97,10 @@ public class StreamTransmitterTest extends TestCase {
         // should get a data message
         Assert.assertEquals("1st messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data)));
+                           .equals(new StreamDataSendMessage(hereID, farID, new int[256], 0)));
 
         // reply to proceed
-        m = new StreamDataProceedMessage(farID, hereID);
+        m = new StreamDataProceedMessage(farID, hereID, 0, 0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -108,9 +108,9 @@ public class StreamTransmitterTest extends TestCase {
         // 2nd message should be followed by a Stream Data Complete message
         Assert.assertEquals("2nd messages", 2, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data)));
+                           .equals(new StreamDataSendMessage(hereID, farID, new int[256], 0)));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID)));
+                           .equals(new StreamDataCompleteMessage(hereID, farID, 0, 0)));
 
     }
     
