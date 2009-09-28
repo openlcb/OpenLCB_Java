@@ -35,6 +35,12 @@ public class ImplementationsTest extends TestCase {
         suite.addTest(ScatterGatherTest.suite());
         suite.addTest(EventFilterGatewayTest.suite());
 
+        suite.addTest(DatagramTransmitterTest.suite());
+        suite.addTest(DatagramReceiverTest.suite());
+
+        suite.addTest(StreamTransmitterTest.suite());
+        suite.addTest(StreamReceiverTest.suite());
+
         suite.addTest(BlueGoldEngineTest.suite());
 
         return suite;
