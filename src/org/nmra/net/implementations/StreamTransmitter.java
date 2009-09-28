@@ -23,7 +23,7 @@ public class StreamTransmitter extends MessageDecoder {
         this.connection = c;
         
         // start negotiation
-        StreamInitRequestMessage m = new StreamInitRequestMessage(here, far, bufferSize);
+        StreamInitRequestMessage m = new StreamInitRequestMessage(here, far, bufferSize, destStreamID);
         connection.put(m, this);
     }
     
@@ -34,14 +34,16 @@ public class StreamTransmitter extends MessageDecoder {
     Connection connection;
     int nextIndex;
     
-    boolean done = false;
-
+    int destStreamID;
+    int sourceStreamID = 4;  // notional value 
+    
     /**
      * Handle "Stream Init Reply" message
      */
     public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
         // pick up buffer size to use
         this.bufferSize = msg.getBufferSize();
+        this.destStreamID = msg.getDestStreamID();
         
         // init transfer
         nextIndex = 0;
@@ -59,14 +61,14 @@ public class StreamTransmitter extends MessageDecoder {
         nextIndex = nextIndex+size;
         
         // send data
-        Message m = new StreamDataSendMessage(here, far, data);
+        Message m = new StreamDataSendMessage(here, far, data, destStreamID);
         connection.put(m, this);
         
         // are we done?
         if (nextIndex < bytes.length) return; // wait for Data Proceed message
         
         // yes, say we're done
-        m = new StreamDataCompleteMessage(here, far);
+        m = new StreamDataCompleteMessage(here, far, sourceStreamID, destStreamID);
         connection.put(m, this);
     }
     
