@@ -18,6 +18,7 @@ public class NodeIDCollisions {
     long m = 1l<<n;
     return (long)(Math.random()*m);
   }
+  static long random12() { return randomNbits(12); }
   static long random16() { return randomNbits(16); }
   static long random48() { return randomNbits(48); }
   
@@ -102,11 +103,11 @@ public class NodeIDCollisions {
   
   public static void main(String[] args) {
 
-    singleCollisionCheck(16, 10, 10*1000*1000);
-    singleCollisionCheck(16, 25, 1000*1000);
-    singleCollisionCheck(16, 100, 300*1000);
-    singleCollisionCheck(16, 250, 300*300);
-    singleCollisionCheck(16, 1000, 100*300);
+    singleCollisionCheck(12, 10, 10*1000*1000);
+    singleCollisionCheck(12, 25, 1000*1000);
+    singleCollisionCheck(12, 100, 300*1000);
+    singleCollisionCheck(12, 250, 300*300);
+    singleCollisionCheck(12, 1000, 100*300);
     System.out.println("");
 
     checkSeedCollisions();
@@ -223,7 +224,7 @@ public class NodeIDCollisions {
             if (n>0) hitruns++;
             run++;
         }   
-        System.out.println("16 bit "+(seeded?" seeded ":"")+" ID in "+nNodes+" nodes from each of "+nMfg+" vendors first "+nBoards+" production "
+        System.out.println("12 bit "+(seeded?" seeded ":"")+" ID in "+nNodes+" nodes from each of "+nMfg+" vendors first "+nBoards+" production "
                                 +" net collision rate "+((double)hitruns)/((double)nRuns)
                                 +" node collision rate "+((double)hitnodes)/((double)nRuns)/((double)nNodes));
     }  
