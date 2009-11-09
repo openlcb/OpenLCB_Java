@@ -15,17 +15,17 @@ import org.nmra.net.*;
 public class NmraNetCanFrame implements org.nmra.net.can.CanFrame {
 
     public static NmraNetCanFrame makeCimFrame(int alias, int num, int val) {
-        return new NmraNetCanFrame( (0<<26) | (alias&0xffff));
+        return new NmraNetCanFrame( (0<<26) | (alias&0xffffff));
     }
     
     public static NmraNetCanFrame makeRimFrame(int alias, NodeID n) {
-        return new NmraNetCanFrame( (1<<26) | (alias&0xffff),
+        return new NmraNetCanFrame( (1<<26) | (alias&0xffffff),
                                     n.getContents());
     }
     
     static int makeHeader(int alias) {
         return 
-            (alias&0xFFFF);
+            (alias&0xFFFFFF);
     }
     
     // data is stored in completed form as
@@ -78,7 +78,7 @@ public class NmraNetCanFrame implements org.nmra.net.can.CanFrame {
     
     public long getHeader() { return header; }
     
-    public int getNodeIDa() { return (int)getHeader()&0xFFFF; }
+    public int getNodeIDa() { return (int)getHeader()&0xFFFFFF; }
     
     public boolean isCIM() { return (getTypeField() == TypeField.CHECKIDMESSAGE); }
     public boolean isRIM() { return (getTypeField() == TypeField.RESERVEDIDMESSAGE); }
@@ -100,5 +100,12 @@ public class NmraNetCanFrame implements org.nmra.net.can.CanFrame {
             return false;
         }
     }
-
+    
+    public String toString() {
+        return "Type: "+getTypeField()
+            + " NIDa: "+getNodeIDa()
+            + " isCIM: "+isCIM()
+            + " isRIM: "+isRIM();
+            
+    }
 }

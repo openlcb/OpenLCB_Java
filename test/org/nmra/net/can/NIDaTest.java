@@ -40,7 +40,15 @@ public class NIDaTest extends TestCase {
         last = na.getNIDa();
         Assert.assertTrue("5", first!=last);
     }
-            
+    
+    // print the first few from a zero seed, not normally done
+    public void XtestListValues() {
+        for (int i = 0; i< 200; i++) {
+            System.out.println("0x"+Integer.toHexString(na.getNIDa()));
+            na.nextAlias();
+        }
+    }
+    
     // test takes a couple minutes, not normally done
     public void XtestAltPRNG() {
       // http://en.wikipedia.org/wiki/Linear_feedback_shift_register

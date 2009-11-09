@@ -67,21 +67,12 @@ public class NIDa {
         this.nid = nid;
         byte[] id = this.nid.getContents();
 
-        // simplest starting point
-        //reg = id[0]+id[1]+id[2]+id[3]+id[4]+id[5];
-
-        // prototype v1
-        reg = id[0] ^ id[1] <<5 ^ id[2] <<10 ^ id[3] <<15 ^ id[4] << 20 ^ id[5] << 24;
-        if (reg == 0)
-            reg = ( id[0] << 23)+(id[1] << 19)+(id[2] << 15)+(id[3] << 11)+(id[4] << 7)+id[5];
-        if (reg == 0)
-            reg = 0xAC01;
-
-        // prototype v2
-        reg = id[0] ^ (id[1] <<5) ^ (id[2] <<10) ^ (id[3] <<15) 
-                    ^ (id[4] << 20) ^ (id[5] << 24) 
-                    ^ ((id[3]^id[4]^id[5])<<8);
-
+        reg =   ((id[0] & 0xff) << 40)
+              | ((id[1] & 0xff) << 32)
+              | ((id[2] & 0xff) << 24)
+              | ((id[3] & 0xff) << 16)
+              | ((id[4] & 0xff) <<  8)
+              | ((id[5] & 0xff) <<  0);
     }
     
     /**
@@ -89,34 +80,22 @@ public class NIDa {
      */
     protected void stepGenerator() {
         
-        // 16-bit shift register PRNG algorithm from e.g.
-        // <a href="http://en.wikipedia.org/wiki/Linear_feedback_shift_register">Wikipedia Linear Feedback Shift Register</a> page.
-        //long bit = (reg & 0x0001) ^
-        //    ((reg & 0x0004) >> 2) ^
-        //    ((reg & 0x0008) >> 3) ^
-        //    ((reg & 0x0020) >> 5);
-        //reg = (reg >> 1) | (bit << 15);
-
-        // prototype V1
-        // see <http://en.wikipedia.org/wiki/Linear_feedback_shift_register> example 2
-        reg = (reg >> 1) ^ (-(reg & 1) & 0xd0000001); 
+        // See H G Kuehn, CACM 8/1961
+        reg = ( (512+1)*reg + 0x1B0CA37A4BA9L)
+                & 0xFFFFFFFFFFFFL;
  }
 
     /**
      * Reduce the current generator value to an alias value.
      */
     protected int computeAliasFromGenerator() {
-        int retval;
         
-        // just return low bits, but force non-zero
-        //retval = (int) (reg & 0xFFFF);
-        //if (retval == 0) retval = 1;
+        int s1 = (int)reg&0xFFFFFF;
+        int s2 = (int)(reg>>12)&0xFFFFFF;
+        int s3 = (int)(reg>>24)&0xFFFFFF;
+        int s4 = (int)(reg>>36)&0xFFFFFF;
         
-        // merge 32 bits to just 16
-        retval = (int) ( (reg ^ (reg >>16) ) & 0xFFFF);
-        if (retval == 0) retval = 1;
-        
-        return retval;
+        return s1^s2^s3^s4;
     }
 
     // Generator state register
