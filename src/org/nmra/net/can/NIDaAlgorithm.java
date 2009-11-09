@@ -37,7 +37,10 @@ public class NIDaAlgorithm {
     
     public void processFrame(NmraNetCanFrame f) {
         if (f == null) return; // as a convenience, ignore
-        
+
+        // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
+        //                    +" vs our "+Integer.toHexString(nida.getNIDa()));
+
         if (f.getNodeIDa() != nida.getNIDa()) return;  // not us
         if (f.isCIM() || f.isRIM()) {
             // CIM or RIM with our alias

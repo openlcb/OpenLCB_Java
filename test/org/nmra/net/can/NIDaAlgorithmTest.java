@@ -77,7 +77,7 @@ public class NIDaAlgorithmTest extends TestCase {
         // start
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
 
-        // conflict 
+        // inject conflict 
         alg.processFrame(NmraNetCanFrame.makeCimFrame(f.getNodeIDa(), 0, 0));
         
         // seventh frame after now is RIM
@@ -111,7 +111,7 @@ public class NIDaAlgorithmTest extends TestCase {
 
         Assert.assertEquals((f = alg.nextFrame()), null);
 
-        // conflict 
+        // inject conflict 
         alg.processFrame(NmraNetCanFrame.makeCimFrame(nida, 0, 0));
 
         // still active
