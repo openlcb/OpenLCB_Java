@@ -316,7 +316,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals("starting aliases same", alg1.getNIDa(), alg10.getNIDa());
         
         // run the startup
-        int expectedCount = 87; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 114; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPCS10 converges "+count);
