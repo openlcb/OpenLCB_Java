@@ -14,9 +14,9 @@
 	<!-- $Id$ -->
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
-<H1>9.6 Proposal Java Prototypes Directory</H1>
+<H1>OpenLCB Proposal Java Prototypes Directory</H1>
 <P>This directory contains prototype implementation(s) in Java of the
-S9.6 proposed NMRAnet specification. 
+proposed OpenLCB specification. 
 </P>
 <P>These are primarily intended for testing proposed algorithms, not
 as a first implementation for use. 
@@ -25,8 +25,8 @@ as a first implementation for use.
 <DL>
 	<DT>src 
 	</DT><DD>
-	Contains NMRAnet source in the org.nmra.net package, and source for
-	NMRAnet CAN wire protocol in the org.nmra.net.can package. 
+	Contains OpenLCB source in the org.openlcb package, and source for
+	OpenLCB CAN wire protocol in the org.openlcb.can package. 
 	</DD><DT>
 	test 
 	</DT><DD STYLE="margin-bottom: 0.5cm">
@@ -34,14 +34,14 @@ as a first implementation for use.
 	</DD></DL>
 <UL>
 	<LI><DD STYLE="margin-bottom: 0.5cm">
-	org.nmra.net – unit tests for the implementation code</DD><LI><DD STYLE="margin-bottom: 0.5cm">
+	org.openlcb – unit tests for the implementation code</DD><LI><DD STYLE="margin-bottom: 0.5cm">
 	tools – various non-NMRAnet implementation for testing, including
 	a small CAN segment simulator</DD><LI><DD STYLE="margin-bottom: 0.5cm">
-	scenarios – tests of operation of multiple NMRAnet classes
-	simulating various NMRAnet use scenarios</DD></UL>
+	scenarios – tests of operation of multiple OpenLCB classes
+	simulating various OpenLCB use scenarios</DD></UL>
 <P>For example, <A HREF="test/scenarios/TwoBusesFiltered.java">test/scenarios/TwoBusesFiltered.java</A>
-contains a scenario where two NMRAnet CAN segments are connected via
-a TCP/IP link and filtering gateways. The NMRA net implementation is
+contains a scenario where two OpenLCB CAN segments are connected via
+a TCP/IP link and filtering gateways. The OpenLCB implementation is
 tested to make sure that P/C event reports are properly routed to
 nodes needing them, event reports are not routed when not needed,
 etc.</P>

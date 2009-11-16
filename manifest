@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Main-Class: scenarios.BlueGoldCheck
 Class-Path: lib/junit.jar
 
-Name: org.nmra.nmranet
-Specification-Title: “NMRAnet”
+Name: org.openlcb
+Specification-Title: “OpenLCB”
 Specification-Version: “0.0”
-Specification-Vendor: “NMRAnet WG"
-Package-Title: “nmranet”
+Specification-Vendor: “OpenLCB group"
+Package-Title: “openlcb”
 Package-Version: “0.0”
-Package-Vendor: “NMRAnet WG”
+Package-Vendor: “OpenLCB group”
  
