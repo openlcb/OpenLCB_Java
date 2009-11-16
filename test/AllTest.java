@@ -28,7 +28,7 @@ public class AllTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllTest.class);
         suite.addTest(tools.ToolsTest.suite());
-        suite.addTest(org.nmra.net.NetTest.suite());
+        suite.addTest(org.openlcb.NetTest.suite());
         suite.addTest(scenarios.Scenarios.suite());
         return suite;
     }

@@ -1,7 +1,7 @@
 package scenarios;
 
-import org.nmra.net.*;
-import org.nmra.net.implementations.*;
+import org.openlcb.*;
+import org.openlcb.implementations.*;
 
 import junit.framework.Assert;
 import junit.framework.Test;
@@ -26,7 +26,7 @@ public class TwoBusesFiltered extends TwoBuses {
 
     // Use a filtering gateway 
     protected void createGateway() {
-        gate = new org.nmra.net.implementations.EventFilterGateway();
+        gate = new org.openlcb.implementations.EventFilterGateway();
     }
     
     // first will be specific tests of filtering
