@@ -1,10 +1,11 @@
-package org.nmra.net.can;
+
+package org.openlcb.can;
 
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.nmra.net.*;
+import org.openlcb.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
