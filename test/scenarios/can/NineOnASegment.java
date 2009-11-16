@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Simulate nine nodes interacting on a single CAN bus NMRAnet segment.
+ * Simulate nine nodes interacting on a single CAN bus OpenLCB segment.
  * 
  * <ul>
  * <li>Nodes 1,2,3 send Event A to 8,9
