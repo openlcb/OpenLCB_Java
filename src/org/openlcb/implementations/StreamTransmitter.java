@@ -3,7 +3,7 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of sending a NMRAnet stream.
+ * Example of sending a OpenLCB stream.
  *<p>
  * This implementation is limited to sending 
  * from a fixed-size input array.  The protocol

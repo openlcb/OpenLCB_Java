@@ -2,7 +2,7 @@ package org.openlcb;
 
 /**
  * This class provides a basic double-dispatch mechanism for handling
- * messages.  NMRAnet messages in this implementation
+ * messages.  OpenLCB messages in this implementation
  * are of separate type.  To simplify the operation of
  * specific Node implementions, this base class provides
  * a dispatch mechanism, in cooperation with the Message types,

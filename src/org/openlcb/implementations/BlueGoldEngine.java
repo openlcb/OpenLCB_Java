@@ -3,7 +3,7 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of a NMRAnet algorithm for doing configuration with
+ * Example of a OpenLCB algorithm for doing configuration with
  * small number of buttons.
  *<p>
  * This handles both "configuring" and "being configured"

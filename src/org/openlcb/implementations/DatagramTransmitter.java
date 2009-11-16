@@ -3,7 +3,7 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of sending a NMRAnet datagram.
+ * Example of sending a OpenLCB datagram.
  *<p>
  *
  * @author  Bob Jacobsen   Copyright 2009

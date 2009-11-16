@@ -3,10 +3,10 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of a NMRAnet node that consumes one Event.
+ * Example of a OpenLCB node that consumes one Event.
  *<p>
  * The event doesn't cause much to happen, but e.g.
- * a {@link org.nmra.net.swing.ConsumerPane} can display
+ * a {@link org.openlcb.swing.ConsumerPane} can display
  * it.
  *
  * @author  Bob Jacobsen   Copyright 2009

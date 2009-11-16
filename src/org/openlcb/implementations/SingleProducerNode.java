@@ -3,7 +3,7 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of a NMRAnet node that produces one Event.
+ * Example of a OpenLCB node that produces one Event.
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
