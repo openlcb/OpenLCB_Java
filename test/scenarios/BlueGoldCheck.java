@@ -1,8 +1,8 @@
 package scenarios;
 
-import org.nmra.net.*;
-import org.nmra.net.implementations.*;
-import org.nmra.net.swing.*;
+import org.openlcb.*;
+import org.openlcb.implementations.*;
+import org.openlcb.swing.*;
 
 //import junit.framework.Assert;
 //import junit.framework.Test;

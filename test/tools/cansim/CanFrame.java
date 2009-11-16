@@ -12,7 +12,7 @@ import tools.*;
  */
 
 
-public class CanFrame implements org.nmra.net.can.CanFrame {
+public class CanFrame implements org.openlcb.can.CanFrame {
 
     long header;
     int[] bytes;
