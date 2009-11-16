@@ -3,7 +3,7 @@ package org.openlcb.implementations;
 import org.openlcb.*;
 
 /**
- * Example of receiving a NMRAnet stream.
+ * Example of receiving a OpenLCB stream.
  *<p>
  *
  * @author  Bob Jacobsen   Copyright 2009
