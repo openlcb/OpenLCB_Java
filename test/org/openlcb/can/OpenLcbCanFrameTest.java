@@ -47,9 +47,9 @@ public class OpenLcbCanFrameTest extends TestCase {
                 OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE));
 
         Assert.assertEquals("0x00, OpenLCB message ", 0x0C000000, 
-                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE));
+                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
         Assert.assertEquals("0x01, OpenLCB message ", 0x0C000001, 
-                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE));
+                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
 
         Assert.assertEquals("0x00, CAN msg ", 0x08000000, 
                 OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.CANMESSAGE));
@@ -72,8 +72,8 @@ public class OpenLcbCanFrameTest extends TestCase {
               
         c = new OpenLcbCanFrame(
                                 OpenLcbCanFrame.setTypeField(1,
-                                    OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE));
-        Assert.assertEquals("NMRANETCOMMONMESSAGE", OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE, c.getTypeField());
+                                    OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
+        Assert.assertEquals("OPENLCBCOMMONMESSAGE", OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE, c.getTypeField());
               
         c = new OpenLcbCanFrame(
                                 OpenLcbCanFrame.setTypeField(1,
@@ -87,7 +87,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertEquals("CHECKIDMESSAGE", 0, OpenLcbCanFrame.TypeField.CHECKIDMESSAGE.ordinal());
         Assert.assertEquals("RESERVEDIDMESSAGE", 1, OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE.ordinal());
         Assert.assertEquals("CANMESSAGE", 2, OpenLcbCanFrame.TypeField.CANMESSAGE.ordinal());
-        Assert.assertEquals("NMRANETCOMMONMESSAGE", 3, OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE.ordinal());
+        Assert.assertEquals("OPENLCBCOMMONMESSAGE", 3, OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE.ordinal());
     }
     
     public void testMakeCim() {
