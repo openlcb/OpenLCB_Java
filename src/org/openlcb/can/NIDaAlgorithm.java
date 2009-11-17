@@ -18,12 +18,12 @@ public class NIDaAlgorithm {
         nida = new NIDa(n);
     }
     
-    public NmraNetCanFrame nextFrame() {
-        NmraNetCanFrame f;
+    public OpenLcbCanFrame nextFrame() {
+        OpenLcbCanFrame f;
         if (index<6)
-            f = NmraNetCanFrame.makeCimFrame(nida.getNIDa(), 0, 0);
+            f = OpenLcbCanFrame.makeCimFrame(nida.getNIDa(), 0, 0);
         else if (index == 6) {
-            f = NmraNetCanFrame.makeRimFrame(nida.getNIDa(), nid);
+            f = OpenLcbCanFrame.makeRimFrame(nida.getNIDa(), nid);
             complete = true;
         } else {
             // send nothing
@@ -35,7 +35,7 @@ public class NIDaAlgorithm {
     
     public long getNIDa() { return nida.getNIDa(); }
     
-    public void processFrame(NmraNetCanFrame f) {
+    public void processFrame(OpenLcbCanFrame f) {
         if (f == null) return; // as a convenience, ignore
 
         // System.out.println("process "+Integer.toHexString(f.getNodeIDa())

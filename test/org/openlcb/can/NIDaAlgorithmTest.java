@@ -19,7 +19,7 @@ public class NIDaAlgorithmTest extends TestCase {
     }
     
     public void testFirst() {
-        NmraNetCanFrame f = alg.nextFrame();        
+        OpenLcbCanFrame f = alg.nextFrame();        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // first frame is CIM
@@ -28,7 +28,7 @@ public class NIDaAlgorithmTest extends TestCase {
     }
     
     public void testSeventh() {
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // seventh frame is RIM
@@ -46,24 +46,24 @@ public class NIDaAlgorithmTest extends TestCase {
     }
     
     public void testNotAConflict() {
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // seventh frame is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isRIM());
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(1, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
     
         Assert.assertTrue("complete", alg.isComplete());
 
@@ -71,14 +71,14 @@ public class NIDaAlgorithmTest extends TestCase {
     }
     
     public void testConflictAfterOne() {
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // start
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
 
         // inject conflict 
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(f.getNodeIDa(), 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(f.getNodeIDa(), 0, 0));
         
         // seventh frame after now is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -95,7 +95,7 @@ public class NIDaAlgorithmTest extends TestCase {
     }
     
     public void testLatecomerConflict() {
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // seventh frame after start is RIM
@@ -112,7 +112,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals((f = alg.nextFrame()), null);
 
         // inject conflict 
-        alg.processFrame(NmraNetCanFrame.makeCimFrame(nida, 0, 0));
+        alg.processFrame(OpenLcbCanFrame.makeCimFrame(nida, 0, 0));
 
         // still active
         Assert.assertTrue("complete", alg.isComplete());
@@ -123,7 +123,7 @@ public class NIDaAlgorithmTest extends TestCase {
     public void testSequentialStart2() {
         NIDaAlgorithm alg1 = new NIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
         NIDaAlgorithm alg2 = new NIDaAlgorithm(new NodeID(new byte[]{20,21,22,23,24,25}));
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
 
         // check to make sure seeds are different; condition of test, not test itself
         Assert.assertTrue("starting aliases should differ", 
@@ -152,7 +152,7 @@ public class NIDaAlgorithmTest extends TestCase {
         alg1.forceSeedValue(0xAC01L);
         NubNIDaAlgorithm alg2 = new NubNIDaAlgorithm(new NodeID(new byte[]{11,10,12,13,14,15}));
         alg2.forceSeedValue(0xAC01L);
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
 
         // check to make sure seeds are same; condition of test, not test itself
         Assert.assertTrue("starting aliases should agree", 
@@ -191,7 +191,7 @@ public class NIDaAlgorithmTest extends TestCase {
         NIDaAlgorithm alg8 = new NIDaAlgorithm(new NodeID(new byte[]{80,81,82,83,14,15}));
         NIDaAlgorithm alg9 = new NIDaAlgorithm(new NodeID(new byte[]{90,91,92,93,14,15}));
         NIDaAlgorithm alg10 = new NIDaAlgorithm(new NodeID(new byte[]{100,101,102,103,14,15}));
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
 
         NIDaAlgorithm[] algs = new NIDaAlgorithm[]
                         {alg1, alg2, alg3, alg4, alg5, alg6, alg7, alg8, alg9, alg10};
@@ -253,7 +253,7 @@ public class NIDaAlgorithmTest extends TestCase {
                             algs[i].getNIDa()!=algs[j].getNIDa());
 
 
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
 
         // run the startup
         int expectedCount = (6+1)*10; // count messages
@@ -294,7 +294,7 @@ public class NIDaAlgorithmTest extends TestCase {
         NubNIDaAlgorithm alg8 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,11,22,23,24,15}));
         NubNIDaAlgorithm alg9 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,21,22,23,24,15}));
         NubNIDaAlgorithm alg10 = new NubNIDaAlgorithm(new NodeID(new byte[]{20,21,22,23,24,15}));
-        NmraNetCanFrame f;        
+        OpenLcbCanFrame f;        
 
         NubNIDaAlgorithm[] algs = new NubNIDaAlgorithm[]
                         {alg1, alg2, alg3, alg4, alg5, alg6, alg7, alg8, alg9, alg10};
@@ -383,7 +383,7 @@ public class NIDaAlgorithmTest extends TestCase {
      * and sending to others.
      */
     int sequentialRunner(NIDaAlgorithm[] algs, int nCycles) {
-        NmraNetCanFrame f;
+        OpenLcbCanFrame f;
         for (int i = 0; i < nCycles; i++) {
             for (int j = 0; j < algs.length; j++) { // provides next message
                 f = algs[j].nextFrame();
@@ -410,8 +410,8 @@ public class NIDaAlgorithmTest extends TestCase {
      * simulates nodes sending very fast, so that CAN arbitrates.
      */
      int priorityRunner(NIDaAlgorithm[] algs, int nCycles) {
-        NmraNetCanFrame[] q = new NmraNetCanFrame[algs.length];
-        NmraNetCanFrame f;
+        OpenLcbCanFrame[] q = new OpenLcbCanFrame[algs.length];
+        OpenLcbCanFrame f;
         // start with 1st one each wants to send
         for (int j = 0; j < algs.length; j++)
             q[j] = algs[j].nextFrame();
