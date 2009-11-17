@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir=".." name="NMRAnet-IDE">
+<project basedir=".." name="OpenLCB-IDE">
     <import file="../build.xml"/>
     <!-- TODO: edit the following target according to your needs -->
     <!-- (more info: http://www.netbeans.org/kb/41/freeform-config.html#debugj2se) -->
-    <target depends="debug" description="build and run NMRAnet prototype" name="debug-nb">
-        <nbjpdastart addressproperty="jpda.address" name="NMRAnet" transport="dt_socket">
+    <target depends="debug" description="build and run OpenLCB prototype" name="debug-nb">
+        <nbjpdastart addressproperty="jpda.address" name="OpenLCB" transport="dt_socket">
             <classpath refid="project.class.path"/>
         </nbjpdastart>
         <java classname="AllTest" dir=".." fork="yes">
