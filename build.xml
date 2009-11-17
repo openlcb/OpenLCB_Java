@@ -1,12 +1,12 @@
-<!-- Ant build.xml file for NMRAnet development -->
+<!-- Ant build.xml file for OpenLCB development -->
 <!-- Bob Jacobsen, Copyright 2009 -->
 <!-- Revision $Revision: 370 $ -->
 
-<project name="NMRAnet" default="run" basedir=".">
+<project name="OpenLCB" default="run" basedir=".">
 <!-- basedir="." means all paths are relative to the "java" subdir. -->
 
   <description>
-  Provides build services for NMRAnet development
+  Provides build services for OpenLCB development
   </description>
 
   <!-- options you might want to change during development,   -->
@@ -131,17 +131,17 @@
            author="true"
            version="false"
            use="true"
-           windowtitle="NMRAnet S9.6">
-      <group title="Core" packages="org.nmra.net"/>
+           windowtitle="OpenLCB">
+      <group title="Core" packages="org.openlcb"/>
 	  
       <classpath refid="project.class.path"    />
-      <doctitle><![CDATA[<h1>NMRAnet API</h1>]]></doctitle>
+      <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
       <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
     </javadoc>
   </target>
 
   <target name="jar" description="create working jar file with current contents">
-    <jar jarfile="${jartarget}/nmranet.jar" 
+    <jar jarfile="${jartarget}/openlcb.jar" 
          basedir="${target}"
          manifest="manifest" 
          compress="true" />   <!-- compress="true" is default -->

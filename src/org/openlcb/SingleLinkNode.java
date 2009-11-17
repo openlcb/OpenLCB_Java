@@ -1,7 +1,7 @@
 package org.openlcb;
 
 /**
- * Base for NMRAnet nodes that have only a single connection to the
+ * Base for OpenLCB nodes that have only a single connection to the
  * outside world.
  *
  * @author  Bob Jacobsen   Copyright 2009

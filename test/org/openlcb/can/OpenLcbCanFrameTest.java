@@ -46,9 +46,9 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertEquals("0x01, ReservedID ", 0x04000001, 
                 OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE));
 
-        Assert.assertEquals("0x00, NMRAnet message ", 0x0C000000, 
+        Assert.assertEquals("0x00, OpenLCB message ", 0x0C000000, 
                 OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE));
-        Assert.assertEquals("0x01, NMRAnet message ", 0x0C000001, 
+        Assert.assertEquals("0x01, OpenLCB message ", 0x0C000001, 
                 OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.NMRANETCOMMONMESSAGE));
 
         Assert.assertEquals("0x00, CAN msg ", 0x08000000, 
