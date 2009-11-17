@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir=".." name="NMRAnet-IDE">
+<project basedir=".." name="OpenLCB-IDE">
     <!-- TODO: edit the following target according to your needs -->
     <!-- (more info: http://www.netbeans.org/kb/55/freeform-config.html#compilesingle) -->
     <target name="compile-selected-files-in-jmri">
