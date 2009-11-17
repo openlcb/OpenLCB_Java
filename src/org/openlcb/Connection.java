@@ -1,7 +1,7 @@
 package org.openlcb;
 
 /**
- * Interface for receiving NMRAnet messages.
+ * Interface for receiving OpenLCB messages.
  * <p>
  * Generally, nodes send messages by delivering them to Connections.
  *
