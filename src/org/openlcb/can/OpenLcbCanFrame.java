@@ -64,7 +64,7 @@ public class OpenLcbCanFrame implements org.openlcb.can.CanFrame {
         CHECKIDMESSAGE,        
         RESERVEDIDMESSAGE,
         CANMESSAGE,
-        NMRANETCOMMONMESSAGE;
+        OPENLCBCOMMONMESSAGE;
     }
     
     public TypeField getTypeField() {
