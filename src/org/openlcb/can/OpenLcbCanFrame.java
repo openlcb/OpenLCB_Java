@@ -3,7 +3,7 @@ package org.openlcb.can;
 import org.openlcb.*;
 
 /**
- * Carry and work with a CAN frame in NMRAnet format.
+ * Carry and work with a CAN frame in OpenLCB format.
  *
  * Immutable once created.
  *
@@ -12,14 +12,14 @@ import org.openlcb.*;
  */
 
 
-public class NmraNetCanFrame implements org.openlcb.can.CanFrame {
+public class OpenLcbCanFrame implements org.openlcb.can.CanFrame {
 
-    public static NmraNetCanFrame makeCimFrame(int alias, int num, int val) {
-        return new NmraNetCanFrame( (0<<26) | (alias&0xffffff));
+    public static OpenLcbCanFrame makeCimFrame(int alias, int num, int val) {
+        return new OpenLcbCanFrame( (0<<26) | (alias&0xffffff));
     }
     
-    public static NmraNetCanFrame makeRimFrame(int alias, NodeID n) {
-        return new NmraNetCanFrame( (1<<26) | (alias&0xffffff),
+    public static OpenLcbCanFrame makeRimFrame(int alias, NodeID n) {
+        return new OpenLcbCanFrame( (1<<26) | (alias&0xffffff),
                                     n.getContents());
     }
     
@@ -34,11 +34,11 @@ public class NmraNetCanFrame implements org.openlcb.can.CanFrame {
     long header;
     byte[] bytes;
     
-    public NmraNetCanFrame(long header) {
+    public OpenLcbCanFrame(long header) {
         this.header = header;
     }
             
-    public NmraNetCanFrame(long header, byte[] bytes) {
+    public OpenLcbCanFrame(long header, byte[] bytes) {
         this(header);
         if (bytes.length > 8) {
             throw new IllegalArgumentException("payload too long: "+bytes);
@@ -86,7 +86,7 @@ public class NmraNetCanFrame implements org.openlcb.can.CanFrame {
     public boolean equals(Object other) {
         // try to cast, else not equal
         try {
-            NmraNetCanFrame c = (NmraNetCanFrame) other;
+            OpenLcbCanFrame c = (OpenLcbCanFrame) other;
             if (this.header != c.header) return false;
             if (this.bytes == null && c.bytes == null) return true;
             if (this.bytes == null && c.bytes != null) return false;

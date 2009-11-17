@@ -29,7 +29,7 @@ public class CanTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(CanTest.class);
 
-        suite.addTest(NmraNetCanFrameTest.suite());
+        suite.addTest(OpenLcbCanFrameTest.suite());
         suite.addTest(NIDaTest.suite());
         suite.addTest(NIDaAlgorithmTest.suite());
 
