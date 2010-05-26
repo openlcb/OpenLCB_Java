@@ -6,6 +6,13 @@ import org.openlcb.*;
  * Example of a OpenLCB algorithm for doing configuration with
  * small number of buttons.
  *<p>
+ *<ul>
+ *<li>On learners, push blue to choose a C/P and put that C/P in learn mode 
+ * (complete cycle turns off blue light and starts over)
+ *<li>On the teaching node, push blue to choose a C/P, 
+ * push Gold to send the TeachEvent message
+ *</ul>
+ *<p>
  * This handles both "configuring" and "being configured"
  * cases. It also handles both consumers and producers
  * via working with the
@@ -20,100 +27,48 @@ import org.openlcb.*;
  */
 public class BlueGoldEngine extends MessageDecoder implements Connection {
 
-    boolean isConfigMaster = false;
-    boolean isConfigSlave = false;
     int selectedPC = -1;
     
     public void goldClick() {
-        // is click making us the master?
-        if (!isConfigMaster) {
-            sendLearnPendingMessage();
-            setGoldLightOn(true);
-            isConfigMaster = true;
-            System.out.println("enter master");
-            // reset blue selection to off end
+        if (selectedPC >= 0) {
+            // have a selected P or C
+            sendLearnEventMessage(getEventID(selectedPC));
+            setGoldLightOn(false);
+            setBlueLightOn(false);
             selectedPC = -1;
-        } 
-        // if not, we are already master, leave learn mode
-        else {
-            if (selectedPC >= 0) {
-                // have a selected P or C
-                sendLearnEventMessage(getEventID(selectedPC));
-                setGoldLightOn(false);
-                setBlueLightOn(false);
-                selectedPC = -1;
-                isConfigMaster = false;
-                System.out.println("exit master mode");
-                return;
-            } else {
-                // nothing selected, cancel
-                sendLearnCancelMessage();
-                setGoldLightOn(false);
-                setBlueLightOn(false);
-                selectedPC = -1;
-                isConfigMaster = false;
-                System.out.println("exit master mode");
-                return;
-            }
-        }
-    }
-    
-    public void blueClick() {
-        // Are we master or slave?
-        if (isConfigMaster || isConfigSlave) {
-            // yes, click updates selection
-            selectedPC++;
-            //check if wrapping
-            if (selectedPC >= producers.size()+consumers.size()) {
-                // yes, turn off light until next time
-                selectedPC = -1;
-                setBlueLightOn(false);
-            } else {
-                // no, make sure light is on
-                setBlueLightOn(true);
-            }
-            // and print for now (no GUI for this, add LEDs?)
-            System.out.println("incremented selectedPC to "+selectedPC);
+            System.out.println("send learn event");
             return;
         }
-        // else not master, ignore for now
-        else {
+    }
+
+    public void blueClick() {
+        // click updates selection
+        selectedPC++;
+        setBlueLightOn(true);
+        //check if wrapping
+        if (selectedPC >= producers.size()+consumers.size()) {
+            // yes, turn off light until next time
+            selectedPC = -1;
+            setBlueLightOn(false);
+        } else {
+            // no, make sure light is on
+            setBlueLightOn(true);
         }
+        // and print for now (no GUI for this, add LEDs?)
+        System.out.println("incremented selectedPC to "+selectedPC);
+        return;
     }
     
-    public void handleLearnPending(LearnPendingMessage msg, Connection sender){
-        // if not in master mode, enter slave mode
-        if (!isConfigMaster && !isConfigSlave) {
-            isConfigSlave = true;
-            System.out.println("enter slave mode");
-        }
-    }
-
     public void handleLearnEvent(LearnEventMessage msg, Connection sender){
-        // if in slave mode, learn and exit
-        if (isConfigSlave) {
-            // learn
-            if (selectedPC >= 0) {
-                EventID eid = msg.getEventID();
-                System.out.println("Set "+selectedPC+" to "+eid);
-                setEventID(selectedPC, eid);
-            }
-            // exit
-            isConfigSlave = false;
-            System.out.println("exit slave mode");
-            setBlueLightOn(false);
-            selectedPC = -1;
+        // learn
+        if (selectedPC >= 0) {
+            EventID eid = msg.getEventID();
+            System.out.println("Set "+selectedPC+" to "+eid);
+            setEventID(selectedPC, eid);
         }
-    }
-
-    public void handleLearnCancel(LearnCancelMessage msg, Connection sender){
-        // if in slave mode, exit
-        if (isConfigSlave) {
-            isConfigSlave = false;
-            System.out.println("exit slave mode");
-            setBlueLightOn(false);
-            selectedPC = -1;
-        }
+        // exit
+        setBlueLightOn(false);
+        selectedPC = -1;
     }
     
     //*************************************************
