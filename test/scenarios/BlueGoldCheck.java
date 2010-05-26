@@ -58,28 +58,28 @@ public class BlueGoldCheck /* extends TestCase */ {
         
         // create and connect the nodes
         producer11 = new SingleProducer(id, sg.getConnection(), 
-                                        new EventID(id, index, 1));
+                                        new EventID(id, 1, 1));
         sg.register(producer11);
         
         producer12 = new SingleProducer(id, sg.getConnection(), 
-                                        new EventID(id, index, 2));
+                                        new EventID(id, 1, 2));
         sg.register(producer12);
         
         producer13 = new SingleProducer(id, sg.getConnection(), 
-                                        new EventID(id, index, 3));
+                                        new EventID(id, 1, 3));
         sg.register(producer13);
         
         
         consumer11 = new SingleConsumer(id, sg.getConnection(), 
-                                        new EventID(id, index, 1));
+                                        new EventID(id, 0, 1));
         sg.register(consumer11);
         
         consumer12 = new SingleConsumer(id, sg.getConnection(), 
-                                        new EventID(id, index, 2));
+                                        new EventID(id, 0, 2));
         sg.register(consumer12);
         
         consumer13 = new SingleConsumer(id, sg.getConnection(), 
-                                        new EventID(id, index, 3));
+                                        new EventID(id, 0, 3));
         sg.register(consumer13);
                 
         // composite GUI
