@@ -47,14 +47,15 @@ public class BlueGoldCheck /* extends TestCase */ {
     }
     
     void createSampleNode(int index) throws Exception {
-        NodeID id = new NodeID(new byte[]{0,0,0,0,0,(byte)index});
-
+        NodeID id;
         SingleProducer producer11;
         SingleProducer producer12;
         SingleProducer producer13;
         SingleConsumer consumer11;
         SingleConsumer consumer12;
         SingleConsumer consumer13;
+
+        id = new NodeID(new byte[]{0,0,0,0,0,(byte)index});
         
         // create and connect the nodes
         producer11 = new SingleProducer(id, sg.getConnection(), 
@@ -173,6 +174,8 @@ public class BlueGoldCheck /* extends TestCase */ {
                         java.util.List<SingleProducer> producers,
                         java.util.List<SingleConsumer> consumers,
                         ScatterGather sg) {
+            this.nid = nid;
+            
             this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             buttons = new JPanel();
             buttons.setLayout(new GridLayout(2, Math.max(consumers.size(), producers.size())));
@@ -216,18 +219,58 @@ public class BlueGoldCheck /* extends TestCase */ {
             
             sg.register(engine);
             
-            blueButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    engine.blueClick();
+            blueButton.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    blueTime = System.currentTimeMillis();
+                }
+                public void mouseReleased(java.awt.event.MouseEvent e) {
+                    if (System.currentTimeMillis()-blueTime < 2000)
+                        engine.blueClick();
+                    else
+                        longBluePress();
                 }
             });
-           goldButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    engine.goldClick();
+            
+            goldButton.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    goldTime = System.currentTimeMillis();
+                }
+                public void mouseReleased(java.awt.event.MouseEvent e) {
+                    if (System.currentTimeMillis()-goldTime < 2000)
+                        engine.goldClick();
+                    else
+                        longGoldPress();
                 }
             });
         }
         
+        NodeID nid;
+        
+        /**
+         * Handle a long (greater than 2 second) press on
+         * the blue button
+         */
+        void longBluePress() {
+            // nothing
+        }
+        
+        /**
+         * Handle a long (greater than 2 second) press on
+         * the gold button
+         */
+        void longGoldPress() {
+            // reset the device
+            System.out.println("reset");
+            producers.get(0).setEventID(new EventID(nid, 1, 1));
+            producers.get(1).setEventID(new EventID(nid, 1, 2));
+            producers.get(2).setEventID(new EventID(nid, 1, 3));
+            consumers.get(0).setEventID(new EventID(nid, 0, 1));
+            consumers.get(1).setEventID(new EventID(nid, 0, 2));
+            consumers.get(2).setEventID(new EventID(nid, 0, 3));            
+        }
+        
+        long blueTime;
+        long goldTime;
         JPanel buttons;
         JButton blueButton;
         JButton goldButton;
@@ -317,7 +360,7 @@ public class BlueGoldCheck /* extends TestCase */ {
         void colorGoldOn() {
                 goldLabel.setBackground(java.awt.Color.yellow.brighter().brighter());
         }
-        ArrayList<SingleProducer> producers = new ArrayList<SingleProducer>();
+        java.util.List<SingleProducer> producers = new ArrayList<SingleProducer>();
         JPanel producerPanel = new JPanel();
         
         /**
@@ -330,7 +373,7 @@ public class BlueGoldCheck /* extends TestCase */ {
             buttons.add(new ProducerPane(name, n));
          }
 
-        ArrayList<SingleConsumer> consumers = new ArrayList<SingleConsumer>();
+        java.util.List<SingleConsumer> consumers = new ArrayList<SingleConsumer>();
         JPanel consumerPanel = new JPanel();
         
         /**
