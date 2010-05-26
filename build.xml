@@ -119,6 +119,16 @@
     </java>
   </target>
 
+  <target name="bg" depends="debug, tests" description="build and run Blue/Gold test">
+    <java classname="scenarios.BlueGoldCheck"
+          dir=".." 
+	  fork="yes" >
+       <classpath refid="project.class.path"    />
+       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+       <sysproperty key="java.library.path" path=".:lib/"/>       
+    </java>
+  </target>
+
 
   <target name="javadoc" depends="init" description="create JavaDocs">
     <javadoc packagenames="org.*, tools.*, simulations.*, scenarios.*"
