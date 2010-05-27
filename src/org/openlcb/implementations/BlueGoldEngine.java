@@ -41,6 +41,8 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
         }
     }
 
+    public void longGoldPress() {}
+    
     public void blueClick() {
         // click updates selection
         selectedPC++;
@@ -59,6 +61,8 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
         return;
     }
     
+    public void longBluePress() {}
+
     public void handleLearnEvent(LearnEventMessage msg, Connection sender){
         // learn
         if (selectedPC >= 0) {

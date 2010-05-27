@@ -76,6 +76,15 @@ public class BlueGoldExtendedEngine extends BlueGoldEngine {
         return;
     }
     
+    public void longBluePress() {
+        // reset selections, leave gold alone
+        for (int i=0; i<isSelectedPC.length; i++) {
+            isSelectedPC[i] = false;
+        }
+        selectedPC = -1;
+        setBlueLightOn(false);
+    }
+
     public void handleLearnEvent(LearnEventMessage msg, Connection sender){
         // learn
         for (int i=0; i<isSelectedPC.length; i++) {
