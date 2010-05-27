@@ -257,7 +257,9 @@ public class BlueGoldCheck /* extends TestCase */ {
          * the blue button
          */
         void longBluePress() {
-            // nothing
+            // reset selections
+            System.out.println("reset selections");
+            engine.longBluePress();
         }
         
         /**
@@ -266,7 +268,7 @@ public class BlueGoldCheck /* extends TestCase */ {
          */
         void longGoldPress() {
             // reset the device
-            System.out.println("reset");
+            System.out.println("reset device");
             producers.get(0).setEventID(new EventID(nid, 1, 1));
             producers.get(1).setEventID(new EventID(nid, 1, 2));
             producers.get(2).setEventID(new EventID(nid, 1, 3));
