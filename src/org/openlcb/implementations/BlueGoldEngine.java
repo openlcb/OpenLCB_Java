@@ -68,6 +68,7 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
         }
         // exit
         setBlueLightOn(false);
+        setGoldLightOn(false);
         selectedPC = -1;
     }
     
@@ -79,11 +80,17 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
     // Methods to be overridden in using classes
     public void setBlueLightOn(boolean f) {
     }
+    public boolean getBlueLightOn() {
+        return false;
+    }
     
     public void setBlueLightBlink(int dwell) {
     }
     
     public void setGoldLightOn(boolean f) {
+    }
+    public boolean getGoldLightOn() {
+        return false;
     }
 
     public void setGoldLightBlink(int dwell) {
@@ -120,7 +127,10 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
     }
     
     protected void sendLearnEventMessage(EventID eid) {
-        c.put(new LearnEventMessage(nid, eid), this);
+        LearnEventMessage msg = new LearnEventMessage(nid, eid);
+        c.put(msg, this);
+        // also process here
+        handleLearnEvent(msg, null);
     }
     
     EventID getEventID(int n) {

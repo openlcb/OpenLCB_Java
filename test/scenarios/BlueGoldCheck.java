@@ -198,9 +198,12 @@ public class BlueGoldCheck /* extends TestCase */ {
             setGoldOn(false);
             p1.add(goldLabel);
             
-            engine = new BlueGoldEngine(nid, sg, producers, consumers) {
+            engine = new BlueGoldExtendedEngine(nid, sg, producers, consumers) {
                 public void setBlueLightOn(boolean f) {
                     setBlueOn(f);
+                }
+                public boolean getBlueLightOn() {
+                    return blueOn;
                 }
                 
                 public void setBlueLightBlink(int dwell) {
@@ -209,6 +212,9 @@ public class BlueGoldCheck /* extends TestCase */ {
 
                 public void setGoldLightOn(boolean f) {
                     setGoldOn(f);
+                }
+                public boolean getGoldLightOn() {
+                    return goldOn;
                 }
 
                 public void setGoldLightBlink(int dwell) {
@@ -314,7 +320,7 @@ public class BlueGoldCheck /* extends TestCase */ {
             else
                 colorBlueOff();
         }
-        
+
         public void setBlueBlink(int dwell) {
             blueBlink = true;
             blueOn = true;
