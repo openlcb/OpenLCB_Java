@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Blue-Gold Demo</title>
+</head>
+<body>
+This page demonstrates the OpenLCB Blue/Gold algorithm for easily programming
+producers and consumers.
+<p>
+Press the button at the bottom to start the demonstration.
+
+<h2>An Example</h2>
+
+First, let's set the 1st producer in the 1st node to be programmed:
+<ul>
+<li>Press Blue on the 1st node once.  The blue light comes on.
+<li>Next, click Gold on the 1st node once to select the 1st producer.
+The blue light goes off.
+</ul>
+Next, select the 1st consumer on the 2nd board, and tell all selected
+producers and consumers to use its event:
+<ul>
+<li>Press Gold to indicate you want to select an event to be learned.
+The gold light comes on to indicate this.
+<li>Press Blue on the 2nd node 4 times (three for the producers, then 
+one more to get to the 1st consumer).
+<li>Press Gold again. The gold and blue lights go off.
+</ul>
+Note that the 1st producer on the 1st node is now showing the event number
+from the selected consumer.  If you press that producer, it sends its event,
+and the consumer responds.
+
+<h2>How it works</h2>
+
+Basically, the blue button selects a producer or consumer, and the 
+gold button specifies what to do with it.
+
+<p>
+To select a producer or consumer, just click the blue button the
+necessary number of times.  Clicks cycle through the producers, then 
+through the consumers, then back to no selection.
+If you lose track, just push the blue button until the light goes
+out, then start counting again.
+
+<p>
+The gold button does commands and modes.
+<ul>
+<li>Push and hold it for 3 seconds, then release, to reset the node 
+to factory defaults.
+<li>Push it after you pick a producer or consumer with blue to
+select that producer or consumer for programming.  You can
+select as many producers and consumers in a node as you'd like.
+<li>Push it before picking with the blue button to select "programming mode".
+The gold LED lights.  After you select a producer or consumer (blue LED lit),
+clicking gold again will send the corresponding event to be programmed
+into all the other selected producers and consumers, and then exit this mode
+by turning off the gold LED.
+</ul>
+
+If you've selected producers and/or consumers and want to deselect them,
+press and hold the blue button for at least three seconds. All selected
+producers and consumers on that node will be unselected.
+
+<p>
+<applet code = "scenarios.BlueGoldApplet" archive = "openlcb.jar" 
+    height="60"
+    width="300"
+/>
+</body>
+</html>
