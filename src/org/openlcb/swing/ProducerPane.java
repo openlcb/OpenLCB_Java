@@ -16,7 +16,7 @@ import org.openlcb.implementations.*;
  */
 public class ProducerPane extends JPanel  {
 
-    public ProducerPane(String name, SingleProducerNode node) throws Exception {
+    public ProducerPane(String name, SingleProducerNode node) {
         this.node = node;
 
         this.name = name;

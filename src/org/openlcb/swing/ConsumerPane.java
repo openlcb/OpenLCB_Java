@@ -20,7 +20,7 @@ public class ConsumerPane extends JPanel  {
 
     final static int DELAY = 2000;
     
-    public ConsumerPane(String name, SingleConsumerNode node) throws Exception {
+    public ConsumerPane(String name, SingleConsumerNode node) {
         this.name = name;
         if (name != null) sendLabel.setText(name);
         else sendLabel.setText(node.getEventID().toString());

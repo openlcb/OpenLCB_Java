@@ -46,7 +46,7 @@ public class MonPane extends JPanel  {
     protected JTextField entryField = new JTextField();
     protected JButton enterButton = new JButton();
 
-    final javax.swing.JFileChooser logFileChooser = new JFileChooser();
+    javax.swing.JFileChooser logFileChooser;
 
 	// for locking
 	MonPane self;
@@ -56,7 +56,7 @@ public class MonPane extends JPanel  {
     	self = this;
     }
 
-    public void initComponents() throws Exception {
+    public void initComponents() {
         // the following code sets the frame's initial state
 
         clearButton.setText("Clear screen");
@@ -158,9 +158,24 @@ public class MonPane extends JPanel  {
             });
 
         // set file chooser to a default
-        logFileChooser.setSelectedFile(new File("monitorLog.txt"));
+        setFileChooser();
+        if (logFileChooser == null) {
+            openFileChooserButton.setEnabled(false);
+            openFileChooserButton.setVisible(false);
+        }
     }
 
+    void setFileChooser() {
+        try {
+            if (logFileChooser == null) {
+                logFileChooser = new JFileChooser();
+                // set file chooser to a default
+                logFileChooser.setSelectedFile(new File("monitorLog.txt"));
+            }
+        } catch (Exception e) {
+            logFileChooser = null;
+        }
+    }
     
     public void nextLine(String line, String raw) {
         // handle display of traffic
@@ -246,7 +261,9 @@ public class MonPane extends JPanel  {
         if ( logStream==null) {  // successive clicks don't restart the file
             // start logging
             try {
-                logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()));
+                setFileChooser();
+                if  (logFileChooser != null)
+                    logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()));
             } catch (Exception ex) {
                 System.err.println("exception "+ex);
             }
@@ -263,6 +280,9 @@ public class MonPane extends JPanel  {
     }
 
     public void openFileChooserButtonActionPerformed(java.awt.event.ActionEvent e) {
+        setFileChooser();
+        if  (logFileChooser == null)
+            return;
         // start at current file, show dialog
         int retVal = logFileChooser.showSaveDialog(this);
 
