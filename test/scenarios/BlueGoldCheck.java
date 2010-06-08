@@ -251,6 +251,7 @@ public class BlueGoldCheck /* extends TestCase */ {
         }
         
         NodeID nid;
+        int resets = 0;
         
         /**
          * Handle a long (greater than 2 second) press on
@@ -267,14 +268,15 @@ public class BlueGoldCheck /* extends TestCase */ {
          * the gold button
          */
         void longGoldPress() {
+            resets++;
             // reset the device
             System.out.println("reset device");
-            producers.get(0).setEventID(new EventID(nid, 1, 1));
-            producers.get(1).setEventID(new EventID(nid, 1, 2));
-            producers.get(2).setEventID(new EventID(nid, 1, 3));
-            consumers.get(0).setEventID(new EventID(nid, 0, 1));
-            consumers.get(1).setEventID(new EventID(nid, 0, 2));
-            consumers.get(2).setEventID(new EventID(nid, 0, 3));            
+            producers.get(0).setEventID(new EventID(nid, 1, 1+resets*3));
+            producers.get(1).setEventID(new EventID(nid, 1, 2+resets*3));
+            producers.get(2).setEventID(new EventID(nid, 1, 3+resets*3));
+            consumers.get(0).setEventID(new EventID(nid, 0, 1+resets*3));
+            consumers.get(1).setEventID(new EventID(nid, 0, 2+resets*3));
+            consumers.get(2).setEventID(new EventID(nid, 0, 3+resets*3));            
         }
         
         long blueTime;
