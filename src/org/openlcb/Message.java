@@ -12,7 +12,7 @@ package org.openlcb;
  * @version $Revision$
  * @see MessageDecoder
  */
-public class Message {
+abstract public class Message implements OpenLcb {
 
     public Message(NodeID source) {
         sourceNodeID = source;
@@ -40,11 +40,15 @@ public class Message {
       * same type and content
       */
      public boolean equals(Object o) {
-        if (! this.getClass().equals(o.getClass()))
+        if (! (o instanceof Message))
             return false;
         Message msg = (Message) o;
+        if (this.getMTI() != msg.getMTI())
+            return false;
         if (! this.sourceNodeID.equals(msg.sourceNodeID))
             return false;
         return true;
      }
+     
+     abstract public int getMTI();
 }

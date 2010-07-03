@@ -18,10 +18,8 @@ public class NodeIDTest extends TestCase {
     }
 
     public void testTooLongArg() {
-        try {
-            new NodeID(new byte[]{1,2,3,4,5,6,7});
-        } catch (IllegalArgumentException e) { return; }
-        Assert.fail("Should have thrown exception");
+        // shouldn't throw, just takes 1st part
+        new NodeID(new byte[]{1,2,3,4,5,6,7});
     }
 
     public void testTooShortArg() {

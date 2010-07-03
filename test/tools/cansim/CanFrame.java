@@ -14,15 +14,15 @@ import tools.*;
 
 public class CanFrame implements org.openlcb.can.CanFrame {
 
-    long header;
+    int header;
     int[] bytes;
     
-    public CanFrame(long header) {
+    public CanFrame(int header) {
         this.bytes = null;
         this.header = header;
     }
             
-    public CanFrame(long header, int[] bytes) {
+    public CanFrame(int header, int[] bytes) {
         this(header);
         if (bytes.length > 8) {
             throw new IllegalArgumentException("payload too long: "+bytes);
@@ -30,7 +30,7 @@ public class CanFrame implements org.openlcb.can.CanFrame {
         this.bytes = bytes;
     }
     
-    public long getHeader() { return header; }
+    public int getHeader() { return header; }
     
     public boolean equals(Object other) {
         // try to cast, else not equal

@@ -43,4 +43,6 @@ public class ConsumerIdentifiedMessage extends Message {
         return getSourceNodeID().toString()
                 +" Consumer identified for "+eventID.toString();     
     }
+
+    public int getMTI() { return MTI_CONSUMER_IDENTIFIED; }
 }

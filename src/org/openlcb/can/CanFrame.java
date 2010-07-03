@@ -16,6 +16,6 @@ package org.openlcb.can;
 
 public interface CanFrame {
 
-    public long getHeader();
+    public int getHeader();
     
 }

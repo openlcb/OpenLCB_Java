@@ -3,7 +3,7 @@ package org.openlcb;
 /**
  * Verify Node ID Number message implementation
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
  */
 public class VerifyNodeIDNumberMessage extends Message {
@@ -28,4 +28,6 @@ public class VerifyNodeIDNumberMessage extends Message {
         return getSourceNodeID().toString()
                 +" PVerify Node ID number";     
     }
+
+    public int getMTI() { return MTI_VERIFY_NID; }
 }

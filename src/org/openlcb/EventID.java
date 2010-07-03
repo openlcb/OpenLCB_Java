@@ -33,6 +33,14 @@ public class EventID {
     
     byte[] contents;
     
+    public byte[] getContents() {
+        // copy to ensure immutable
+        byte[] retval = new byte[BYTECOUNT];
+        for (int i =0; i < BYTECOUNT; i++) 
+            retval[i] = contents[i];
+        return retval;
+    }
+
     public boolean equals(Object o){
         // try to cast, else not equal
         try {

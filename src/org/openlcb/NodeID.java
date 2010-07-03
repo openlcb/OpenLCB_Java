@@ -18,7 +18,7 @@ public class NodeID {
     public NodeID(byte[] contents) {
         if (contents == null)
             throw new java.lang.IllegalArgumentException("null argument invalid");
-        if (contents.length != BYTECOUNT)
+        if (contents.length < BYTECOUNT)
             throw new java.lang.IllegalArgumentException("Wrong NodeID length: "+contents.length);
         this.contents = new byte[BYTECOUNT];
         for (int i = 0; i < BYTECOUNT; i++)

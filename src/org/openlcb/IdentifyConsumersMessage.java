@@ -43,4 +43,6 @@ public class IdentifyConsumersMessage extends Message {
         return getSourceNodeID().toString()
                 +" Identify Consumers with "+eventID.toString();     
     }
+
+    public int getMTI() { return MTI_IDENTIFY_CONSUMERS; }
 }

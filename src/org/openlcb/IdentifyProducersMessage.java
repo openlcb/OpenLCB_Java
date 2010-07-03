@@ -43,4 +43,6 @@ public class IdentifyProducersMessage extends Message {
         return getSourceNodeID().toString()
                 +" Identify Producers with "+eventID.toString();     
     }
+
+    public int getMTI() { return MTI_IDENTIFY_PRODUCERS; }
 }

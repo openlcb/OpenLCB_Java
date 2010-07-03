@@ -23,4 +23,6 @@ public class DatagramMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleDatagram(this, sender);
      }
+
+    public int getMTI() { return MTI_DATAGRAM; }
 }

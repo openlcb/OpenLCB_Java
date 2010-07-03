@@ -43,4 +43,6 @@ public class StreamDataCompleteMessage extends Message {
         return getSourceNodeID().toString()
                 +" StreamDataComplete "+dest.toString();     
     }
+
+    public int getMTI() { return MTI_STREAM_DATA_COMPLETE; }
 }
