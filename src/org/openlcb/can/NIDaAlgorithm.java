@@ -8,7 +8,7 @@ import org.openlcb.*;
  * to and from the actual interface.
  * It also requires subclassing to provide a timer function.
  * 
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
  */
 public class NIDaAlgorithm {
@@ -20,9 +20,9 @@ public class NIDaAlgorithm {
     
     public OpenLcbCanFrame nextFrame() {
         OpenLcbCanFrame f;
-        if (index<6)
+        if (index<4)
             f = OpenLcbCanFrame.makeCimFrame(nida.getNIDa(), 0, 0);
-        else if (index == 6) {
+        else if (index == 4) {
             f = OpenLcbCanFrame.makeRimFrame(nida.getNIDa(), nid);
             complete = true;
         } else {
@@ -46,15 +46,16 @@ public class NIDaAlgorithm {
             // CIM or RIM with our alias
             if (complete) {
                 // complete, so alias is ours;: send RIM
-                index = 6;
+                index = 4;
             } else {
                 // reset and start over
                 index = 0;
                 cancelTimer();
-            }    nida.nextAlias();
+            }    
+            nida.nextAlias();
         } else {
             // other frame with our alias: send RIM
-            index = 6;
+            index = 4;
         }
     }
     

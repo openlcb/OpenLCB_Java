@@ -18,6 +18,16 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertTrue("not complete", !alg.isComplete());
     }
     
+    public void testAliasSequence() {
+        NIDa alg = new NIDa(new NodeID(new byte[]{2,3,4,5,6,7}));
+
+        Assert.assertEquals("proper 1st alias", (long)0x285, alg.getNIDa());
+
+        alg.nextAlias();
+        
+        Assert.assertEquals("proper 2nd alias", (long)0x6BA, alg.getNIDa());
+    }
+
     public void testFirst() {
         OpenLcbCanFrame f = alg.nextFrame();        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -27,13 +37,11 @@ public class NIDaAlgorithmTest extends TestCase {
 
     }
     
-    public void testSeventh() {
+    public void testFifth() {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
         // seventh frame is RIM
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -49,11 +57,7 @@ public class NIDaAlgorithmTest extends TestCase {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
-        // seventh frame is RIM
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
+        // fifth frame is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -80,9 +84,7 @@ public class NIDaAlgorithmTest extends TestCase {
         // inject conflict 
         alg.processFrame(OpenLcbCanFrame.makeCimFrame(f.getNodeIDa(), 0, 0));
         
-        // seventh frame after now is RIM
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
+        // fifth frame after now is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -98,9 +100,7 @@ public class NIDaAlgorithmTest extends TestCase {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
         
-        // seventh frame after start is RIM
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        Assert.assertTrue((f = alg.nextFrame()).isCIM());
+        // fifth frame after start is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -133,7 +133,7 @@ public class NIDaAlgorithmTest extends TestCase {
         f = alg1.nextFrame();
         f = alg1.nextFrame();
         
-        int expectedCount = 7;
+        int expectedCount = 5;
         int count = sequentialRunner(new NIDaAlgorithm[]{alg1, alg2}, expectedCount);
 
         debug("tSS2 converges "+count);
@@ -149,9 +149,9 @@ public class NIDaAlgorithmTest extends TestCase {
     public void testSequentialCollisionStart2() {
         // this is getting identical aliases by tricking the seed computation.
         NubNIDaAlgorithm alg1 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
-        alg1.forceSeedValue(0xAC01L);
+        alg1.forceSeedValue(0xAC01L,0L);
         NubNIDaAlgorithm alg2 = new NubNIDaAlgorithm(new NodeID(new byte[]{11,10,12,13,14,15}));
-        alg2.forceSeedValue(0xAC01L);
+        alg2.forceSeedValue(0xAC01L,0L);
         OpenLcbCanFrame f;        
 
         // check to make sure seeds are same; condition of test, not test itself
@@ -162,7 +162,7 @@ public class NIDaAlgorithmTest extends TestCase {
         f = alg1.nextFrame();
         f = alg1.nextFrame();
         
-        int expectedCount = 7;
+        int expectedCount = 5;
         int count = sequentialRunner(new NIDaAlgorithm[]{alg1, alg2}, 2*expectedCount);
 
         debug("tSCS2 converges in "+count);
@@ -205,7 +205,7 @@ public class NIDaAlgorithmTest extends TestCase {
         f = alg1.nextFrame();
         f = alg1.nextFrame();
         
-        int expectedCount = 7; // count cycles
+        int expectedCount = 5; // count cycles
         int count = sequentialRunner(algs, 2*expectedCount);
 
         debug("tSS10 converges "+count);
@@ -256,7 +256,7 @@ public class NIDaAlgorithmTest extends TestCase {
         OpenLcbCanFrame f;        
 
         // run the startup
-        int expectedCount = (6+1)*10; // count messages
+        int expectedCount = (4+1)*10; // count messages
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPS10 converges "+count);
@@ -301,7 +301,7 @@ public class NIDaAlgorithmTest extends TestCase {
                         
         // set to same seed
         for (int i = 0; i<algs.length; i++)
-            algs[i].forceSeedValue(0xAC01L);
+            algs[i].forceSeedValue(0xAC01L,0L);
             
         // this group of checks is just to make sure seeds are same
         // condition of test, not test itself
@@ -316,7 +316,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals("starting aliases same", alg1.getNIDa(), alg10.getNIDa());
         
         // run the startup
-        int expectedCount = 114; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 66; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPCS10 converges "+count);
@@ -361,7 +361,7 @@ public class NIDaAlgorithmTest extends TestCase {
 
         
         // run the startup
-        int expectedCount = 800; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 568; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPMNSN converges "+count);
@@ -449,12 +449,12 @@ public class NIDaAlgorithmTest extends TestCase {
     // Local version of classes to allow forcing identical alias, state
     class NubNIDaAlgorithm extends NIDaAlgorithm {
         public NubNIDaAlgorithm(NodeID nid) { super(nid); this.nida = new NubNIDa(nid); }
-        public void forceSeedValue(long seed) { ((NubNIDa)nida).forceSeedValue(seed); }
+        public void forceSeedValue(long seed1, long seed2) { ((NubNIDa)nida).forceSeedValue(seed1, seed2); }
         public void forceAliasValue(int alias) { ((NubNIDa)nida).forceAliasValue(alias); }
     }
     class NubNIDa extends NIDa {
         public NubNIDa(NodeID nid) { super(nid);}
-        public void forceSeedValue(long seed) { super.forceSeedValue(seed); }
+        public void forceSeedValue(long seed1, long seed2 ) { super.forceSeedValue(seed1,seed2); }
         public void forceAliasValue(int alias) { super.forceAliasValue(alias); }
     }
    
