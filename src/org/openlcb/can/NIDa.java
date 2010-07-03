@@ -9,7 +9,7 @@ import org.openlcb.*;
  * sending and receiving of CAN frames.
  *
  * 
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
  */
 public class NIDa {
@@ -43,8 +43,9 @@ public class NIDa {
      * value. In the process, it updates the alias
      * to the value implied by this seed.
      */
-    protected void forceSeedValue(long seed) {
-        reg = seed;
+    protected void forceSeedValue(long seed1, long seed2) {
+        lfsr1 = seed1;
+        lfsr2 = seed2;
         nida = computeAliasFromGenerator();
     }
 
@@ -65,40 +66,39 @@ public class NIDa {
      */
     protected void loadSeed(NodeID nid) {
         this.nid = nid;
-        byte[] id = this.nid.getContents();
+        byte[] val = this.nid.getContents();
 
-        reg =   ((id[0] & 0xff) << 40)
-              | ((id[1] & 0xff) << 32)
-              | ((id[2] & 0xff) << 24)
-              | ((id[3] & 0xff) << 16)
-              | ((id[4] & 0xff) <<  8)
-              | ((id[5] & 0xff) <<  0);
+        lfsr1 = (((long)val[0]) << 16) | (((long)val[1]) << 8) | ((long)val[2]);
+        lfsr2 = (((long)val[3]) << 16) | (((long)val[4]) << 8) | ((long)val[5]);
     }
     
     /**
      * Advance the sequence generator by one step.
      */
-    protected void stepGenerator() {
-        
-        // See H G Kuehn, CACM 8/1961
-        reg = ( (512+1)*reg + 0x1B0CA37A4BA9L)
-                & 0xFFFFFFFFFFFFL;
- }
+    protected void stepGenerator() {   
+       // step the PRNG
+       // First, form 2^9*val
+       long temp1 = ((lfsr1<<9) | ((lfsr2>>15)&0x1FF)) & 0xFFFFFF;
+       long temp2 = (lfsr2<<9) & 0xFFFFFF;
+       
+       // add
+       lfsr2 = lfsr2 + temp2 + 0x7A4BA9l;
+       lfsr1 = lfsr1 + temp1 + 0x1B0CA3l;
+       
+       // carry
+       lfsr1 = (lfsr1 & 0xFFFFFF) | ((lfsr2&0xFF000000) >> 24);
+       lfsr2 = lfsr2 & 0xFFFFFF;
+     }
 
     /**
      * Reduce the current generator value to an alias value.
      */
     protected int computeAliasFromGenerator() {
-        
-        int s1 = (int)reg&0xFFFFFF;
-        int s2 = (int)(reg>>12)&0xFFFFFF;
-        int s3 = (int)(reg>>24)&0xFFFFFF;
-        int s4 = (int)(reg>>36)&0xFFFFFF;
-        
-        return s1^s2^s3^s4;
+        return (int)(lfsr1 ^ lfsr2 ^ (lfsr1>>12) ^ (lfsr2>>12) ) & 0xFFF;
     }
 
     // Generator state register
-    long reg = 0xFFFFL;  // unsigned
+    long lfsr1 = 0; // long to act as unsigned
+    long lfsr2 = 0;
 
 }
