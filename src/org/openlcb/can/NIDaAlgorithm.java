@@ -20,10 +20,12 @@ public class NIDaAlgorithm {
     
     public OpenLcbCanFrame nextFrame() {
         OpenLcbCanFrame f;
-        if (index<4)
-            f = OpenLcbCanFrame.makeCimFrame(nida.getNIDa(), 0, 0);
-        else if (index == 4) {
-            f = OpenLcbCanFrame.makeRimFrame(nida.getNIDa(), nid);
+        if (index<4) {
+            f = new OpenLcbCanFrame(nida.getNIDa());
+            f.setCIM(index, 0, nida.getNIDa());
+        } else if (index == 4) {
+            f = new OpenLcbCanFrame(nida.getNIDa());
+            f.setRIM(nida.getNIDa());
             complete = true;
         } else {
             // send nothing
@@ -41,7 +43,7 @@ public class NIDaAlgorithm {
         // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
         //                    +" vs our "+Integer.toHexString(nida.getNIDa()));
 
-        if (f.getNodeIDa() != nida.getNIDa()) return;  // not us
+        if (f.getSourceAlias() != nida.getNIDa()) return;  // not us
         if (f.isCIM() || f.isRIM()) {
             // CIM or RIM with our alias
             if (complete) {

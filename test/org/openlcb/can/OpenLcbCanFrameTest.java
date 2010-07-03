@@ -35,70 +35,34 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue("12a not equals 13", !cf12a.equals(cf13));
     }
         
-    public void testSetTypeFieldBasic(){
-        Assert.assertEquals("0x00, CheckID ", 0x00, 
-                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.CHECKIDMESSAGE));
-        Assert.assertEquals("0x01, CheckID ", 0x01, 
-                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.CHECKIDMESSAGE));
-
-        Assert.assertEquals("0x00, ReservedID ", 0x04000000, 
-                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE));
-        Assert.assertEquals("0x01, ReservedID ", 0x04000001, 
-                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE));
-
-        Assert.assertEquals("0x00, OpenLCB message ", 0x0C000000, 
-                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
-        Assert.assertEquals("0x01, OpenLCB message ", 0x0C000001, 
-                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
-
-        Assert.assertEquals("0x00, CAN msg ", 0x08000000, 
-                OpenLcbCanFrame.setTypeField(0,OpenLcbCanFrame.TypeField.CANMESSAGE));
-        Assert.assertEquals("0x01, CAN msg ", 0x08000001, 
-                OpenLcbCanFrame.setTypeField(1,OpenLcbCanFrame.TypeField.CANMESSAGE));
-
+    public void testBasicFieldMaps(){
+        OpenLcbCanFrame f;
+        f = new OpenLcbCanFrame(0xFFF);
+        Assert.assertEquals("sourceAlias 1s", 0xFFF, f.getSourceAlias());
+        
     }
     
     public void testGetTypeField(){
         OpenLcbCanFrame c;
-        c = new OpenLcbCanFrame(
-                                OpenLcbCanFrame.setTypeField(1,
-                                    OpenLcbCanFrame.TypeField.CHECKIDMESSAGE));
-        Assert.assertEquals("CHECKIDMESSAGE", OpenLcbCanFrame.TypeField.CHECKIDMESSAGE, c.getTypeField());
               
-        c = new OpenLcbCanFrame(
-                                OpenLcbCanFrame.setTypeField(1,
-                                    OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE));
-        Assert.assertEquals("RESERVEDIDMESSAGE", OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE, c.getTypeField());
-              
-        c = new OpenLcbCanFrame(
-                                OpenLcbCanFrame.setTypeField(1,
-                                    OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE));
-        Assert.assertEquals("OPENLCBCOMMONMESSAGE", OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE, c.getTypeField());
-              
-        c = new OpenLcbCanFrame(
-                                OpenLcbCanFrame.setTypeField(1,
-                                    OpenLcbCanFrame.TypeField.CANMESSAGE));
-        Assert.assertEquals("CANMESSAGE", OpenLcbCanFrame.TypeField.CANMESSAGE, c.getTypeField());
-              
-    }
-
-    public void testTypeFieldCoding() {
-        Assert.assertEquals("count",4,  OpenLcbCanFrame.TypeField.values().length);
-        Assert.assertEquals("CHECKIDMESSAGE", 0, OpenLcbCanFrame.TypeField.CHECKIDMESSAGE.ordinal());
-        Assert.assertEquals("RESERVEDIDMESSAGE", 1, OpenLcbCanFrame.TypeField.RESERVEDIDMESSAGE.ordinal());
-        Assert.assertEquals("CANMESSAGE", 2, OpenLcbCanFrame.TypeField.CANMESSAGE.ordinal());
-        Assert.assertEquals("OPENLCBCOMMONMESSAGE", 3, OpenLcbCanFrame.TypeField.OPENLCBCOMMONMESSAGE.ordinal());
     }
     
+    public void testInitializationComplete(){
+        OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
+        f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        Assert.assertTrue("isIC", f.isInitializationComplete());         
+    }
+
     public void testMakeCim() {
-        OpenLcbCanFrame f = OpenLcbCanFrame.makeCimFrame(0, 0, 0);
+        OpenLcbCanFrame f = new OpenLcbCanFrame(123);
+        f.setCIM(1, 2, 123);
         Assert.assertTrue(f.isCIM());
         Assert.assertTrue(!f.isRIM());
     }
     
     public void testMakeRim() {
-        OpenLcbCanFrame f = OpenLcbCanFrame.makeRimFrame(0, 
-                                        new NodeID(new byte[]{10,11,12,13,14,15}));
+        OpenLcbCanFrame f = new OpenLcbCanFrame(123);
+        f.setRIM(123);
         Assert.assertTrue(!f.isCIM());
         Assert.assertTrue(f.isRIM());
     }

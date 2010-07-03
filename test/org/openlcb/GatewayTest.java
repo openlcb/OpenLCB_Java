@@ -57,7 +57,8 @@ public class GatewayTest extends TestCase {
 
     public void testEastToWest() {
         buildGateway();
-        Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}));
+        Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
+            {public int getMTI() {return 0; }};
 
         cE.put(m, tE);
         
@@ -73,7 +74,8 @@ public class GatewayTest extends TestCase {
     
     public void testWestToEast() {
         buildGateway();
-        Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}));
+        Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
+            {public int getMTI() {return 0; }};
 
         cW.put(m, tW);
         

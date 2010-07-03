@@ -32,6 +32,7 @@ public class CanTest extends TestCase {
         suite.addTest(OpenLcbCanFrameTest.suite());
         suite.addTest(NIDaTest.suite());
         suite.addTest(NIDaAlgorithmTest.suite());
+        suite.addTest(AliasMapTest.suite());
 
         return suite;
     }

@@ -52,7 +52,8 @@ public class ScatterGatherTest extends TestCase {
             void setResult() { result3 = true;}
         };
         Connection c3 = sg.getConnection();      
-        Message m = new Message(nodeID);
+        Message m = new Message(nodeID)
+            {public int getMTI() {return 0; }};
 
         sg.register(t1);
         sg.register(t2);
@@ -71,7 +72,8 @@ public class ScatterGatherTest extends TestCase {
             void setResult() { result1 = true; }
         };
         Connection c1 = sg.getConnection();      
-        Message m = new Message(nodeID);
+        Message m = new Message(nodeID)
+            {public int getMTI() {return 0; }};
 
         sg.register(t);
         c1.put(m, t);

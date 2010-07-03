@@ -47,8 +47,6 @@ public class NetTest extends TestCase {
         suite.addTest(ProducerIdentifiedMessageTest.suite());
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
         suite.addTest(VerifyNodeIDNumberMessageTest.suite());
-        suite.addTest(LearnPendingMessageTest.suite());
-        suite.addTest(LearnCancelMessageTest.suite());
         suite.addTest(LearnEventMessageTest.suite());
         
         suite.addTest(SingleLinkNodeTest.suite());

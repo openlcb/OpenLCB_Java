@@ -23,4 +23,6 @@ public class DatagramRejectedMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleDatagramRejected(this, sender);
      }
+
+    public int getMTI() { return MTI_DATAGRAM_REJECTED; }
 }

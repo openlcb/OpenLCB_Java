@@ -122,14 +122,7 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
     public void put(Message msg, Connection sender) {
         msg.applyTo(this, sender);
     }
-    
-    protected void sendLearnPendingMessage() {
-        c.put(new LearnPendingMessage(nid), this);
-    }
-    protected void sendLearnCancelMessage() {
-        c.put(new LearnCancelMessage(nid), this);
-    }
-    
+        
     protected void sendLearnEventMessage(EventID eid) {
         LearnEventMessage msg = new LearnEventMessage(nid, eid);
         c.put(msg, this);

@@ -43,4 +43,5 @@ public class ProducerConsumerEventReportMessage extends Message {
                 +" Producer/Consumer Event Report with "+eventID.toString();     
     }
     
+    public int getMTI() { return MTI_PC_EVENT_REPORT; }
 }

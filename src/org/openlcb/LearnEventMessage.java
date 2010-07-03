@@ -43,4 +43,5 @@ public class LearnEventMessage extends Message {
                 +" LearnEvent "+eventID.toString();     
     }
      
+    public int getMTI() { return MTI_LEARN_EVENT; }
 }

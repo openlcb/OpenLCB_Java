@@ -23,4 +23,6 @@ public class DatagramAcknowledgedMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleDatagramAcknowledged(this, sender);
      }
+
+    public int getMTI() { return MTI_DATAGRAM_RCV_OK; }
 }

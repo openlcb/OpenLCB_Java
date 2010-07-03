@@ -46,4 +46,6 @@ public class StreamDataSendMessage extends Message {
         return getSourceNodeID().toString()
                 +" StreamDataSend "+dest.toString();     
     }
+
+    public int getMTI() { return MTI_STREAM_DATA_SEND; }
 }

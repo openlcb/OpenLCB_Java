@@ -50,4 +50,6 @@ public class StreamInitRequestMessage extends Message {
                 +" SSID "+sourceStreamID
                 +" bsize "+bufferSize;     
     }
+
+    public int getMTI() { return MTI_STREAM_INIT_REQUEST; }
 }

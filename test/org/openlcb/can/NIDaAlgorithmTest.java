@@ -59,16 +59,27 @@ public class NIDaAlgorithmTest extends TestCase {
         
         // fifth frame is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
+        
+        OpenLcbCanFrame t = new OpenLcbCanFrame(0);
+        t.setCIM(1,0,0);
+        alg.processFrame(t);
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
+        
+        t = new OpenLcbCanFrame(0);
+        t.setCIM(1,0,0);
+        alg.processFrame(t);
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
+        
+        t = new OpenLcbCanFrame(0);
+        t.setCIM(1,0,0);
+        alg.processFrame(t);
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
+        
+        t = new OpenLcbCanFrame(0);
+        t.setCIM(1,0,0);
+        alg.processFrame(t);
         Assert.assertTrue((f = alg.nextFrame()).isRIM());
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(1, 0, 0));
-    
+            
         Assert.assertTrue("complete", alg.isComplete());
 
         Assert.assertEquals((f = alg.nextFrame()), null);
@@ -82,7 +93,9 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
 
         // inject conflict 
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(f.getNodeIDa(), 0, 0));
+        OpenLcbCanFrame t = new OpenLcbCanFrame(f.getSourceAlias());
+        t.setCIM(0, 0, f.getSourceAlias());
+        alg.processFrame(t);
         
         // fifth frame after now is RIM
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
@@ -106,13 +119,15 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isCIM());
         Assert.assertTrue((f = alg.nextFrame()).isRIM());
-        int nida = f.getNodeIDa();
+        int nida = f.getSourceAlias();
         Assert.assertTrue("complete", alg.isComplete());
 
         Assert.assertEquals((f = alg.nextFrame()), null);
 
         // inject conflict 
-        alg.processFrame(OpenLcbCanFrame.makeCimFrame(nida, 0, 0));
+        OpenLcbCanFrame t = new OpenLcbCanFrame(nida);
+        t.setCIM(0, 0, nida);
+        alg.processFrame(t);
 
         // still active
         Assert.assertTrue("complete", alg.isComplete());
@@ -316,7 +331,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals("starting aliases same", alg1.getNIDa(), alg10.getNIDa());
         
         // run the startup
-        int expectedCount = 66; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 64; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPCS10 converges "+count);
@@ -361,7 +376,7 @@ public class NIDaAlgorithmTest extends TestCase {
 
         
         // run the startup
-        int expectedCount = 568; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 537; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2*expectedCount);
 
         debug("tPMNSN converges "+count);

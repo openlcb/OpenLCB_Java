@@ -45,4 +45,6 @@ public class StreamDataProceedMessage extends Message {
         return getSourceNodeID().toString()
                 +" StreamDataProceed "+dest.toString();     
     }
+
+    public int getMTI() { return MTI_STREAM_DATA_PROCEED; }
 }

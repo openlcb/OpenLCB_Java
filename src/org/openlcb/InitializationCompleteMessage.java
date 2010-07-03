@@ -27,4 +27,6 @@ public class InitializationCompleteMessage extends Message {
         return getSourceNodeID().toString()
                 +" Initialization Complete";    
     }
+
+    public int getMTI() { return MTI_INITIALIZATION_COMPLETE; }
 }

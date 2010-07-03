@@ -27,4 +27,6 @@ public class VerifiedNodeIDNumberMessage extends Message {
         return getSourceNodeID().toString()
                 +" Verified Node ID Number";     
     }
+
+    public int getMTI() { return MTI_VERIFIED_NID; }
 }

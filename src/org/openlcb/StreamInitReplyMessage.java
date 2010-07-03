@@ -54,4 +54,6 @@ public class StreamInitReplyMessage extends Message {
                 +" DSID "+destStreamID
                 +" bsize "+bufferSize;     
     }
+
+    public int getMTI() { return MTI_STREAM_INIT_REPLY; }
 }

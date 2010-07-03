@@ -27,4 +27,6 @@ public class IdentifyEventsMessage extends Message {
         return getSourceNodeID().toString()
                 +" Identify Events ";   
     }
+
+    public int getMTI() { return MTI_IDENTIFY_EVENTS; }
 }
