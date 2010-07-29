@@ -8,7 +8,7 @@ import org.openlcb.*;
  * For definiton, see
  * http://openlcb.sf.net/trunk/documents/can/index.html
  *
- * Bit 0 of the frame is 0x10000000
+ * Bit 0 of the frame is in the 0x10000000 position.
  *
  * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
