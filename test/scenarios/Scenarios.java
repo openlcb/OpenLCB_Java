@@ -39,6 +39,7 @@ public class Scenarios extends TestCase {
         
         suite.addTest(TwoBuses.suite());
         suite.addTest(TwoBusesFiltered.suite());
+        suite.addTest(ThreeBuses.suite());
 
         suite.addTest(scenarios.can.CanScenarios.suite());
 
