@@ -1,14 +1,14 @@
 package org.openlcb;
 
 /**
- * Base for all NRMAnet message types
+ * Base for all OpenLCB message types
  *<p>
  * Messages (and therefore all subtypes) are immutable once created.
  *<p>
  * A Message works with a {@link MessageDecoder} object in a double dispatch
  * pattern to do message specific-processing in e.g. a node implementation.
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
  * @see MessageDecoder
  */
