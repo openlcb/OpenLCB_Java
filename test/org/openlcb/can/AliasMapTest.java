@@ -30,6 +30,13 @@ public class AliasMapTest extends TestCase {
         Assert.assertEquals("check NodeID", new NodeID(new byte[]{0,1,2,3,4,5}), map.getNodeID(0x123));
     }
     
+    public void testAfterInsert() {
+        AliasMap map = new AliasMap();
+        
+        map.insert(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        Assert.assertEquals("check NodeID", new NodeID(new byte[]{0,1,2,3,4,5}), map.getNodeID(0x123));
+    }
+    
     // from here down is testing infrastructure
     
     public AliasMapTest(String s) {

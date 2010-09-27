@@ -22,9 +22,13 @@ public class AliasMap {
         if (f.isInitializationComplete()) {
             Integer alias = new Integer(f.getSourceAlias());
             NodeID nid = f.getNodeID();
-            nMap.put(alias, nid);
-            iMap.put(nid, alias);
+            insert(alias, nid);
         }
+    }
+    
+    public void insert(int alias, NodeID nid) {
+        nMap.put(alias, nid);
+        iMap.put(nid, alias);
     }
     
     public NodeID getNodeID(int alias) {
