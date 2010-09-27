@@ -1,7 +1,7 @@
 package org.openlcb;
 
 /**
- * Default base for NRMAnet node implementations.
+ * Default base for OpenLCB node implementations.
  * <p>
  * Provides a Connection for incoming Messages.
  *

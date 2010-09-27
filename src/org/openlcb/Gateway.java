@@ -1,7 +1,7 @@
 package org.openlcb;
 
 /**
- * Base for NRMAnet gateway implementations.
+ * Base for OpenLCB gateway implementations.
  *<p>
  * Provides two connections, called "East" and "West"
  *
