@@ -31,6 +31,10 @@ public class CanFrame implements org.openlcb.can.CanFrame {
     }
     
     public int getHeader() { return header; }
+    public boolean isExtended() { return true; }    
+    public boolean isRtr() { return false; }
+    public int getNumDataElements() { return bytes.length; }
+    public int getElement(int n) { return bytes[n]; }
     
     public boolean equals(Object other) {
         // try to cast, else not equal

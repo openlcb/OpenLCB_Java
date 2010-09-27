@@ -2,14 +2,11 @@ package org.openlcb.can;
 
 
 /**
- * Very, very simple interface for a CAN frame.
- *
- * This is mostly here to make it possible to (later) 
- * move to an implementation class that's hardware specific.
+ * Simple interface for a CAN frame.
  *
  * Immutable once created.
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010
  * @version $Revision$
  */
 
@@ -18,4 +15,11 @@ public interface CanFrame {
 
     public int getHeader();
     
+    public boolean isExtended();
+    
+    public boolean isRtr();
+    
+    public int getNumDataElements();
+    public int getElement(int n);
+
 }
