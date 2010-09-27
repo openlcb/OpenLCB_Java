@@ -3,28 +3,34 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>OpenLCB: Java Prototypes Directory</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Unix)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.2  (Unix)">
 	<META NAME="CREATED" CONTENT="0;0">
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
-	<META NAME="CHANGED" CONTENT="20090819;5410400">
+	<META NAME="CHANGED" CONTENT="20100927;12330100">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
 	<META NAME="Info 4" CONTENT="">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
 	<!-- $Id$ -->
+	<STYLE TYPE="text/css">
+	<!--
+		H2.ctl { font-family: "Lucida Sans" }
+	-->
+	</STYLE>
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
-<H1><IMG SRC="../../web/logo-ajs-dph.png" NAME="OpenLCB" ALIGN=RIGHT WIDTH=344 HEIGHT=142 BORDER=0>
-OpenLCB Proposal Java Prototypes Directory</H1>
+<H1><IMG SRC="../../web/logo-ajs-dph.png" NAME="OpenLCB" ALIGN=RIGHT WIDTH=344 HEIGHT=142 BORDER=0>OpenLCB
+Proposal Java Prototypes Directory</H1>
 <P>This directory contains prototype implementation(s) in Java of the
 proposed OpenLCB specification. 
 </P>
 <P>These are primarily intended for testing proposed algorithms, not
 as a first implementation for use. 
 </P>
-<a href="BlueGoldApplet.html">Applet demonstration</a>
-of Blue/Gold configuration.
-
+<P><A HREF="BlueGoldApplet.html">Applet demonstration</A> of
+Blue/Gold configuration. 
+</P>
 <P>Major subdirectories:</P>
 <DL>
 	<DT><A HREF="src">src</A> 
@@ -32,7 +38,7 @@ of Blue/Gold configuration.
 	Contains OpenLCB source in the org.openlcb package, and source for
 	OpenLCB CAN wire protocol in the org.openlcb.can package. 
 	</DD><DT>
-	<A HREF="test">test</A>
+	<A HREF="test">test</A> 
 	</DT><DD STYLE="margin-bottom: 0.5cm">
 	contains test code of several types in subpackages: 
 	</DD></DL>
@@ -49,7 +55,7 @@ a TCP/IP link and filtering gateways. The OpenLCB implementation is
 tested to make sure that P/C event reports are properly routed to
 nodes needing them, event reports are not routed when not needed,
 etc.</P>
-<H2>Building and Running</H2>
+<H2 CLASS="western">Building and Running</H2>
 <P>Java 1.5 and Ant are the standard way to build and run this code.</P>
 <PRE STYLE="margin-bottom: 0.5cm">ant run</PRE><P>
 will do any needed compilations and run the complete set of tests
@@ -61,11 +67,14 @@ using the JUnit GUI.</P>
 a good idea)</P>
 <P>To create an openlcb.jar file containing the currently compiled
 code,</P>
-<PRE>ant jar
-</PRE><P>
+<PRE STYLE="margin-bottom: 0.5cm">ant jar</PRE><P>
 Note that you might want to do an “ant clean debug” first so only
 the prototype classes are put in the jar, and the test code is
 omitted.</P>
+<H2 CLASS="western">License</H2>
+<P>All of the software in this directory and linked from this page is
+copyrighted by its authors.  You many only use it subject to its
+<A href="../../../Licensing.html">license</a>.</P>
 <P><BR><BR>
 </P>
 </BODY>
