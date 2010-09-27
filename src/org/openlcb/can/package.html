@@ -33,6 +33,15 @@ quantities that must be at least 32 bits. Since Java does
 not have an "unsigned" modifier, we add that as a comment
 on appropriate declarations.
 
+<p>
+The OpenLcbCanFrame class centralizes
+the frame formatting and in most cases deformatting
+specific CAN frame contents to numbers and other values.
+
+<p>
+The connection between the {@link org.openlcb} message classes
+(e.g. {@link org.openlcb.VerifiedNodeIDNumberMessage} et al)
+and CAN frames is through the MessageBuilder class.
 
 <h2>Related Documentation</h2>
 

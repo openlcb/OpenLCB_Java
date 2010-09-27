@@ -1,8 +1,6 @@
-List of tests and simulations you can run:
+See the index.hmtl file for more information.
 
-./runtest.csh NodeIDCollisions
-    Various probability calculations
+This software is copyrighted and is subject to 
+license. For more information, see
 
-ant run
-    full test suite
-    
+http://openlcb.org/Licensing.html
