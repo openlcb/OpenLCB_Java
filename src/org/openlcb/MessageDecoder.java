@@ -21,6 +21,9 @@ public class MessageDecoder implements Connection {
      * Base implementation refers 
      * back to message to implement its
      * own specific type.
+     * @param msg Input to be processed by type
+     * @param sender Passed through for specific message processing,
+     * e.g. to send a reply back to the originator
      */
     public void put(Message msg, Connection sender) {
         msg.applyTo(this, sender);
