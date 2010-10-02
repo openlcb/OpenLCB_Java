@@ -143,7 +143,10 @@ public class MessageBuilder {
          * Handle "Initialization Complete" message
          */
         public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setInitializationComplete(map.getAlias(msg.getSourceNodeID()), msg.getSourceNodeID());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Verified Node ID Number" message
