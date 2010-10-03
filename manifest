@@ -4,9 +4,9 @@ Class-Path: lib/junit.jar
 
 Name: org.openlcb
 Specification-Title: “OpenLCB”
-Specification-Version: “0.2”
+Specification-Version: “0.3”
 Specification-Vendor: “OpenLCB group"
 Package-Title: “openlcb”
-Package-Version: “0.2”
+Package-Version: “0.3”
 Package-Vendor: “OpenLCB group”
  
