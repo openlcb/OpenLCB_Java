@@ -217,6 +217,12 @@ public class OpenLcbCanFrame implements CanFrame, OpenLcbCan {
       return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_VERIFY_NID);
   }
 
+  void setVerifyNID(NodeID nid) {
+    init(nodeAlias);
+    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_VERIFY_NID);
+    length=0;
+  }
+
   void setVerifiedNID(NodeID nid) {
     init(nodeAlias);
     setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_VERIFIED_NID);
