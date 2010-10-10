@@ -19,7 +19,7 @@ abstract public class Message implements OpenLcb {
     }
     
     // cannot create without sourceID
-    private Message() {}
+    protected Message() {}
     
     NodeID sourceNodeID;
     

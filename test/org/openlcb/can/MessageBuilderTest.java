@@ -39,11 +39,25 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [190AF123] 01 02 03 04 05 06
+        // looking for [190AF123]
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
         Assert.assertEquals("header", toHexString(0x190af123), toHexString(f0.getHeader()));
+        compareContent(null, f0);
+    }
+    public void testVerifiedNodeIDNumberMessage() {
+        
+        Message m = new VerifiedNodeIDNumberMessage(source);
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+        
+        // looking for [190BF123] 01 02 03 04 05 06
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x190bf123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
 
@@ -54,29 +68,12 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [192df123] 11 12 13 14 15 16 17 18
+        // looking for [182df123] 11 12 13 14 15 16 17 18
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x192Df123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x182Df123), toHexString(f0.getHeader()));
         compareContent(event.getContents(), f0);
-    }
-
-    // not a high priority itself, but this shows
-    // handling of destination address
-    public void testStreamInitRequestMessage() {
-        int bufferSize = 1024;
-        int sourceStreamID = 7;
-        Message m = new StreamInitRequestMessage(source, destination, bufferSize, sourceStreamID);
-        MessageBuilder b = new MessageBuilder(map);
-        
-        List<OpenLcbCanFrame> list = b.processMessage(m);
-                
-        Assert.assertEquals("count", 1, list.size()); 
-        CanFrame f0 = list.get(0);
-
-        Assert.assertEquals("header", toHexString(0x1E321123), toHexString(f0.getHeader()));
-        compareContent(null, f0);  // known to be wrong
     }
 
     public void testDatagramMessageShort() {
@@ -89,8 +86,22 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
 
-        Assert.assertEquals("header", toHexString(0x1C321123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x1D321123), toHexString(f0.getHeader()));
         compareContent(new byte[]{21,22,23}, f0);
+    }
+
+    public void testDatagramMessageEight() {
+        int[] data = new int[]{21,22,23,24,25,26,27,28};
+        Message m = new DatagramMessage(source, destination, data);
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        CanFrame f0 = list.get(0);
+
+        Assert.assertEquals("header", toHexString(0x1D321123), toHexString(f0.getHeader()));
+        compareContent(new byte[]{21,22,23,24,25,26,27,28}, f0);
     }
 
     public void testDatagramMessageTwoFrame() {
@@ -102,16 +113,37 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for ??
         
-        Assert.assertEquals("count", 1, list.size()); 
+        Assert.assertEquals("count", 2, list.size()); 
 
         CanFrame f0 = list.get(0);
+        Assert.assertEquals("f0 header", toHexString(0x1C321123), toHexString(f0.getHeader()));
         compareContent(new byte[]{21,22,23,24,25,26,27,28}, f0);
 
         CanFrame f1 = list.get(1);
         Assert.assertEquals("f1 header", toHexString(0x1D321123), toHexString(f1.getHeader()));
         compareContent(new byte[]{31,32,33,34,35,36,37,38}, f1);
+    }
+
+    public void testDatagramMessageNine() {
+        int[] data = new int[]{21,22,23,24,25,26,27,28, 
+                               31};
+                               
+        Message m = new DatagramMessage(source, destination, data);
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+        
+        
+        Assert.assertEquals("count", 2, list.size()); 
+
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("f0 header", toHexString(0x1C321123), toHexString(f0.getHeader()));
+        compareContent(new byte[]{21,22,23,24,25,26,27,28}, f0);
+
+        CanFrame f1 = list.get(1);
+        Assert.assertEquals("f1 header", toHexString(0x1D321123), toHexString(f1.getHeader()));
+        compareContent(new byte[]{31}, f1);
     }
 
     // from here down is testing infrastructure

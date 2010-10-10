@@ -302,6 +302,21 @@ public class OpenLcbCanFrame implements CanFrame, OpenLcbCan {
       return (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_LAST);
   }
 
+    /**
+     * create a single datagram frame
+     */
+  void setDatagram(int[] content, int destAlias, boolean last) {
+    init(nodeAlias);
+    if (!last) {
+        setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM,destAlias);
+    } else {
+        setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_LAST,destAlias);
+    }
+    length=content.length;
+    for (int i = 0; i< content.length; i++) {
+        data[i] = (byte)(content[i]&0xFF);
+    }
+  }
 
     public boolean equals(Object other) {
         // try to cast, else not equal

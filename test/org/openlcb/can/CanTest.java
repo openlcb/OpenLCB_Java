@@ -30,6 +30,7 @@ public class CanTest extends TestCase {
         TestSuite suite = new TestSuite(CanTest.class);
 
         suite.addTest(OpenLcbCanFrameTest.suite());
+        suite.addTest(MessageBuilderTest.suite());
         suite.addTest(NIDaTest.suite());
         suite.addTest(NIDaAlgorithmTest.suite());
         suite.addTest(AliasMapTest.suite());
