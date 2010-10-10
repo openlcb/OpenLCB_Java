@@ -152,14 +152,17 @@ public class MessageBuilder {
          * Handle "Verified Node ID Number" message
          */
         public void handleVerifiedNodeIDNumber(VerifiedNodeIDNumberMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setVerifiedNID(msg.getSourceNodeID());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Verify Node ID Number" message
          */
         public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setVerifiedNID(msg.getSourceNodeID());
+            f.setVerifyNID(msg.getSourceNodeID());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
