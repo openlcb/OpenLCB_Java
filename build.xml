@@ -34,6 +34,7 @@
   <path id="project.class.path">
     <pathelement location="." />
     <pathelement location="lib/junit.jar" />
+    <pathelement location="lib/jdom.jar" />
     <pathelement location="/System/Library/Java" /> <!-- MacOS X -->
     <pathelement location="${target}/" />  <!-- last to check for name collisions -->
   </path>
@@ -150,8 +151,15 @@
     </javadoc>
   </target>
 
-  <target name="jar" description="create working jar file with current contents">
+  <target name="jars" description="create working jar files with current contents">
+    <antcall target="clean" />
+    <antcall target="debug" />
     <jar jarfile="${jartarget}/openlcb.jar" 
+         basedir="${target}"
+         manifest="manifest" 
+         compress="true" />   <!-- compress="true" is default -->
+    <antcall target="tests" />
+    <jar jarfile="${jartarget}/openlcb-demo.jar" 
          basedir="${target}"
          manifest="manifest" 
          compress="true" />   <!-- compress="true" is default -->
