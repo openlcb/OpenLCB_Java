@@ -97,7 +97,7 @@ public class JdomCdiRepTest extends TestCase {
         
         java.util.List<CdiRep.Item> items = segment.getItems();
         Assert.assertNotNull(items);
-        Assert.assertEquals("contents length",3,items.size());
+        Assert.assertEquals("contents length",4,items.size());
     }
 
     public JdomCdiRepTest(String s) {
