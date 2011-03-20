@@ -134,7 +134,27 @@
   </target>
 
 
-  <target name="javadoc" depends="init" description="create JavaDocs">
+  <target name="javadoc" depends="init" description="create JavaDoc for prototype code, omitting tests">
+    <javadoc packagenames="org.*"
+           maxmemory="512m"
+           sourcepath="${source}"
+           overview="src/overview.html"
+           defaultexcludes="yes"
+           destdir="${doctarget}"
+           additionalparam="-breakiterator"
+           author="true"
+           version="false"
+           use="true"
+           windowtitle="OpenLCB">
+      <group title="Core" packages="org.openlcb"/>
+	  
+      <classpath refid="project.class.path"    />
+      <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
+      <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
+    </javadoc>
+  </target>
+
+  <target name="javadocall" depends="init" description="create JavaDoc for all code including tests">
     <javadoc packagenames="org.*, tools.*, simulations.*, scenarios.*"
            maxmemory="512m"
            sourcepath="${source}:${test}"
