@@ -1,0 +1,41 @@
+/**
+CAN-specific OpenLCB functionality.
+
+<p>
+This package does not provide a CAN implementation; that's 
+to be done in a device-specific way elsewhere.
+
+<p>
+For testing purposes, that implementation is currently
+taken from the {@link tools.cansim} package.
+
+<p>
+Although Java guarantees that an int is 32 bits and a long
+is 64 bits, we want this code to be easy to translate to other
+languages (e.g. C) and smaller processors.  We therefore use int for 
+quantities that must be at least 16 bits, and long for 
+quantities that must be at least 32 bits. Since Java does
+not have an "unsigned" modifier, we add that as a comment
+on appropriate declarations.
+
+<p>
+The OpenLcbCanFrame class centralizes
+the frame formatting and in most cases deformatting
+specific CAN frame contents to numbers and other values.
+
+<p>
+The connection between the {@link org.openlcb} message classes
+(e.g. {@link org.openlcb.VerifiedNodeIDNumberMessage} et al)
+and CAN frames is through the MessageBuilder class.
+
+<h2>Related Documentation</h2>
+
+
+(Pointers to CAN info)
+
+<!-- Put @see and @since tags down here. -->
+<!-- @since 1.2.3 -->
+
+@see tools.cansim
+*/
+package org.openlcb.can;
