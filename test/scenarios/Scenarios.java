@@ -20,6 +20,11 @@ public class Scenarios extends TestCase {
         BlueGoldCheck.runTest();
     }
     
+    // ConfigDemoApplet not JUnit so can run standalone
+    public void testConfigDemoApplet() throws Exception {
+        ConfigDemoApplet.runTest();
+    }
+
     // from here down is testing infrastructure
     
     public Scenarios(String s) {
@@ -43,7 +48,7 @@ public class Scenarios extends TestCase {
 
         suite.addTest(scenarios.can.CanScenarios.suite());
 
-        // BlueGoldCheck done above
+        // Applets done above
         
         return suite;
     }

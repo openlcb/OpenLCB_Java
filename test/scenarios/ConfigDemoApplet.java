@@ -3,6 +3,7 @@ package scenarios;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 import org.openlcb.swing.*;
+import org.openlcb.cdi.swing.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,15 +48,28 @@ public class ConfigDemoApplet extends JApplet {
         
         JFrame f = new JFrame();
         f.setTitle("Configuration Demonstration");
-        JPanel m = new JPanel();
+        CdiPanel m = new CdiPanel();
+        m.initComponents();
+        m.loadCDI(
+            new org.openlcb.cdi.jdom.JdomCdiRep(
+                org.openlcb.cdi.jdom.SampleFactory.getBasicSample()
+            )
+        );
+        
         f.add( m );
 
-        // read and fill
-        JTextArea t = new JTextArea();
-        m.add(t);
-        
-        Element elem = new Element("Foo");
-        
+        // show
+        f.pack();
+        f.setVisible(true);
+    }
+    
+
+    // frame starting positions
+    int hPos = 500;
+    int vPos = 0;
+
+    // load content
+    void loadSample(JTextArea t) {
         // get content
         try {
             // Create a URL for the desired page
@@ -75,15 +89,17 @@ public class ConfigDemoApplet extends JApplet {
         } catch (IOException e) {
             System.err.println("IOException: "+e);
         }
-        
-        // show
-        f.pack();
-        f.setVisible(true);
     }
     
+    // For running as a JUnit test
+    static public void runTest() {
+        ConfigDemoApplet app = new ConfigDemoApplet();
+        app.start();
+        app.startDemo();
+    }
+    // Main entry point for standalone run
+    static public void main(String[] args) {
+        runTest();
+    }
 
-    // frame starting positions
-    int hPos = 500;
-    int vPos = 0;
-         
 }
