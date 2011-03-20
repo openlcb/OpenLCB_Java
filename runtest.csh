@@ -12,5 +12,5 @@ java -noverify \
     -Dapple.laf.useScreenMenuBar=true \
     -Dlog4j.ignoreTCL=true \
     -Djava.library.path=.:lib/ \
-    -cp .:classes:lib/junit.jar:lib/jdom.jar \
+    -cp .:classes:lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar \
     $1 $2 $3

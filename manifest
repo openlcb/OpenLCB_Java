@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: scenarios.BlueGoldCheck
-Class-Path: lib/junit.jar lib/jdom.jar
+Class-Path: lib/junit.jar lib/jdom.jar lib/jlfgr-1_0.jar
 
 Name: org.openlcb
 Specification-Title: ÒOpenLCBÓ
