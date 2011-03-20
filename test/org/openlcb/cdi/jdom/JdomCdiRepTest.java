@@ -20,15 +20,15 @@ public class JdomCdiRepTest extends TestCase {
     }
     
     public void testGetIdent() {
-        CdiRep rep = new JdomCdiRep(getSample());
+        CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
         CdiRep.Identification id = rep.getIdentification();
         Assert.assertNotNull(id);
         
-        Assert.assertEquals("mfg", "mfg1", id.getManufacturer());
-        Assert.assertEquals("model", "mod1", id.getModel());
-        Assert.assertEquals("hardware", "hard1", id.getHardwareVersion());
-        Assert.assertEquals("software", "soft1", id.getSoftwareVersion());
+        Assert.assertEquals("mfg", "OpenLCB Prototype", id.getManufacturer());
+        Assert.assertEquals("model", "Basic sketch", id.getModel());
+        Assert.assertEquals("hardware", "Arduino (any)", id.getHardwareVersion());
+        Assert.assertEquals("software", "0.4", id.getSoftwareVersion());
     }
     
     public void testMap() {
@@ -64,7 +64,7 @@ public class JdomCdiRepTest extends TestCase {
     }
     
     public void testSegments() {
-        CdiRep rep = new JdomCdiRep(getSample());
+        CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
         java.util.List list = rep.getSegments();
         
@@ -73,37 +73,33 @@ public class JdomCdiRepTest extends TestCase {
         CdiRep.Segment segment;
         segment = (CdiRep.Segment)list.get(0);
         Assert.assertNotNull(segment);
-        Assert.assertEquals("space", 2, segment.getSpace());
+        Assert.assertEquals("space", 0, segment.getSpace());
+        Assert.assertEquals("name", "Content", segment.getName());
+        Assert.assertEquals("description", "Variables for controlling general operation", segment.getDescription());
         
         segment = (CdiRep.Segment)list.get(1);
         Assert.assertNotNull(segment);
-        Assert.assertEquals("space", 0, segment.getSpace());
+        Assert.assertEquals("space", 1, segment.getSpace());
+        Assert.assertEquals("name", "Resets", segment.getName());
+        Assert.assertEquals("description", "Memory locations controlling resets", segment.getDescription());
     }
-    
-    // from here down is testing infrastructure
-    
-    Element getSample() {
-        Element root = new Element("cdi");
         
-        root.addContent(
-            new Element("identification")
-                .addContent(new Element("manufacturer").addContent("mfg1"))
-                .addContent(new Element("model").addContent("mod1"))
-                .addContent(new Element("hardwareVersion").addContent("hard1"))
-                .addContent(new Element("softwareVersion").addContent("soft1"))
-        );
+    public void testGroupsInSegments() {
+        CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
-        root.addContent(
-            new Element("segment").setAttribute("space","2")
-        );
-
-        root.addContent(
-            new Element("segment")
-        );
-
-        return root;
+        java.util.List list = rep.getSegments();
+        
+        Assert.assertEquals("len", 2, list.size());
+        
+        CdiRep.Segment segment;
+        segment = (CdiRep.Segment)list.get(0);
+        Assert.assertNotNull(segment);
+        
+        java.util.List<CdiRep.Item> items = segment.getItems();
+        Assert.assertNotNull(items);
+        Assert.assertEquals("contents length",3,items.size());
     }
-    
+
     public JdomCdiRepTest(String s) {
         super(s);
     }
