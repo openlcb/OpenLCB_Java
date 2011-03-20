@@ -56,6 +56,7 @@ public class NetTest extends TestCase {
         // test implementation classes
         suite.addTest(org.openlcb.implementations.ImplementationsTest.suite());
         suite.addTest(org.openlcb.swing.SwingTest.suite());
+        suite.addTest(org.openlcb.cdi.PackageTest.suite());
         
         // test CAN classes
         suite.addTest(org.openlcb.can.CanTest.suite());
