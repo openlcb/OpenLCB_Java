@@ -34,6 +34,7 @@ public class CdiPanel extends JPanel {
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.setAlignmentY(Component.TOP_ALIGNMENT);
         //p.setBorder(BorderFactory.createTitledBorder("Identification"));
 
         CdiRep.Identification id = c.getIdentification();
@@ -58,8 +59,9 @@ public class CdiPanel extends JPanel {
         JPanel p2 = createPropertyPane(id.getMap());
         if (p2!=null) p.add(p2);
         
-        return new util.CollapsiblePanel("Identification", p);
-
+        JPanel ret = new util.CollapsiblePanel("Identification", p);
+        ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        return ret;
     }
     
     JPanel createPropertyPane(CdiRep.Map map) {
@@ -88,6 +90,7 @@ public class CdiPanel extends JPanel {
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.setAlignmentY(Component.TOP_ALIGNMENT);
         String name = "Segment"+(item.getName()!=null?(": "+item.getName()):"");
         //p.setBorder(BorderFactory.createTitledBorder(name));
 
@@ -110,7 +113,9 @@ public class CdiPanel extends JPanel {
             }
         }
         
-        return new util.CollapsiblePanel(name, p);
+        JPanel ret = new util.CollapsiblePanel(name, p);
+        ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        return ret;
     }
 
     JPanel createDescriptionPane(String d) {
