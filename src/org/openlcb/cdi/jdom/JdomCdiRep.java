@@ -55,9 +55,9 @@ public class JdomCdiRep implements CdiRep {
         return new Identification(id);
     }
 
-    public java.util.List getSegments() {
+    public java.util.List<CdiRep.Segment> getSegments() {
         java.util.List list = root.getChildren("segment");
-        java.util.ArrayList result = new java.util.ArrayList();
+        java.util.ArrayList<CdiRep.Segment> result = new java.util.ArrayList<CdiRep.Segment>();
         for (int i = 0; i<list.size(); i++) {
             result.add(new Segment((Element)list.get(i)));
         }
@@ -68,7 +68,35 @@ public class JdomCdiRep implements CdiRep {
      * Comment implementation of finding the list of contained Items
      */
     static class Nested {
-        public java.util.List<CdiRep.Item> getItems() { return null; }
+        public String getName() { 
+            Element d = e.getChild("name");
+            if (d==null) return null;
+            return d.getText();
+        }
+        public String getDescription() { 
+            Element d = e.getChild("description");
+            if (d==null) return null;
+            return d.getText();
+        }
+        public Map getMap() {
+            return new Map(e.getChild("map"));
+        }
+        
+        public java.util.List<CdiRep.Item> getItems() {
+            java.util.List<CdiRep.Item> list = new java.util.ArrayList<CdiRep.Item>();
+            if (e == null) return list;
+            java.util.List elements = e.getChildren();
+            for (int i = 0; i<elements.size(); i++) {
+                // some elements aren't contained items
+                Element element = (Element)elements.get(i);
+                if ("group".equals(element.getName())) list.add(new Group(element));
+                else if ("bit".equals(element.getName())) list.add(new Bit(element));
+                else if ("int".equals(element.getName())) list.add(new Int(element));
+                else if ("eventid".equals(element.getName())) list.add(new EventID(element));
+            }
+            return list;
+        }
+        
         Nested(Element e) { this.e = e; }
         Element e;
     }
@@ -101,9 +129,21 @@ public class JdomCdiRep implements CdiRep {
         
         public java.util.List<String> getKeys() {
             java.util.ArrayList<String> list = new java.util.ArrayList<String>();
+            if (map == null) return list;
             java.util.List relations = map.getChildren("relation");
+            if (relations == null) return list;
             for (int i = 0; i<relations.size(); i++) {
                 list.add(((Element)relations.get(i)).getChild("property").getText());
+            }
+            return list;
+        }
+        public java.util.List<String> getValues() {
+            java.util.ArrayList<String> list = new java.util.ArrayList<String>();
+            if (map == null) return list;
+            java.util.List relations = map.getChildren("relation");
+            if (relations == null) return list;
+            for (int i = 0; i<relations.size(); i++) {
+                list.add(((Element)relations.get(i)).getChild("value").getText());
             }
             return list;
         }
@@ -112,8 +152,16 @@ public class JdomCdiRep implements CdiRep {
     }
 
     public static class Item implements CdiRep.Item {
-        public String getName() { return null; }
-        public String getDescription() { return null; }
+        public String getName() { 
+            Element d = e.getChild("name");
+            if (d==null) return null;
+            return d.getText();
+        }
+        public String getDescription() { 
+            Element d = e.getChild("description");
+            if (d==null) return null;
+            return d.getText();
+        }
         public Map getMap() {
             return new Map(e.getChild("map"));
         }
@@ -122,11 +170,6 @@ public class JdomCdiRep implements CdiRep {
         Element e;
     }
     public static class Group extends Nested implements CdiRep.Group {
-        public String getName() { return null; }
-        public String getDescription() { return null; }
-        public Map getMap() {
-            return new Map(e.getChild("map"));
-        }
 
         Group(Element e) { super(e); }
     }

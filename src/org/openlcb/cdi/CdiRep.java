@@ -21,11 +21,15 @@ public interface CdiRep {
 
     public Identification getIdentification();
     
-    public java.util.List getSegments();
+    public java.util.List<Segment> getSegments();
     
     public static interface Segment {
         public int getSpace();
         public java.util.List<Item> getItems();
+
+        public String getName();
+        public String getDescription();
+        public Map getMap();
     }
     
     public static interface Item {
@@ -41,6 +45,7 @@ public interface CdiRep {
     public static interface Map {
         public String getEntry(String key);
         public java.util.List<String> getKeys();
+        public java.util.List<String> getValues();
     }
 
     public static interface EventID extends Item {
