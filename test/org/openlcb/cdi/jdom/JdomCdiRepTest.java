@@ -68,7 +68,7 @@ public class JdomCdiRepTest extends TestCase {
         
         java.util.List list = rep.getSegments();
         
-        Assert.assertEquals("len", 2, list.size());
+        Assert.assertEquals("len", 3, list.size());
         
         CdiRep.Segment segment;
         segment = (CdiRep.Segment)list.get(0);
@@ -89,7 +89,7 @@ public class JdomCdiRepTest extends TestCase {
         
         java.util.List list = rep.getSegments();
         
-        Assert.assertEquals("len", 2, list.size());
+        Assert.assertEquals("len", 3, list.size());
         
         CdiRep.Segment segment;
         segment = (CdiRep.Segment)list.get(0);
