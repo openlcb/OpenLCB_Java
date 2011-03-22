@@ -170,6 +170,13 @@ public class JdomCdiRep implements CdiRep {
         Element e;
     }
     public static class Group extends Nested implements CdiRep.Group {
+        public int getReplication() {
+            Attribute a = e.getAttribute("replication");
+            try {
+                if (a == null) return 0;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
 
         Group(Element e) { super(e); }
     }

@@ -148,18 +148,23 @@ public class CdiPanel extends JPanel {
         JPanel p2 = createPropertyPane(item.getMap());
         if (p2!=null) p.add(p2);
 
-        // find and process items
-        java.util.List<CdiRep.Item> items = item.getItems();
-        if (items != null) {
-            for (int i=0; i<items.size(); i++) {
-                CdiRep.Item it = (CdiRep.Item) items.get(i);
-                if (it instanceof CdiRep.Group) p.add(createGroupPane((CdiRep.Group)it));
-                else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
-                else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
-                else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
+        // find and process items as replicated
+        int rep = item.getReplication();
+        if (rep == 0) rep = 1;  // default
+        
+        for (int i = 0; i < rep; i++) {
+            java.util.List<CdiRep.Item> items = item.getItems();
+            if (items != null) {
+                for (int j=0; j<items.size(); j++) {
+                    CdiRep.Item it = (CdiRep.Item) items.get(j);
+                    if (it instanceof CdiRep.Group) p.add(createGroupPane((CdiRep.Group)it));
+                    else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
+                    else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
+                    else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
+                }
             }
         }
-
+        
         return p;
     }
     
@@ -235,7 +240,7 @@ public class CdiPanel extends JPanel {
         // see if map is present
         String[] labels;
         CdiRep.Map map = item.getMap();
-        if ((map != null) && (map.getKeys().size()>=0)) {
+        if ((map != null) && (map.getKeys().size()>0)) {
             // map present, make selection box
             p3.add(new JComboBox(map.getValues().toArray(new String[]{""})));
         } else {

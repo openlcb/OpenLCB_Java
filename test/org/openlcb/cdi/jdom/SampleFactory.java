@@ -105,6 +105,24 @@ public class SampleFactory {
                 )
         );
 
+        root.addContent(
+            new Element("segment").setAttribute("space","3").setAttribute("origin","0")
+                .addContent(new Element("name").addContent("Demos"))
+                .addContent(new Element("description").addContent("Demonstrations of various CDI capabilities"))
+                .addContent(new Element("group").setAttribute("replication","2")
+                    .addContent(new Element("name").addContent("Outer Group"))
+                    .addContent(new Element("description").addContent("The contents of this group are replicated by 2"))
+                    .addContent(new Element("group").setAttribute("replication","3")
+                        .addContent(new Element("name").addContent("Inner Group"))
+                        .addContent(new Element("description").addContent("The contents of this group are replicated by 3"))
+                        .addContent(new Element("int").setAttribute("size","1")
+                            .addContent(new Element("name").addContent("Int inside groups"))
+                            .addContent(new Element("description").addContent("This is inside a 2x3 group"))
+                        )
+                    )
+                )
+        );
+
         return root;
     }
     
