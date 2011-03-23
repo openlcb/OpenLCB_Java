@@ -6,6 +6,7 @@
 </head>
 <body>
 <h1>OpenLCB Configuration Demo</h1>
+
 This page demonstrates one possible form of an OpenLCB configuration tool.
 
 <p>
@@ -23,7 +24,16 @@ information from the OpenLCB node's Configuration Definition Information (CDI)
 file.  These are properties of the node, and can't be changed.
 
 <p>
-Below that are sections for two "segments" of configuration information.
+Below that are sections for three "segments" of configuration information.
+<ul>
+<li>The first shows typical configuration content for a node: some
+produced and consumed Event IDs, then a couple of binary configuration variables.
+<li>The second shows a couple variables in another space, in this case
+the EEPROM variables that control whether the non-volatile memory in the node
+should be fully or partially reloaded.
+<li>The third shows off the "nested" and "replicating" group capabilities
+that CDI has for compactly handling a number of definitions.
+</ul>
 
 <p>
 Note this that is just a demo. The read/write buttons don't work yet!
