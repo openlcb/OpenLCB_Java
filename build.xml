@@ -36,6 +36,8 @@
     <pathelement location="lib/junit.jar" />
     <pathelement location="lib/jdom.jar" />
     <pathelement location="lib/jlfgr-1_0.jar" />
+    <pathelement location="lib/annotations.jar" /> <!-- only needed for compile -->
+    <pathelement location="lib/jsr305.jar" /> <!-- only needed for compile -->
     <pathelement location="/System/Library/Java" /> <!-- MacOS X -->
     <pathelement location="${target}/" />  <!-- last to check for name collisions -->
   </path>
