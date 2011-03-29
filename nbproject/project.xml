@@ -111,6 +111,10 @@
                 <package-root>test</package-root>
                 <unit-tests/>
                 <classpath mode="compile">lib/junit.jar</classpath>
+                <classpath mode="compile">lib/jdom.jar</classpath>
+                <classpath mode="compile">lib/jlfgr-1_0.jar</classpath>
+                <classpath mode="compile">lib/annotations.jar</classpath>
+                <classpath mode="compile">lib/jsr305.jar</classpath>
                 <built-to>classes</built-to>
                 <source-level>1.5</source-level>
             </compilation-unit>
