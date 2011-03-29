@@ -1,0 +1,21 @@
+This is the OpenLCB Java prototype "lib" directory. 
+These are the binary files, typically .jars, needed at build and run time.
+
+Contents:
+
+Specific components:
+
+jdom.jar                
+ version 1.1
+ Used for testing only, not in main jar
+ from <jdom.org>
+ 
+junit.jar
+ version 3.8.2
+ Used for testing only, not at runtime
+ from <junit.org>
+
+annotations.jar, jsr305.jar:
+    From Findbugs 1.3.9 from http://findbugs.sourceforge.net
+    Only needed at compile/build time, not runtime
+    
