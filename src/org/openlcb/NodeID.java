@@ -1,21 +1,29 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Common NodeID implementation
  * <p>
  * NodeID objects are immutable once created.
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2010, 2011
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class NodeID {
     static final int BYTECOUNT = 6;
     
-    public NodeID(NodeID node) {
+    @CheckReturnValue
+    public NodeID(@NonNull NodeID node) {
         this (node.contents);
     }
     
-    public NodeID(byte[] contents) {
+    @CheckReturnValue
+    public NodeID(@NonNull byte[] contents) {
         if (contents == null)
             throw new java.lang.IllegalArgumentException("null argument invalid");
         if (contents.length < BYTECOUNT)
@@ -27,7 +35,8 @@ public class NodeID {
     
     byte[] contents;
 
-    public boolean equals(Object o){
+    @CheckReturnValue
+    public boolean equals(@NonNull Object o){
         // try to cast, else not equal
         try {
             NodeID other = (NodeID) o;
@@ -38,6 +47,8 @@ public class NodeID {
             return false;
         }
     }  
+    
+    @CheckReturnValue
     public int hashCode() {
         return contents[0]
             +contents[1]<<5
@@ -47,6 +58,8 @@ public class NodeID {
             +contents[5]<<25;
     } 
     
+    @CheckReturnValue
+    @NonNull
     public byte[] getContents() {
         // copy to ensure immutable
         byte[] retval = new byte[BYTECOUNT];
@@ -55,6 +68,8 @@ public class NodeID {
         return retval;
     }
 
+    @CheckReturnValue
+    @NonNull
     public String toString() {
         return "NodeID:"
                 +contents[0]+","
