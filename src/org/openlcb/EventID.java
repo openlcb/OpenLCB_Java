@@ -1,5 +1,9 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Common EventID implementation.
  * <p>
@@ -8,11 +12,14 @@ package org.openlcb;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class EventID {
 
     static final int BYTECOUNT = 8;
     
-    public EventID(NodeID node, int b7, int b8) {
+    @CheckReturnValue
+    public EventID(@NonNull NodeID node, int b7, int b8) {
         this.contents = new byte[BYTECOUNT];
         for (int i = 0; i < BYTECOUNT-2; i++)
             this.contents[i] = node.contents[i];
@@ -21,7 +28,8 @@ public class EventID {
         this.contents[7] = (byte)b8;
     }
     
-    public EventID(byte[] contents) {
+    @CheckReturnValue
+    public EventID(@NonNull byte[] contents) {
         if (contents == null)
             throw new java.lang.IllegalArgumentException("null argument invalid");
         if (contents.length != BYTECOUNT)
@@ -33,6 +41,8 @@ public class EventID {
     
     byte[] contents;
     
+    @CheckReturnValue
+    @NonNull
     public byte[] getContents() {
         // copy to ensure immutable
         byte[] retval = new byte[BYTECOUNT];
@@ -41,7 +51,8 @@ public class EventID {
         return retval;
     }
 
-    public boolean equals(Object o){
+    @CheckReturnValue
+    public boolean equals(@NonNull Object o){
         // try to cast, else not equal
         try {
             EventID other = (EventID) o;
@@ -52,6 +63,8 @@ public class EventID {
             return false;
         }
     }  
+
+    @CheckReturnValue
     public int hashCode() {
         return contents[0]<<21
             +contents[1]<<18
@@ -63,6 +76,8 @@ public class EventID {
             +contents[7];
     } 
 
+    @CheckReturnValue
+    @NonNull
     public String toString() {
         return "Event:"
                 +contents[0]+","
