@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Main-Class: scenarios.BlueGoldCheck
+Main-Class: scenarios.ScenarioRunner
 Class-Path: lib/junit.jar lib/jdom.jar lib/jlfgr-1_0.jar
 
 Name: org.openlcb
