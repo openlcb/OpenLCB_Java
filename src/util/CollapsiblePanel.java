@@ -32,8 +32,8 @@ public class CollapsiblePanel extends JPanel {
 			int h = getHeight();
 
 			try {
-				open = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Forward24.gif"));
-				closed = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Down24.gif"));
+				closed = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Forward24.gif"));
+				open = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Down24.gif"));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
