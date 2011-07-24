@@ -28,6 +28,9 @@ public class CdiPanel extends JPanel {
         for (int i=0; i<segments.size(); i++) {
             add(createSegmentPane(segments.get(i)));
         }
+        
+        // add glue at bottom
+        add(Box.createVerticalGlue());
     }
 
     JPanel createIdentificationPane(CdiRep c) {
