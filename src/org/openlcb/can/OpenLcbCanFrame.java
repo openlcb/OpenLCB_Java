@@ -15,7 +15,7 @@ import org.openlcb.*;
  */
 
 
-public class OpenLcbCanFrame implements CanFrame, OpenLcbCan {
+public class OpenLcbCanFrame implements CanFrame {
 
     public OpenLcbCanFrame(int nodeAlias) {
         this.nodeAlias = nodeAlias;
@@ -343,4 +343,43 @@ public class OpenLcbCanFrame implements CanFrame, OpenLcbCan {
         }
         return retval;
     }
+
+    // the following constants really shouldn't leak out of this class
+
+    /**
+     * OpenLCB CAN MTI format bits
+     */
+    static final int MTI_FORMAT_SIMPLE_MTI               = 0; 
+    static final int MTI_FORMAT_COMPLEX_MTI              = 1;
+    //
+    //
+    static final int MTI_FORMAT_ADDRESSED_DATAGRAM       = 4;
+    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_LAST  = 5;
+    static final int MTI_FORMAT_ADDRESSED_NON_DATAGRAM   = 6;
+    static final int MTI_FORMAT_STREAM_CODE              = 7;
+    
+    
+    /**
+     * Basic header MTI definitions for OpenLCB on CAN.
+     */
+     
+    static final int MTI_INITIALIZATION_COMPLETE     = 0x087;
+    
+    static final int MTI_VERIFY_NID                  = 0x0A7;
+    static final int MTI_VERIFIED_NID                = 0x0B7;
+    
+    static final int MTI_IDENTIFY_CONSUMERS          = 0x24F;
+    static final int MTI_IDENTIFY_CONSUMERS_RANGE    = 0x25F;
+    static final int MTI_CONSUMER_IDENTIFIED         = 0x26B;
+    
+    static final int MTI_IDENTIFY_PRODUCERS          = 0x28F;
+    static final int MTI_IDENTIFY_PRODUCERS_RANGE    = 0x29F;
+    static final int MTI_PRODUCER_IDENTIFIED         = 0x2AB;
+    
+    static final int MTI_IDENTIFY_EVENTS             = 0x2B7;
+    
+    static final int MTI_LEARN_EVENT                 = 0x2CF;
+    static final int MTI_PC_EVENT_REPORT             = 0x2DF;
+
+
 }

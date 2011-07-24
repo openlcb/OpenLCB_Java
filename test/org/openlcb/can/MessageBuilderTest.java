@@ -29,7 +29,7 @@ public class MessageBuilderTest extends TestCase {
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x1908f123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19087123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
     public void testVerifyNodeIDNumberMessage() {
@@ -43,7 +43,7 @@ public class MessageBuilderTest extends TestCase {
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x190af123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x190a7123), toHexString(f0.getHeader()));
         compareContent(null, f0);
     }
     public void testVerifiedNodeIDNumberMessage() {
@@ -57,7 +57,7 @@ public class MessageBuilderTest extends TestCase {
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x190bf123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x190b7123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
 
