@@ -85,18 +85,13 @@ public class MessageBuilder {
             break;
         
         case OpenLcb.MTI_DATAGRAM:
-        case OpenLcb.MTI_DATAGRAM_RCV_OK:
-        case OpenLcb.MTI_DATAGRAM_REJECTED:
     
         case OpenLcb.MTI_STREAM_INIT_REQUEST:
         case OpenLcb.MTI_STREAM_INIT_REPLY:
         case OpenLcb.MTI_STREAM_DATA_SEND:
         case OpenLcb.MTI_STREAM_DATA_PROCEED:
         case OpenLcb.MTI_STREAM_DATA_COMPLETE:
-        
-        //case OpenLcb.MTI_IDENTIFY_CONSUMERS_RANGE:
-        //case OpenLcb.MTI_IDENTIFY_PRODUCERS_RANGE:
-        
+                
         default:
             // this is an error
         }
