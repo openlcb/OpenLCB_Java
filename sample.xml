@@ -1,7 +1,7 @@
 <cdi>
 
 <identification>
-    <manufacturer>Spacely Sprokets</manufacturer>
+    <manufacturer>Spacely Sprockets</manufacturer>
     <model>Model 123 Uniblab</model>
     <hardwareVersion>EC 415</hardwareVersion>
     <softwareVersion>1.2.3.4</softwareVersion>
@@ -11,13 +11,13 @@
 </identification>
 
 <segment origin="0" space="0">
-    <group offset="0" reps="2">
+    <group offset="0" replication="2">
         <name>Produced Events</name>
         <description>The EventIDs for the producers</description>
         <eventid/>
         <eventid/>
     </group>
-    <group reps="2">
+    <group replication="2">
         <name>Consumed Events</name>
         <description>The EventIDs for the consumers</description>
         <eventid/>
