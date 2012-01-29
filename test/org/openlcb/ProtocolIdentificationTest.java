@@ -35,6 +35,18 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 2", "Reservation", result.get(1));
     }
 
+    public void testSupports1() {
+        ProtocolIdentification.Protocols p = ProtocolIdentification.Protocols.Datagram;
+        
+        Assert.assertTrue("supports", p.supports(~0));
+    }
+    
+    public void testSupports2() {
+        ProtocolIdentification.Protocols p = ProtocolIdentification.Protocols.Datagram;
+        
+        Assert.assertTrue("supports", !p.supports(0));
+    }
+    
     // from here down is testing infrastructure
     
     public ProtocolIdentificationTest(String s) {
