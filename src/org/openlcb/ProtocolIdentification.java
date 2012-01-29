@@ -34,10 +34,14 @@ public class ProtocolIdentification {
         long value;
         String name;
         
+        boolean supports(long r) {
+            return ( (this.value & r) != 0 );
+        }
+        
         static List<String> decode(long r) {
             ArrayList<String> retval = new ArrayList<String>();
             for (Protocols t : Protocols.values()) {
-                if ( (t.value & r) != 0 ) retval.add(t.name);
+                if ( t.supports(r) ) retval.add(t.name);
             }
             return retval;
         }
