@@ -43,6 +43,7 @@ public class NetTest extends TestCase {
         suite.addTest(IdentifyEventsMessageTest.suite());
         suite.addTest(IdentifyProducersMessageTest.suite());
         suite.addTest(InitializationCompleteMessageTest.suite());
+        suite.addTest(ProtocolIdentificationTest.suite());
         suite.addTest(ProducerConsumerEventReportMessageTest.suite());
         suite.addTest(ProducerIdentifiedMessageTest.suite());
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
