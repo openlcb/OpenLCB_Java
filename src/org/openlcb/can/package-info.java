@@ -28,6 +28,14 @@ The connection between the {@link org.openlcb} message classes
 (e.g. {@link org.openlcb.VerifiedNodeIDNumberMessage} et al)
 and CAN frames is through the MessageBuilder class.
 
+<p>
+The AliasMap class maintains mapping between NodeIDs and aliases
+by monitoring all frame-level traffic.  (This is an absolute
+responsibility, and some day may require being able to send frames
+to handle ambiguities due to e.g. joining a segment late)
+It in turn is used to get the source full NodeID for received
+messages from the source alias.
+
 <h2>Related Documentation</h2>
 
 

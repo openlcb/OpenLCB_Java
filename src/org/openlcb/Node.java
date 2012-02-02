@@ -4,6 +4,7 @@ package org.openlcb;
  * Default base for OpenLCB node implementations.
  * <p>
  * Provides a Connection for incoming Messages.
+ * Nodes consume messages to accomplish things.
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
