@@ -54,6 +54,8 @@ public class NetTest extends TestCase {
 
         suite.addTest(GatewayTest.suite());
 
+        suite.addTest(MimicNodeStoreTest.suite());
+
         // test implementation classes
         suite.addTest(org.openlcb.implementations.ImplementationsTest.suite());
         suite.addTest(org.openlcb.swing.SwingTest.suite());
