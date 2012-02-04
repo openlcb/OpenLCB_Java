@@ -35,4 +35,7 @@ public interface OpenLcb {
     static final int MTI_STREAM_DATA_PROCEED         = 0x36A4;
     static final int MTI_STREAM_DATA_COMPLETE        = 0x36B4;
 
+    static final int MTI_PROTOCOL_IDENT_REQUEST      = 0x0;
+    static final int MTI_PROTOCOL_IDENT_REPLY        = 0x0;
+
 }

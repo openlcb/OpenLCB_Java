@@ -146,5 +146,16 @@ public class MessageDecoder implements Connection {
     public void handleStreamDataComplete(StreamDataCompleteMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
-
+    /**
+     * Handle "Protocol Identification Request" message
+     */
+    public void handleProtocolIdentificationRequest(ProtocolIdentificationRequestMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Protocol Identification Reply" message
+     */
+    public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
 }

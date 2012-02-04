@@ -28,7 +28,7 @@ public class AllTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(AllTest.class);
         suite.addTest(tools.ToolsTest.suite());
-        suite.addTest(org.openlcb.NetTest.suite());
+        suite.addTest(org.openlcb.PackageTest.suite());
         suite.addTest(scenarios.PackageTest.suite());
         return suite;
     }
