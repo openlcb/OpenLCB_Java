@@ -14,10 +14,29 @@ import edu.umd.cs.findbugs.annotations.*;
 @ThreadSafe
 public class ProtocolIdentificationReplyMessage extends Message {
     
-    public ProtocolIdentificationReplyMessage(NodeID source) {
+    public ProtocolIdentificationReplyMessage(NodeID source, long value) {
         super(source);
+        this.value = value;
     }
         
+    long value;
+    
+    public long getValue() { return value; }
+    
+     /**
+      * To be equal, messages have to have the
+      * same type and content
+      */
+     public boolean equals(Object o) {
+        if (o == null) return false;
+        if (! (o instanceof ProtocolIdentificationReplyMessage))
+            return false;
+        ProtocolIdentificationReplyMessage msg = (ProtocolIdentificationReplyMessage) o;
+        if (this.value != msg.getValue())
+            return false;
+        return super.equals(o);
+     }
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -29,9 +48,10 @@ public class ProtocolIdentificationReplyMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleProtocolIdentificationReply(this, sender);
      }
+    
     public String toString() {
         return getSourceNodeID().toString()
-                +" Protocol Identification Reply ";   
+                +" Protocol Identification Reply with value "+value;   
     }
 
     public int getMTI() { return MTI_PROTOCOL_IDENT_REPLY; }
