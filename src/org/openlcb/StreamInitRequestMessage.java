@@ -1,11 +1,17 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Stream Initialization Request message implementation
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class StreamInitRequestMessage extends Message {
     
     public StreamInitRequestMessage(NodeID source, NodeID dest, 

@@ -1,11 +1,17 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Producer Identified message implementation
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class ProducerIdentifiedMessage extends Message {
     
     public ProducerIdentifiedMessage(NodeID source, EventID eventID) {

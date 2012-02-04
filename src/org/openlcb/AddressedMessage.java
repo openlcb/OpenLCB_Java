@@ -1,5 +1,9 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Base for addressed OpenLCB message types
  *<p>
@@ -12,6 +16,8 @@ package org.openlcb;
  * @version $Revision$
  * @see MessageDecoder
  */
+@Immutable
+@ThreadSafe
 abstract public class AddressedMessage extends Message {
 
     public AddressedMessage(NodeID source, NodeID dest) {

@@ -1,11 +1,17 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Producer Consumer Event Report message implementation
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class ProducerConsumerEventReportMessage extends Message {
     
     public ProducerConsumerEventReportMessage(NodeID source, EventID eventID) {

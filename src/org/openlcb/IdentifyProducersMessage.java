@@ -1,11 +1,17 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Identify Producers message implementation
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
+@Immutable
+@ThreadSafe
 public class IdentifyProducersMessage extends Message {
     
     public IdentifyProducersMessage(NodeID source, EventID eventID) {

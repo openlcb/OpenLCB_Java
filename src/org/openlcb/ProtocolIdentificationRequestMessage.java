@@ -1,11 +1,17 @@
 package org.openlcb;
 
+// For annotations
+import net.jcip.annotations.*; 
+import edu.umd.cs.findbugs.annotations.*; 
+
 /**
  * Request message for the Protocol Identification protocol 
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision: 529 $
  */
+@Immutable
+@ThreadSafe
 public class ProtocolIdentificationRequestMessage extends Message {
     
     public ProtocolIdentificationRequestMessage(NodeID source) {
