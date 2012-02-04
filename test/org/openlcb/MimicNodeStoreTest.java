@@ -6,6 +6,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.util.Collection;
+import java.beans.PropertyChangeListener;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
@@ -22,9 +23,17 @@ public class MimicNodeStoreTest extends TestCase {
                                                 
     ProducerIdentifiedMessage pim2 = new ProducerIdentifiedMessage(nid2, 
                                                 new EventID(new byte[]{1,0,0,0,0,0,1,0}));
-                                                
+                 
+    PropertyChangeListener listener;
+    boolean listenerFired;
+                                   
     public void setUp() {
         store = new MimicNodeStore();
+        
+        listener = new PropertyChangeListener(){
+            public void propertyChange(java.beans.PropertyChangeEvent e) { listenerFired = true; }
+        };
+        listenerFired = false;
     }
 
     public void testCtor() {
@@ -71,7 +80,66 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertTrue(list.size()==1);
     }
     
+    public void testNoDefaultProtocolInfo() {
+        store.put(pim1,null);
+        Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
+        MimicNodeStore.NodeMemo memo = list.iterator().next();
+
+        Assert.assertNull(memo.getProtocolIdentification());
+    }
+
+    public void testProtocolInfoAvailableFromNode() {
+        store.put(pim1,null);
+        Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
+        MimicNodeStore.NodeMemo memo = list.iterator().next();
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+
+        Assert.assertNotNull(memo.getProtocolIdentification());
+    }
     
+    public void testForNotificationOfNode() {
+        store.addPropertyChangeListener(
+            new PropertyChangeListener(){
+            public void propertyChange(java.beans.PropertyChangeEvent e) { 
+                MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
+                memo.addPropertyChangeListener(listener);
+            }
+        });
+        store.put(pim1,null);
+        Assert.assertFalse(listenerFired);
+
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+        Assert.assertTrue(listenerFired);
+        
+    }
+
+    public void testForNotificationOfOnlyOneNode() {
+        store.put(pim1,null);
+
+        store.addPropertyChangeListener(
+            new PropertyChangeListener(){
+            public void propertyChange(java.beans.PropertyChangeEvent e) { 
+                MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
+                memo.addPropertyChangeListener(listener);
+            }
+        });
+        store.put(pim2,null);
+        Assert.assertFalse(listenerFired);
+
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+        Assert.assertFalse(listenerFired);
+
+        store.put(new ProtocolIdentificationReplyMessage(nid2, 0x03), null);
+        Assert.assertTrue(listenerFired);
+        
+    }
+
+    public void testForNotificationOfProtocolIdent() {
+        store.addPropertyChangeListener(listener);
+        store.put(pim1,null);
+        
+        Assert.assertTrue(listenerFired);
+    }
     // from here down is testing infrastructure
     
     public MimicNodeStoreTest(String s) {

@@ -3,6 +3,8 @@ package org.openlcb;
 import java.util.HashMap;
 import java.util.Collection;
 
+import java.beans.PropertyChangeListener;
+
 /**
  * Store containing mimic proxies for nodes on external connections
  * <p>
@@ -20,13 +22,23 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
     } 
     
     public void put(Message msg, Connection sender) {
-        if (map.get(msg.getSourceNodeID()) == null)
-            map.put(msg.getSourceNodeID(), new NodeMemo(msg.getSourceNodeID()));
+        NodeMemo memo = map.get(msg.getSourceNodeID());
+        if (memo == null) {
+            memo = new NodeMemo(msg.getSourceNodeID());
+            map.put(msg.getSourceNodeID(), memo);
+            pcs.firePropertyChange("AddNode", null, memo);
+        }
+        // check for necessary updates in specific node
+        memo.put(msg, sender);
     }
     
     HashMap<NodeID, NodeMemo> map = new java.util.HashMap<NodeID, NodeMemo>();
-    
-    class NodeMemo {
+
+    java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
+    public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
+    public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
+
+    public class NodeMemo extends MessageDecoder {
         NodeID id;
         
         public NodeMemo(NodeID id) { this.id = id; }
@@ -34,5 +46,19 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         public NodeID getNodeID() {
             return id;
         }
+        
+        ProtocolIdentification pIdent = null;
+        public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
+            // accept assumes from mimic'd node
+            pIdent = new ProtocolIdentification(msg);
+            pcs.firePropertyChange("updateProtocol", null, pIdent);
+        }  
+        public ProtocolIdentification getProtocolIdentification() {
+            return pIdent;
+        }
+
+        java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
+        public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
+        public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
     }
 }
