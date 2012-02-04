@@ -3,10 +3,10 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>OpenLCB: Java Prototypes Directory</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.2  (Unix)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.3  (Unix)">
 	<META NAME="CREATED" CONTENT="0;0">
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
-	<META NAME="CHANGED" CONTENT="20110308;17033600">
+	<META NAME="CHANGED" CONTENT="20120129;10374100">
 	<META NAME="Info 1" CONTENT="">
 	<META NAME="Info 2" CONTENT="">
 	<META NAME="Info 3" CONTENT="">
@@ -14,10 +14,13 @@
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
 	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
+	<META NAME="CHANGEDBY" CONTENT="Bob Jacobsen">
 	<!-- $Id$ -->
 	<STYLE TYPE="text/css">
 	<!--
+		H2.cjk { font-family: "SimSun" }
 		H2.ctl { font-family: "Lucida Sans" }
+		H3.cjk { font-family: "SimSun" }
 		H3.ctl { font-family: "Lucida Sans" }
 	-->
 	</STYLE>
@@ -26,7 +29,7 @@
 <H1><IMG SRC="../../web/logo-ajs-dph.png" NAME="OpenLCB" ALIGN=RIGHT WIDTH=344 HEIGHT=142 BORDER=0>OpenLCB
 Proposal Java Prototypes Directory</H1>
 <P>This directory contains prototype implementation(s) in Java of the
-proposed OpenLCB&#8482; specification. 
+proposed OpenLCB™ specification. 
 </P>
 <P>These are primarily intended for testing proposed algorithms, not
 as a first implementation for use. 
@@ -35,7 +38,8 @@ as a first implementation for use.
 Blue/Gold configuration. 
 </P>
 <P><A HREF="ConfigDemoApplet.html">Applet demonstration</A> of
-configuration tool loading from <a href="sample2.xml">sample node XML</a>.
+configuration tool loading from <A HREF="sample2.xml">sample node
+XML</A>. 
 </P>
 <P>Major subdirectories:</P>
 <DL>
@@ -81,6 +85,14 @@ including doing the “clean” step.</P>
 <P>The main OpenLCB library has no pre-requisite libraries.</P>
 <P>The test code uses JUnit and JDOM via lib/junit.jar and
 lib/jdom.jar respectively.</P>
+<H3 CLASS="western">Packaging and Versioning</H3>
+<P>For use in applications, we provide versioned Jar files containing
+parts of this prototype:</P>
+<P>openlcb.jar – contains the org.openlcb service classes, does not
+include test or demo classes</P>
+<P>openlcb-demo.jar – contains the demo code, including applets</P>
+<P>Version summary information is kept in SVN and on a 
+<a href="versions.html">separate page</a>.</P>
 <H2 CLASS="western">License</H2>
 <P>All of the software in this directory and linked from this page is
 copyrighted by its authors. You many only use it subject to its

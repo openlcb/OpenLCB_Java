@@ -6,28 +6,28 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2012
  * @version $Revision$
  */
-public class NetTest extends TestCase {
+public class PackageTest extends TestCase {
     public void testStart() {
     }
     
     // from here down is testing infrastructure
     
-    public NetTest(String s) {
+    public PackageTest(String s) {
         super(s);
     }
 
     // Main entry point
     static public void main(String[] args) {
-        String[] testCaseName = {NetTest.class.getName()};
+        String[] testCaseName = {PackageTest.class.getName()};
         junit.swingui.TestRunner.main(testCaseName);
     }
 
     // test suite from all defined tests
     public static Test suite() {
-        TestSuite suite = new TestSuite(NetTest.class);
+        TestSuite suite = new TestSuite(PackageTest.class);
 
         suite.addTest(EventIDTest.suite());
         suite.addTest(NodeIDTest.suite());
@@ -49,7 +49,11 @@ public class NetTest extends TestCase {
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
         suite.addTest(VerifyNodeIDNumberMessageTest.suite());
         suite.addTest(LearnEventMessageTest.suite());
+        suite.addTest(ProtocolIdentificationRequestMessageTest.suite());
+        suite.addTest(ProtocolIdentificationReplyMessageTest.suite());
         
+        suite.addTest(ConfigurationPortalTest.suite());
+
         suite.addTest(SingleLinkNodeTest.suite());
 
         suite.addTest(GatewayTest.suite());
@@ -57,7 +61,7 @@ public class NetTest extends TestCase {
         suite.addTest(MimicNodeStoreTest.suite());
 
         // test implementation classes
-        suite.addTest(org.openlcb.implementations.ImplementationsTest.suite());
+        suite.addTest(org.openlcb.implementations.PackageTest.suite());
         suite.addTest(org.openlcb.swing.SwingTest.suite());
         suite.addTest(org.openlcb.cdi.PackageTest.suite());
         
