@@ -1,4 +1,4 @@
-// MonFrame.java
+// MonPane.java
 
 package org.openlcb.swing;
 
