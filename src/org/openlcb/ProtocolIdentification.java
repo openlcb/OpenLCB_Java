@@ -46,5 +46,14 @@ public class ProtocolIdentification {
             return retval;
         }
     }
-        
+       
+    long value = 0;  // multiple bits, e.g. from a node
+    
+    public ProtocolIdentification( ProtocolIdentificationReplyMessage msg) {
+        value = msg.getValue();
+    }
+    public ProtocolIdentification() {
+        value = 0;
+    }
+    
 }

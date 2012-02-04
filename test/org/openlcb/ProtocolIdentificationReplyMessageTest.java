@@ -17,18 +17,28 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
 
     public void testEqualsSame() {
         Message m1 = new ProtocolIdentificationReplyMessage(
-                               nodeID1);
+                               nodeID1, 12);
         Message m2 = new ProtocolIdentificationReplyMessage(
-                               nodeID1);
+                               nodeID1, 12);
     
         Assert.assertTrue(m1.equals(m2));
     }
 
     public void testNotEqualsDifferentNode() {
         Message m1 = new ProtocolIdentificationReplyMessage(
-                                nodeID1);
+                                nodeID1, 12);
         Message m2 = new ProtocolIdentificationReplyMessage(
-                                nodeID2);
+                                nodeID2, 12);
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+
+
+    public void testNotEqualsDifferentValue() {
+        Message m1 = new ProtocolIdentificationReplyMessage(
+                                nodeID1, 12);
+        Message m2 = new ProtocolIdentificationReplyMessage(
+                                nodeID1, 13);
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -42,7 +52,7 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
                 result = true;
             }
         };
-        Message m = new ProtocolIdentificationReplyMessage(nodeID1);
+        Message m = new ProtocolIdentificationReplyMessage(nodeID1, 21);
         
         n.put(m, null);
         
