@@ -127,7 +127,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Thread.currentThread().sleep(10);
 
         Assert.assertEquals("forwarded messages", 1, messagesForwarded.size());
-        Assert.assertTrue(messagesForwarded.get(0).equals(datagram2));        
+        Assert.assertTrue(messagesForwarded.get(0).equals(datagram1));        
         Assert.assertTrue(testConnection != null);
         
         // now send the reply
