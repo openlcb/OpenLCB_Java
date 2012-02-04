@@ -19,7 +19,6 @@ import java.util.concurrent.BlockingQueue;
  *<li>Does not parallelize Datagrams to separate nodes
  *<li>Does not yet check NAK for transient vs permanent
  *<li>Needs to timeout and resume operation is no reply received
- *<li>Should just pass non-datagram messages through unchanged.
  *</ul>
  *<p>
  *
@@ -44,7 +43,10 @@ public class DatagramMeteringBuffer extends MessageDecoder {
      */
     
     public void put(Message msg, Connection upstream) {
-        queue.add(new MessageMemo(msg, upstream, downstream));
+        if (msg instanceof DatagramMessage)
+            queue.add(new MessageMemo(msg, upstream, downstream));
+        else 
+            downstream.put(msg, this);
     }
     
     class MessageMemo extends MessageDecoder {
