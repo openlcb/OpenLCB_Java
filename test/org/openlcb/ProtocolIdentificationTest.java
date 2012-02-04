@@ -47,6 +47,13 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertTrue("supports", !p.supports(0));
     }
     
+    public void testCreationFromMessage() {
+        new ProtocolIdentification(
+            new ProtocolIdentificationReplyMessage(
+                new NodeID(new byte[]{1,3,3,4,5,6}), 
+                0x03));
+    }
+    
     // from here down is testing infrastructure
     
     public ProtocolIdentificationTest(String s) {
