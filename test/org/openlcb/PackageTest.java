@@ -38,19 +38,25 @@ public class PackageTest extends TestCase {
         suite.addTest(NodeTest.suite());
 
         // specific message types (uses Node, IDs)
-        suite.addTest(ConsumerIdentifiedMessageTest.suite());
-        suite.addTest(IdentifyConsumersMessageTest.suite());
-        suite.addTest(IdentifyEventsMessageTest.suite());
-        suite.addTest(IdentifyProducersMessageTest.suite());
         suite.addTest(InitializationCompleteMessageTest.suite());
-        suite.addTest(ProtocolIdentificationTest.suite());
-        suite.addTest(ProducerConsumerEventReportMessageTest.suite());
-        suite.addTest(ProducerIdentifiedMessageTest.suite());
+
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
         suite.addTest(VerifyNodeIDNumberMessageTest.suite());
+
+        suite.addTest(IdentifyProducersMessageTest.suite());
+        suite.addTest(ProducerIdentifiedMessageTest.suite());
+        suite.addTest(IdentifyConsumersMessageTest.suite());
+        suite.addTest(ConsumerIdentifiedMessageTest.suite());
+        suite.addTest(IdentifyEventsMessageTest.suite());
+        suite.addTest(ProducerConsumerEventReportMessageTest.suite());
+
         suite.addTest(LearnEventMessageTest.suite());
+
+        suite.addTest(DatagramMessageTest.suite());
+
         suite.addTest(ProtocolIdentificationRequestMessageTest.suite());
         suite.addTest(ProtocolIdentificationReplyMessageTest.suite());
+        suite.addTest(ProtocolIdentificationTest.suite());
         
         suite.addTest(ConfigurationPortalTest.suite());
 

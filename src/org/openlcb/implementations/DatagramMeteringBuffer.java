@@ -6,10 +6,22 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * Accepts Datagrams from one or more sources, and meters them out
- * to a downstream node (e.g. on CAN), one at a time.
+ * Accepts Datagrams over a Connection from "upstream", and meters them out
+ * to "downstream" nodes (e.g. on a CAN network), one at a time.
+ * This is to ensure that e.g. simple CAN nodes that can't accept more
+ * than one datagram at a time get a chance to reply before the next one
+ * arrives.
  *<p>
- * Does not parallelize Datagrams to separate nodes, but could
+ * Datagram negative replies cause a local retransmission. Positive
+ * replies are reflected upstream to original source of the datagram.
+ *<p>
+ *<ul>
+ *<li>Does not parallelize Datagrams to separate nodes
+ *<li>Does not yet check NAK for transient vs permanent
+ *<li>Needs to timeout and resume operation is no reply received
+ *<li>Should just pass non-datagram messages through unchanged.
+ *</ul>
+ *<p>
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
