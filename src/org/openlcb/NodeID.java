@@ -23,6 +23,11 @@ public class NodeID {
     }
     
     @CheckReturnValue
+    public NodeID() {
+        this (new byte[]{0,0,0,0,0,0});
+    }
+    
+    @CheckReturnValue
     public NodeID(@NonNull byte[] contents) {
         if (contents == null)
             throw new java.lang.IllegalArgumentException("null argument invalid");
