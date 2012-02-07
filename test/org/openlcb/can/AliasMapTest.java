@@ -18,7 +18,7 @@ public class AliasMapTest extends TestCase {
         
         Assert.assertEquals("get Alias", -1, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
 
-        Assert.assertEquals("get NodeID", null, map.getNodeID(0));
+        Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
     
     public void testAfterFrame() {

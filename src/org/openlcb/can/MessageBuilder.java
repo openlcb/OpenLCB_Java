@@ -3,6 +3,8 @@ package org.openlcb.can;
 import org.openlcb.*;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Converts CAN frame messages to regular messages
@@ -37,66 +39,142 @@ public class MessageBuilder {
      *
      * The List is always returned, even if empty.
      */
-    public List<Message> processFrame(OpenLcbCanFrame f) {
-        List<Message> retlist = new java.util.ArrayList<Message>();
-        NodeID source = map.getNodeID(f.getSourceAlias());
-
+    public List<Message> processFrame(CanFrame f) {
         // check for special cases first
+        if ( (f.getHeader() & 0x08000000) != 0x08000000 ) return null;  // not OpenLCB frame
         
-        // then decode standard MTIs
-        switch(1) {
+        // break into types
+        int format = ( f.getHeader() & 0x07000000 ) >> 24;
 
-        case OpenLcb.MTI_INITIALIZATION_COMPLETE:
-            retlist.add(new InitializationCompleteMessage(source));
-            break;
-        
-        case OpenLcb.MTI_VERIFY_NID:
-            retlist.add(new VerifyNodeIDNumberMessage(source));
-            break;
-        case OpenLcb.MTI_VERIFIED_NID:      // also 30B2 
-            retlist.add(new VerifiedNodeIDNumberMessage(source));
-            break;
-        
-        case OpenLcb.MTI_IDENTIFY_CONSUMERS:
-            retlist.add(new IdentifyConsumersMessage(source, f.getEventID()));
-            break;
-            
-        case OpenLcb.MTI_CONSUMER_IDENTIFIED:
-            retlist.add(new ConsumerIdentifiedMessage(source, f.getEventID()));
-            break;
-        
-        case OpenLcb.MTI_IDENTIFY_PRODUCERS:
-            retlist.add(new IdentifyProducersMessage(source, f.getEventID()));
-            break;
-        
-        case OpenLcb.MTI_PRODUCER_IDENTIFIED:
-            retlist.add(new ProducerIdentifiedMessage(source, f.getEventID()));
-            break;
-        
-        case OpenLcb.MTI_IDENTIFY_EVENTS:   // also 32B2
-            retlist.add(new IdentifyEventsMessage(source));
-            break;
-        
-        case OpenLcb.MTI_LEARN_EVENT:
-            retlist.add(new LearnEventMessage(source, f.getEventID()));
-            break;
-        case OpenLcb.MTI_PC_EVENT_REPORT:
-            retlist.add(new ProducerConsumerEventReportMessage(source, f.getEventID()));
-            break;
-        
-        case OpenLcb.MTI_DATAGRAM:
-    
-        case OpenLcb.MTI_STREAM_INIT_REQUEST:
-        case OpenLcb.MTI_STREAM_INIT_REPLY:
-        case OpenLcb.MTI_STREAM_DATA_SEND:
-        case OpenLcb.MTI_STREAM_DATA_PROCEED:
-        case OpenLcb.MTI_STREAM_DATA_COMPLETE:
-                
-        default:
-            // this is an error
+        switch (format) {
+            case 0:
+                return processFormat0(f);
+            case 1:
+                return processFormat1(f);
+            case 2:
+                return processFormat2(f);
+            case 3:
+                return processFormat3(f);
+            case 4:
+                return processFormat4(f);
+            case 5:
+                return processFormat5(f);
+            case 6:
+                return processFormat6(f);
+            case 7:
+                return processFormat7(f);
+            default:  // should not happen
+                return null;
         }
+    }
+    
+    HashMap<NodeID, List<Integer>> datagramData = new HashMap<NodeID, List<Integer>>();
+    
+    int getSourceID(CanFrame f) { return f.getHeader()&0x00000FFF; }
+    int getType(CanFrame f) { return ( f.getHeader() & 0x00FF0000 ) >> 16; }
+    EventID getEventID(CanFrame f) { return new EventID(f.getData()); }
+    
+    public List<Message> processFormat0(CanFrame f) {
+        // simple MTI
+        List<Message> retlist = new java.util.ArrayList<Message>();
+        NodeID source = map.getNodeID(getSourceID(f));
+        
+        int type = getType(f);
+        switch (type) {
+            case 0x0A: 
+                retlist.add(new VerifyNodeIDNumberMessage(source));
+                return retlist;
+            case 0x24: 
+                retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
+                return retlist;
+            case 0x28: 
+                retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
+                return retlist;
+            case 0x2B: 
+                retlist.add(new IdentifyEventsMessage(source));
+                return retlist;
+            case 0x2C: 
+                retlist.add(new LearnEventMessage(source, getEventID(f)));
+                return retlist;
+            case 0x2D: 
+                retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
+                return retlist;
+            default: return null;
+        }
+    }
+    public List<Message> processFormat1(CanFrame f) {
+        // complex  MTI
+        List<Message> retlist = new java.util.ArrayList<Message>();
+        NodeID source = map.getNodeID(getSourceID(f));
+        int type = getType(f);
+        switch (type) {
+            case 0x08: 
+                retlist.add(new InitializationCompleteMessage(source));
+                return retlist;
+            case 0x0B: 
+                retlist.add(new VerifiedNodeIDNumberMessage(source));
+                return retlist;
+            case 0x26: 
+                retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
+                return retlist;
+            case 0x2A: 
+                retlist.add(new ProducerIdentifiedMessage(source, getEventID(f)));
+                return retlist;
+            default: return null;
+        }
+    }
+    public List<Message> processFormat2(CanFrame f) {
+        // reserved
+        return null;
+    }
+    public List<Message> processFormat3(CanFrame f) {
+        // reserved
+        return null;
+    }
+    public List<Message> processFormat4(CanFrame f) {
+        // datagram not-last
+        NodeID source = map.getNodeID(getSourceID(f));
+        List<Integer> list = datagramData.get(source);
+        if (list == null) {
+            list = new ArrayList<Integer>();
+            datagramData.put(source, list);
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add(f.getElement(i));
+        }
+        return null;
+    }
+    public List<Message> processFormat5(CanFrame f) {
+        // datagram last
+        NodeID source = map.getNodeID(getSourceID(f));
+        List<Integer> list = datagramData.get(source);
+        if (list == null) {
+            list = new ArrayList<Integer>();
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add(f.getElement(i));
+        }
+        
+        datagramData.put(source, null);
+        
+        int[] data = new int[list.size()];
+        for (int i=0; i<list.size(); i++) {
+            data[i] = list.get(i);
+        }
+        List<Message> retlist = new java.util.ArrayList<Message>();
+        NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
+        retlist.add(new DatagramMessage(source, dest, data));
         return retlist;
     }
+    public List<Message> processFormat6(CanFrame f) {
+        // addressed
+        return null;
+    }
+    public List<Message> processFormat7(CanFrame f) {
+        // stream data
+        return null;
+    }
+        
 
     /** 
      * Accept an OpenLCB Message, and convert to 

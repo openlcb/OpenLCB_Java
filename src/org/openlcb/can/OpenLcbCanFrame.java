@@ -32,6 +32,10 @@ public class OpenLcbCanFrame implements CanFrame {
     int nodeAlias;
 
     public int getHeader() { return id; }
+    public void setHeader(int id) { this.id = id; }
+    
+    public byte[] getData() { return data; }
+    public void setData(byte[] b) { data = b; length = b.length;}
     
     public boolean isExtended() { return true; }
     
@@ -337,7 +341,7 @@ public class OpenLcbCanFrame implements CanFrame {
     }
     
     public String toString() {
-        String retval = "["+id+"(d)]";
+        String retval = "[0x"+Integer.toHexString(id)+"]";
         for (int i = 0; i<length; i++) {
             retval += " "+data[i];
         }
@@ -363,7 +367,7 @@ public class OpenLcbCanFrame implements CanFrame {
      * Basic header MTI definitions for OpenLCB on CAN.
      */
      
-    static final int MTI_INITIALIZATION_COMPLETE     = 0x087;
+    static final int MTI_INITIALIZATION_COMPLETE     = 0x08F;
     
     static final int MTI_VERIFY_NID                  = 0x0A7;
     static final int MTI_VERIFIED_NID                = 0x0B7;
