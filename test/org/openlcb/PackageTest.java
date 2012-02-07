@@ -72,7 +72,7 @@ public class PackageTest extends TestCase {
         suite.addTest(org.openlcb.cdi.PackageTest.suite());
         
         // test CAN classes
-        suite.addTest(org.openlcb.can.CanTest.suite());
+        suite.addTest(org.openlcb.can.PackageTest.suite());
 
         return suite;
     }

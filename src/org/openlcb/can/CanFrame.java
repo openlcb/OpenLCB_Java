@@ -21,5 +21,7 @@ public interface CanFrame {
     
     public int getNumDataElements();
     public int getElement(int n);
+    
+    public byte[] getData();
 
 }

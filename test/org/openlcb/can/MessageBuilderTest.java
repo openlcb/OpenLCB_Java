@@ -29,7 +29,7 @@ public class MessageBuilderTest extends TestCase {
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x19087123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x1908F123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
     public void testVerifyNodeIDNumberMessage() {
@@ -146,6 +146,63 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{31}, f1);
     }
 
+    public void testInitializationCompleteFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19087123);
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof InitializationCompleteMessage);        
+    }
+    
+    public void testSingleFrameDatagram() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1D321123);
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof DatagramMessage);        
+    }
+    
+    public void testTwoFrameDatagram() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1C321123);
+        frame.setData(new byte[]{1,2});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertNull(list); 
+        
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1D321123);
+        frame.setData(new byte[]{11,12,13});
+                
+        list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof DatagramMessage);  
+        int[] data =  ((DatagramMessage)msg).getData();   
+        Assert.assertEquals(5, data.length);
+        Assert.assertEquals(1,data[0]);
+        Assert.assertEquals(2,data[1]);
+        Assert.assertEquals(11,data[2]);
+        Assert.assertEquals(12,data[3]);
+        Assert.assertEquals(13,data[4]);
+    }
+    
     // from here down is testing infrastructure
     
     public MessageBuilderTest(String s) {

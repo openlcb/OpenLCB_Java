@@ -32,7 +32,9 @@ public class AliasMap {
     }
     
     public NodeID getNodeID(int alias) {
-        return nMap.get(new Integer(alias));
+        NodeID retVal = nMap.get(new Integer(alias));
+        if (retVal != null) return retVal;
+        else return new NodeID();
     }
     public int getAlias(NodeID nid) {
         Integer r = iMap.get(nid);
