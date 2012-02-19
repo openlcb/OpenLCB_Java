@@ -32,7 +32,7 @@ public class VerifyNodeIDNumberMessage extends Message {
 
     public String toString() {
         return getSourceNodeID().toString()
-                +" PVerify Node ID number";     
+                +" Verify Node ID number";     
     }
 
     public int getMTI() { return MTI_VERIFY_NID; }
