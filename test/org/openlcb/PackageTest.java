@@ -58,6 +58,10 @@ public class PackageTest extends TestCase {
         suite.addTest(ProtocolIdentificationReplyMessageTest.suite());
         suite.addTest(ProtocolIdentificationTest.suite());
         
+        suite.addTest(SimpleNodeIdentInfoRequestMessageTest.suite());
+        suite.addTest(SimpleNodeIdentInfoReplyMessageTest.suite());
+        suite.addTest(SimpleNodeIdentTest.suite());
+
         suite.addTest(ConfigurationPortalTest.suite());
 
         suite.addTest(SingleLinkNodeTest.suite());
