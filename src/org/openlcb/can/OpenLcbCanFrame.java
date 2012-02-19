@@ -36,7 +36,13 @@ public class OpenLcbCanFrame implements CanFrame {
     
     public byte[] getData() { return data; }
     public void setData(byte[] b) { data = b; length = b.length;}
-    
+    public long bodyAsLong() {
+        long retval = 0;
+        for (int i = 0 ; i<data.length; i++) {
+            retval = retval << 8 | (data[0]&0xFF);
+        }
+        return retval;
+    }
     public boolean isExtended() { return true; }
     
     public boolean isRtr() { return false; }
@@ -105,6 +111,7 @@ public class OpenLcbCanFrame implements CanFrame {
   // start of CAN-level messages
  
   static final int RIM_VAR_FIELD = 0x0700;
+  static final int AMD_VAR_FIELD = 0x0701;
 
   void setCIM(int i, int testval, int alias) {
     init(alias);
@@ -127,6 +134,10 @@ public class OpenLcbCanFrame implements CanFrame {
 
   boolean isRIM() {
       return isFrameTypeCAN() && getVariableField() == RIM_VAR_FIELD;
+  }
+
+  boolean isAliasMapDefinition() {
+      return isFrameTypeCAN() && getVariableField() == AMD_VAR_FIELD;
   }
 
 
@@ -225,6 +236,10 @@ public class OpenLcbCanFrame implements CanFrame {
     init(nodeAlias);
     setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_VERIFY_NID);
     length=0;
+  }
+
+  boolean isVerifiedNID() {
+      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_VERIFIED_NID);
   }
 
   void setVerifiedNID(NodeID nid) {

@@ -19,7 +19,7 @@ public class AliasMap {
     
     public void processFrame(OpenLcbCanFrame f) {
         // check type
-        if (f.isInitializationComplete()) {
+        if (f.isInitializationComplete() || f.isVerifiedNID() || f.isAliasMapDefinition()) {
             Integer alias = new Integer(f.getSourceAlias());
             NodeID nid = f.getNodeID();
             insert(alias, nid);
