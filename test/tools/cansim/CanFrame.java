@@ -31,6 +31,19 @@ public class CanFrame implements org.openlcb.can.CanFrame {
     }
     
     public int getHeader() { return header; }
+    public byte[] getData() { 
+        byte[] t = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; i++) t[i] = (byte)bytes[i];
+        return t; 
+    }
+    public long bodyAsLong() {
+        long retval = 0;
+        for (int i = 0 ; i<bytes.length; i++) {
+            retval = retval << 8 | (bytes[0]&0xFF);
+        }
+        return retval;
+    }
+    
     public boolean isExtended() { return true; }    
     public boolean isRtr() { return false; }
     public int getNumDataElements() { return bytes.length; }
