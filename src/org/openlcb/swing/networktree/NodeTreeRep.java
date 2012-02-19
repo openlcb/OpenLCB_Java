@@ -36,9 +36,34 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
 
                 if (e.getPropertyName().equals("updateProtocol")) {
+                    System.out.println("protocol property change");
                     getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Protocols"), getThis(),
                                  getThis().getChildCount());
                 
+                }
+                if (e.getPropertyName().equals("updateSimpleNodeIdent")) {
+                    System.out.println("simple ID property change");
+                    if (simpleInfoMfgNode == null) {
+                        simpleInfoMfgNode = new DefaultMutableTreeNode("Mfg: "+((SimpleNodeIdent)e.getNewValue()).getMfgName());
+                        getTreeModel().insertNodeInto(simpleInfoMfgNode, getThis(),
+                                     getThis().getChildCount());
+                    } else {
+                        simpleInfoMfgNode.setUserObject("Mfg: "+((SimpleNodeIdent)e.getNewValue()).getMfgName());
+                    }
+                    if (simpleInfoModelNode == null) {
+                        simpleInfoModelNode = new DefaultMutableTreeNode("Mod: "+((SimpleNodeIdent)e.getNewValue()).getModelName());
+                        getTreeModel().insertNodeInto(simpleInfoModelNode, getThis(),
+                                     getThis().getChildCount());
+                    } else {
+                        simpleInfoModelNode.setUserObject("Mod: "+((SimpleNodeIdent)e.getNewValue()).getModelName());
+                    }
+                    if (simpleInfoVersionNode == null) {
+                        simpleInfoVersionNode = new DefaultMutableTreeNode("Ver: "+((SimpleNodeIdent)e.getNewValue()).getVersion());
+                        getTreeModel().insertNodeInto(simpleInfoVersionNode, getThis(),
+                                     getThis().getChildCount());
+                    } else {
+                        simpleInfoVersionNode.setUserObject("Ver: "+((SimpleNodeIdent)e.getNewValue()).getVersion());
+                    }
                 }
                 if (e.getPropertyName().equals("updateConsumers")) {
                     getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Consumers"), getThis(),
@@ -53,6 +78,10 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             }
         });
     }
+    
+    DefaultMutableTreeNode simpleInfoMfgNode;
+    DefaultMutableTreeNode simpleInfoModelNode;
+    DefaultMutableTreeNode simpleInfoVersionNode;
     
     /**
      * Provides the node label in the tree
