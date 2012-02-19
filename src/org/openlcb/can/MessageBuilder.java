@@ -78,11 +78,14 @@ public class MessageBuilder {
         // simple MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
-        
+
         int type = getType(f);
         switch (type) {
             case 0x0A: 
                 retlist.add(new VerifyNodeIDNumberMessage(source));
+                return retlist;
+            case 0x0B: 
+                retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
             case 0x24: 
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
@@ -110,9 +113,6 @@ public class MessageBuilder {
         switch (type) {
             case 0x08: 
                 retlist.add(new InitializationCompleteMessage(source));
-                return retlist;
-            case 0x0B: 
-                retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
             case 0x26: 
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
@@ -167,8 +167,28 @@ public class MessageBuilder {
         return retlist;
     }
     public List<Message> processFormat6(CanFrame f) {
-        // addressed
-        return null;
+        List<Message> retlist = new java.util.ArrayList<Message>();
+        NodeID source = map.getNodeID(getSourceID(f));
+        int type = f.getElement(0);
+        switch (type) {
+            case 0x2E: 
+                retlist.add(new ProtocolIdentificationRequestMessage(source));
+                return retlist;
+            case 0x2F: 
+                retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
+                return retlist;
+            case 0x52: 
+                retlist.add(new SimpleNodeIdentInfoRequestMessage(source));
+                return retlist;
+            case 0x53: 
+                byte[] content = f.getData();
+                byte[] data = new byte[content.length-1];
+                System.arraycopy(content, 1, data, 0, data.length);
+                
+                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,data));
+                return retlist;
+            default: return null;
+        }
     }
     public List<Message> processFormat7(CanFrame f) {
         // stream data
