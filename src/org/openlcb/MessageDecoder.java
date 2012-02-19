@@ -158,4 +158,16 @@ public class MessageDecoder implements Connection {
     public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
+    /**
+     * Handle "Simple Node Ident Info Request" message
+     */
+    public void handleSimpleNodeIdentInfoRequest(SimpleNodeIdentInfoRequestMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Simple Node Ident Info Reply" message
+     */
+    public void handleSimpleNodeIdentInfoReply(SimpleNodeIdentInfoReplyMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
 }
