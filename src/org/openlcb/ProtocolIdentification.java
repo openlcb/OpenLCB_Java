@@ -21,12 +21,13 @@ public class ProtocolIdentification {
         Stream(                 0x200000000000L,"Stream"), 
         Configuration(          0x100000000000L,"Configuration"),
         Reservation(            0x080000000000L,"Reservation"),
-        Display(                0x040000000000L,"Display"),
+        ProducerConsumer(       0x040000000000L,"ProducerConsumer"),
         Identification(         0x020000000000L,"Identification"),
         TeachingLearningConfiguration(0x010000000000L,"TeachingLearningConfiguration"),
         RemoteButton(           0x008000000000L,"RemoteButton"),
         AbbreviatedDefaultCDI(  0x004000000000L,"AbbreviatedDefaultCDI");
-        
+        Display(                0x002000000000L,"Display"),
+       
         Protocols(long value, String name) {
             this.value = value;
             this.name = name;
