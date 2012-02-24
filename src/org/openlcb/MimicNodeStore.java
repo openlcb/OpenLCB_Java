@@ -29,7 +29,6 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
             pcs.firePropertyChange("AddNode", null, memo);
         }
         // check for necessary updates in specific node
-        System.out.println("about to forward "+msg);
         memo.put(msg, sender);
     }
     
@@ -51,7 +50,6 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         ProtocolIdentification pIdent = null;
         public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
-            System.out.println("start protocol handling");
             pIdent = new ProtocolIdentification(msg);
             pcs.firePropertyChange("updateProtocol", null, pIdent);
         }  
@@ -62,7 +60,6 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         SimpleNodeIdent pSimpleNode = null;
         public void handleSimpleNodeIdentInfoReply(SimpleNodeIdentInfoReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
-            System.out.println("start simple ident handling");
             if (pSimpleNode == null) 
                 pSimpleNode = new SimpleNodeIdent(msg);
             else
