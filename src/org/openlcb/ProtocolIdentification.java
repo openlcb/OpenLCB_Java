@@ -25,8 +25,8 @@ public class ProtocolIdentification {
         Identification(         0x020000000000L,"Identification"),
         TeachingLearningConfiguration(0x010000000000L,"TeachingLearningConfiguration"),
         RemoteButton(           0x008000000000L,"RemoteButton"),
-        AbbreviatedDefaultCDI(  0x004000000000L,"AbbreviatedDefaultCDI");
-        Display(                0x002000000000L,"Display"),
+        AbbreviatedDefaultCDI(  0x004000000000L,"AbbreviatedDefaultCDI"),
+        Display(                0x002000000000L,"Display");
        
         Protocols(long value, String name) {
             this.value = value;
