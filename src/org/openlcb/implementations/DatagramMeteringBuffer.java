@@ -18,7 +18,7 @@ import java.util.concurrent.BlockingQueue;
  *<ul>
  *<li>Does not parallelize Datagrams to separate nodes
  *<li>Does not yet check NAK for transient vs permanent
- *<li>Needs to timeout and resume operation is no reply received
+ *<li>Needs to timeout and resume operation if no reply received
  *</ul>
  *<p>
  *
