@@ -20,7 +20,15 @@ public class DatagramMessage extends AddressedMessage {
         System.arraycopy(dataIn, 0, this.data, 0, dataIn.length);
     }
     
-    int[] data;
+    /**
+     * Intended for use by subclasses only
+     * to ensure immutable objects
+     */
+    protected DatagramMessage(NodeID source, NodeID dest) {
+        super(source, dest);
+    }
+    
+    protected int[] data;
     
      /**
       * To be equal, messages have to have the
