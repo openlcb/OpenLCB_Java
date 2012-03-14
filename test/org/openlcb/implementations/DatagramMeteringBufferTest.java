@@ -63,7 +63,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         datagram2   = new DatagramMessage(hereID, farID, data);                                        
 
         replyOK     = new DatagramAcknowledgedMessage(farID, hereID);
-        replyNAK    = new DatagramRejectedMessage(farID, hereID);
+        replyNAK    = new DatagramRejectedMessage(farID, hereID, 0x010);
     }
     
     public void testSend() throws InterruptedException {

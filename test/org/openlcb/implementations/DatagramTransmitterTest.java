@@ -69,7 +69,7 @@ public class DatagramTransmitterTest extends TestCase {
                            .equals(new DatagramMessage(hereID, farID, data)));
                            
         // Reject once
-        Message m = new DatagramRejectedMessage(farID, hereID);
+        Message m = new DatagramRejectedMessage(farID, hereID,0x021);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
