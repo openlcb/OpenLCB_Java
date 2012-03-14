@@ -14,10 +14,13 @@ import edu.umd.cs.findbugs.annotations.*;
 @ThreadSafe
 public class DatagramRejectedMessage extends Message {
     
-    public DatagramRejectedMessage(NodeID source, NodeID dest) {
+    public DatagramRejectedMessage(NodeID source, NodeID dest, int code) {
         super(source);
+        this.code = code;
     }
         
+    int code;
+    
     /**
      * Implement message-type-specific
      * processing when this message
