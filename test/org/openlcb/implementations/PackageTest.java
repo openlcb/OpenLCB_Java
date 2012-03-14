@@ -37,13 +37,17 @@ public class PackageTest extends TestCase {
 
         suite.addTest(DatagramTransmitterTest.suite());
         suite.addTest(DatagramReceiverTest.suite());
-
+        
         suite.addTest(DatagramMeteringBufferTest.suite());
+
+        suite.addTest(DatagramServiceTest.suite());
 
         suite.addTest(StreamTransmitterTest.suite());
         suite.addTest(StreamReceiverTest.suite());
 
         suite.addTest(BlueGoldEngineTest.suite());
+
+        suite.addTest(MemoryConfigurationServiceTest.suite());
 
         return suite;
     }
