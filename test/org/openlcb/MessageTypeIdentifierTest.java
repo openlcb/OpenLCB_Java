@@ -11,24 +11,28 @@ import junit.framework.TestSuite;
  */
 public class MessageTypeIdentifierTest extends TestCase {
 
-    public void testEqualsSame() {
-        Message m1 = new Message(new NodeID(new byte[]{1,2,3,4,5,6}) )
-            {public int getMTI() {return 0; }};
-        Message m2 = new Message(new NodeID(new byte[]{1,2,3,4,5,6}) )
-            {public int getMTI() {return 0; }};
-    
-        Assert.assertTrue(m1.equals(m2));
+    public void testCtor() {
+        MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
     }
 
-    public void testNotEqualsDifferent() {
-        Message m1 = new Message(new NodeID(new byte[]{1,2,3,4,5,6}) )
-            {public int getMTI() {return 0; }};
-        Message m2 = new Message(new NodeID(new byte[]{1,3,3,4,5,6}) )
-            {public int getMTI() {return 0; }};
-    
-        Assert.assertTrue( ! m1.equals(m2));
+    public void testEquals() {
+        MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
+        MessageTypeIdentifier mti2 = MessageTypeIdentifier.InitializationComplete;
+        Assert.assertEquals(mti1, mti2);
     }
 
+    public void testNotEquals() {
+        MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
+        MessageTypeIdentifier mti2 = MessageTypeIdentifier.VerifyNodeIdAddressed;
+        Assert.assertTrue(!mti1.equals(mti2));
+    }
+
+    public void testToString() {
+        MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
+        Assert.assertEquals(mti1.toString(), "InitializationComplete");
+        
+    }
+    
     // from here down is testing infrastructure
     
     public MessageTypeIdentifierTest(String s) {
