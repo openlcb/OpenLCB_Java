@@ -32,6 +32,8 @@ public class PackageTest extends TestCase {
         suite.addTest(EventIDTest.suite());
         suite.addTest(NodeIDTest.suite());
 
+        suite.addTest(MessageTypeIdentifierTest.suite());
+
         suite.addTest(MessageTest.suite());
 
         suite.addTest(MessageDecoderTest.suite());
