@@ -85,6 +85,11 @@ public class EventIDTest extends TestCase {
         Assert.assertTrue(!e1.equals(e2));
     }
 
+    public void testOutputFormat() {
+        EventID e1 = new EventID(new byte[]{0,0,1,0x10,0x13,0x0D,(byte)0xD0,(byte)0xAB});
+        Assert.assertEquals(e1.toString(), "EventID:00.00.01.10.13.0D.D0.AB");
+    }
+
     // from here down is testing infrastructure
     
     public EventIDTest(String s) {
