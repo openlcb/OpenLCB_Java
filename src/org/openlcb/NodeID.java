@@ -77,11 +77,12 @@ public class NodeID {
     @NonNull
     public String toString() {
         return "NodeID:"
-                +contents[0]+","
-                +contents[1]+","
-                +contents[2]+","
-                +contents[3]+","
-                +contents[4]+","
-                +contents[5];
+                +Utilities.toHexPair(contents[0])+"."
+                +Utilities.toHexPair(contents[1])+"."
+                +Utilities.toHexPair(contents[2])+"."
+                +Utilities.toHexPair(contents[3])+"."
+                +Utilities.toHexPair(contents[4])+"."
+                +Utilities.toHexPair(contents[5]);
     }
+    
 }
