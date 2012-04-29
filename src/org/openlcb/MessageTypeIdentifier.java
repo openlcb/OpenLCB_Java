@@ -18,35 +18,22 @@ import java.util.List;
  */
 public enum MessageTypeIdentifier {
 
-        ProtocolIdentification( 0x800000000000L,"ProtocolIdentification"), 
-        Datagram(               0x400000000000L,"Datagram"),
-        Stream(                 0x200000000000L,"Stream"), 
-        Configuration(          0x100000000000L,"Configuration"),
-        Reservation(            0x080000000000L,"Reservation"),
-        ProducerConsumer(       0x040000000000L,"ProducerConsumer"),
-        Identification(         0x020000000000L,"Identification"),
-        TeachingLearningConfiguration(0x010000000000L,"TeachingLearningConfiguration"),
-        RemoteButton(           0x008000000000L,"RemoteButton"),
-        AbbreviatedDefaultCDI(  0x004000000000L,"AbbreviatedDefaultCDI"),
-        Display(                0x002000000000L,"Display");
+        // Arguments are addressed, 
+        InitializationComplete( false, 0x1080, 0x18017, 0x00, "InitializationComplete"), 
+        VerifyNodeIdAddressed ( true,  0x1080, 0x18017, 0x00, "VerifyNodeIdAddressed"), 
+        VerifyNodeIdGlobal    ( false, 0x1080, 0x18017, 0x00, "VerifyNodeIdGlobal"),
+        VerifiedNodeId        ( false, 0x1080, 0x18017, 0x00, "VerifyNodeIdGlobal"),
+        OptionalIntRejected   ( false, 0x1080, 0x18017, 0x00, "VerifyNodeIdGlobal"),
+        TerminateDueToError   ( false, 0x1080, 0x18017, 0x00, "VerifyNodeIdGlobal");
        
-        MessageTypeIdentifier(long value, String name) {
-            this.value = value;
+        MessageTypeIdentifier(boolean addressed, long genMTI, int a, int b, String name) {
+            this.genMTI = genMTI;
             this.name = name;
         }
-        long value;
+        long genMTI;
         String name;
         
-        boolean supports(long r) {
-            return ( (this.value & r) != 0 );
+        public String toString() {
+            return name;
         }
-        
-        static List<String> decode(long r) {
-            ArrayList<String> retval = new ArrayList<String>();
-            for (MessageTypeIdentifier t : MessageTypeIdentifier.values()) {
-                if ( t.supports(r) ) retval.add(t.name);
-            }
-            return retval;
-        }
-           
 }
