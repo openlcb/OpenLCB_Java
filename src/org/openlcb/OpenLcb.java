@@ -1,5 +1,9 @@
 package org.openlcb;
 
+//
+// Eventually, these should go away
+//
+
 public interface OpenLcb {
 
     
@@ -7,7 +11,7 @@ public interface OpenLcb {
      * MTI definitions for OpenLCB.
      */
      
-    static final int MTI_INITIALIZATION_COMPLETE     = 0x3080;
+    static final int MTI_INITIALIZATION_COMPLETE     = (int)MessageTypeIdentifier.InitializationComplete.mti();
     
     static final int MTI_VERIFY_NID                  = 0x10A4;
     static final int MTI_VERIFIED_NID                = 0x10B0;
