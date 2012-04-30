@@ -182,30 +182,30 @@ public class OpenLcbCanFrame implements CanFrame {
   
   void setPCEventReport(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI,MTI_PC_EVENT_REPORT);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_PC_EVENT_REPORT);
     length=8;
     loadFromEid(eid);
   }
   
   boolean isPCEventReport() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_PC_EVENT_REPORT);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_PC_EVENT_REPORT);
   }
 
   void setLearnEvent(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI,MTI_LEARN_EVENT);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_LEARN_EVENT);
     length=8;
     loadFromEid(eid);
   }
 
   boolean isLearnEvent() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_LEARN_EVENT);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_LEARN_EVENT);
   }
 
   void setInitializationComplete(int alias, NodeID nid) {
     nodeAlias = alias;
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_INITIALIZATION_COMPLETE);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_INITIALIZATION_COMPLETE);
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];
@@ -217,7 +217,7 @@ public class OpenLcbCanFrame implements CanFrame {
   }
   
   boolean isInitializationComplete() {
-      return isOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI, MTI_INITIALIZATION_COMPLETE);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_INITIALIZATION_COMPLETE);
   }
   
   EventID getEventID() {
@@ -229,22 +229,22 @@ public class OpenLcbCanFrame implements CanFrame {
   }
   
   boolean isVerifyNID() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_VERIFY_NID);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_VERIFY_NID);
   }
 
   void setVerifyNID(NodeID nid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_VERIFY_NID);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_VERIFY_NID);
     length=0;
   }
 
   boolean isVerifiedNID() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_VERIFIED_NID);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_VERIFIED_NID);
   }
 
   void setVerifiedNID(NodeID nid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_VERIFIED_NID);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_VERIFIED_NID);
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];
@@ -256,12 +256,12 @@ public class OpenLcbCanFrame implements CanFrame {
   }
 
   boolean isIdentifyConsumers() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_IDENTIFY_CONSUMERS);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_CONSUMERS);
   }
 
   void setConsumerIdentified(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_CONSUMER_IDENTIFIED);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_CONSUMER_IDENTIFIED);
     length=8;
     loadFromEid(eid);
   }
@@ -269,18 +269,18 @@ public class OpenLcbCanFrame implements CanFrame {
   void setConsumerIdentifyRange(EventID eid, EventID mask) {
     // does send a message, but not complete yet - RGJ 2009-06-14
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_IDENTIFY_CONSUMERS_RANGE);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_CONSUMERS_RANGE);
     length=8;
     loadFromEid(eid);
   }
 
   boolean isIdentifyProducers() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_IDENTIFY_PRODUCERS);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_PRODUCERS);
   }
 
   void setProducerIdentified(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_PRODUCER_IDENTIFIED);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_PRODUCER_IDENTIFIED);
     length=8;
     loadFromEid(eid);
   }
@@ -288,13 +288,13 @@ public class OpenLcbCanFrame implements CanFrame {
   void setProducerIdentifyRange(EventID eid, EventID mask) {
     // does send a message, but not complete yet - RGJ 2009-06-14
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_COMPLEX_MTI,MTI_IDENTIFY_PRODUCERS_RANGE);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_PRODUCERS_RANGE);
     length=8;
     loadFromEid(eid);
   }
 
   boolean isIdentifyEvents() {
-      return isOpenLcbMTI(MTI_FORMAT_SIMPLE_MTI, MTI_IDENTIFY_EVENTS);
+      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_EVENTS);
   }
 
   void loadFromEid(EventID eid) {
@@ -368,8 +368,7 @@ public class OpenLcbCanFrame implements CanFrame {
     /**
      * OpenLCB CAN MTI format bits
      */
-    static final int MTI_FORMAT_SIMPLE_MTI               = 0; 
-    static final int MTI_FORMAT_COMPLEX_MTI              = 1;
+    static final int MTI_FORMAT_UNADDRESSED_MTI          = 0; 
     //
     //
     static final int MTI_FORMAT_ADDRESSED_DATAGRAM       = 4;
@@ -382,23 +381,23 @@ public class OpenLcbCanFrame implements CanFrame {
      * Basic header MTI definitions for OpenLCB on CAN.
      */
      
-    static final int MTI_INITIALIZATION_COMPLETE     = 0x08F;
+    static final int MTI_INITIALIZATION_COMPLETE     = 0x087;
     
-    static final int MTI_VERIFY_NID                  = 0x0A7;
-    static final int MTI_VERIFIED_NID                = 0x0B7;
+    static final int MTI_VERIFY_NID                  = 0x8A7;
+    static final int MTI_VERIFIED_NID                = 0x8B7;
     
-    static final int MTI_IDENTIFY_CONSUMERS          = 0x24F;
+    static final int MTI_IDENTIFY_CONSUMERS          = 0xA4F;
     static final int MTI_IDENTIFY_CONSUMERS_RANGE    = 0x25F;
     static final int MTI_CONSUMER_IDENTIFIED         = 0x26B;
     
-    static final int MTI_IDENTIFY_PRODUCERS          = 0x28F;
+    static final int MTI_IDENTIFY_PRODUCERS          = 0xA8F;
     static final int MTI_IDENTIFY_PRODUCERS_RANGE    = 0x29F;
     static final int MTI_PRODUCER_IDENTIFIED         = 0x2AB;
     
-    static final int MTI_IDENTIFY_EVENTS             = 0x2B7;
+    static final int MTI_IDENTIFY_EVENTS             = 0xAB7;
     
-    static final int MTI_LEARN_EVENT                 = 0x2CF;
-    static final int MTI_PC_EVENT_REPORT             = 0x2DF;
+    static final int MTI_LEARN_EVENT                 = 0xACF;
+    static final int MTI_PC_EVENT_REPORT             = 0xADF;
 
 
 }

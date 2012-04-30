@@ -74,43 +74,31 @@ public class MessageBuilder {
     int getType(CanFrame f) { return ( f.getHeader() & 0x00FF0000 ) >> 16; }
     EventID getEventID(CanFrame f) { return new EventID(f.getData()); }
     
-    public List<Message> processFormat0(CanFrame f) {
+    List<Message> processFormat0(CanFrame f) {
         // simple MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
 
         int type = getType(f);
         switch (type) {
-            case 0x0A: 
+            case 0x8A: 
                 retlist.add(new VerifyNodeIDNumberMessage(source));
                 return retlist;
-            case 0x0B: 
+            case 0x8B: 
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
-            case 0x24: 
+            case 0xA4: 
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
-            case 0x28: 
+            case 0xA8: 
                 retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
                 return retlist;
-            case 0x2B: 
-                retlist.add(new IdentifyEventsMessage(source));
-                return retlist;
-            case 0x2C: 
+            case 0xAC: 
                 retlist.add(new LearnEventMessage(source, getEventID(f)));
                 return retlist;
-            case 0x2D: 
+            case 0xAD: 
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
                 return retlist;
-            default: return null;
-        }
-    }
-    public List<Message> processFormat1(CanFrame f) {
-        // complex  MTI
-        List<Message> retlist = new java.util.ArrayList<Message>();
-        NodeID source = map.getNodeID(getSourceID(f));
-        int type = getType(f);
-        switch (type) {
             case 0x08: 
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
@@ -123,39 +111,25 @@ public class MessageBuilder {
             default: return null;
         }
     }
-    public List<Message> processFormat2(CanFrame f) {
+    List<Message> processFormat1(CanFrame f) {
         // reserved
         return null;
     }
-    public List<Message> processFormat3(CanFrame f) {
-        // reserved
-        return null;
-    }
-    public List<Message> processFormat4(CanFrame f) {
-        // datagram not-last
+    List<Message> processFormat2(CanFrame f) {
+        // datagram only-segment
         NodeID source = map.getNodeID(getSourceID(f));
         List<Integer> list = datagramData.get(source);
         if (list == null) {
             list = new ArrayList<Integer>();
-            datagramData.put(source, list);
-        }
-        for (int i = 0; i < f.getNumDataElements(); i++) {
-            list.add(f.getElement(i));
-        }
-        return null;
-    }
-    public List<Message> processFormat5(CanFrame f) {
-        // datagram last
-        NodeID source = map.getNodeID(getSourceID(f));
-        List<Integer> list = datagramData.get(source);
-        if (list == null) {
-            list = new ArrayList<Integer>();
+            // don't need to put it back, as we're doing just one
+        } else {
+            // this is actually an error, datagram already in process for only-segment
         }
         for (int i = 0; i < f.getNumDataElements(); i++) {
             list.add(f.getElement(i));
         }
         
-        datagramData.put(source, null);
+        // done, forward
         
         int[] data = new int[list.size()];
         for (int i=0; i<list.size(); i++) {
@@ -166,7 +140,58 @@ public class MessageBuilder {
         retlist.add(new DatagramMessage(source, dest, data));
         return retlist;
     }
-    public List<Message> processFormat6(CanFrame f) {
+    List<Message> processFormat3(CanFrame f) {
+        // datagram first-segment
+        NodeID source = map.getNodeID(getSourceID(f));
+        List<Integer> list = datagramData.get(source);
+        if (list == null) {
+            list = new ArrayList<Integer>();
+            datagramData.put(source, list);
+        } else {
+            // this is actually an error, datagram already in process for only-segment
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add(f.getElement(i));
+        }
+        return null;
+    }
+    List<Message> processFormat4(CanFrame f) {
+        // datagram middle-segment
+        NodeID source = map.getNodeID(getSourceID(f));
+        List<Integer> list = datagramData.get(source);
+        if (list == null) {
+            // this is actually an error, should be already started
+            list = new ArrayList<Integer>();
+            datagramData.put(source, list);
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add(f.getElement(i));
+        }
+        return null;
+    }
+    List<Message> processFormat5(CanFrame f) {
+        // datagram last
+        NodeID source = map.getNodeID(getSourceID(f));
+        List<Integer> list = datagramData.get(source);
+        if (list == null) {
+            list = new ArrayList<Integer>();
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add(f.getElement(i));
+        }
+        
+        datagramData.put(source, null); // not accumulating any more
+        
+        int[] data = new int[list.size()];
+        for (int i=0; i<list.size(); i++) {
+            data[i] = list.get(i);
+        }
+        List<Message> retlist = new java.util.ArrayList<Message>();
+        NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
+        retlist.add(new DatagramMessage(source, dest, data));
+        return retlist;
+    }
+    List<Message> processFormat6(CanFrame f) {
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
         int type = f.getElement(0);
@@ -190,7 +215,7 @@ public class MessageBuilder {
             default: return null;
         }
     }
-    public List<Message> processFormat7(CanFrame f) {
+    List<Message> processFormat7(CanFrame f) {
         // stream data
         return null;
     }
