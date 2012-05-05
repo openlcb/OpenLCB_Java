@@ -312,8 +312,10 @@ public class OpenLcbCanFrame implements CanFrame {
   // general, but not efficient
   boolean isDatagram() {
       return isFrameTypeOpenLcb() 
-                && ( (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM)
-                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_LAST))
+                && ( (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_ALL)
+                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST)
+                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_MID)
+                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_LAST) )
                 && (nodeAlias == getVariableField() );
   }
   // just checks 1st, assumes datagram already checked.
@@ -324,12 +326,18 @@ public class OpenLcbCanFrame implements CanFrame {
     /**
      * create a single datagram frame
      */
-  void setDatagram(int[] content, int destAlias, boolean last) {
+  void setDatagram(int[] content, int destAlias, boolean first, boolean last) {
     init(nodeAlias);
-    if (!last) {
-        setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM,destAlias);
+    if (last) {
+        if (first)
+            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_ALL,destAlias);
+        else
+            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_LAST,destAlias);
     } else {
-        setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_LAST,destAlias);
+        if (first)
+            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST,destAlias);
+        else
+            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_MID,destAlias);
     }
     length=content.length;
     for (int i = 0; i< content.length; i++) {
@@ -371,7 +379,9 @@ public class OpenLcbCanFrame implements CanFrame {
     static final int MTI_FORMAT_UNADDRESSED_MTI          = 0; 
     //
     //
-    static final int MTI_FORMAT_ADDRESSED_DATAGRAM       = 4;
+    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_ALL   = 2;
+    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST = 3;
+    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_MID   = 4;
     static final int MTI_FORMAT_ADDRESSED_DATAGRAM_LAST  = 5;
     static final int MTI_FORMAT_ADDRESSED_NON_DATAGRAM   = 6;
     static final int MTI_FORMAT_STREAM_CODE              = 7;

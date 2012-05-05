@@ -29,7 +29,7 @@ public class MessageBuilderTest extends TestCase {
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x18017123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x18087123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
     public void testVerifyNodeIDNumberMessage() {

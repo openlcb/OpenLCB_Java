@@ -336,6 +336,7 @@ public class MessageBuilder {
             // must loop over data to send 8 byte chunks
             int remains = msg.getData().length;
             int j = 0;
+            boolean first = true;
             // always sends at least one datagram, even with zero bytes
             do {
                 int size = Math.min(8, remains);
@@ -345,11 +346,12 @@ public class MessageBuilder {
                 }
                 
                 OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-                f.setDatagram(data, map.getAlias(msg.getDestNodeID()), remains <= 8);
+                f.setDatagram(data, map.getAlias(msg.getDestNodeID()), first, remains <= 8);
                 f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
                 retlist.add(f);
                 
                 remains = remains - size;
+                first = false;
             } while (remains > 0);
         }
 
