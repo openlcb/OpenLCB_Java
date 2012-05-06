@@ -39,10 +39,14 @@ public class TreePaneTest extends TestCase {
     
     JFrame frame;
     TreePane pane;
+    Connection connection = new AbstractConnection() {
+        public void put(Message msg, Connection sender) {}
+    };
+    
     MimicNodeStore store;
     
     public void setUp() throws Exception {
-        store = new MimicNodeStore();
+        store = new MimicNodeStore(connection, nid1);
         Message msg = new ProducerIdentifiedMessage(nid1, eventA);
         store.put(msg, null);
         
@@ -51,7 +55,7 @@ public class TreePaneTest extends TestCase {
         frame.setTitle("TreePane Test");
         TreePane pane = new TreePane();
         frame.add( pane );
-        pane.initComponents(store);
+        pane.initComponents(store, null, null);
         frame.pack();
         frame.setMinimumSize(new java.awt.Dimension(200,200));
         frame.setVisible(true);

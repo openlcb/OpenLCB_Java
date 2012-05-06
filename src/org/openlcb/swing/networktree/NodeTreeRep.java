@@ -43,27 +43,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 }
                 if (e.getPropertyName().equals("updateSimpleNodeIdent")) {
                     System.out.println("simple ID property change");
-                    if (simpleInfoMfgNode == null) {
-                        simpleInfoMfgNode = new DefaultMutableTreeNode("Mfg: "+((SimpleNodeIdent)e.getNewValue()).getMfgName());
-                        getTreeModel().insertNodeInto(simpleInfoMfgNode, getThis(),
-                                     getThis().getChildCount());
-                    } else {
-                        simpleInfoMfgNode.setUserObject("Mfg: "+((SimpleNodeIdent)e.getNewValue()).getMfgName());
-                    }
-                    if (simpleInfoModelNode == null) {
-                        simpleInfoModelNode = new DefaultMutableTreeNode("Mod: "+((SimpleNodeIdent)e.getNewValue()).getModelName());
-                        getTreeModel().insertNodeInto(simpleInfoModelNode, getThis(),
-                                     getThis().getChildCount());
-                    } else {
-                        simpleInfoModelNode.setUserObject("Mod: "+((SimpleNodeIdent)e.getNewValue()).getModelName());
-                    }
-                    if (simpleInfoVersionNode == null) {
-                        simpleInfoVersionNode = new DefaultMutableTreeNode("Ver: "+((SimpleNodeIdent)e.getNewValue()).getVersion());
-                        getTreeModel().insertNodeInto(simpleInfoVersionNode, getThis(),
-                                     getThis().getChildCount());
-                    } else {
-                        simpleInfoVersionNode.setUserObject("Ver: "+((SimpleNodeIdent)e.getNewValue()).getVersion());
-                    }
+                    updateSimpleNodeIdent((SimpleNodeIdent)e.getNewValue());
                 }
                 if (e.getPropertyName().equals("updateConsumers")) {
                     getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Consumers"), getThis(),
@@ -77,6 +57,34 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 }
             }
         });
+        
+        // see if simple ID info already present
+        SimpleNodeIdent id = store.getSimpleNodeIdent(memo.getNodeID());
+        if (id != null) updateSimpleNodeIdent(id);  // otherwise, will be notified later
+    }
+    
+    void updateSimpleNodeIdent(SimpleNodeIdent e) {
+        if (simpleInfoMfgNode == null) {
+            simpleInfoMfgNode = new DefaultMutableTreeNode("Mfg: "+e.getMfgName());
+            getTreeModel().insertNodeInto(simpleInfoMfgNode, getThis(),
+                         getThis().getChildCount());
+        } else {
+            simpleInfoMfgNode.setUserObject("Mfg: "+e.getMfgName());
+        }
+        if (simpleInfoModelNode == null) {
+            simpleInfoModelNode = new DefaultMutableTreeNode("Mod: "+e.getModelName());
+            getTreeModel().insertNodeInto(simpleInfoModelNode, getThis(),
+                         getThis().getChildCount());
+        } else {
+            simpleInfoModelNode.setUserObject("Mod: "+e.getModelName());
+        }
+        if (simpleInfoVersionNode == null) {
+            simpleInfoVersionNode = new DefaultMutableTreeNode("Ver: "+e.getVersion());
+            getTreeModel().insertNodeInto(simpleInfoVersionNode, getThis(),
+                         getThis().getChildCount());
+        } else {
+            simpleInfoVersionNode.setUserObject("Ver: "+e.getVersion());
+        }
     }
     
     DefaultMutableTreeNode simpleInfoMfgNode;
