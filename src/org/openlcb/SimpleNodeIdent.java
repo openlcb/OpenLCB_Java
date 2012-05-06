@@ -40,7 +40,9 @@ public class SimpleNodeIdent {
         // skip mfg
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       return new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
     }
     public String getModelName() {
         int len = 1;
@@ -51,7 +53,9 @@ public class SimpleNodeIdent {
         start = ++len;
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       return new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
     }
     public String getVersion() {
         int len = 1;
@@ -65,7 +69,9 @@ public class SimpleNodeIdent {
         start = ++len;
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       return new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
     }
 
 }

@@ -194,6 +194,7 @@ public class MessageBuilder {
     List<Message> processFormat6(CanFrame f) {
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
+        NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
         int type = f.getElement(0);
         switch (type) {
             case 0x2E: 
@@ -203,7 +204,7 @@ public class MessageBuilder {
                 retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
                 return retlist;
             case 0x52: 
-                retlist.add(new SimpleNodeIdentInfoRequestMessage(source));
+                retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
                 return retlist;
             case 0x53: 
                 byte[] content = f.getData();
@@ -339,6 +340,15 @@ public class MessageBuilder {
          */
         public void handleLearnEvent(LearnEventMessage msg, Connection sender){
             defaultHandler(msg, sender);
+        }
+        /**
+         * Handle "Simple Node Ident Info Request" message
+         */
+        public void handleSimpleNodeIdentInfoRequest(SimpleNodeIdentInfoRequestMessage msg, Connection sender){
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x52);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Datagram" message

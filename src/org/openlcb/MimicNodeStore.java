@@ -14,8 +14,13 @@ import java.beans.PropertyChangeListener;
  * @version $Revision$
  */
 public class MimicNodeStore extends MessageDecoder implements Connection {
-    public MimicNodeStore() {
+    public MimicNodeStore(Connection connection, NodeID node) {
+        this.connection = connection;
+        this.node = node;
     }
+    
+    Connection connection;
+    NodeID node;
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
@@ -30,6 +35,18 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         }
         // check for necessary updates in specific node
         memo.put(msg, sender);
+    }
+    
+    public SimpleNodeIdent getSimpleNodeIdent(NodeID dest) {
+        NodeMemo memo = map.get(dest);
+        if (memo == null) {
+            return null;
+        } else if (memo.getSimpleNodeIdent() != null) {
+            return memo.getSimpleNodeIdent();
+        } else {
+            connection.put(new SimpleNodeIdentInfoRequestMessage(node, dest), null);
+            return null;
+        }
     }
     
     HashMap<NodeID, NodeMemo> map = new java.util.HashMap<NodeID, NodeMemo>();

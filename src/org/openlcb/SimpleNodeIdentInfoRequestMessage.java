@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class SimpleNodeIdentInfoRequestMessage extends Message {
+public class SimpleNodeIdentInfoRequestMessage extends AddressedMessage {
     
-    public SimpleNodeIdentInfoRequestMessage(NodeID source) {
-        super(source);
+    public SimpleNodeIdentInfoRequestMessage(NodeID source, NodeID dest) {
+        super(source, dest);
     }
         
     long value;

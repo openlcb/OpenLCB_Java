@@ -17,18 +17,27 @@ public class SimpleNodeIdentInfoRequestMessageTest extends TestCase {
 
     public void testEqualsSame() {
         Message m1 = new SimpleNodeIdentInfoRequestMessage(
-                               nodeID1);
+                               nodeID1,nodeID2);
         Message m2 = new SimpleNodeIdentInfoRequestMessage(
-                               nodeID1);
+                               nodeID1,nodeID2);
     
         Assert.assertTrue(m1.equals(m2));
     }
 
-    public void testNotEqualsDifferentNode() {
+    public void testNotEqualsDifferentSrcNode() {
         Message m1 = new SimpleNodeIdentInfoRequestMessage(
-                                nodeID1);
+                                nodeID1,nodeID2);
         Message m2 = new SimpleNodeIdentInfoRequestMessage(
-                                nodeID2);
+                                nodeID2,nodeID2);
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+    
+    public void testNotEqualsDifferentDstNode() {
+        Message m1 = new SimpleNodeIdentInfoRequestMessage(
+                                nodeID1,nodeID2);
+        Message m2 = new SimpleNodeIdentInfoRequestMessage(
+                                nodeID1,nodeID1);
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -42,7 +51,7 @@ public class SimpleNodeIdentInfoRequestMessageTest extends TestCase {
                 result = true;
             }
         };
-        Message m = new SimpleNodeIdentInfoRequestMessage(nodeID1);
+        Message m = new SimpleNodeIdentInfoRequestMessage(nodeID1, nodeID2);
         
         n.put(m, null);
         

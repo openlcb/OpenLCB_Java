@@ -26,9 +26,14 @@ public class MimicNodeStoreTest extends TestCase {
                  
     PropertyChangeListener listener;
     boolean listenerFired;
+    Connection connection = new AbstractConnection() {
+        public void put(Message msg, Connection sender) {}
+    };
+    
+    NodeID node = new NodeID(new byte[]{1,2,3,4,5,6});
                                    
     public void setUp() {
-        store = new MimicNodeStore();
+        store = new MimicNodeStore(connection, node);
         
         listener = new PropertyChangeListener(){
             public void propertyChange(java.beans.PropertyChangeEvent e) { listenerFired = true; }
