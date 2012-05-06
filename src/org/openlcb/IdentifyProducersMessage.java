@@ -20,6 +20,8 @@ public class IdentifyProducersMessage extends Message {
     }
         
     EventID eventID;
+    public EventID getEventID() { return eventID; }
+    
     /**
      * Implement message-type-specific
      * processing when this message

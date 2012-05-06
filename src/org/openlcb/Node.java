@@ -9,7 +9,7 @@ package org.openlcb;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class Node extends MessageDecoder implements Connection {
+public class Node extends MessageDecoder {
     public Node(NodeID nodeID) {
         this.nodeID = nodeID;
     }

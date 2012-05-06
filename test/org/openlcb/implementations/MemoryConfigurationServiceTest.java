@@ -24,7 +24,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
-        testConnection = new Connection(){
+        testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 messagesReceived.add(msg);
             }

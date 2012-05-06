@@ -17,7 +17,7 @@ public class Gateway extends MessageDecoder {
      * the East node.
      */
     public Connection getEastConnection() {
-        eastInputConnection = new Connection() {
+        eastInputConnection = new AbstractConnection() {
             public void put(Message msg, Connection sender) {
                 sendMessageToWest(msg, sender);
             }
@@ -46,7 +46,7 @@ public class Gateway extends MessageDecoder {
      * the West node.
      */
     public Connection getWestConnection() {
-        westInputConnection = new Connection() {
+        westInputConnection = new AbstractConnection() {
             public void put(Message msg, Connection sender) {
                 sendMessageToEast(msg, sender);
             }

@@ -41,7 +41,7 @@ abstract public class AddressedMessage extends Message {
         if (! (o instanceof AddressedMessage))
             return false;
         AddressedMessage msg = (AddressedMessage) o;
-        if (this.getDestNodeID() != msg.getDestNodeID())
+        if (!this.getDestNodeID().equals(msg.getDestNodeID()))
             return false;
         else return super.equals(o);
      }

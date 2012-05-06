@@ -18,5 +18,21 @@ public interface Connection {
      *        communications link is used)
      */
     public void put(Message msg, Connection sender);
+    
+    /**
+     * Register to be informed when this connection is ready
+     * to accept messages.  Unless you know via some other
+     * mechanism that the connection is ready to go, you
+     * must register a listener and get the call-back before
+     * sending messages through the connection.
+     */
+    public void registerStartNotification(ConnectionListener c);
 
+    /** 
+     * Internal listener class definition
+     */
+    public class ConnectionListener {
+        public void connectionActive(Connection c) {
+        }
+    }
 }

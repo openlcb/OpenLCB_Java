@@ -65,7 +65,7 @@ public class ProducerPane extends JPanel  {
 	 * <p>
 	 * This implementation doesn't distinguish the source of a message, but it could.
 	 */
-	class InputLink implements Connection {
+	class InputLink extends AbstractConnection {
 	    public InputLink() {
 	    }
 	    

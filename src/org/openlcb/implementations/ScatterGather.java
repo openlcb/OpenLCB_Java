@@ -31,7 +31,7 @@ public class ScatterGather {
         return c;
     }
 
-    class SingleConnection implements Connection {
+    class SingleConnection extends AbstractConnection {
         public void put(Message msg, Connection sender) {
             // forward to all but the sender
             boolean match = false;

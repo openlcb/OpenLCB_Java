@@ -34,7 +34,12 @@ public class OpenLcbCanFrame implements CanFrame {
     public int getHeader() { return id; }
     public void setHeader(int id) { this.id = id; }
     
-    public byte[] getData() { return data; }
+    public byte[] getData() { 
+        // return a copy of appropriate length
+        byte[] copy = new byte[length];
+        System.arraycopy(data,0,copy,0,length);
+        return copy; 
+    }
     public void setData(byte[] b) { data = b; length = b.length;}
     public long bodyAsLong() {
         long retval = 0;
@@ -293,11 +298,30 @@ public class OpenLcbCanFrame implements CanFrame {
     loadFromEid(eid);
   }
 
-  boolean isIdentifyEvents() {
+  boolean isIdentifyEventsGlobal() {
       return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_EVENTS);
   }
 
+  void setIdentifyEventsGlobal() {
+    init(nodeAlias);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_EVENTS);
+    length=0;
+  }
+
+  void setGlobalMessage(int mti) {
+    init(nodeAlias);
+    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,mti);
+    length=0;
+  }
+  void setAddressedMessage(int destAlias, byte mti) {
+    init(nodeAlias);
+    setOpenLcbMTI(MTI_FORMAT_ADDRESSED_NON_DATAGRAM,destAlias);
+    length=1;
+    data[0] = mti;
+  }
+
   void loadFromEid(EventID eid) {
+    length = 8;
     byte[] val = eid.getContents();
     data[0] = val[0];
     data[1] = val[1];
@@ -388,7 +412,7 @@ public class OpenLcbCanFrame implements CanFrame {
     
     
     /**
-     * Basic header MTI definitions for OpenLCB on CAN.
+     * Basic 12-bit header MTI definitions for OpenLCB on CAN.
      */
      
     static final int MTI_INITIALIZATION_COMPLETE     = 0x087;
@@ -403,11 +427,15 @@ public class OpenLcbCanFrame implements CanFrame {
     static final int MTI_IDENTIFY_PRODUCERS          = 0xA8F;
     static final int MTI_IDENTIFY_PRODUCERS_RANGE    = 0x29F;
     static final int MTI_PRODUCER_IDENTIFIED         = 0x2AB;
-    
-    static final int MTI_IDENTIFY_EVENTS             = 0xAB7;
-    
+        
+    static final int MTI_IDENTIFY_EVENTS             = 0xAB7;  // global form
+
     static final int MTI_LEARN_EVENT                 = 0xACF;
     static final int MTI_PC_EVENT_REPORT             = 0xADF;
+
+    /**
+     * Basic 8-bit header MTI definitions for OpenLCB on CAN, go in data[0]
+     */
 
 
 }

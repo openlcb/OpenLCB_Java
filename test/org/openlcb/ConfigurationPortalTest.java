@@ -14,7 +14,7 @@ public class ConfigurationPortalTest extends TestCase {
     
     NodeID nodeID1 = new NodeID(new byte[]{1,2,3,4,5,6});
 
-    Connection connection = new Connection(){
+    Connection connection = new AbstractConnection(){
         public void put(Message m, Connection node) {
             msg = m;
         }

@@ -26,7 +26,7 @@ public class SingleConsumerNodeTest extends TestCase {
     public void testInitialization() {
         result = false;
         messagesReceived = new java.util.ArrayList<Message>();
-        Connection testConnection = new Connection(){
+        Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 messagesReceived.add(msg);
             }
@@ -45,7 +45,7 @@ public class SingleConsumerNodeTest extends TestCase {
     }
     
     public void testConsumeRight() {
-        Connection testConnection = new Connection(){
+        Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
             }
         };
@@ -61,7 +61,7 @@ public class SingleConsumerNodeTest extends TestCase {
     }
 
     public void testConsumeWrong() {
-        Connection testConnection = new Connection(){
+        Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
             }
         };

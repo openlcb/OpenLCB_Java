@@ -20,6 +20,13 @@ public class DatagramMessage extends AddressedMessage {
         System.arraycopy(dataIn, 0, this.data, 0, dataIn.length);
     }
     
+    public DatagramMessage(NodeID source, NodeID dest, byte[] dataIn) {
+        super(source, dest);
+        this.data = new int[dataIn.length];
+        for (int i = 0; i<dataIn.length; i++)
+            this.data[i] = dataIn[i]&0xFF;
+    }
+
     /**
      * Intended for use by subclasses only
      * to ensure immutable objects

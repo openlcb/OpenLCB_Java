@@ -25,6 +25,17 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue("12a not equals 13", !cf12a.equals(cf13));
     }
     
+    public void testArrayGet() {
+        OpenLcbCanFrame cf12a = new OpenLcbCanFrame(12);
+        cf12a.setData(new byte[]{10,20,30});
+        
+        byte[] b = cf12a.getData();
+        Assert.assertEquals(3, b.length);
+        Assert.assertEquals(10, b[0]);
+        Assert.assertEquals(20, b[1]);
+        Assert.assertEquals(30, b[2]);
+    }
+    
     public void testSimpleEqualObject() {
         Object cf12a = new OpenLcbCanFrame(12);
         Object cf12b = new OpenLcbCanFrame(12);

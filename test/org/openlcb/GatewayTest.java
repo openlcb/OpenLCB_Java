@@ -32,7 +32,7 @@ public class GatewayTest extends TestCase {
     protected Connection cE;
     protected Connection cW;
     
-    abstract class TestListener implements Connection {
+    abstract class TestListener extends AbstractConnection {
         public void put(Message m, Connection n) {
             setResult();
         }
