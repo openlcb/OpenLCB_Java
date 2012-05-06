@@ -297,7 +297,11 @@ public class MessageBuilder {
          * Handle "Identify Consumers" message
          */
         public void handleIdentifyConsumers(IdentifyConsumersMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setGlobalMessage(0xA4F);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
         }
         /**
          * Handle "Consumer Identified" message
@@ -309,7 +313,11 @@ public class MessageBuilder {
          * Handle "Identify Producers" message
          */
         public void handleIdentifyProducers(IdentifyProducersMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setGlobalMessage(0xA8F);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
         }
         /**
          * Handle "Producer Identified" message
@@ -321,7 +329,10 @@ public class MessageBuilder {
          * Handle "Identify Event" message
          */
         public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x2B);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Learn Event" message
@@ -359,13 +370,19 @@ public class MessageBuilder {
          * Handle "Datagram Rejected" message
          */
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4D);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Datagram Acknowledged" message
          */
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4C);
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Stream Init Request" message

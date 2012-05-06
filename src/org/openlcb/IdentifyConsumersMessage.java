@@ -20,6 +20,8 @@ public class IdentifyConsumersMessage extends Message {
     }
     
     EventID eventID = null;
+    public EventID getEventID() { return eventID; }
+    
     /**
      * Implement message-type-specific
      * processing when this message

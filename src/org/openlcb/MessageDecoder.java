@@ -10,10 +10,10 @@ package org.openlcb;
  * Using this, a subclass need not use e.g. a switch statement
  * or tentative casting to determine the type of message received.
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2012
  * @version $Revision$
  */
-public class MessageDecoder implements Connection {
+public class MessageDecoder extends AbstractConnection {
     
     /**
      * Process message.

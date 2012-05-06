@@ -15,7 +15,7 @@ public class ScatterGatherTest extends TestCase {
 
     NodeID nodeID = new NodeID(new byte[]{1,2,3,4,5,6});
     
-    abstract class TestListener implements Connection {
+    abstract class TestListener extends AbstractConnection {
         public void put(Message m, Connection n) {
             setResult();
         }

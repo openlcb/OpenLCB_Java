@@ -22,7 +22,7 @@ public class DatagramReceiverTest extends TestCase {
     
     public void testTransfer() {
         messagesReceived = new java.util.ArrayList<Message>();
-        Connection testConnection = new Connection(){
+        Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 messagesReceived.add(msg);
             }

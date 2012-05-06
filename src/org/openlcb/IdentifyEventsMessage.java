@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class IdentifyEventsMessage extends Message {
+public class IdentifyEventsMessage extends AddressedMessage {
     
-    public IdentifyEventsMessage(NodeID source) {
-        super(source);
+    public IdentifyEventsMessage(NodeID source, NodeID dest) {
+        super(source, dest);
     }
         
     /**

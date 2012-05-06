@@ -17,7 +17,7 @@ public class SingleLinkNodeTest extends TestCase {
     
     public void testInitialization() {
         result = false;
-        Connection testConnection = new Connection(){
+        Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection node) {
                 if (msg.equals(new InitializationCompleteMessage(nodeID)))
                     result = true;

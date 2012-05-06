@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class DatagramRejectedMessage extends Message {
+public class DatagramRejectedMessage extends AddressedMessage {
     
     public DatagramRejectedMessage(NodeID source, NodeID dest, int code) {
-        super(source);
+        super(source, dest);
         this.code = code;
     }
         

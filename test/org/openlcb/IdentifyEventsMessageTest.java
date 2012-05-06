@@ -14,18 +14,40 @@ public class IdentifyEventsMessageTest extends TestCase {
     
     public void testEqualsSame() {
         Message m1 = new IdentifyEventsMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
         Message m2 = new IdentifyEventsMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
     
         Assert.assertTrue(m1.equals(m2));
     }
 
-    public void testNotEqualsDifferent() {
+    public void testEqualsSelf() {
         Message m1 = new IdentifyEventsMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
+    
+        Assert.assertTrue(m1.equals(m1));
+    }
+
+    public void testNotEqualsDifferentSrc() {
+        Message m1 = new IdentifyEventsMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
         Message m2 = new IdentifyEventsMessage(
-                                            new NodeID(new byte[]{1,3,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,3,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+    public void testNotEqualsDifferentDest() {
+        Message m1 = new IdentifyEventsMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
+        Message m2 = new IdentifyEventsMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), 
+                                            new NodeID(new byte[]{7,10,9,10,11,12}) );
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -39,7 +61,8 @@ public class IdentifyEventsMessageTest extends TestCase {
             }
         };
         Message m = new IdentifyEventsMessage(
-                                            new NodeID(new byte[]{1,2,3,4,5,6}) );
+                                            new NodeID(new byte[]{1,2,3,4,5,6}),
+                                            new NodeID(new byte[]{7,8,9,10,11,12}) );
         
         n.put(m, null);
         

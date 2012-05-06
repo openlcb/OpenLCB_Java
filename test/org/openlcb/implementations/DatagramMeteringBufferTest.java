@@ -37,14 +37,14 @@ public class DatagramMeteringBufferTest extends TestCase {
     public void setUp() {
 
         repliesReturned1 = new java.util.ArrayList<Message>();
-        replyConnection1 = new Connection(){
+        replyConnection1 = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 repliesReturned1.add(msg);
             }
         };
 
         messagesForwarded = new java.util.ArrayList<Message>();
-        forwardConnection = new Connection(){
+        forwardConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 messagesForwarded.add(msg);
                 testConnection = sender;
