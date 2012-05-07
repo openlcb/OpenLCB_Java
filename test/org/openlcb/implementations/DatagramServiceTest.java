@@ -99,7 +99,7 @@ public class DatagramServiceTest extends TestCase {
     public void testReceiveFirstDG() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
-                public int handleData(int[] data) { 
+                public int handleData( NodeID n, int[] data) { 
                     flag = true;
                     return 0; 
                 }

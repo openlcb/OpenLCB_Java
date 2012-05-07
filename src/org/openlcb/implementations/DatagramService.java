@@ -51,7 +51,7 @@ public class DatagramService extends MessageDecoder {
         // forward
         int retval = DEFAULT_ERROR_CODE;
         if (rcvMemo != null && rcvMemo.type == msg.getData()[0]) {
-            retval = rcvMemo.handleData(msg.getData());
+            retval = rcvMemo.handleData(msg.getSourceNodeID(), msg.getData());
         }
         if (retval  == 0) {
             // accept
@@ -68,7 +68,6 @@ public class DatagramService extends MessageDecoder {
      * Handle positive datagram reply message from layout
      */
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
-        System.out.println("received Datagram acknowledged");
         if (xmtMemo != null) {
             xmtMemo.handleReply(0);
         }
@@ -111,7 +110,7 @@ public class DatagramService extends MessageDecoder {
          * Overload this to for notification of data.
          * @returns 0 for OK, non-zero for error reply
          */
-        public int handleData(int[] data) { 
+        public int handleData(NodeID n, int[] data) { 
             // default is error
             return DEFAULT_ERROR_CODE; 
         }

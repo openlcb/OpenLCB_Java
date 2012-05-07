@@ -28,8 +28,14 @@ public class MemoryConfigurationService {
         
         // connect to be notified of config service
         downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo(DATAGRAM_TYPE){
-            public int handleData(int[] data) { 
-                System.out.println("Received datagram "+data);
+            public int handleData(NodeID dest, int[] data) { 
+                System.out.println("Received datagram of "+data.length+" from "+dest);
+                if (readMemo != null) {
+                    byte[] content = new byte[data.length-6];
+                    for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6];
+                    readMemo.handleReadData(dest, readMemo.space, readMemo.address, content);
+                }    
+                readMemo = null;
                 return 0;
             }
         });
@@ -38,14 +44,17 @@ public class MemoryConfigurationService {
     NodeID here;
     DatagramService downstream;
     
+    
     public void request(McsWriteMemo memo) {
         // forward as write Datagram
         WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
         downstream.sendData(dg);
     }
 
+    McsReadMemo readMemo;
     public void request(McsReadMemo memo) {
         // forward as read Datagram
+        readMemo = memo;
         ReadDatagramMemo dg = new ReadDatagramMemo(memo.dest, memo.space, memo.address, memo.count, memo);
         downstream.sendData(dg);
     }
@@ -91,7 +100,7 @@ public class MemoryConfigurationService {
         /**
          * Overload this for notification of data.
          */
-        public void handleReadData(int[] data) { 
+        public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
         }
 
     }
