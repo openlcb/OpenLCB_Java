@@ -21,6 +21,8 @@ public class DatagramRejectedMessage extends AddressedMessage {
         
     int code;
     
+    public int getCode() { return code; }
+    
     /**
      * Implement message-type-specific
      * processing when this message

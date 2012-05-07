@@ -383,6 +383,7 @@ public class MessageBuilder {
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4D);
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.setData(new byte[]{(byte)0x4D, (byte)((msg.getCode()>>8)&0xFF), (byte)(msg.getCode()&0xFF)});
             retlist.add(f);
         }
         /**
