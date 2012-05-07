@@ -203,6 +203,12 @@ public class MessageBuilder {
             case 0x2F: 
                 retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
                 return retlist;
+            case 0x4C: 
+                retlist.add(new DatagramAcknowledgedMessage(source,dest));
+                return retlist;
+            case 0x4D: 
+                retlist.add(new DatagramRejectedMessage(source,dest,(int)f.bodyAsLong()));
+                return retlist;
             case 0x52: 
                 retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
                 return retlist;
