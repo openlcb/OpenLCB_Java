@@ -68,6 +68,7 @@ public class DatagramService extends MessageDecoder {
      * Handle positive datagram reply message from layout
      */
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
+        System.out.println("received Datagram acknowledged");
         if (xmtMemo != null) {
             xmtMemo.handleReply(0);
         }

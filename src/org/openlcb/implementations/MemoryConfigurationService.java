@@ -18,12 +18,21 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 public class MemoryConfigurationService {
 
+    private static final int DATAGRAM_TYPE = 0x20;
     /**
      * @param downstream Connection in the direction of the layout
      */
     public MemoryConfigurationService(NodeID here, DatagramService downstream) {
         this.here = here;
         this.downstream = downstream;   
+        
+        // connect to be notified of config service
+        downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo(DATAGRAM_TYPE){
+            public int handleData(int[] data) { 
+                System.out.println("Received datagram "+data);
+                return 0;
+            }
+        });
     }
     
     NodeID here;
@@ -34,10 +43,16 @@ public class MemoryConfigurationService {
         WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
         downstream.sendData(dg);
     }
+
+    public void request(McsReadMemo memo) {
+        // forward as read Datagram
+        ReadDatagramMemo dg = new ReadDatagramMemo(memo.dest, memo.space, memo.address, memo.count, memo);
+        downstream.sendData(dg);
+    }
     
     @Immutable
     @ThreadSafe    
-    static protected class McsReadMemo {
+    static public class McsReadMemo {
         public McsReadMemo(NodeID dest, int space, long address, int count) {
             this.count = count;
             this.address = address;
@@ -83,15 +98,46 @@ public class MemoryConfigurationService {
 
     @Immutable
     @ThreadSafe    
-    static protected class McsWriteMemo {
-        public McsWriteMemo(NodeID dest, int space, long address, int[] data) {
+    static public class ReadDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+        ReadDatagramMemo(NodeID dest, int space, long address, int count, McsReadMemo memo) {
+            super(dest);
+            boolean spaceByte = false;
+            if (space<0xFD) spaceByte = true;
+            this.data = new int[6+(spaceByte ? 1 : 0)+1];
+            this.data[0] = DATAGRAM_TYPE;
+            this.data[1] = 0x40;
+            if (space >= 0xFD) this.data[1] |= space&0x3;
+            
+            this.data[2] = (int)(address>>24)&0xFF;
+            this.data[3] = (int)(address>>16)&0xFF;
+            this.data[4] = (int)(address>>8 )&0xFF;
+            this.data[5] = (int)(address    )&0xFF;
+
+            if (spaceByte) this.data[6] = space;
+            
+            this.data[6+(spaceByte ? 1 : 0)] = count;
+                
+            this.memo = memo;
+        }
+        McsReadMemo memo;
+        public void handleReply(int code) { 
+            memo.handleWriteReply(code);
+        }
+        
+
+    }
+
+    @Immutable
+    @ThreadSafe    
+    static public class McsWriteMemo {
+        public McsWriteMemo(NodeID dest, int space, long address, byte[] data) {
             this.data = data;
             this.address = address;
             this.space = space;
             this.dest = dest;
         }
 
-        int[] data;
+        byte[] data;
         long address;
         int space;
         NodeID dest;
@@ -126,13 +172,13 @@ public class MemoryConfigurationService {
     
     @Immutable
     @ThreadSafe    
-    protected class WriteDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
-        WriteDatagramMemo(NodeID dest, int space, long address, int[] content, McsWriteMemo memo) {
+    static public class WriteDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+        WriteDatagramMemo(NodeID dest, int space, long address, byte[] content, McsWriteMemo memo) {
             super(dest);
             boolean spaceByte = false;
             if (space<0xFD) spaceByte = true;
             this.data = new int[6+(spaceByte ? 1 : 0)+content.length];
-            this.data[0] = 0x20;
+            this.data[0] = DATAGRAM_TYPE;
             this.data[1] = 0x00;
             if (space >= 0xFD) this.data[1] |= space&0x3;
             
