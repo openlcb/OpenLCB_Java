@@ -36,13 +36,11 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
 
                 if (e.getPropertyName().equals("updateProtocol")) {
-                    System.out.println("protocol property change");
                     getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Protocols"), getThis(),
                                  getThis().getChildCount());
                 
                 }
                 if (e.getPropertyName().equals("updateSimpleNodeIdent")) {
-                    System.out.println("simple ID property change");
                     updateSimpleNodeIdent((SimpleNodeIdent)e.getNewValue());
                 }
                 if (e.getPropertyName().equals("updateConsumers")) {
