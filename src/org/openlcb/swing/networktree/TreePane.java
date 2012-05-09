@@ -34,6 +34,12 @@ public class TreePane extends JPanel  {
         
         nodes = new DefaultMutableTreeNode("OpenLCB Network");
 
+        // build GUI
+        treeModel = new DefaultTreeModel(nodes);
+        JTree tree = new JTree(treeModel);
+        tree.setEditable(true);
+        JScrollPane treeView = new JScrollPane(tree);
+        add(treeView);
 
         // listen for newly arrived nodes
         store.addPropertyChangeListener(
@@ -43,16 +49,23 @@ public class TreePane extends JPanel  {
                 if (e.getPropertyName().equals("AddNode")) {
                     MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
     
-                    treeModel.insertNodeInto(new NodeTreeRep(memo, getStore(), getTreeModel()), nodes,
+                    NodeTreeRep n = new NodeTreeRep(memo, getStore(), getTreeModel());
+                    treeModel.insertNodeInto(n, nodes,
                                  nodes.getChildCount());
+                    n.initConnections();
                 }
             }
         });
 
         // add nodes that exist now
         for (MimicNodeStore.NodeMemo memo : store.getNodeMemos() ) {
-            nodes.add(new NodeTreeRep(memo, store, treeModel));
+            NodeTreeRep n = new NodeTreeRep(memo, store, treeModel);
+            nodes.add(n);
+            n.initConnections();
         }
+        
+        // start with top level expanded
+        tree.expandPath(new TreePath(nodes.getPath()));
 
         // kick off a listen when connection ready
         Connection.ConnectionListener cl = new Connection.ConnectionListener(){
@@ -63,12 +76,6 @@ public class TreePane extends JPanel  {
         };
         if (connection != null) connection.registerStartNotification(cl);
         
-        // build GUI
-        treeModel = new DefaultTreeModel(nodes);
-        JTree tree = new JTree(treeModel);
-        tree.setEditable(true);
-        JScrollPane treeView = new JScrollPane(tree);
-        add(treeView);
 
     }
 	

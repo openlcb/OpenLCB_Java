@@ -29,7 +29,9 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
 	    this.memo = memo;
 	    this.store = store;
 	    this.treeModel = treeModel;
-	    
+    }
+    
+    void initConnections() {
         // listen for more info arriving
         memo.addPropertyChangeListener(
             new PropertyChangeListener(){
@@ -64,22 +66,25 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     void updateSimpleNodeIdent(SimpleNodeIdent e) {
         if (simpleInfoMfgNode == null) {
             simpleInfoMfgNode = new DefaultMutableTreeNode("Mfg: "+e.getMfgName());
-            getTreeModel().insertNodeInto(simpleInfoMfgNode, getThis(),
-                         getThis().getChildCount());
+            getTreeModel().insertNodeInto(simpleInfoMfgNode, 
+                        getThis(),
+                        getThis().getChildCount());
         } else {
             simpleInfoMfgNode.setUserObject("Mfg: "+e.getMfgName());
         }
         if (simpleInfoModelNode == null) {
             simpleInfoModelNode = new DefaultMutableTreeNode("Mod: "+e.getModelName());
-            getTreeModel().insertNodeInto(simpleInfoModelNode, getThis(),
-                         getThis().getChildCount());
+            getTreeModel().insertNodeInto(simpleInfoModelNode, 
+                        getThis(),
+                        getThis().getChildCount());
         } else {
             simpleInfoModelNode.setUserObject("Mod: "+e.getModelName());
         }
         if (simpleInfoVersionNode == null) {
             simpleInfoVersionNode = new DefaultMutableTreeNode("Ver: "+e.getVersion());
-            getTreeModel().insertNodeInto(simpleInfoVersionNode, getThis(),
-                         getThis().getChildCount());
+            getTreeModel().insertNodeInto(simpleInfoVersionNode, 
+                        getThis(),
+                        getThis().getChildCount());
         } else {
             simpleInfoVersionNode.setUserObject("Ver: "+e.getVersion());
         }
