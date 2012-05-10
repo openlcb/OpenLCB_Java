@@ -27,14 +27,19 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
     } 
     
     public void put(Message msg, Connection sender) {
-        NodeMemo memo = map.get(msg.getSourceNodeID());
-        if (memo == null) {
-            memo = new NodeMemo(msg.getSourceNodeID());
-            map.put(msg.getSourceNodeID(), memo);
-            pcs.firePropertyChange("AddNode", null, memo);
-        }
+        NodeMemo memo = addNode(msg.getSourceNodeID());
         // check for necessary updates in specific node
         memo.put(msg, sender);
+    }
+    
+    public NodeMemo addNode(NodeID id) {
+        NodeMemo memo = map.get(id);
+        if (memo == null) {
+            memo = new NodeMemo(id);
+            map.put(id, memo);
+            pcs.firePropertyChange("AddNode", null, memo);
+        }
+        return memo;
     }
     
     public SimpleNodeIdent getSimpleNodeIdent(NodeID dest) {
