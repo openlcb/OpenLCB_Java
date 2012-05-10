@@ -34,6 +34,7 @@ public class PackageTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(PackageTest.class);
         suite.addTest(MonPaneTest.suite());
+        suite.addTest(NodeSelectorTest.suite());
         suite.addTest(org.openlcb.swing.networktree.PackageTest.suite());
 
         return suite;
