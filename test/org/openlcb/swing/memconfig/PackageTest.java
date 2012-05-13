@@ -1,16 +1,12 @@
-package org.openlcb.swing;
+package org.openlcb.swing.memconfig;
 
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import javax.swing.*;
-
-import org.openlcb.swing.*;
-
 /**
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
  */
 public class PackageTest extends TestCase {
@@ -33,10 +29,8 @@ public class PackageTest extends TestCase {
     // test suite from all defined tests
     public static Test suite() {
         TestSuite suite = new TestSuite(PackageTest.class);
-        suite.addTest(MonPaneTest.suite());
-        suite.addTest(NodeSelectorTest.suite());
-        suite.addTest(org.openlcb.swing.networktree.PackageTest.suite());
-        suite.addTest(org.openlcb.swing.memconfig.PackageTest.suite());
+        suite.addTest(MemConfigDescriptionPaneTest.suite());
+        suite.addTest(MemConfigReadWritePaneTest.suite());
 
         return suite;
     }
