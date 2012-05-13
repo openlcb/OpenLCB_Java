@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Simple Node Ident Protocol 
  *
- * @see             http://www.openlcb.org/trunk/specs/drafts/GenProtocolIdS.pdf
+ * @see             "http://www.openlcb.org/trunk/specs/drafts/GenProtocolIdS.pdf"
  * @author			Bob Jacobsen   Copyright (C) 2012
  * @version			$Revision: 18542 $
  *

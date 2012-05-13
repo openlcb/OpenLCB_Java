@@ -108,7 +108,7 @@ public class DatagramService extends MessageDecoder {
         
         /**
          * Overload this to for notification of data.
-         * @returns 0 for OK, non-zero for error reply
+         * @return 0 for OK, non-zero for error reply
          */
         public int handleData(NodeID n, int[] data) { 
             // default is error
