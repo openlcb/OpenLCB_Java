@@ -7,7 +7,7 @@ to be done in a device-specific way elsewhere.
 
 <p>
 For testing purposes, that implementation is currently
-taken from the {@link tools.cansim} package.
+taken from the tools.cansim package in the test code tree.
 
 <p>
 Although Java guarantees that an int is 32 bits and a long
@@ -41,9 +41,5 @@ messages from the source alias.
 
 (Pointers to CAN info)
 
-<!-- Put @see and @since tags down here. -->
-<!-- @since 1.2.3 -->
-
-@see tools.cansim
 */
 package org.openlcb.can;

@@ -92,7 +92,7 @@ public class MemoryConfigurationService {
         
         /**
          * Overload this for notification of failure reply
-         * @param non-zero for error reply
+         * @param code non-zero for error reply
          */
         public void handleWriteReply(int code) { 
         }

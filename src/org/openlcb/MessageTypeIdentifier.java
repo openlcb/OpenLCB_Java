@@ -11,7 +11,7 @@ import java.util.List;
  * Central place to carry the (only) numerical values for 
  * Message Type Identifiers
  *
- * @see             http://www.openlcb.org/trunk/specs/drafts/
+ * @see             "http://www.openlcb.org/trunk/specs/"
  * @author			Bob Jacobsen   Copyright (C) 2012
  * @version			$Revision: 18542 $
  *
