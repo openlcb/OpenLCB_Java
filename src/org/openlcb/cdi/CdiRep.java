@@ -55,9 +55,17 @@ public interface CdiRep {
         public int getDefault();
         public int getMin();
         public int getMax();
+
+        public int getSize();
     }
     public static interface Bit extends Item {
         public boolean getDefault();
+
+        public int getSize();
+    }
+    public static interface CdiString extends Item {  // "String" causes too many name conflicts
+
+        public int getSize();
     }
 
 }

@@ -93,6 +93,7 @@ public class JdomCdiRep implements CdiRep {
                 else if ("bit".equals(element.getName())) list.add(new Bit(element));
                 else if ("int".equals(element.getName())) list.add(new Int(element));
                 else if ("eventid".equals(element.getName())) list.add(new EventID(element));
+                else if ("string".equals(element.getName())) list.add(new CdiString(element));
             }
             return list;
         }
@@ -187,13 +188,41 @@ public class JdomCdiRep implements CdiRep {
         public int getDefault() { return 0; }
         public int getMin() { return 0; }
         public int getMax() { return 0; }
+
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
         
         Int(Element e) { super(e); }
     }
     public static class Bit extends Item implements CdiRep.Bit {
         public boolean getDefault() { return false; }
 
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
+
         Bit(Element e) { super(e); }
+    }
+    public static class CdiString extends Item implements CdiRep.CdiString {
+
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
+
+        CdiString(Element e) { super(e); }
     }
 
     Element root;
