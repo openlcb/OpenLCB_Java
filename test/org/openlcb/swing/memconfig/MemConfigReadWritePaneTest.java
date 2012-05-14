@@ -32,7 +32,8 @@ public class MemConfigReadWritePaneTest extends TestCase {
     };
     
     MimicNodeStore store;
-    
+    MemConfigReadWritePane pane;
+
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nidHere);
         store.addNode(nidThere);
@@ -41,6 +42,10 @@ public class MemConfigReadWritePaneTest extends TestCase {
         frame = new JFrame();
         frame.setTitle("MemConfigReadWritePane Test");
 
+        pane = new MemConfigReadWritePane(store);
+        frame.add(pane);
+        
+        frame.pack();
         frame.pack();
         frame.setMinimumSize(new java.awt.Dimension(200,200));
         frame.setVisible(true);
