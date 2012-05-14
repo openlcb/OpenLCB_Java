@@ -31,6 +31,7 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
         
         suite.addTest(JdomCdiRepTest.suite());
+        suite.addTest(CdiMemConfigReaderTest.suite());
 
         return suite;
     }
