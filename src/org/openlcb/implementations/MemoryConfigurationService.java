@@ -28,14 +28,39 @@ public class MemoryConfigurationService {
         
         // connect to be notified of config service
         downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo(DATAGRAM_TYPE){
+            // does not allow for overlapping operations, either to a single node nor or multiple types
+            // nor to multiple nodes
+            //
+            // doesn't check for match of reply to memo, but eventually should.
             public int handleData(NodeID dest, int[] data) { 
-                System.out.println("Received datagram of "+data.length+" from "+dest);
                 if (readMemo != null) {
                     byte[] content = new byte[data.length-6];
                     for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6];
-                    readMemo.handleReadData(dest, readMemo.space, readMemo.address, content);
+                    McsReadMemo memo = readMemo;
+                    readMemo = null;
+                    memo.handleReadData(dest, memo.space, memo.address, content);
                 }    
-                readMemo = null;
+                if (configMemo != null) {
+                    // doesn't handle decode of name string, but should
+                    int commands = (data[2]<<8)+data[3];
+                    int options = data[4];
+                    int highSpace = data[5];
+                    int lowSpace = data[6];
+                    McsConfigMemo memo = configMemo;
+                    configMemo = null;
+                    memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
+                }    
+                if (addrSpaceMemo != null) {
+                    // doesn't handle decode of desc string, but should
+                    int space = data[2];
+                    long highAddress = (data[3]<<24)+(data[4]<<16)+(data[5]<<8)+data[6];
+                    int flags = data[7];
+                    long lowAddress = 0;  // doesn't handle optional value
+                    
+                    McsAddrSpaceMemo memo = addrSpaceMemo;
+                    addrSpaceMemo = null;
+                    memo.handleConfigData(dest, space, highAddress, lowAddress, flags, "");
+                }    
                 return 0;
             }
         });
@@ -56,6 +81,22 @@ public class MemoryConfigurationService {
         // forward as read Datagram
         readMemo = memo;
         ReadDatagramMemo dg = new ReadDatagramMemo(memo.dest, memo.space, memo.address, memo.count, memo);
+        downstream.sendData(dg);
+    }
+
+    McsConfigMemo configMemo;
+    public void request(McsConfigMemo memo) {
+        // forward as read Datagram
+        configMemo = memo;
+        ConfigDatagramMemo dg = new ConfigDatagramMemo(memo.dest, memo);
+        downstream.sendData(dg);
+    }
+    
+    McsAddrSpaceMemo addrSpaceMemo;
+    public void request(McsAddrSpaceMemo memo) {
+        // forward as read Datagram
+        addrSpaceMemo = memo;
+        AddrSpaceDatagramMemo dg = new AddrSpaceDatagramMemo(memo.dest, memo);
         downstream.sendData(dg);
     }
     
@@ -132,8 +173,6 @@ public class MemoryConfigurationService {
         public void handleReply(int code) { 
             memo.handleWriteReply(code);
         }
-        
-
     }
 
     @Immutable
@@ -211,4 +250,117 @@ public class MemoryConfigurationService {
 
     }
     
+    @Immutable
+    @ThreadSafe    
+    static public class McsConfigMemo {
+        public McsConfigMemo(NodeID dest) {
+            this.dest = dest;
+        }
+
+        NodeID dest;
+        
+        public boolean equals(Object o) {
+            if (o == null) return false;
+            if (! (o instanceof McsConfigMemo)) return false;
+            McsConfigMemo m = (McsConfigMemo) o;
+            return this.dest == m.dest;
+        } 
+    
+        public String toString() {
+            return "McsConfigMemo";
+        }
+        
+        public int hashCode() { return dest.hashCode(); }
+        
+        /**
+         * Overload this for notification of failure reply
+         * @param code non-zero for error reply
+         */
+        public void handleWriteReply(int code) { 
+        }
+        
+        /**
+         * Overload this for notification of data.
+         */
+        public void handleConfigData(NodeID dest, int commands, int options, int highSpace, int lowSpace, String name) { 
+        }
+
+    }
+
+    @Immutable
+    @ThreadSafe    
+    static public class ConfigDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+        ConfigDatagramMemo(NodeID dest, McsConfigMemo memo) {
+            super(dest);
+            this.data = new int[2];
+            this.data[0] = DATAGRAM_TYPE;
+            this.data[1] = 0x80;                
+            this.memo = memo;
+        }
+        McsConfigMemo memo;
+        public void handleReply(int code) { 
+            memo.handleWriteReply(code);
+        }
+        
+
+    }
+
+    @Immutable
+    @ThreadSafe    
+    static public class McsAddrSpaceMemo {
+        public McsAddrSpaceMemo(NodeID dest, int space) {
+            this.dest = dest;
+            this.space = space;
+        }
+
+        NodeID dest;
+        int space;
+        
+        public boolean equals(Object o) {
+            if (o == null) return false;
+            if (! (o instanceof McsAddrSpaceMemo)) return false;
+            McsAddrSpaceMemo m = (McsAddrSpaceMemo) o;
+            if (this.space != m.space) return false;
+            return this.dest == m.dest;
+        } 
+    
+        public String toString() {
+            return "McsAddrSpaceMemo "+space;
+        }
+        
+        public int hashCode() { return dest.hashCode()+space; }
+        
+        /**
+         * Overload this for notification of failure reply
+         * @param code non-zero for error reply
+         */
+        public void handleWriteReply(int code) { 
+        }
+        
+        /**
+         * Overload this for notification of data.
+         */
+        public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+        }
+
+    }
+
+    @Immutable
+    @ThreadSafe    
+    static public class AddrSpaceDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+        AddrSpaceDatagramMemo(NodeID dest, McsAddrSpaceMemo memo) {
+            super(dest);
+            this.data = new int[3];
+            this.data[0] = DATAGRAM_TYPE;
+            this.data[1] = 0x84;                
+            this.data[2] = memo.space;                
+            this.memo = memo;
+        }
+        McsAddrSpaceMemo memo;
+        public void handleReply(int code) { 
+            memo.handleWriteReply(code);
+        }
+        
+
+    }
 }

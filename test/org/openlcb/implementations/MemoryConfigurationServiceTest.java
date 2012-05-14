@@ -146,98 +146,191 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
-//     public void testReceiveDGbeforeReg() {
-//         DatagramService.DatagramServiceReceiveMemo m20 = 
-//             new DatagramService.DatagramServiceReceiveMemo(0x20){
-//                 public int handleData(int[] data) { 
-//                     flag = true;
-//                     return 0; 
-//                 }
-//             };
-//         
-//         Message m = new DatagramMessage(farID, hereID, new int[]{0x020});
-//       
-//         Assert.assertEquals(0,messagesReceived.size());
-// 
-//         Assert.assertTrue(!flag);
-//         service.put(m, null);
-//         Assert.assertTrue(!flag);
-//         
-//         Assert.assertEquals(1,messagesReceived.size());
-//         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
-//     }
-// 
-//     public void testReceiveFirstDG() {
-//         DatagramService.DatagramServiceReceiveMemo m20 = 
-//             new DatagramService.DatagramServiceReceiveMemo(0x20){
-//                 public int handleData(int[] data) { 
-//                     flag = true;
-//                     return 0; 
-//                 }
-//             };
-// 
-//         service.registerForReceive(m20);  
-//         
-//         Message m = new DatagramMessage(farID, hereID, new int[]{0x020});
-//       
-//         Assert.assertTrue(!flag);
-//         service.put(m, null);
-//         Assert.assertTrue(flag);
-//         
-//         Assert.assertEquals(1,messagesReceived.size());
-//         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramAcknowledgedMessage);
-//     }
-// 
-//     public void testReceiveWrongDGType() {
-//         DatagramService.DatagramServiceReceiveMemo m20 = 
-//             new DatagramService.DatagramServiceReceiveMemo(0x20){
-//                 public int handleData(int[] data) { 
-//                     flag = true;
-//                     return 0; 
-//                 }
-//             };
-// 
-//         service.registerForReceive(m20);  
-//         
-//         Message m = new DatagramMessage(farID, hereID, new int[]{0x21});
-//       
-//         Assert.assertTrue(!flag);
-//         service.put(m, null);
-//         Assert.assertTrue(!flag);
-//         
-//         Assert.assertEquals(1,messagesReceived.size());
-//         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
-//     }
-// 
-// 
-//     public void testSendOK() {
-//         int[] data = new byte[]{1,2,3,4,5};
-//         DatagramService.DatagramServiceTransmitMemo memo = 
-//             new DatagramService.DatagramServiceTransmitMemo(farID,data) {
-//                 public void handleReply(int code) { 
-//                     flag = true;
-//                 }
-//             };
-//             
-//         service.sendData(memo);
-//         
-//         Assert.assertEquals("init messages", 1, messagesReceived.size());
-//         Assert.assertTrue(messagesReceived.get(0)
-//                            .equals(new DatagramMessage(hereID, farID, data)));
-// 
-//         // Accepted
-//         Message m = new DatagramAcknowledgedMessage(farID, hereID);
-//         messagesReceived = new java.util.ArrayList<Message>();
-// 
-//         Assert.assertTrue(!flag);
-//         service.put(m, null);
-//         Assert.assertTrue(flag);
-// 
-//         Assert.assertEquals("1st messages", 0, messagesReceived.size());
-//         
-//     }
+    public void testSimpleRead() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        int length = 4;
+        MemoryConfigurationService.McsReadMemo memo = 
+            new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
+                public void handleWriteReply(int code) { 
+                    flag = true;
+                }
+                public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
+                    flag = true;
+                }
+            };
+
+        // test executes the callbacks instantly; real connections might not
+        Assert.assertTrue(!flag);
+        service.request(memo);
+        Assert.assertTrue(!flag);
+        
+        // should have sent datagram
+         Assert.assertEquals(1,messagesReceived.size());
+         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+        // check format of datagram read
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertTrue(content.length >= 6);
+        Assert.assertEquals("datagram type", 0x20, content[0]);
+        Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
+        
+        Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
+        
+        if (space >= 0xFD) {
+            Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
+            Assert.assertEquals("data length", length, content[6]);
+        } else {
+            Assert.assertEquals("space byte", space, content[6]);
+            Assert.assertEquals("data length", length, content[7]);
+        }
+        
+        // datagram reply comes back 
+        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+        // now return data
+        flag = false;
+        content[1] = content[1]|0x01;
+        // needs to have pseudo-data added to end of array
+        m = new DatagramMessage(farID, hereID, content);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+    }
     
-    
+    public void testConfigMemoIsRealClass() {
+        MemoryConfigurationService.McsConfigMemo m20 = 
+            new MemoryConfigurationService.McsConfigMemo(farID);
+        MemoryConfigurationService.McsConfigMemo m20a = 
+            new MemoryConfigurationService.McsConfigMemo(farID);
+        MemoryConfigurationService.McsConfigMemo m21 = 
+            new MemoryConfigurationService.McsConfigMemo(hereID);
+        
+        Assert.assertTrue(m20.equals(m20));
+        Assert.assertTrue(m20.equals(m20a));
+        
+        Assert.assertTrue(!m20.equals(null));
+        
+        Assert.assertTrue(!m20.equals(m21));
+        
+    }
+
+    public void testGetConfig() {
+        MemoryConfigurationService.McsConfigMemo memo = 
+            new MemoryConfigurationService.McsConfigMemo(farID) {
+                public void handleWriteReply(int code) { 
+                    flag = true;
+                }
+                public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) { 
+                    flag = true;
+                }
+            };
+
+        // test executes the callbacks instantly; real connections might not
+        Assert.assertTrue(!flag);
+        service.request(memo);
+        Assert.assertTrue(!flag);
+        
+        // should have sent datagram
+         Assert.assertEquals(1,messagesReceived.size());
+         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+        // check format of datagram read
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertTrue(content.length == 2);
+        Assert.assertEquals("datagram type", 0x20, content[0]);
+        Assert.assertEquals("read command", 0x80, (content[1]&0xFC));
+                
+        // datagram reply comes back 
+        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+        // now return data
+        flag = false;
+        content = new int[]{0x20, 0x81, 0x55, 0x55, 0xEE, 0xFF, 0x80, 'a', 'b', 'c'};
+        m = new DatagramMessage(farID, hereID, content);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+    }
+
+    public void testAddrSpaceMemoIsRealClass() {
+        MemoryConfigurationService.McsAddrSpaceMemo m20 = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(farID,0xFD);
+        MemoryConfigurationService.McsAddrSpaceMemo m20a = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(farID,0xFD);
+        MemoryConfigurationService.McsAddrSpaceMemo m22 = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(farID,0xFE);
+        MemoryConfigurationService.McsAddrSpaceMemo m23 = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(hereID,0xFD);
+        
+        Assert.assertTrue(m20.equals(m20));
+        Assert.assertTrue(m20.equals(m20a));
+        
+        Assert.assertTrue(!m20.equals(null));
+        
+        Assert.assertTrue(!m20.equals(m22));
+        Assert.assertTrue(!m20.equals(m23));
+        
+    }
+
+    public void testGetAddrSpace() {
+        int space = 0xFD;
+        MemoryConfigurationService.McsAddrSpaceMemo memo = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(farID, space) {
+                public void handleWriteReply(int code) { 
+                    flag = true;
+                }
+                public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+                    flag = true;
+                }
+            };
+
+        // test executes the callbacks instantly; real connections might not
+        Assert.assertTrue(!flag);
+        service.request(memo);
+        Assert.assertTrue(!flag);
+        
+        // should have sent datagram
+         Assert.assertEquals(1,messagesReceived.size());
+         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+        // check format of datagram read
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertTrue(content.length == 3);
+        Assert.assertEquals("datagram type", 0x20, content[0]);
+        Assert.assertEquals("addr space command", 0x84, (content[1]&0xFC));
+        Assert.assertEquals("space", space, (content[2]));
+                
+        // datagram reply comes back 
+        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+        // now return data
+        flag = false;
+        content = new int[]{0x20, 0x85, space, 0x12, 0x34, 0x56, 0x78, 0x55};
+        m = new DatagramMessage(farID, hereID, content);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+    }
+
     // from here down is testing infrastructure
     
     public MemoryConfigurationServiceTest(String s) {
