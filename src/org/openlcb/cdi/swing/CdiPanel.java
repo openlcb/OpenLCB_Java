@@ -113,6 +113,7 @@ public class CdiPanel extends JPanel {
                 else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
                 else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
                 else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
+                else if (it instanceof CdiRep.CdiString) p.add(createStringPane((CdiRep.CdiString)it));
             }
         }
         
@@ -164,6 +165,7 @@ public class CdiPanel extends JPanel {
                     else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
                     else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
                     else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
+                    else if (it instanceof CdiRep.CdiString) p.add(createStringPane((CdiRep.CdiString)it));
                 }
             }
         }
@@ -250,6 +252,29 @@ public class CdiPanel extends JPanel {
             // map not present, just an entry box
             p3.add(new JTextField(24));
         }
+
+        p3.add(new JButton("Read"));
+        p3.add(new JButton("Write"));
+
+        return p;
+    }
+
+    JPanel createStringPane(CdiRep.CdiString item) {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        String name = "String"+(item.getName()!=null?(": "+item.getName()):"");
+        p.setBorder(BorderFactory.createTitledBorder(name));
+        
+        String d = item.getDescription();
+        if (d!=null) p.add(createDescriptionPane(d));
+        
+        JPanel p3 = new JPanel();
+        p3.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p3.setLayout(new FlowLayout());
+        p.add(p3);
+
+        p3.add(new JTextField(24));
 
         p3.add(new JButton("Read"));
         p3.add(new JButton("Write"));
