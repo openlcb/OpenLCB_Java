@@ -14,7 +14,7 @@ import org.jdom.input.SAXBuilder;
  */
 public class JdomCdiReader {
 
-    Element getHeadFromReader(Reader rdr) throws Exception {
+    public Element getHeadFromReader(Reader rdr) throws Exception {
         SAXBuilder builder = new SAXBuilder("org.apache.xerces.parsers.SAXParser",false);  // argument controls validation
         
         //builder.setEntityResolver(new jmri.util.JmriLocalEntityResolver());
