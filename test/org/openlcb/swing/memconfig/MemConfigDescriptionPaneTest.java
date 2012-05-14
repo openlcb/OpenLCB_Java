@@ -32,20 +32,49 @@ public class MemConfigDescriptionPaneTest extends TestCase {
     };
     
     MimicNodeStore store;
+    MemoryConfigurationService service;
+    int spaceCount;
+    
+    DatagramService dgs;
+    
+    MemConfigDescriptionPane pane;
     
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nidHere);
+        dgs = new DatagramService(null, null);
+        
         store.addNode(nidThere);
+        
+        spaceCount = 3;
+        service = new MemoryConfigurationService(nidHere, dgs) {
+            public void request(MemoryConfigurationService.McsWriteMemo memo) {
+            }
+        
+            public void request(MemoryConfigurationService.McsReadMemo memo) {
+            }
+        
+            public void request(MemoryConfigurationService.McsConfigMemo memo) {
+                // for test, call back immediately
+                memo.handleConfigData(nidThere, 0xFFFF, 0xFF, 0xFF, 0, "");
+            }
+            
+            public void request(MemoryConfigurationService.McsAddrSpaceMemo memo) {
+                if (spaceCount-- > 0) memo.handleConfigData(nidThere, spaceCount, spaceCount*256, 0, 0, "");
+            }
+        };
         
         // Test is really popping a window before doing all else
         frame = new JFrame();
         frame.setTitle("MemConfigDescriptionPane Test");
 
+        pane = new MemConfigDescriptionPane(nidThere, store, service);
+        frame.add(pane);
+
+        pane.initComponents();
+        
         frame.pack();
         frame.setMinimumSize(new java.awt.Dimension(200,200));
         frame.setVisible(true);
-        
-        
     }
     
     public void tearDown() {
@@ -53,6 +82,7 @@ public class MemConfigDescriptionPaneTest extends TestCase {
     }
             
     public void testSetup() {
+        
     }
            
     // from here down is testing infrastructure
