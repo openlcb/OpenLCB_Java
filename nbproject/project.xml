@@ -3,6 +3,9 @@
     <type>org.netbeans.modules.ant.freeform</type>
     <configuration>
         <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
+            <name>OpenLCB Prototype</name>
+        </general-data>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
             <!-- Do not use Project Properties customizer when editing this file manually. -->
             <name>OpenLCB Prototype</name>
             <properties/>
@@ -11,11 +14,18 @@
                     <label>src</label>
                     <type>java</type>
                     <location>src</location>
+                    <encoding>MacRoman</encoding>
                 </source-folder>
                 <source-folder>
                     <label>test</label>
                     <type>java</type>
                     <location>test</location>
+                    <encoding>MacRoman</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>OpenLCB Prototype</label>
+                    <location>.</location>
+                    <encoding>MacRoman</encoding>
                 </source-folder>
             </folders>
             <ide-actions>
@@ -94,29 +104,26 @@
                     <ide-action name="debug"/>
                     <action>
                         <label>Make Jar File</label>
-                        <target>jar</target>
+                        <target>jars</target>
                     </action>
                 </context-menu>
             </view>
             <subprojects/>
         </general-data>
-        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/2">
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
+                <classpath mode="compile">lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
                 <built-to>classes</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
-                <source-level>1.5</source-level>
+                <source-level>1.6</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">lib/junit.jar</classpath>
-                <classpath mode="compile">lib/jdom.jar</classpath>
-                <classpath mode="compile">lib/jlfgr-1_0.jar</classpath>
-                <classpath mode="compile">lib/annotations.jar</classpath>
-                <classpath mode="compile">lib/jsr305.jar</classpath>
+                <classpath mode="compile">lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
                 <built-to>classes</built-to>
-                <source-level>1.5</source-level>
+                <source-level>1.6</source-level>
             </compilation-unit>
         </java-data>
     </configuration>
