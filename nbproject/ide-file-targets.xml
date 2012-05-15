@@ -10,4 +10,19 @@
             <classpath path=".:java/classes:java/lib/junit.jar"/>
         </javac>
     </target>
+    <!-- TODO: edit the following target according to your needs -->
+    <!-- (more info: http://www.netbeans.org/kb/articles/freeform-config.html#runsingle) -->
+    <target name="run-selected-file-in-test">
+        <fail unless="run.class">Must set property 'run.class'</fail>
+        <ant antfile="build.xml" inheritall="false">
+            <target name="debug"/>
+            <target name="tests"/>
+        </ant>
+        <java classname="${run.class}" failonerror="true" fork="true">
+            <classpath>
+                <pathelement path="lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src"/>
+                <pathelement location="classes"/>
+            </classpath>
+        </java>
+    </target>
 </project>
