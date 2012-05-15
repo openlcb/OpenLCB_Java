@@ -11,6 +11,11 @@
             <properties/>
             <folders>
                 <source-folder>
+                    <label>OpenLCB Prototype</label>
+                    <location>.</location>
+                    <encoding>MacRoman</encoding>
+                </source-folder>
+                <source-folder>
                     <label>src</label>
                     <type>java</type>
                     <location>src</location>
@@ -20,11 +25,6 @@
                     <label>test</label>
                     <type>java</type>
                     <location>test</location>
-                    <encoding>MacRoman</encoding>
-                </source-folder>
-                <source-folder>
-                    <label>OpenLCB Prototype</label>
-                    <location>.</location>
                     <encoding>MacRoman</encoding>
                 </source-folder>
             </folders>
@@ -67,6 +67,19 @@
                 <action name="debug">
                     <script>nbproject/ide-targets.xml</script>
                     <target>debug-nb</target>
+                </action>
+                <action name="run.single">
+                    <script>nbproject/ide-file-targets.xml</script>
+                    <target>run-selected-file-in-test</target>
+                    <context>
+                        <property>run.class</property>
+                        <folder>test</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
                 </action>
             </ide-actions>
             <export>
@@ -121,7 +134,7 @@
             <compilation-unit>
                 <package-root>test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
+                <classpath mode="compile">lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src</classpath>
                 <built-to>classes</built-to>
                 <source-level>1.6</source-level>
             </compilation-unit>
