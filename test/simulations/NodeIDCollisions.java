@@ -52,8 +52,9 @@ public class NodeIDCollisions {
                 ^ ((id[3]^id[4]^id[5])<<8);
 
     // prototype v3: xor 3 16-bit quantities
-    reg = (id[0]<<8 | id[1]) ^ (id[2]<<8 | id[3])  
-                ^ (id[4]<<8 | id[5]);
+    reg =         ( ((id[0]<<8) & 0xFF) | (id[1] & 0xFF) ) 
+                ^ ( ((id[2]<<8) & 0xFF) | (id[3] & 0xFF) )  
+                ^ ( ((id[4]<<8) & 0xFF) | (id[5] & 0xFF) );
 
     // first step
     

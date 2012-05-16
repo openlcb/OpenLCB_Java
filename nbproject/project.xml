@@ -30,7 +30,7 @@
             </folders>
             <ide-actions>
                 <action name="build">
-                    <target>debug</target>
+                    <target>compile</target>
                 </action>
                 <action name="clean">
                     <target>clean</target>
@@ -49,7 +49,7 @@
                 </action>
                 <action name="rebuild">
                     <target>clean</target>
-                    <target>tests</target>
+                    <target>compile</target>
                 </action>
                 <action name="compile.single">
                     <script>nbproject/ide-file-targets.xml</script>
@@ -85,12 +85,12 @@
             <export>
                 <type>folder</type>
                 <location>classes</location>
-                <build-target>debug</build-target>
+                <build-target>compile</build-target>
             </export>
             <export>
                 <type>folder</type>
                 <location>classes</location>
-                <build-target>debug</build-target>
+                <build-target>compile</build-target>
             </export>
             <view>
                 <items>
@@ -108,12 +108,12 @@
                 </items>
                 <context-menu>
                     <ide-action name="build"/>
+                    <ide-action name="rebuild"/>
                     <ide-action name="clean"/>
                     <ide-action name="javadoc"/>
                     <ide-action name="run"/>
-                    <ide-action name="profile"/>
                     <ide-action name="test"/>
-                    <ide-action name="rebuild"/>
+                    <ide-action name="profile"/>
                     <ide-action name="debug"/>
                     <action>
                         <label>Make Jar File</label>
