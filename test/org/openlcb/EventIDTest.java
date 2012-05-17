@@ -41,6 +41,20 @@ public class EventIDTest extends TestCase {
         Assert.assertTrue(e1.equals(e2));
     }
     
+    public void testStringArgDotted() {
+        EventID e1 = new EventID("1.2.3.4.5.6.7.8");
+        EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
+        Assert.assertTrue(e1.equals(e2));
+        
+    }
+
+    public void testStringArgSpaces() {
+        EventID e1 = new EventID("1 2 3 4 5 6 7 8");
+        EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
+        Assert.assertTrue(e1.equals(e2));
+        
+    }
+
     public void testAltCtor() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         
