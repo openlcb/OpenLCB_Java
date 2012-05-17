@@ -27,7 +27,18 @@ public class UtilitiesTest extends TestCase {
         Assert.assertEquals("0A 0B 12", Utilities.toHexSpaceString(new int[]{0x0A, 0x0B, 0x12}));
     }
 
-   // from here down is testing infrastructure
+    public void testToByteArray() {
+        Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A 0B 12")));
+        Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A.0B.12")));
+    }
+    
+    boolean compareArrays(byte[] a, byte[]b) {
+        if (a == null && b == null) return true;
+        if (a.length != b.length) return false;
+        for (int i = 0; i <a.length; i++) if (a[i]!=b[i]) return false;
+        return true;
+    }
+    // from here down is testing infrastructure
     
     public UtilitiesTest(String s) {
         super(s);
