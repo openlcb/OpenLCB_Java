@@ -49,7 +49,17 @@ public class ConfigDemoApplet extends JApplet {
         JFrame f = new JFrame();
         f.setTitle("Configuration Demonstration");
         CdiPanel m = new CdiPanel();
-        m.initComponents();
+                
+        m.initComponents(new CdiPanel.ReadWriteAccess(){
+            public void doWrite(long address, int space, byte[] data) {
+                    System.out.println(data.length);
+                    System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
+                }
+            public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
+                    handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
+                    System.out.println("read "+address+" "+space);
+                }            
+        });
         m.loadCDI(
             new org.openlcb.cdi.jdom.JdomCdiRep(
                 org.openlcb.cdi.jdom.SampleFactory.getBasicSample()

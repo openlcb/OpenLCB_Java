@@ -25,6 +25,7 @@ public interface CdiRep {
     
     public static interface Segment {
         public int getSpace();
+        public int getOrigin();
         public java.util.List<Item> getItems();
 
         public String getName();
@@ -36,6 +37,7 @@ public interface CdiRep {
         public String getName();
         public String getDescription();
         public Map getMap();
+        public int getOffset();
     }
 
     public static interface Group extends Item {
@@ -51,19 +53,19 @@ public interface CdiRep {
 
     public static interface EventID extends Item {
     }
-    public static interface Int extends Item {
+    public static interface IntegerRep extends Item {
         public int getDefault();
         public int getMin();
         public int getMax();
 
         public int getSize();
     }
-    public static interface Bit extends Item {
+    public static interface BitRep extends Item {
         public boolean getDefault();
 
         public int getSize();
     }
-    public static interface CdiString extends Item {  // "String" causes too many name conflicts
+    public static interface StringRep extends Item {  // "String" causes too many name conflicts
 
         public int getSize();
     }
