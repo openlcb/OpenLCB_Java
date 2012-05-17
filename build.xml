@@ -163,7 +163,7 @@
 
   <target name="jars" description="create working jar files with current contents">
     <antcall target="clean" />
-    <antcall target="debug" />
+    <antcall target="compile" />
     <jar jarfile="${jartarget}/openlcb.jar" 
          basedir="${target}"
          manifest="manifest" 
