@@ -15,7 +15,7 @@
     <target name="run-selected-file-in-test">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <ant antfile="build.xml" inheritall="false">
-            <target name="debug"/>
+            <target name="compile"/>
             <target name="tests"/>
         </ant>
         <java classname="${run.class}" failonerror="true" fork="true">
