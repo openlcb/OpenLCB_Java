@@ -90,10 +90,10 @@ public class JdomCdiRep implements CdiRep {
                 // some elements aren't contained items
                 Element element = (Element)elements.get(i);
                 if ("group".equals(element.getName())) list.add(new Group(element));
-                else if ("bit".equals(element.getName())) list.add(new Bit(element));
-                else if ("int".equals(element.getName())) list.add(new Int(element));
+                else if ("bit".equals(element.getName())) list.add(new BitRep(element));
+                else if ("int".equals(element.getName())) list.add(new IntRep(element));
                 else if ("eventid".equals(element.getName())) list.add(new EventID(element));
-                else if ("string".equals(element.getName())) list.add(new CdiString(element));
+                else if ("string".equals(element.getName())) list.add(new StringRep(element));
             }
             return list;
         }
@@ -112,6 +112,13 @@ public class JdomCdiRep implements CdiRep {
         }
         
         Segment(Element segment) { super(segment); }
+        public int getOrigin() {
+            Attribute a = e.getAttribute("origin");
+            try {
+                if (a == null) return 0;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
     }
 
     public static class Map implements CdiRep.Map {
@@ -166,6 +173,13 @@ public class JdomCdiRep implements CdiRep {
         public Map getMap() {
             return new Map(e.getChild("map"));
         }
+        public int getOffset() {
+            Attribute a = e.getAttribute("offset");
+            try {
+                if (a == null) return 0;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
         
         Item(Element e) { this.e = e; }
         Element e;
@@ -178,13 +192,21 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom.DataConversionException e) { return 0; }
         }
+        public int getOffset() {
+            Attribute a = e.getAttribute("offset");
+            try {
+                if (a == null) return 0;
+                else return a.getIntValue();
+            } catch (org.jdom.DataConversionException e) { return 0; }
+        }
 
         Group(Element e) { super(e); }
     }
+
     public static class EventID extends Item implements CdiRep.EventID {
         EventID(Element e) { super(e); }
     }
-    public static class Int extends Item implements CdiRep.Int {
+    public static class IntRep extends Item implements CdiRep.IntegerRep {
         public int getDefault() { return 0; }
         public int getMin() { return 0; }
         public int getMax() { return 0; }
@@ -197,9 +219,9 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom.DataConversionException e) { return 0; }
         }
         
-        Int(Element e) { super(e); }
+        IntRep(Element e) { super(e); }
     }
-    public static class Bit extends Item implements CdiRep.Bit {
+    public static class BitRep extends Item implements CdiRep.BitRep {
         public boolean getDefault() { return false; }
 
         public int getSize() { 
@@ -210,9 +232,9 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom.DataConversionException e) { return 0; }
         }
 
-        Bit(Element e) { super(e); }
+        BitRep(Element e) { super(e); }
     }
-    public static class CdiString extends Item implements CdiRep.CdiString {
+    public static class StringRep extends Item implements CdiRep.StringRep {
 
         public int getSize() { 
             Attribute a = e.getAttribute("size");
@@ -222,7 +244,7 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom.DataConversionException e) { return 0; }
         }
 
-        CdiString(Element e) { super(e); }
+        StringRep(Element e) { super(e); }
     }
 
     Element root;

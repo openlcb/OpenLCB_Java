@@ -17,9 +17,12 @@ public class CdiPanel extends JPanel {
 
     public CdiPanel () { super(); }
     
-    public void initComponents() {
+    public void initComponents(ReadWriteAccess accessor) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.accessor = accessor;
     }
+    
+    ReadWriteAccess accessor;
     
     public void loadCDI(CdiRep c) {
         add(createIdentificationPane(c));
@@ -104,17 +107,37 @@ public class CdiPanel extends JPanel {
         JPanel p2 = createPropertyPane(item.getMap());
         if (p2!=null) p.add(p2);
 
+        long origin = item.getOrigin();
+        int space = item.getSpace();
+        
         // find and process items
         java.util.List<CdiRep.Item> items = item.getItems();
         if (items != null) {
-            for (int i=0; i<items.size(); i++) {
+             DisplayPane pane = null; 
+              
+             for (int i=0; i<items.size(); i++) {
                 CdiRep.Item it = (CdiRep.Item) items.get(i);
-                if (it instanceof CdiRep.Group) p.add(createGroupPane((CdiRep.Group)it));
-                else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
-                else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
-                else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
-                else if (it instanceof CdiRep.CdiString) p.add(createStringPane((CdiRep.CdiString)it));
-            }
+                
+                origin = origin +it.getOffset();
+ 
+                 if (it instanceof CdiRep.Group) {
+                     pane = createGroupPane((CdiRep.Group) it, origin, space);
+                 } else if (it instanceof CdiRep.BitRep) {
+                     pane = createBitPane((CdiRep.BitRep) it, origin, space);
+                 } else if (it instanceof CdiRep.IntegerRep) {
+                     pane = createIntPane((CdiRep.IntegerRep) it, origin, space);
+                 } else if (it instanceof CdiRep.EventID) {
+                     pane = createEventIdPane((CdiRep.EventID) it, origin, space);
+                 } else if (it instanceof CdiRep.StringRep) {
+                     pane = createStringPane((CdiRep.StringRep) it, origin, space);
+                 }
+                 if (pane != null) {
+                     origin = pane.getOrigin() + pane.getVarSize();
+                     p.add(pane);
+                 } else {
+                     System.out.println("could not process type of " + it);
+                 }
+        }
         }
         
         JPanel ret = new util.CollapsiblePanel(name, p);
@@ -138,147 +161,326 @@ public class CdiPanel extends JPanel {
         return p;
     }
     
-    JPanel createGroupPane(CdiRep.Group item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        String name = "Group"+(item.getName()!=null?(": "+item.getName()):"");
-        p.setBorder(BorderFactory.createTitledBorder(name));
-        
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        // include map if present
-        JPanel p2 = createPropertyPane(item.getMap());
-        if (p2!=null) p.add(p2);
-
-        // find and process items as replicated
-        int rep = item.getReplication();
-        if (rep == 0) rep = 1;  // default
-        
-        for (int i = 0; i < rep; i++) {
-            java.util.List<CdiRep.Item> items = item.getItems();
-            if (items != null) {
-                for (int j=0; j<items.size(); j++) {
-                    CdiRep.Item it = (CdiRep.Item) items.get(j);
-                    if (it instanceof CdiRep.Group) p.add(createGroupPane((CdiRep.Group)it));
-                    else if (it instanceof CdiRep.Bit) p.add(createBitPane((CdiRep.Bit)it));
-                    else if (it instanceof CdiRep.Int) p.add(createIntPane((CdiRep.Int)it));
-                    else if (it instanceof CdiRep.EventID) p.add(createEventIdPane((CdiRep.EventID)it));
-                    else if (it instanceof CdiRep.CdiString) p.add(createStringPane((CdiRep.CdiString)it));
-                }
-            }
+    abstract class DisplayPane extends JPanel {
+        DisplayPane(long origin, int space) {
+                this.origin = origin;
+                this.space = space;
         }
+        int getVarSize() { return size; }
+        int size;
         
-        return p;
+        long getOrigin() { return origin; }
+        long origin;
+        
+        int getVarSpace() { return space; }
+        int space;
+    }
+
+    DisplayPane createGroupPane(CdiRep.Group item, long origin, int space) {
+        return new GroupPane(item, origin, space);
     }
     
-    JPanel createBitPane(CdiRep.Bit item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        String name = "Bit"+(item.getName()!=null?(": "+item.getName()):"");
-        p.setBorder(BorderFactory.createTitledBorder(name));
-        
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        // see if map is present
-        String[] labels;
-        CdiRep.Map map = item.getMap();
-        if ((map != null) && (map.getKeys().size()>=2)) {
-            // first two map values are labels, must be present
-            java.util.List<String> keys = map.getKeys();
-            labels = new String[]{map.getEntry(keys.get(0)),map.getEntry(keys.get(1))};
-        } else {
-            labels = new String[]{"On","Off"};
+    class GroupPane extends DisplayPane {
+        GroupPane(CdiRep.Group item, long origin, int space){
+            super(origin, space);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            String name = "Group" + (item.getName() != null ? (": " + item.getName()) : "");
+            setBorder(BorderFactory.createTitledBorder(name));
+
+            String d = item.getDescription();
+            if (d != null) {
+                add(createDescriptionPane(d));
+            }
+
+            // include map if present
+            JPanel p2 = createPropertyPane(item.getMap());
+            if (p2 != null) {
+                add(p2);
+            }
+
+            // find and process items as replicated
+            int rep = item.getReplication();
+            if (rep == 0) {
+                rep = 1;  // default
+            }
+            for (int i = 0; i < rep; i++) {
+                java.util.List<CdiRep.Item> items = item.getItems();
+                if (items != null) {
+                    for (int j = 0; j < items.size(); j++) {
+                        CdiRep.Item it = (CdiRep.Item) items.get(j);
+                        DisplayPane pane = null;
+                        
+                        origin = origin +it.getOffset();
+                        size = size + it.getOffset();
+                        
+                        if (it instanceof CdiRep.Group) {
+                            pane = createGroupPane((CdiRep.Group) it, origin, space);
+                        } else if (it instanceof CdiRep.BitRep) {
+                            pane = createBitPane((CdiRep.BitRep) it, origin, space);
+                        } else if (it instanceof CdiRep.IntegerRep) {
+                            pane = createIntPane((CdiRep.IntegerRep) it, origin, space);
+                        } else if (it instanceof CdiRep.EventID) {
+                            pane = createEventIdPane((CdiRep.EventID) it, origin, space);
+                        } else if (it instanceof CdiRep.StringRep) {
+                            pane = createStringPane((CdiRep.StringRep) it, origin,space);
+                        }
+                        if (pane != null) {
+                            size = size + pane.getVarSize();
+                            origin = pane.getOrigin() + pane.getVarSize();
+                            add(pane);
+                        } else {
+                            System.out.println("could not process type of " + it);
+                        }
+                    }
+                }
+            }
+           
         }
-
-        JPanel p3 = new JPanel();
-        p3.setLayout(new FlowLayout());
-        p.add(p3);
-        p3.add(new JComboBox(labels));
-        p3.add(new JButton("Read"));
-        p3.add(new JButton("Write"));
-
-        return p;
+        
+    }
+    
+    DisplayPane createBitPane(CdiRep.BitRep item, long origin, int space) {
+        return new BitPane(item, origin, space);
     }
 
-    JPanel createEventIdPane(CdiRep.EventID item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        String name = "EventID"+(item.getName()!=null?(": "+item.getName()):"");
-        p.setBorder(BorderFactory.createTitledBorder(name));
-        
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        JPanel p3 = new JPanel();
-        p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p3.setLayout(new FlowLayout());
-        p.add(p3);
+    class BitPane extends DisplayPane {
 
-        p3.add(new JTextField(24));
-        
-        p3.add(new JButton("Read"));
-        p3.add(new JButton("Write"));
+        BitPane(CdiRep.BitRep item, long origin, int space) {
+            super(origin, space);
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            String name = "Bit" + (item.getName() != null ? (": " + item.getName()) : "");
+            setBorder(BorderFactory.createTitledBorder(name));
 
-        return p;
-    }
+            String d = item.getDescription();
+            if (d != null) {
+                add(createDescriptionPane(d));
+            }
 
-    JPanel createIntPane(CdiRep.Int item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        String name = "Integer"+(item.getName()!=null?(": "+item.getName()):"");
-        p.setBorder(BorderFactory.createTitledBorder(name));
-        
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        JPanel p3 = new JPanel();
-        p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p3.setLayout(new FlowLayout());
-        p.add(p3);
+            size = item.getSize();
+            
+            // see if map is present
+            String[] labels;
+            CdiRep.Map map = item.getMap();
+            if ((map != null) && (map.getKeys().size() >= 2)) {
+                // first two map values are labels, must be present
+                java.util.List<String> keys = map.getKeys();
+                labels = new String[]{map.getEntry(keys.get(0)), map.getEntry(keys.get(1))};
+            } else {
+                labels = new String[]{"On", "Off"};
+            }
 
-        // see if map is present
-        String[] labels;
-        CdiRep.Map map = item.getMap();
-        if ((map != null) && (map.getKeys().size()>0)) {
-            // map present, make selection box
-            p3.add(new JComboBox(map.getValues().toArray(new String[]{""})));
-        } else {
-            // map not present, just an entry box
-            p3.add(new JTextField(24));
+            JPanel p3 = new JPanel();
+            p3.setLayout(new FlowLayout());
+            add(p3);
+            p3.add(new JComboBox(labels));
+
+            JButton b;
+            b = new JButton("Read");
+            final ReadReturn handler = new ReadReturn() {
+                public void returnData(byte[] data) {
+                    //textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+                }
+            };
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
+                }
+            });
+            p3.add(b);
+            b = new JButton("Write");
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doWrite(getOrigin(), getVarSpace(), new byte[]{});
+                }
+            });
+            p3.add(b);
         }
-
-        p3.add(new JButton("Read"));
-        p3.add(new JButton("Write"));
-
-        return p;
     }
 
-    JPanel createStringPane(CdiRep.CdiString item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        String name = "String"+(item.getName()!=null?(": "+item.getName()):"");
-        p.setBorder(BorderFactory.createTitledBorder(name));
-        
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        JPanel p3 = new JPanel();
-        p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p3.setLayout(new FlowLayout());
-        p.add(p3);
-
-        p3.add(new JTextField(24));
-
-        p3.add(new JButton("Read"));
-        p3.add(new JButton("Write"));
-
-        return p;
+    DisplayPane createEventIdPane(CdiRep.EventID item, long start, int space) {
+        return new EventIdPane(item,start,space);
     }
+
+    class EventIdPane extends DisplayPane {
+
+        JTextField textField;
+        
+        EventIdPane(CdiRep.EventID item, long origin, int space) {
+            super(origin, space);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            String name = "EventID" + (item.getName() != null ? (": " + item.getName()) : "");
+            setBorder(BorderFactory.createTitledBorder(name));
+
+            String d = item.getDescription();
+            if (d != null) {
+                add(createDescriptionPane(d));
+            }
+
+            size = 8;
+            
+            JPanel p3 = new JPanel();
+            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p3.setLayout(new FlowLayout());
+            add(p3);
+
+            textField = new JTextField(24);
+            p3.add(textField);
+            textField.setToolTipText("EventID as eight-byte dotted-hex string, e.g. 01.02.0A.AB.34.56.78.00");
+
+            JButton b;
+            b = new JButton("Read");
+            final ReadReturn handler = new ReadReturn() {
+                public void returnData(byte[] data) {
+                    textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+                }
+            };
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
+                }
+            });
+            p3.add(b);
+            b = new JButton("Write");
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    byte[] contents = org.openlcb.Utilities.bytesFromHexString(textField.getText());
+                    accessor.doWrite(getOrigin(), getVarSpace(), contents);
+                 }
+            });
+            p3.add(b);
+
+        }
+    }
+    
+    DisplayPane createIntPane(CdiRep.IntegerRep item, long origin, int space) {
+        return new IntPane(item, origin, space);
+    }
+
+    class IntPane extends DisplayPane {
+
+        IntPane(CdiRep.IntegerRep item, long origin, int space) {
+            super(origin, space);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            String name = "Integer" + (item.getName() != null ? (": " + item.getName()) : "");
+            setBorder(BorderFactory.createTitledBorder(name));
+
+            String d = item.getDescription();
+            if (d != null) {
+                add(createDescriptionPane(d));
+            }
+
+            size = item.getSize();
+            
+            JPanel p3 = new JPanel();
+            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p3.setLayout(new FlowLayout());
+            add(p3);
+
+            // see if map is present
+            String[] labels;
+            CdiRep.Map map = item.getMap();
+            if ((map != null) && (map.getKeys().size() > 0)) {
+                // map present, make selection box
+                p3.add(new JComboBox(map.getValues().toArray(new String[]{""})));
+            } else {
+                // map not present, just an entry box
+                JTextField textField = new JTextField(24);
+                p3.add(textField);
+                textField.setToolTipText("Signed integer value of up to "+size+" bytes");
+            }
+
+            JButton b;
+            b = new JButton("Read");
+            final ReadReturn handler = new ReadReturn() {
+                public void returnData(byte[] data) {
+                     //textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+               }
+            };
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
+                }
+            });
+            p3.add(b);
+            b = new JButton("Write");
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doWrite(getOrigin(), getVarSpace(), new byte[]{});
+                }
+            });
+            p3.add(b);
+        }
+    }
+
+    DisplayPane createStringPane(CdiRep.StringRep item, long origin, int space) {
+        return new StringPane(item, origin, space);
+    }
+    
+    class StringPane extends DisplayPane {
+        JTextField textField;
+        
+        StringPane(CdiRep.StringRep item, long origin, int space) {
+            super(origin, space);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            String name = "String"+(item.getName()!=null?(": "+item.getName()):"");
+            setBorder(BorderFactory.createTitledBorder(name));
+        
+            String d = item.getDescription();
+            if (d!=null) add(createDescriptionPane(d));
+        
+            size = item.getSize();
+            
+            JPanel p3 = new JPanel();
+            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p3.setLayout(new FlowLayout());
+            add(p3);
+
+            textField = new JTextField(size);
+            
+            p3.add(textField);
+            textField.setToolTipText("String of up to "+size+" characters");
+
+            JButton b;
+            b = new JButton("Read");
+            final ReadReturn handler = new ReadReturn() {
+                public void returnData(byte[] data) {
+                    textField.setText(new String(data));
+                }
+            };
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    accessor.doRead(getOrigin(), getVarSpace(), size, handler);
+                }
+            });
+            p3.add(b);
+            b = new JButton("Write");
+            b.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    byte[] content = textField.getText().getBytes();
+                    accessor.doWrite(getOrigin(), getVarSpace(), content);
+                }
+            });
+            p3.add(b);
+        }
+     }
+
+     /** 
+      * Memo class for adding access to e.g. a MemoryConfig service.
+      * 
+      * Default just writes output for debug
+      */
+     abstract public static class ReadWriteAccess {
+            abstract public void doWrite(long address, int space, byte[] data);
+            abstract public void doRead(long address, int space, int length, final ReadReturn handler);
+     }
+     /**
+      * Memo class for handling read-return data
+      */
+     abstract public class ReadReturn {
+         abstract public void returnData(byte[] data);
+     }
 }
