@@ -49,7 +49,7 @@ public class SimpleNodeIdentTest extends TestCase {
 
         Assert.assertEquals("abcdefg", id.getMfgName());
         Assert.assertEquals("AB", id.getModelName());
-        Assert.assertEquals("Z", id.getVersion());
+        Assert.assertEquals("Z", id.getHardwareVersion());
     }
 
     // from here down is testing infrastructure

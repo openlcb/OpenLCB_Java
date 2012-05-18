@@ -57,16 +57,71 @@ public class SimpleNodeIdent {
        if (s == null) return "";
        else return s;
     }
-    public String getVersion() {
+    public String getHardwareVersion() {
         int len = 1;
         int start = 1;
         // skip mfg, model
+        for (int i = 0; i<2; i++) {
+            for (; len < bytes.length; len++)
+                if (bytes[len] == 0) break;
+            start = ++len;
+        }
+        
+        // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-        start = ++len;
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
+    }
+
+    public String getSoftwareVersion() {
+        int len = 1;
+        int start = 1;
+        // skip mfg, model, hardware_version
+        for (int i = 0; i<3; i++) {
+            for (; len < bytes.length; len++)
+                if (bytes[len] == 0) break;
+            start = ++len;
+        }
+        
+        // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-        start = ++len;
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
+    }
+
+    public String getUserName() {
+        int len = 1;
+        int start = 1;
+        // skip mfg, model, hardware_version, software_version
+        for (int i = 0; i<4; i++) {
+            for (; len < bytes.length; len++)
+                if (bytes[len] == 0) break;
+            start = ++len;
+        }
+        
+        // find this string
+        for (; len < bytes.length; len++)
+            if (bytes[len] == 0) break;
+       String s = new String(bytes,start, len-start);
+       if (s == null) return "";
+       else return s;
+    }
+
+    public String getUserDesc() {
+        int len = 1;
+        int start = 1;
+        // skip mfg, model, hardware_version, software_version, user_name
+        for (int i = 0; i<5; i++) {
+            for (; len < bytes.length; len++)
+                if (bytes[len] == 0) break;
+            start = ++len;
+        }
+        
+        // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
        String s = new String(bytes,start, len-start);
