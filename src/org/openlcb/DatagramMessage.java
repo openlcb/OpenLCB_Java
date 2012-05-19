@@ -1,8 +1,9 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Datagram message implementation
@@ -35,12 +36,14 @@ public class DatagramMessage extends AddressedMessage {
         super(source, dest);
     }
     
+    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     protected int[] data;
     
      /**
       * To be equal, messages have to have the
       * same type and content
       */
+    @Override
      public boolean equals(Object o) {
         if (o == null) return false;
         if (! (o instanceof DatagramMessage))
@@ -56,7 +59,10 @@ public class DatagramMessage extends AddressedMessage {
         }
         return super.equals(o);
      }
-
+     
+    @Override
+     public int hashCode() { return getSourceNodeID().hashCode()+getDestNodeID().hashCode(); }
+     
     /**
      * Implement message-type-specific
      * processing when this message
@@ -73,5 +79,6 @@ public class DatagramMessage extends AddressedMessage {
         return data;
     }
     
+    @Override
     public int getMTI() { return MTI_DATAGRAM; }
 }

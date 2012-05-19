@@ -56,5 +56,9 @@ abstract public class Message implements OpenLcb {
         return true;
      }
      
+     
+     @Override
+     public int hashCode() { return getSourceNodeID().hashCode(); }
+    
      abstract public int getMTI();
 }

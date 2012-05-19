@@ -45,6 +45,8 @@ abstract public class AddressedMessage extends Message {
             return false;
         else return super.equals(o);
      }
-     
-     abstract public int getMTI();
+
+     @Override
+     public int hashCode() { return super.hashCode()+getDestNodeID().hashCode(); }
+
 }
