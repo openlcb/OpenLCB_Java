@@ -1,10 +1,8 @@
 package org.openlcb.implementations;
 
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 import org.openlcb.*;
-
-// For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
 
 /**
  * Service for sending and receiving data via datagrams.
@@ -92,18 +90,21 @@ public class DatagramService extends MessageDecoder {
             this.type = type;
         }
 
-        int type;
+        final int type;
         
+        @Override
         public boolean equals(Object o) {
             if (o == null) return false;
             if (! (o instanceof DatagramServiceReceiveMemo)) return false;
             return this.type == ((DatagramServiceReceiveMemo)o).type;
         } 
     
+        @Override
         public String toString() {
             return "DatagramServiceReceiveMemo: "+type;
         }
         
+        @Override
         public int hashCode() { return type; }
         
         /**
@@ -117,6 +118,13 @@ public class DatagramService extends MessageDecoder {
 
     }
 
+    /**
+     * Memo class to hold information about request while
+     * it's being processed.
+     * 
+     * @ToDo copy in and out the data contents to make truly immutable
+     * @ToDo are these really immutable, given that subclass will inherit and change them?
+     */
     @Immutable
     @ThreadSafe    
     static protected class DatagramServiceTransmitMemo {
@@ -126,13 +134,14 @@ public class DatagramService extends MessageDecoder {
         }
 
         protected DatagramServiceTransmitMemo(NodeID dest) {
-            this.data = data;
-            this.dest = dest;
+            this.data = null;  // sends zero-byte datagram
+            this.dest = dest; 
         }
-
-        protected int[] data;
-        NodeID dest;
         
+        protected int[] data;
+        final NodeID dest;
+        
+        @Override
         public boolean equals(Object o) {
             if (o == null) return false;
             if (! (o instanceof DatagramServiceTransmitMemo)) return false;
@@ -144,10 +153,12 @@ public class DatagramService extends MessageDecoder {
             return true;
         } 
     
+        @Override
         public String toString() {
-            return "DatagramServiceTransmitMemo: "+data;
+            return "DatagramServiceTransmitMemo: "+Utilities.toHexDotsString(data);
         }
         
+        @Override
         public int hashCode() { return this.data.length+this.data[0]+dest.hashCode(); }
         
         /**
