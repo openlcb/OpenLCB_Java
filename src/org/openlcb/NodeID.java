@@ -76,13 +76,7 @@ public class NodeID {
     @CheckReturnValue
     @NonNull
     public String toString() {
-        return "NodeID:"
-                +Utilities.toHexPair(contents[0])+"."
-                +Utilities.toHexPair(contents[1])+"."
-                +Utilities.toHexPair(contents[2])+"."
-                +Utilities.toHexPair(contents[3])+"."
-                +Utilities.toHexPair(contents[4])+"."
-                +Utilities.toHexPair(contents[5]);
+        return Utilities.toHexDotsString(contents);
     }
     
 }
