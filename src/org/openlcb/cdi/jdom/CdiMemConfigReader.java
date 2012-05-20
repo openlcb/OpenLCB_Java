@@ -49,7 +49,6 @@ public class CdiMemConfigReader  {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(node, SPACE, nextAddress, LENGTH) {
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
-                    System.out.println("read "+data.length+" bytes");
                     // handle return data, checking for null in string
                     for (int i = 0; i<data.length; i++) {
                         if (data[i] == 0) {

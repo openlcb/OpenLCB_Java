@@ -187,7 +187,7 @@ public class CdiPanel extends JPanel {
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = "Group" + (item.getName() != null ? (": " + item.getName()) : "");
+            String name = (item.getName() != null ? (item.getName()) : "Group");
             setBorder(BorderFactory.createTitledBorder(name));
 
             String d = item.getDescription();
@@ -206,7 +206,17 @@ public class CdiPanel extends JPanel {
             if (rep == 0) {
                 rep = 1;  // default
             }
+            JPanel currentPane = this;
             for (int i = 0; i < rep; i++) {
+                if (rep != 1) {
+                    // nesting a pane
+                    currentPane = new JPanel();
+                    currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
+                    currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
+                    currentPane.setBorder(BorderFactory.createTitledBorder(name));
+                    add(currentPane);
+                }
                 java.util.List<CdiRep.Item> items = item.getItems();
                 if (items != null) {
                     for (int j = 0; j < items.size(); j++) {
@@ -230,7 +240,7 @@ public class CdiPanel extends JPanel {
                         if (pane != null) {
                             size = size + pane.getVarSize();
                             origin = pane.getOrigin() + pane.getVarSize();
-                            add(pane);
+                            currentPane.add(pane);
                         } else {
                             System.out.println("could not process type of " + it);
                         }
