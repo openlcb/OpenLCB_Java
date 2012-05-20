@@ -35,6 +35,8 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
         suite.addTest(MonPaneTest.suite());
         suite.addTest(NodeSelectorTest.suite());
+        suite.addTest(EventIdTextFieldTest.suite());
+
         suite.addTest(org.openlcb.swing.networktree.PackageTest.suite());
         suite.addTest(org.openlcb.swing.memconfig.PackageTest.suite());
 
