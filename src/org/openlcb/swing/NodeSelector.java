@@ -47,4 +47,8 @@ public class NodeSelector extends JPanel  {
         
     }
     
+    public Object getSelectedItem() {
+        return box.getSelectedItem();
+    }
+    
 }
