@@ -21,7 +21,7 @@ public class DatagramMeteringBufferTest extends TestCase {
     java.util.ArrayList<Message> repliesReturned1;
     Connection replyConnection1;
 
-    Connection testConnection;
+    Connection returnConnection;
 
     java.util.ArrayList<Message> messagesForwarded;
     Connection forwardConnection;
@@ -32,7 +32,7 @@ public class DatagramMeteringBufferTest extends TestCase {
     DatagramMessage datagram2;
     
     DatagramAcknowledgedMessage replyOK;
-    DatagramRejectedMessage replyNAK;
+    DatagramRejectedMessage replyNAKresend;
     
     public void setUp() {
 
@@ -47,15 +47,15 @@ public class DatagramMeteringBufferTest extends TestCase {
         forwardConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
                 messagesForwarded.add(msg);
-                testConnection = sender;
+                Assert.assertEquals(returnConnection, sender);
             }
         };
 
-        testConnection = null;
-        
         data = new int[32];
         
         buffer = new DatagramMeteringBuffer(forwardConnection);
+        
+        returnConnection = buffer.connectionForRepliesFromDownstream();
 
         data[0] = 1;
         datagram1   = new DatagramMessage(hereID, farID, data);                                        
@@ -63,7 +63,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         datagram2   = new DatagramMessage(hereID, farID, data);                                        
 
         replyOK     = new DatagramAcknowledgedMessage(farID, hereID);
-        replyNAK    = new DatagramRejectedMessage(farID, hereID, 0x010);
+        replyNAKresend = new DatagramRejectedMessage(farID, hereID, 0x210);
     }
     
     public void testSend() throws InterruptedException {
@@ -79,7 +79,6 @@ public class DatagramMeteringBufferTest extends TestCase {
         Thread.currentThread().sleep(10);
         Assert.assertEquals("forwarded messages", 1, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(0).equals(m));        
-        Assert.assertTrue(testConnection != null);
     }
 
     public void testFirstDatagramSendGoesThrough() throws InterruptedException {
@@ -88,16 +87,14 @@ public class DatagramMeteringBufferTest extends TestCase {
         Thread.currentThread().sleep(10);
         Assert.assertEquals("forwarded messages", 1, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(0).equals(datagram1));        
-        Assert.assertTrue(testConnection != null);
     }
 
     public void testSendReplyOK() throws InterruptedException {
         buffer.put(datagram1, replyConnection1);
 
         Thread.currentThread().sleep(10);
-        Assert.assertTrue(testConnection != null);
 
-        testConnection.put(replyOK, null);
+        returnConnection.put(replyOK, null);
 
         Assert.assertEquals("reply messages", 1, repliesReturned1.size());
         Assert.assertTrue(repliesReturned1.get(0).equals(replyOK));        
@@ -108,7 +105,7 @@ public class DatagramMeteringBufferTest extends TestCase {
 
         Thread.currentThread().sleep(10);
 
-        testConnection.put(replyNAK, null);
+        returnConnection.put(replyNAKresend, null);
 
         Assert.assertEquals("forwarded messages", 2, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram1));        
@@ -119,12 +116,12 @@ public class DatagramMeteringBufferTest extends TestCase {
 
         Thread.currentThread().sleep(10);
 
-        testConnection.put(replyNAK, null);
+        returnConnection.put(replyNAKresend, null);
 
         Assert.assertEquals("forwarded messages", 2, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram1));        
 
-        testConnection.put(replyOK, null);
+        returnConnection.put(replyOK, null);
 
         Assert.assertEquals("reply messages", 1, repliesReturned1.size());
         Assert.assertTrue(repliesReturned1.get(0).equals(replyOK));        
@@ -139,7 +136,6 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertEquals("forwarded messages", 2, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(0).equals(m));        
         Assert.assertTrue(messagesForwarded.get(1).equals(m));        
-        Assert.assertTrue(testConnection != null);
     }
 
     public void testSendTwoBeforeReply() throws InterruptedException {
@@ -150,11 +146,10 @@ public class DatagramMeteringBufferTest extends TestCase {
 
         Assert.assertEquals("forwarded messages", 1, messagesForwarded.size());
         Assert.assertTrue(messagesForwarded.get(0).equals(datagram1));        
-        Assert.assertTrue(testConnection != null);
         
         // now send the reply
         
-        testConnection.put(replyOK, null);
+        returnConnection.put(replyOK, null);
 
         Thread.currentThread().sleep(10);
 
