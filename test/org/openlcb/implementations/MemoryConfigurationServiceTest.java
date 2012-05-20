@@ -1,11 +1,10 @@
 package org.openlcb.implementations;
 
-import org.openlcb.*;
-
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.openlcb.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
@@ -21,10 +20,12 @@ public class MemoryConfigurationServiceTest extends TestCase {
     DatagramService datagramService;
     MemoryConfigurationService service;
     
+    @Override
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
         testConnection = new AbstractConnection(){
+            @Override
             public void put(Message msg, Connection sender) {
                 messagesReceived.add(msg);
             }
@@ -56,7 +57,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
         
-        Assert.assertTrue(!m20.equals(null));
+        Assert.assertTrue(m20 != null);
         
         Assert.assertTrue(!m20.equals(m21));
         Assert.assertTrue(!m20.equals(m22));
@@ -86,7 +87,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
         
-        Assert.assertTrue(!m20.equals(null));
+        Assert.assertTrue(m20 != null);
         
         Assert.assertTrue(!m20.equals(m21));
         Assert.assertTrue(!m20.equals(m22));
@@ -152,9 +153,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         int length = 4;
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
+                @Override
                 public void handleWriteReply(int code) { 
                     flag = true;
                 }
+                @Override
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
                     flag = true;
                 }
@@ -215,7 +218,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
         
-        Assert.assertTrue(!m20.equals(null));
+        Assert.assertTrue(m20 != null);
         
         Assert.assertTrue(!m20.equals(m21));
         
@@ -224,9 +227,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
     public void testGetConfig() {
         MemoryConfigurationService.McsConfigMemo memo = 
             new MemoryConfigurationService.McsConfigMemo(farID) {
+                @Override
                 public void handleWriteReply(int code) { 
                     flag = true;
                 }
+                @Override
                 public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) { 
                     flag = true;
                 }
@@ -278,7 +283,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
         
-        Assert.assertTrue(!m20.equals(null));
+        Assert.assertTrue(m20 != null);
         
         Assert.assertTrue(!m20.equals(m22));
         Assert.assertTrue(!m20.equals(m23));
@@ -289,9 +294,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
             new MemoryConfigurationService.McsAddrSpaceMemo(farID, space) {
+                @Override
                 public void handleWriteReply(int code) { 
                     flag = true;
                 }
+                @Override
                 public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
                     flag = true;
                 }
