@@ -114,6 +114,7 @@ public class SampleFactory {
                     .addContent(new Element("description").addContent("The contents of this group are replicated by 2"))
                     .addContent(new Element("group").setAttribute("replication","3")
                         .addContent(new Element("name").addContent("Inner Group"))
+                        .addContent(new Element("repname").addContent("Inner Label"))
                         .addContent(new Element("description").addContent("The contents of this group are replicated by 3"))
                         .addContent(new Element("int").setAttribute("size","1")
                             .addContent(new Element("name").addContent("Int inside groups"))
