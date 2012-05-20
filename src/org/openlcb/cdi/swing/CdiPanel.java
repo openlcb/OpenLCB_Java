@@ -1,9 +1,11 @@
 package org.openlcb.cdi.swing;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import javax.swing.*;
-import java.awt.*;
-
 import org.openlcb.cdi.CdiRep;
+import org.openlcb.swing.EventIdTextField;
 
 /**
  * Simple example CDI display.
@@ -278,20 +280,26 @@ public class CdiPanel extends JPanel {
             JButton b;
             b = new JButton("Read");
             final ReadReturn handler = new ReadReturn() {
+                @Override
                 public void returnData(byte[] data) {
                     //textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+                    System.err.println("Bit type not implemented yet - org.openlcb.cdi.swing.CdiPanel");
                 }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
+                    System.err.println("Bit type not implemented yet - org.openlcb.cdi.swing.CdiPanel");
                 }
             });
             p3.add(b);
             b = new JButton("Write");
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     accessor.doWrite(getOrigin(), getVarSpace(), new byte[]{});
+                    System.err.println("Bit type not implemented yet - org.openlcb.cdi.swing.CdiPanel");
                 }
             });
             p3.add(b);
@@ -304,7 +312,7 @@ public class CdiPanel extends JPanel {
 
     class EventIdPane extends DisplayPane {
 
-        JTextField textField;
+        JFormattedTextField textField;
         
         EventIdPane(CdiRep.EventID item, long origin, int space) {
             super(origin, space);
@@ -325,18 +333,19 @@ public class CdiPanel extends JPanel {
             p3.setLayout(new FlowLayout());
             add(p3);
 
-            textField = new JTextField(24);
+            textField = EventIdTextField.getEventIdTextField();
             p3.add(textField);
-            textField.setToolTipText("EventID as eight-byte dotted-hex string, e.g. 01.02.0A.AB.34.56.78.00");
 
             JButton b;
             b = new JButton("Read");
             final ReadReturn handler = new ReadReturn() {
+                @Override
                 public void returnData(byte[] data) {
-                    textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+                    textField.setValue(org.openlcb.Utilities.toHexDotsString(data));
                 }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
                 }
@@ -344,8 +353,9 @@ public class CdiPanel extends JPanel {
             p3.add(b);
             b = new JButton("Write");
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    byte[] contents = org.openlcb.Utilities.bytesFromHexString(textField.getText());
+                    byte[] contents = org.openlcb.Utilities.bytesFromHexString((String)textField.getValue());
                     accessor.doWrite(getOrigin(), getVarSpace(), contents);
                  }
             });
@@ -360,6 +370,10 @@ public class CdiPanel extends JPanel {
 
     class IntPane extends DisplayPane {
 
+        JTextField textField = null;
+        JComboBox box = null;
+        CdiRep.Map map = null;
+        
         IntPane(CdiRep.IntegerRep item, long origin, int space) {
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -381,13 +395,14 @@ public class CdiPanel extends JPanel {
 
             // see if map is present
             String[] labels;
-            CdiRep.Map map = item.getMap();
+            map = item.getMap();
             if ((map != null) && (map.getKeys().size() > 0)) {
                 // map present, make selection box
-                p3.add(new JComboBox(map.getValues().toArray(new String[]{""})));
+                box = new JComboBox(map.getValues().toArray(new String[]{""}));
+                p3.add(box);
             } else {
                 // map not present, just an entry box
-                JTextField textField = new JTextField(24);
+                textField = new JTextField(24);
                 p3.add(textField);
                 textField.setToolTipText("Signed integer value of up to "+size+" bytes");
             }
@@ -395,20 +410,51 @@ public class CdiPanel extends JPanel {
             JButton b;
             b = new JButton("Read");
             final ReadReturn handler = new ReadReturn() {
+                @Override
                 public void returnData(byte[] data) {
-                     //textField.setText(org.openlcb.Utilities.toHexDotsString(data));
+                    long value = 0;
+                    for (int i = 0; i<data.length; i++)
+                        value = (value << 8)+(data[i]&0xFF);
+                    
+                    if (textField != null) {
+                        textField.setText(""+value);
+                    } else {
+                        String key = ""+value;
+                        String entry = map.getEntry(key);
+                        System.out.println("found key "+key+" entry "+entry);
+                        box.setSelectedItem(entry);
+                    }
                }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    accessor.doRead(getOrigin(), getVarSpace(), 8, handler);
+                    accessor.doRead(getOrigin(), getVarSpace(), size, handler);
                 }
             });
             p3.add(b);
             b = new JButton("Write");
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    accessor.doWrite(getOrigin(), getVarSpace(), new byte[]{});
+                    byte[] content = new byte[size];
+                    long value = 0;
+                    if (textField != null) {
+                        value = Long.parseLong(textField.getText());
+                    } else {
+                        // have to get key from stored value
+                        String entry = (String) box.getSelectedItem();
+                        String key = map.getKey(entry);
+                        System.out.println("found key "+key+" entry "+entry);
+                        value = Long.parseLong(key);
+                    }
+                    int i = 0;
+                    while (i<content.length) {
+                        content[content.length-1-i] = (byte)(value & 0xFF); // content[0] is MSByte
+                        value = value >> 8;
+                        i++;
+                    }
+                    accessor.doWrite(getOrigin(), getVarSpace(), content);
                 }
             });
             p3.add(b);
@@ -447,11 +493,13 @@ public class CdiPanel extends JPanel {
             JButton b;
             b = new JButton("Read");
             final ReadReturn handler = new ReadReturn() {
+                @Override
                 public void returnData(byte[] data) {
                     textField.setText(new String(data));
                 }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     accessor.doRead(getOrigin(), getVarSpace(), size, handler);
                 }
@@ -459,6 +507,7 @@ public class CdiPanel extends JPanel {
             p3.add(b);
             b = new JButton("Write");
             b.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     byte[] content = textField.getText().getBytes();
                     accessor.doWrite(getOrigin(), getVarSpace(), content);
