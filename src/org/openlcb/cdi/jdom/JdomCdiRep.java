@@ -1,8 +1,8 @@
 package org.openlcb.cdi.jdom;
 
+import org.jdom.Attribute;
+import org.jdom.Element;
 import org.openlcb.cdi.CdiRep;
-
-import org.jdom.*;
 
 /**
  * Implement the CdiRep interface using 
@@ -18,27 +18,32 @@ public class JdomCdiRep implements CdiRep {
     }
     
     public static class Identification implements CdiRep.Identification {    
+        @Override
         public String getManufacturer() {
             Element c = id.getChild("manufacturer");
             if (c == null) return null;
             return c.getText();
         }
+        @Override
         public String getModel() {
             Element c = id.getChild("model");
             if (c == null) return null;
             return c.getText();
         }
+        @Override
         public String getHardwareVersion() {
             Element c = id.getChild("hardwareVersion");
             if (c == null) return null;
             return c.getText();
         }
+        @Override
         public String getSoftwareVersion() {
             Element c = id.getChild("softwareVersion");
             if (c == null) return null;
             return c.getText();
         }
 
+        @Override
         public Map getMap() {
             return new Map(id.getChild("map"));
         }
@@ -49,12 +54,14 @@ public class JdomCdiRep implements CdiRep {
         Element id;
     }
 
+    @Override
     public Identification getIdentification() {
         Element id = root.getChild("identification");
         if (id == null) return null;
         return new Identification(id);
     }
 
+    @Override
     public java.util.List<CdiRep.Segment> getSegments() {
         java.util.List list = root.getChildren("segment");
         java.util.ArrayList<CdiRep.Segment> result = new java.util.ArrayList<CdiRep.Segment>();
@@ -103,21 +110,24 @@ public class JdomCdiRep implements CdiRep {
     }
     
     public static class Segment extends Nested implements CdiRep.Segment {
+        Segment(Element segment) { super(segment); }
+        
+        @Override
         public int getSpace() {
             Attribute a = e.getAttribute("space");
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
         
-        Segment(Element segment) { super(segment); }
+        @Override
         public int getOrigin() {
             Attribute a = e.getAttribute("origin");
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
     }
 
@@ -126,6 +136,7 @@ public class JdomCdiRep implements CdiRep {
             this.map = map;
         }
         
+        @Override
         public String getEntry(String key) {
             java.util.List relations = map.getChildren("relation");
             for (int i = 0; i<relations.size(); i++) {
@@ -135,6 +146,17 @@ public class JdomCdiRep implements CdiRep {
             return null;
         }
         
+        @Override
+        public String getKey(String entry) {
+            java.util.List relations = map.getChildren("relation");
+            for (int i = 0; i<relations.size(); i++) {
+                if (entry.equals(((Element)relations.get(i)).getChild("value").getText()) )
+                    return ((Element)relations.get(i)).getChild("property").getText();
+            }
+            return null;
+        }
+        
+        @Override
         public java.util.List<String> getKeys() {
             java.util.ArrayList<String> list = new java.util.ArrayList<String>();
             if (map == null) return list;
@@ -145,6 +167,8 @@ public class JdomCdiRep implements CdiRep {
             }
             return list;
         }
+        
+        @Override
         public java.util.List<String> getValues() {
             java.util.ArrayList<String> list = new java.util.ArrayList<String>();
             if (map == null) return list;
@@ -160,19 +184,29 @@ public class JdomCdiRep implements CdiRep {
     }
 
     public static class Item implements CdiRep.Item {
+        Item(Element e) { this.e = e; }
+        Element e;
+
+        @Override
         public String getName() { 
             Element d = e.getChild("name");
             if (d==null) return null;
             return d.getText();
         }
+        
+        @Override
         public String getDescription() { 
             Element d = e.getChild("description");
             if (d==null) return null;
             return d.getText();
         }
+        
+        @Override
         public Map getMap() {
             return new Map(e.getChild("map"));
         }
+        
+        @Override
         public int getOffset() {
             Attribute a = e.getAttribute("offset");
             try {
@@ -180,71 +214,81 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom.DataConversionException e) { return 0; }
         }
-        
-        Item(Element e) { this.e = e; }
-        Element e;
     }
+
     public static class Group extends Nested implements CdiRep.Group {
+        Group(Element e) { super(e); }
+        
+        @Override
         public int getReplication() {
             Attribute a = e.getAttribute("replication");
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
+        
+        @Override
         public int getOffset() {
             Attribute a = e.getAttribute("offset");
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
-
-        Group(Element e) { super(e); }
     }
 
     public static class EventID extends Item implements CdiRep.EventID {
         EventID(Element e) { super(e); }
     }
     public static class IntRep extends Item implements CdiRep.IntegerRep {
+        IntRep(Element e) { super(e); }
+                
+        @Override
         public int getDefault() { return 0; }
+        @Override
         public int getMin() { return 0; }
+        @Override
         public int getMax() { return 0; }
 
+        @Override
         public int getSize() { 
             Attribute a = e.getAttribute("size");
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
-        
-        IntRep(Element e) { super(e); }
     }
+    
     public static class BitRep extends Item implements CdiRep.BitRep {
+        BitRep(Element e) { super(e); }
+        
+        @Override
         public boolean getDefault() { return false; }
 
+        @Override
         public int getSize() { 
             Attribute a = e.getAttribute("size");
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
-
-        BitRep(Element e) { super(e); }
     }
+    
     public static class StringRep extends Item implements CdiRep.StringRep {
 
+        StringRep(Element e) { super(e); }
+        
+        @Override
         public int getSize() { 
             Attribute a = e.getAttribute("size");
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom.DataConversionException e1) { return 0; }
         }
-
-        StringRep(Element e) { super(e); }
     }
 
     Element root;
