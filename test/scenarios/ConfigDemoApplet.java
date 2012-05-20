@@ -1,17 +1,12 @@
 package scenarios;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
-import org.openlcb.swing.*;
-import org.openlcb.cdi.swing.*;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
-import org.jdom.*;
+import org.openlcb.cdi.swing.CdiPanel;
 
 /**
  * Demonstrate basic configuration from an XML file.
@@ -26,6 +21,7 @@ public class ConfigDemoApplet extends JApplet {
     /**
      * Applet starts here
      */
+    @Override
     public void start() {
         JPanel p = new JPanel();
         add(p);
@@ -34,6 +30,7 @@ public class ConfigDemoApplet extends JApplet {
         p.add(startButton);
         startButton.addActionListener(
                     new java.awt.event.ActionListener() {
+                        @Override
                         public void actionPerformed(java.awt.event.ActionEvent e) {
                             startDemo();
                        }
@@ -51,10 +48,12 @@ public class ConfigDemoApplet extends JApplet {
         CdiPanel m = new CdiPanel();
                 
         m.initComponents(new CdiPanel.ReadWriteAccess(){
+            @Override
             public void doWrite(long address, int space, byte[] data) {
                     System.out.println(data.length);
                     System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
                 }
+            @Override
             public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
                     handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
                     System.out.println("read "+address+" "+space);
