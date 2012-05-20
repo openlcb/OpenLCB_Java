@@ -47,6 +47,7 @@ public interface CdiRep {
 
     public static interface Map {
         public String getEntry(String key);
+        public String getKey(String entry);
         public java.util.List<String> getKeys();
         public java.util.List<String> getValues();
     }
