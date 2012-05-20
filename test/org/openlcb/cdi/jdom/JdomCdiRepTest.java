@@ -55,6 +55,10 @@ public class JdomCdiRepTest extends TestCase {
 
         Assert.assertEquals("non-existant value",null,map.getEntry("propX"));
         
+        Assert.assertEquals("prop1 key","prop1",map.getKey("val1"));
+        Assert.assertEquals("prop2 key","prop2",map.getKey("val2"));
+        Assert.assertEquals("prop3 key","prop3",map.getKey("val3"));
+
         java.util.List list = map.getKeys();
         Assert.assertNotNull(list);
         Assert.assertEquals("num keys", 3, list.size());
