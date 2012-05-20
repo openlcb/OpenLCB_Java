@@ -78,9 +78,10 @@ public class DatagramServiceTest extends TestCase {
     public void testReceiveDGbeforeReg() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
-                public int handleData(int[] data) { 
+                @Override
+                public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
                     flag = true;
-                    return 0; 
+                    service.acceptData(0); 
                 }
             };
         
@@ -99,9 +100,10 @@ public class DatagramServiceTest extends TestCase {
     public void testReceiveFirstDG() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
-                public int handleData( NodeID n, int[] data) { 
+                @Override
+                public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
                     flag = true;
-                    return 0; 
+                    service.acceptData(0); 
                 }
             };
 
@@ -120,9 +122,10 @@ public class DatagramServiceTest extends TestCase {
     public void testReceiveWrongDGType() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
-                public int handleData(int[] data) { 
+                @Override
+                public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
                     flag = true;
-                    return 0; 
+                    service.acceptData(0); 
                 }
             };
 
@@ -143,6 +146,7 @@ public class DatagramServiceTest extends TestCase {
         int[] data = new int[]{1,2,3,4,5};
         DatagramService.DatagramServiceTransmitMemo memo = 
             new DatagramService.DatagramServiceTransmitMemo(farID,data) {
+                @Override
                 public void handleReply(int code) { 
                     flag = true;
                 }

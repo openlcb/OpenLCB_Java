@@ -14,6 +14,7 @@ import org.openlcb.*;
  * <li>Register to be notified when data of a particular type arrives
  * </ul>
  *
+ * Does not handle retry of negative replies. For that, see {@link DatagramMeteringBuffer}.
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
@@ -45,26 +46,38 @@ public class DatagramService extends MessageDecoder {
     /**
      * Handle "Datagram" message from layout
      */
+    @Override
     public void handleDatagram(DatagramMessage msg, Connection sender){
         // forward
         int retval = DEFAULT_ERROR_CODE;
+        ReplyMemo replyMemo = new ReplyMemo(msg, downstream, here, this);
         if (rcvMemo != null && rcvMemo.type == msg.getData()[0]) {
-            retval = rcvMemo.handleData(msg.getSourceNodeID(), msg.getData());
-        }
-        if (retval  == 0) {
-            // accept
-            Message m = new DatagramAcknowledgedMessage(here, msg.getSourceNodeID());
-            downstream.put(m, this);
+            rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
+            // check that a reply was sent
+            if (! replyMemo.hasReplied())
+                System.err.println("No internal reply received to datagram with contents "+Utilities.toHexDotsString(msg.getData()));
         } else {
             // reject
-            Message m = new DatagramRejectedMessage(here, msg.getSourceNodeID(), retval);
-            downstream.put(m, this);
+            replyMemo.acceptData(retval);
         }
+        
     }
 
     /**
      * Handle positive datagram reply message from layout
      */
+    @Override
+    public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
+        if (xmtMemo != null) {
+            xmtMemo.handleReply(msg.getCode());
+        }
+        xmtMemo = null;
+    }
+
+    /**
+     * Handle negative datagram reply message from layout
+     */
+    @Override
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
         if (xmtMemo != null) {
             xmtMemo.handleReply(0);
@@ -107,14 +120,55 @@ public class DatagramService extends MessageDecoder {
         @Override
         public int hashCode() { return type; }
         
+        public void acceptData(int resultCode) {
+
+        }
         /**
-         * Overload this to for notification of data.
+         * Overload this for notification of data.
+         * 
+         * @param service Implementations must reply to the datagram by invoking
+         *                  reply.acceptData(int replycode)
+         *              before returning.  (This is done, instead of using the 
+         *              return value, to allow the receiving code to reply immediately
+         *              and queue other activity afterwards)
+         * 
          * @return 0 for OK, non-zero for error reply
          */
-        public int handleData(NodeID n, int[] data) { 
+        public void handleData(NodeID n, int[] data, ReplyMemo service) { 
             // default is error
-            return DEFAULT_ERROR_CODE; 
+            service.acceptData(DEFAULT_ERROR_CODE);
         }
+
+    }
+    
+    @Immutable
+    static protected class ReplyMemo {
+        DatagramMessage msg;
+        Connection downstream;
+        NodeID here;
+        DatagramService service;
+        boolean replied = false;
+        
+        protected ReplyMemo (DatagramMessage msg, Connection downstream, NodeID here, DatagramService service) {
+            this.msg = msg;
+            this.downstream = downstream;
+            this.here = here;
+            this.service = service;
+        }
+        public void acceptData(int resultCode) {
+            replied = true;
+            if (resultCode  == 0) {
+                // accept
+                Message m = new DatagramAcknowledgedMessage(here, msg.getSourceNodeID());
+                downstream.put(m, service);
+            } else {
+                // reject
+                Message m = new DatagramRejectedMessage(here, msg.getSourceNodeID(), resultCode);
+                downstream.put(m, service);
+            }
+
+        }
+        boolean hasReplied() { return replied; }
 
     }
 

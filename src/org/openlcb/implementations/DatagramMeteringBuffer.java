@@ -29,46 +29,68 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     final static int TIMEOUT = 2000;
     
-    public DatagramMeteringBuffer(Connection downstream) {
-        this.downstream = downstream;
+    public DatagramMeteringBuffer(Connection toDownstream) {
+        this.toDownstream = toDownstream;
         new Thread(new Consumer(queue)).start();
+        
+        fromDownstream = new ReplyHandler();
     }
     
-    Connection downstream;
+    Connection toDownstream;
+    Connection fromDownstream;
+    MessageMemo currentMemo;
+    
+    /**
+     * This is where e.g. replies from the OpenLCB
+     * network should be returned to.
+     */
+    public Connection connectionForRepliesFromDownstream() {
+        return fromDownstream;
+    }
     
     BlockingQueue<MessageMemo> queue = new LinkedBlockingQueue<MessageMemo>();
     
     /**
      * Accept a datagram message to be sent
      */
-    
-    public void put(Message msg, Connection upstream) {
+    public void put(Message msg, Connection toUpstream) {
         if (msg instanceof DatagramMessage)
-            queue.add(new MessageMemo(msg, upstream, downstream));
+            queue.add(new MessageMemo(msg, toUpstream, toDownstream));
         else 
-            downstream.put(msg, this);
+            toDownstream.put(msg, fromDownstream);
+    }
+    
+    class ReplyHandler extends AbstractConnection {
+        /*
+         * Find the current handler and have it handle it
+         */
+        public void put(Message msg, Connection sender) {
+            if (currentMemo == null) return;
+            currentMemo.put(msg, sender);
+        }
     }
     
     class MessageMemo extends MessageDecoder {
         Message message;
-        Connection downstream;
-        Connection upstream;
+        Connection toDownstream;
+        Connection toUpstream;
         
-        MessageMemo(Message msg, Connection u, Connection d) {
+        MessageMemo(Message msg, Connection toUpstream, Connection toDownstream) {
             message = msg;
-            upstream = u;
-            downstream = d;
+            this.toUpstream = toUpstream;
+            this.toDownstream = toDownstream;
         }
         
         public void sendIt() {
-            downstream.put(message, this);
+            currentMemo = this;
+            toDownstream.put(message, fromDownstream);
         }
         /**
          * Handle "Datagram Acknowledged" message
          */
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             // forward message upstream
-            upstream.put(msg, upstream);
+            toUpstream.put(msg, toUpstream);
             
             // and allow sending another
             new Thread(new Consumer(queue)).start();
@@ -80,8 +102,15 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
             // need to check if this is from right source
             
-            // resend
-            downstream.put(message, this);
+            // check if resend permitted
+            if (msg.canResend()) {
+                toDownstream.put(message, fromDownstream);
+            } else {
+                // forward upstream to originator and let them sort it out
+                toUpstream.put(msg, toUpstream);
+                // and allow sending another
+                new Thread(new Consumer(queue)).start();
+            }
         }
     }
     
@@ -92,6 +121,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             try {
                 consume(queue.take());
             } catch (InterruptedException ex) {}
+            // and exits. Another has to be started with this item is done.
         }
         void consume(MessageMemo x) { x.sendIt(); }
     }
