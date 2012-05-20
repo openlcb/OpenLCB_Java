@@ -108,7 +108,7 @@ public class NodeIDTest extends TestCase {
 
     public void testOutputFormat() {
         NodeID e1 = new NodeID(new byte[]{1,0x10,0x13,0x0D,(byte)0xD0,(byte)0xAB});
-        Assert.assertEquals(e1.toString(), "NodeID:01.10.13.0D.D0.AB");
+        Assert.assertEquals("01.10.13.0D.D0.AB", e1.toString());
     }
 
    // from here down is testing infrastructure
