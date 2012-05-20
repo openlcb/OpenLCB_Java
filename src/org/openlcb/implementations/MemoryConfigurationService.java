@@ -1,10 +1,8 @@
 package org.openlcb.implementations;
 
-import org.openlcb.*;
-
-// For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import net.jcip.annotations.Immutable; 
+import net.jcip.annotations.ThreadSafe;
+import org.openlcb.NodeID;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
@@ -32,7 +30,9 @@ public class MemoryConfigurationService {
             // nor to multiple nodes
             //
             // doesn't check for match of reply to memo, but eventually should.
-            public int handleData(NodeID dest, int[] data) { 
+            @Override
+            public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) { 
+                service.acceptData(0);
                 if (readMemo != null) {
                     byte[] content = new byte[data.length-6];
                     for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6];
@@ -61,7 +61,6 @@ public class MemoryConfigurationService {
                     addrSpaceMemo = null;
                     memo.handleConfigData(dest, space, highAddress, lowAddress, flags, "");
                 }    
-                return 0;
             }
         });
     }
@@ -110,11 +109,12 @@ public class MemoryConfigurationService {
             this.dest = dest;
         }
 
-        int count;
-        long address;
-        int space;
-        NodeID dest;
+        final int count;
+        final long address;
+        final int space;
+        final NodeID dest;
         
+        @Override
         public boolean equals(Object o) {
             if (o == null) return false;
             if (! (o instanceof McsReadMemo)) return false;
@@ -125,10 +125,12 @@ public class MemoryConfigurationService {
             return this.count == m.count;
         } 
     
+        @Override
         public String toString() {
             return "McsReadMemo: "+address;
         }
         
+        @Override
         public int hashCode() { return dest.hashCode()+space+((int)address)+count; }
         
         /**
@@ -170,6 +172,7 @@ public class MemoryConfigurationService {
             this.memo = memo;
         }
         McsReadMemo memo;
+        @Override
         public void handleReply(int code) { 
             memo.handleWriteReply(code);
         }
@@ -186,10 +189,11 @@ public class MemoryConfigurationService {
         }
 
         byte[] data;
-        long address;
-        int space;
-        NodeID dest;
+        final long address;
+        final int space;
+        final NodeID dest;
         
+        @Override
         public boolean equals(Object o) {
             if (o == null) return false;
             if (! (o instanceof McsWriteMemo)) return false;
@@ -203,10 +207,12 @@ public class MemoryConfigurationService {
             return true;
         } 
     
+        @Override
         public String toString() {
             return "McsWriteMemo: "+address;
         }
         
+        @Override
         public int hashCode() { return this.data.length+this.data[0]+dest.hashCode()+((int)address)+space; }
         
         /**
@@ -257,8 +263,9 @@ public class MemoryConfigurationService {
             this.dest = dest;
         }
 
-        NodeID dest;
+        final NodeID dest;
         
+        @Override
         public boolean equals(Object o) {
             if (o == null) return false;
             if (! (o instanceof McsConfigMemo)) return false;
@@ -266,10 +273,12 @@ public class MemoryConfigurationService {
             return this.dest == m.dest;
         } 
     
+        @Override
         public String toString() {
             return "McsConfigMemo";
         }
         
+        @Override
         public int hashCode() { return dest.hashCode(); }
         
         /**
