@@ -236,6 +236,13 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom.DataConversionException e1) { return 0; }
         }
+        
+        @Override
+        public String getRepName() {
+            Element d = e.getChild("repname");
+            if (d==null) return null;
+            return d.getText();
+       }
     }
 
     public static class EventID extends Item implements CdiRep.EventID {
