@@ -22,7 +22,8 @@ public class EventIdTextField extends JFormattedTextField  {
         JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
         
         retval.setValue("00.00.00.00.00.00.00.00");
-        
+        retval.setToolTipText("EventID as eight-byte dotted-hex string, e.g. 01.02.0A.AB.34.56.78.00");
+          
         return retval;
     }
     
