@@ -519,7 +519,17 @@ public class CdiPanel extends JPanel {
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    byte[] content = textField.getText().getBytes();
+                    byte[] data = textField.getText().getBytes();
+                    byte[] content = new byte[size];
+                    for (int i = 0; i < size-1; i++)
+                        if (i<data.length)
+                            content[i] = data[i];
+                        else 
+                            content[i] = 0;
+                    content[size-1] = 0;
+                    // write it back
+                    textField.setText(new String(content));
+                    // and to the node
                     accessor.doWrite(getOrigin(), getVarSpace(), content);
                 }
             });
