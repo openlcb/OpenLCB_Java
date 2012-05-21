@@ -1,8 +1,8 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Consumer Identified message implementation
@@ -21,6 +21,7 @@ public class ConsumerIdentifiedMessage extends Message {
         this.eventID = eventID;
     }
         
+    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     EventID eventID;
 
     // because EventID is immutable, can directly return object
@@ -40,11 +41,22 @@ public class ConsumerIdentifiedMessage extends Message {
         decoder.handleConsumerIdentified(this, sender);
      }
 
+    @Override
     public boolean equals(Object o) {
+        if (o == null) return false;
+        if (! (o instanceof ConsumerIdentifiedMessage))
+            return false;
         if (!super.equals(o)) return false;
         ConsumerIdentifiedMessage p = (ConsumerIdentifiedMessage) o;
         return eventID.equals(p.eventID);
-    } 
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode()+eventID.hashCode();
+    }
+    
+    @Override
     public String toString() {
         return getSourceNodeID().toString()
                 +" Consumer identified for "+eventID.toString();     

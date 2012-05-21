@@ -1,8 +1,8 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Datagram Rejected message implementation
@@ -19,6 +19,7 @@ public class DatagramRejectedMessage extends AddressedMessage {
         this.code = code;
     }
         
+    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     int code;
     
     public int getCode() { return code; }
@@ -35,6 +36,22 @@ public class DatagramRejectedMessage extends AddressedMessage {
         decoder.handleDatagramRejected(this, sender);
      }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (! (o instanceof DatagramRejectedMessage))
+            return false;
+        if (this.code != ((DatagramRejectedMessage)o).getCode())
+            return false;
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public int getMTI() { return MTI_DATAGRAM_REJECTED; }
     
     static final int DATAGRAM_REJECTED                           = 0x000;

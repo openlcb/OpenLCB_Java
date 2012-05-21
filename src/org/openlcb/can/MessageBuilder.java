@@ -1,10 +1,9 @@
 package org.openlcb.can;
 
-import org.openlcb.*;
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import org.openlcb.*;
 
 /**
  * Converts CAN frame messages to regular messages
@@ -249,6 +248,7 @@ public class MessageBuilder {
          * Catches messages that are not explicitly 
          * handled and throws an error
          */
+        @Override
         protected void defaultHandler(Message msg, Connection sender) {
             throw new java.lang.NoSuchMethodError("no handler for Message: "+msg.toString());
         }
@@ -267,6 +267,7 @@ public class MessageBuilder {
         /**
          * Handle "Initialization Complete" message
          */
+        @Override
         public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setInitializationComplete(map.getAlias(msg.getSourceNodeID()), msg.getSourceNodeID());
@@ -285,6 +286,7 @@ public class MessageBuilder {
         /**
          * Handle "Verify Node ID Number" message
          */
+        @Override
         public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setVerifyNID(msg.getSourceNodeID());
@@ -294,6 +296,7 @@ public class MessageBuilder {
         /**
          * Handle "Producer/Consumer Event Report" message
          */
+        @Override
         public void handleProducerConsumerEventReport(ProducerConsumerEventReportMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setPCEventReport(msg.getEventID());
@@ -303,6 +306,7 @@ public class MessageBuilder {
         /**
          * Handle "Identify Consumers" message
          */
+        @Override
         public void handleIdentifyConsumers(IdentifyConsumersMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setGlobalMessage(0xA4F);
@@ -313,12 +317,14 @@ public class MessageBuilder {
         /**
          * Handle "Consumer Identified" message
          */
+        @Override
         public void handleConsumerIdentified(ConsumerIdentifiedMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Identify Producers" message
          */
+        @Override
         public void handleIdentifyProducers(IdentifyProducersMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setGlobalMessage(0xA8F);
@@ -329,12 +335,14 @@ public class MessageBuilder {
         /**
          * Handle "Producer Identified" message
          */
+        @Override
         public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Identify Event" message
          */
+        @Override
         public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x2B);
@@ -344,12 +352,14 @@ public class MessageBuilder {
         /**
          * Handle "Learn Event" message
          */
+        @Override
         public void handleLearnEvent(LearnEventMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Simple Node Ident Info Request" message
          */
+        @Override
         public void handleSimpleNodeIdentInfoRequest(SimpleNodeIdentInfoRequestMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x52);
@@ -359,6 +369,7 @@ public class MessageBuilder {
         /**
          * Handle "Datagram" message
          */
+        @Override
         public void handleDatagram(DatagramMessage msg, Connection sender){
             // must loop over data to send 8 byte chunks
             int remains = msg.getData().length;
@@ -385,6 +396,7 @@ public class MessageBuilder {
         /**
          * Handle "Datagram Rejected" message
          */
+        @Override
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4D);
@@ -395,6 +407,7 @@ public class MessageBuilder {
         /**
          * Handle "Datagram Acknowledged" message
          */
+        @Override
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4C);
@@ -404,30 +417,35 @@ public class MessageBuilder {
         /**
          * Handle "Stream Init Request" message
          */
+        @Override
         public void handleStreamInitRequest(StreamInitRequestMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Stream Init Reply" message
          */
+        @Override
         public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Stream Data Send" message
          */
+        @Override
         public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Stream Data Proceed" message
          */
+        @Override
         public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
         /**
          * Handle "Stream Data Complete" message
          */
+        @Override
         public void handleStreamDataComplete(StreamDataCompleteMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }

@@ -1,9 +1,9 @@
 package org.openlcb.implementations;
 
-import org.openlcb.*;
-
-import java.util.concurrent.LinkedBlockingQueue;
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import org.openlcb.*;
 
 /**
  * Accepts Datagrams over a Connection from "upstream", and meters them out
@@ -53,6 +53,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     /**
      * Accept a datagram message to be sent
      */
+    @Override
     public void put(Message msg, Connection toUpstream) {
         if (msg instanceof DatagramMessage)
             queue.add(new MessageMemo(msg, toUpstream, toDownstream));
@@ -64,6 +65,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         /*
          * Find the current handler and have it handle it
          */
+        @Override
         public void put(Message msg, Connection sender) {
             if (currentMemo == null) return;
             currentMemo.put(msg, sender);
@@ -88,6 +90,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         /**
          * Handle "Datagram Acknowledged" message
          */
+        @Override
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             // forward message upstream
             toUpstream.put(msg, toUpstream);
@@ -99,6 +102,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         /**
          * Handle "Datagram Rejected" message
          */
+        @Override
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
             // need to check if this is from right source
             
@@ -114,9 +118,10 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
     }
     
-    class Consumer implements Runnable {
+    static class Consumer implements Runnable {
         private final BlockingQueue<MessageMemo> queue;
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
+        @Override
         public void run() {
             try {
                 consume(queue.take());

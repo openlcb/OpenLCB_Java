@@ -1,8 +1,8 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Datagram Acknowledged message implementation
@@ -30,5 +30,20 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
         decoder.handleDatagramAcknowledged(this, sender);
      }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (! (o instanceof DatagramAcknowledgedMessage))
+            return false;
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public int getMTI() { return MTI_DATAGRAM_RCV_OK; }
+
 }
