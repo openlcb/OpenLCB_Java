@@ -21,8 +21,7 @@ public class EventID {
     @CheckReturnValue
     public EventID(@NonNull NodeID node, int b7, int b8) {
         this.contents = new byte[BYTECOUNT];
-        for (int i = 0; i < BYTECOUNT-2; i++)
-            this.contents[i] = node.contents[i];
+        System.arraycopy(node.contents, 0, this.contents, 0, BYTECOUNT-2);
             
         this.contents[6] = (byte)b7;
         this.contents[7] = (byte)b8;
@@ -35,20 +34,18 @@ public class EventID {
         if (contents.length != BYTECOUNT)
             throw new java.lang.IllegalArgumentException("Wrong EventID length: "+contents.length);
         this.contents = new byte[BYTECOUNT];
-        for (int i = 0; i < BYTECOUNT; i++)
-            this.contents[i] = contents[i];
+        System.arraycopy(contents, 0, this.contents, 0, BYTECOUNT);
     }
     
     @CheckReturnValue
     public EventID(@NonNull String value) {
         if (value == null)
             throw new java.lang.IllegalArgumentException("null argument invalid");
-        byte[] contents = org.openlcb.Utilities.bytesFromHexString(value);
-        if (contents.length != BYTECOUNT)
-            throw new java.lang.IllegalArgumentException("Wrong EventID length: "+contents.length);
+        byte[] data = org.openlcb.Utilities.bytesFromHexString(value);
+        if (data.length != BYTECOUNT)
+            throw new java.lang.IllegalArgumentException("Wrong EventID length: "+data.length);
         this.contents = new byte[BYTECOUNT];
-        for (int i = 0; i < BYTECOUNT; i++)
-            this.contents[i] = contents[i];
+        System.arraycopy(data, 0, this.contents, 0, BYTECOUNT);
     }
     
     byte[] contents;
@@ -58,12 +55,12 @@ public class EventID {
     public byte[] getContents() {
         // copy to ensure immutable
         byte[] retval = new byte[BYTECOUNT];
-        for (int i =0; i < BYTECOUNT; i++) 
-            retval[i] = contents[i];
+        System.arraycopy(contents, 0, retval, 0, BYTECOUNT);
         return retval;
     }
 
     @CheckReturnValue
+    @Override
     public boolean equals(@NonNull Object o){
         // try to cast, else not equal
         try {
@@ -77,6 +74,7 @@ public class EventID {
     }  
 
     @CheckReturnValue
+    @Override
     public int hashCode() {
         return contents[0]<<21
             +contents[1]<<18
@@ -90,6 +88,7 @@ public class EventID {
 
     @CheckReturnValue
     @NonNull
+    @Override
     public String toString() {
         return "EventID:"
                 +Utilities.toHexPair(contents[0])+"."

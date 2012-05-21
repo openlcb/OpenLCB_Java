@@ -1,6 +1,6 @@
 package org.openlcb.can;
 
-import org.openlcb.*;
+import org.openlcb.NodeID;
 
 /**
  * Maintains a 2-way map between nodes and CAN node ID aliases.
@@ -20,7 +20,7 @@ public class AliasMap {
     public void processFrame(OpenLcbCanFrame f) {
         // check type
         if (f.isInitializationComplete() || f.isVerifiedNID() || f.isAliasMapDefinition()) {
-            Integer alias = new Integer(f.getSourceAlias());
+            Integer alias = Integer.valueOf(f.getSourceAlias());
             NodeID nid = f.getNodeID();
             insert(alias, nid);
         }
@@ -32,7 +32,7 @@ public class AliasMap {
     }
     
     public NodeID getNodeID(int alias) {
-        NodeID retVal = nMap.get(new Integer(alias));
+        NodeID retVal = nMap.get(Integer.valueOf(alias));
         if (retVal != null) return retVal;
         else return new NodeID();
     }

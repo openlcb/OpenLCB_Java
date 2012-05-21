@@ -1,8 +1,9 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Base for addressed OpenLCB message types
@@ -28,6 +29,7 @@ abstract public class AddressedMessage extends Message {
     // cannot create without sourceID, destID
     protected AddressedMessage() {}
     
+    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     NodeID destNodeID;
     
     public NodeID getDestNodeID() { return destNodeID; }
@@ -36,6 +38,7 @@ abstract public class AddressedMessage extends Message {
       * To be equal, messages have to have the
       * same type and content
       */
+    @Override
      public boolean equals(Object o) {
         if (o == null) return false;
         if (! (o instanceof AddressedMessage))

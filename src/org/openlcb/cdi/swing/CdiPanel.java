@@ -78,7 +78,7 @@ public class CdiPanel extends JPanel {
             p2.setBorder(BorderFactory.createTitledBorder("Properties"));
             
             java.util.List keys = map.getKeys();
-            if (keys.size() == 0) return null;
+            if (keys.isEmpty()) return null;
 
             p2.setLayout(new util.javaworld.GridLayout2(keys.size(),2));
 
@@ -448,7 +448,7 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     byte[] content = new byte[size];
-                    long value = 0;
+                    long value;
                     if (textField != null) {
                         value = Long.parseLong(textField.getText());
                     } else {
