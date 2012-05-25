@@ -141,6 +141,27 @@ public class DatagramServiceTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
     }
 
+    public void testReceiveWrongDest() {
+        DatagramService.DatagramServiceReceiveMemo m20 = 
+            new DatagramService.DatagramServiceReceiveMemo(0x20){
+                @Override
+                public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
+                    flag = true;
+                    service.acceptData(0); 
+                }
+            };
+
+        service.registerForReceive(m20);  
+        
+        Message m = new DatagramMessage(farID, farID, new int[]{0x20});
+      
+        Assert.assertTrue(!flag);
+        service.put(m, null);
+        Assert.assertTrue(!flag);
+        
+        Assert.assertEquals(0,messagesReceived.size());
+    }
+
 
     public void testSendOK() {
         int[] data = new int[]{1,2,3,4,5};
