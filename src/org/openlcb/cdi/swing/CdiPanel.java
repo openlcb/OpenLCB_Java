@@ -261,7 +261,7 @@ public class CdiPanel extends JPanel {
         BitPane(CdiRep.BitRep item, long origin, int space) {
             super(origin, space);
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = "Bit" + (item.getName() != null ? (": " + item.getName()) : "");
+            String name = (item.getName() != null ? item.getName() : "Bit");
             setBorder(BorderFactory.createTitledBorder(name));
 
             String d = item.getDescription();
@@ -328,7 +328,7 @@ public class CdiPanel extends JPanel {
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = "EventID" + (item.getName() != null ? (": " + item.getName()) : "");
+            String name = (item.getName() != null ? item.getName() : "EventID");
             setBorder(BorderFactory.createTitledBorder(name));
 
             String d = item.getDescription();
@@ -388,7 +388,7 @@ public class CdiPanel extends JPanel {
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = "Integer" + (item.getName() != null ? (": " + item.getName()) : "");
+            String name = (item.getName() != null ? item.getName() : "Integer");
             setBorder(BorderFactory.createTitledBorder(name));
 
             String d = item.getDescription();
@@ -482,7 +482,7 @@ public class CdiPanel extends JPanel {
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = "String"+(item.getName()!=null?(": "+item.getName()):"");
+            String name = (item.getName()!=null? item.getName() : "String");
             setBorder(BorderFactory.createTitledBorder(name));
         
             String d = item.getDescription();
