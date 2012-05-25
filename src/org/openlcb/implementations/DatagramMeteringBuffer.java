@@ -56,7 +56,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     @Override
     public void put(Message msg, Connection toUpstream) {
         if (msg instanceof DatagramMessage)
-            queue.add(new MessageMemo(msg, toUpstream, toDownstream));
+            queue.add(new MessageMemo((DatagramMessage)msg, toUpstream, toDownstream));
         else 
             toDownstream.put(msg, fromDownstream);
     }
@@ -73,11 +73,11 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     }
     
     class MessageMemo extends MessageDecoder {
-        Message message;
+        DatagramMessage message;
         Connection toDownstream;
         Connection toUpstream;
         
-        MessageMemo(Message msg, Connection toUpstream, Connection toDownstream) {
+        MessageMemo(DatagramMessage msg, Connection toUpstream, Connection toDownstream) {
             message = msg;
             this.toUpstream = toUpstream;
             this.toDownstream = toDownstream;
@@ -103,9 +103,13 @@ public class DatagramMeteringBuffer extends MessageDecoder {
          * Handle "Datagram Rejected" message
          */
         @Override
-        public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
-            // need to check if this is from right source
-            
+        public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender) {
+            // check if this is from right source & to us
+            if ( ! (msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
+                // not for us, just forward
+                toUpstream.put(msg, toUpstream);
+                return;
+            }
             // check if resend permitted
             if (msg.canResend()) {
                 toDownstream.put(message, fromDownstream);

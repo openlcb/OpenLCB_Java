@@ -48,6 +48,9 @@ public class DatagramService extends MessageDecoder {
      */
     @Override
     public void handleDatagram(DatagramMessage msg, Connection sender){
+        // ignore if not for here
+        if (!msg.getDestNodeID().equals(here)) return;
+        
         // forward
         int retval = DEFAULT_ERROR_CODE;
         ReplyMemo replyMemo = new ReplyMemo(msg, downstream, here, this);
@@ -68,7 +71,7 @@ public class DatagramService extends MessageDecoder {
      */
     @Override
     public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
-        if (xmtMemo != null) {
+        if (xmtMemo != null && msg.getDestNodeID().equals(here) && xmtMemo.dest.equals(msg.getSourceNodeID()) ) {
             xmtMemo.handleReply(msg.getCode());
         }
         xmtMemo = null;
@@ -79,7 +82,7 @@ public class DatagramService extends MessageDecoder {
      */
     @Override
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
-        if (xmtMemo != null) {
+        if (xmtMemo != null && msg.getDestNodeID().equals(here) && xmtMemo.dest.equals(msg.getSourceNodeID()) ) {
             xmtMemo.handleReply(0);
         }
         xmtMemo = null;
