@@ -135,7 +135,6 @@ public class DatagramService extends MessageDecoder {
          *              return value, to allow the receiving code to reply immediately
          *              and queue other activity afterwards)
          * 
-         * @return 0 for OK, non-zero for error reply
          */
         public void handleData(NodeID n, int[] data, ReplyMemo service) { 
             // default is error
@@ -158,6 +157,10 @@ public class DatagramService extends MessageDecoder {
             this.here = here;
             this.service = service;
         }
+        /**
+         * called to indicate whether the data was accepted or not
+         * @param resultCode 0 for OK, non-zero for error reply
+         */
         public void acceptData(int resultCode) {
             replied = true;
             if (resultCode  == 0) {
@@ -178,10 +181,9 @@ public class DatagramService extends MessageDecoder {
     /**
      * Memo class to hold information about request while
      * it's being processed.
-     * 
-     * @ToDo copy in and out the data contents to make truly immutable
-     * @ToDo are these really immutable, given that subclass will inherit and change them?
      */
+     // TODO copy in and out the data contents to make truly immutable
+     // TODO are these really immutable, given that subclass will inherit and change them?
     @Immutable
     @ThreadSafe    
     static protected class DatagramServiceTransmitMemo {
