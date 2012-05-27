@@ -35,6 +35,8 @@ public class TreePane extends JPanel  {
         nodes = new DefaultMutableTreeNode("OpenLCB Network");
 
         // build GUI
+        setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
+
         treeModel = new DefaultTreeModel(nodes);
         JTree tree = new JTree(treeModel);
         tree.setEditable(true);
