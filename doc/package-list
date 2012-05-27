@@ -1,0 +1,9 @@
+org.openlcb
+org.openlcb.can
+org.openlcb.cdi
+org.openlcb.cdi.jdom
+org.openlcb.cdi.swing
+org.openlcb.implementations
+org.openlcb.swing
+org.openlcb.swing.memconfig
+org.openlcb.swing.networktree
