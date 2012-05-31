@@ -86,6 +86,20 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
     }
         
+    public void testWith1stSNII() {
+        frame.setTitle("3rd has PIP && 1st SNII");
+        Message msg;
+        msg = new ProducerIdentifiedMessage(nid2, eventA);
+        store.put(msg, null);
+        msg = new ProtocolIdentificationReplyMessage(nid2, 0x03);
+        store.put(msg, null);
+
+        msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
+                    new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
+                );
+        store.put(msg, null);
+    }
+        
    
     // from here down is testing infrastructure
     
