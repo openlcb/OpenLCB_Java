@@ -3,6 +3,7 @@ package org.openlcb.cdi.swing;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.nio.charset.Charset;
 import javax.swing.*;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.swing.EventIdTextField;
@@ -475,6 +476,8 @@ public class CdiPanel extends JPanel {
         return new StringPane(item, origin, space);
     }
     
+    static final Charset UTF8 = Charset.forName("UTF8");
+    
     class StringPane extends DisplayPane {
         JTextField textField;
         
@@ -505,7 +508,7 @@ public class CdiPanel extends JPanel {
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
-                    textField.setText(new String(data));
+                    textField.setText(new String(data, UTF8));
                 }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
@@ -519,7 +522,7 @@ public class CdiPanel extends JPanel {
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    byte[] data = textField.getText().getBytes();
+                    byte[] data = textField.getText().getBytes(UTF8);
                     byte[] content = new byte[size];
                     for (int i = 0; i < size-1; i++)
                         if (i<data.length)
@@ -528,7 +531,7 @@ public class CdiPanel extends JPanel {
                             content[i] = 0;
                     content[size-1] = 0;
                     // write it back
-                    textField.setText(new String(content));
+                    textField.setText(new String(content, UTF8));
                     // and to the node
                     accessor.doWrite(getOrigin(), getVarSpace(), content);
                 }
