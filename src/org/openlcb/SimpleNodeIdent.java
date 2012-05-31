@@ -5,6 +5,8 @@ package org.openlcb;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.nio.charset.Charset;
+
 /**
  * Simple Node Ident Protocol 
  *
@@ -24,7 +26,10 @@ public class SimpleNodeIdent {
     public SimpleNodeIdent() {
     }
 
-    byte[] bytes = new byte[128];
+    static final Charset UTF8 = Charset.forName("UTF8");
+
+    static final int MAX_REPLY_LENGTH = 256; // TODO from standard
+    byte[] bytes = new byte[MAX_REPLY_LENGTH];
     int next = 0;
    
     public void addMsg(SimpleNodeIdentInfoReplyMessage msg) {
@@ -40,7 +45,7 @@ public class SimpleNodeIdent {
         // skip mfg
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
@@ -53,7 +58,7 @@ public class SimpleNodeIdent {
         start = ++len;
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
@@ -70,7 +75,7 @@ public class SimpleNodeIdent {
         // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
@@ -88,7 +93,7 @@ public class SimpleNodeIdent {
         // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
@@ -106,7 +111,7 @@ public class SimpleNodeIdent {
         // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
@@ -124,7 +129,7 @@ public class SimpleNodeIdent {
         // find this string
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
-       String s = new String(bytes,start, len-start);
+       String s = new String(bytes,start, len-start, UTF8);
        if (s == null) return "";
        else return s;
     }
