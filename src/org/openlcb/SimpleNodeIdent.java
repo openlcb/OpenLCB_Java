@@ -101,12 +101,13 @@ public class SimpleNodeIdent {
     public String getUserName() {
         int len = 1;
         int start = 1;
-        // skip mfg, model, hardware_version, software_version
+        // skip mfg, model, hardware_version, software_version, version byte
         for (int i = 0; i<4; i++) {
             for (; len < bytes.length; len++)
                 if (bytes[len] == 0) break;
             start = ++len;
         }
+        if (len < bytes.length) start = ++len;
         
         // find this string
         for (; len < bytes.length; len++)
@@ -119,8 +120,14 @@ public class SimpleNodeIdent {
     public String getUserDesc() {
         int len = 1;
         int start = 1;
-        // skip mfg, model, hardware_version, software_version, user_name
-        for (int i = 0; i<5; i++) {
+        // skip mfg, model, hardware_version, software_version, version byte, user_name
+        for (int i = 0; i<4; i++) {
+            for (; len < bytes.length; len++)
+                if (bytes[len] == 0) break;
+            start = ++len;
+        }
+        if (len < bytes.length) start = ++len;
+        for (int i = 0; i<1; i++) {
             for (; len < bytes.length; len++)
                 if (bytes[len] == 0) break;
             start = ++len;
