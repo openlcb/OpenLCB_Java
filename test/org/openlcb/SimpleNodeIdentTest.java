@@ -52,6 +52,21 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertEquals("Z", id.getHardwareVersion());
     }
 
+    public void testCreationWithUserPart() {
+        SimpleNodeIdent id = new SimpleNodeIdent(
+            new SimpleNodeIdentInfoReplyMessage(
+                new NodeID(new byte[]{1,2,3,4,5,6}), 
+                new byte[]{1,'a','b',0,'1',0,'2',0,'A',0,1,'u','s',0,'3','4',0}));
+
+        Assert.assertEquals("ab", id.getMfgName());
+        Assert.assertEquals("1", id.getModelName());
+        Assert.assertEquals("2", id.getHardwareVersion());
+        Assert.assertEquals("A", id.getSoftwareVersion());
+        Assert.assertEquals("us", id.getUserName());
+        Assert.assertEquals("34", id.getUserDesc());
+    }
+
+
     // from here down is testing infrastructure
     
     public SimpleNodeIdentTest(String s) {
