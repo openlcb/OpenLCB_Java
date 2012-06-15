@@ -170,4 +170,10 @@ public class MessageDecoder extends AbstractConnection {
     public void handleSimpleNodeIdentInfoReply(SimpleNodeIdentInfoReplyMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
+    /**
+     * Handle "Optional Interaction Rejected" message
+     */
+    public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
 }

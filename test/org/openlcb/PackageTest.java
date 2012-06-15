@@ -44,6 +44,8 @@ public class PackageTest extends TestCase {
         // specific message types (uses Node, IDs)
         suite.addTest(InitializationCompleteMessageTest.suite());
 
+        suite.addTest(OptionalIntRejectedMessageTest.suite());
+
         suite.addTest(VerifiedNodeIDNumberMessageTest.suite());
         suite.addTest(VerifyNodeIDNumberMessageTest.suite());
 
