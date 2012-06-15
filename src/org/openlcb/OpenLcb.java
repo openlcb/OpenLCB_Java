@@ -15,6 +15,8 @@ public interface OpenLcb {
     
     static final int MTI_VERIFY_NID                  = 0x10A4;
     static final int MTI_VERIFIED_NID                = 0x10B0;
+
+    static final int MTI_OPT_INT_REJECTED            = 0x30C0;
     
     static final int MTI_IDENTIFY_CONSUMERS          = 0x1242;
     static final int MTI_IDENTIFY_CONSUMERS_RANGE    = 0x3252;
