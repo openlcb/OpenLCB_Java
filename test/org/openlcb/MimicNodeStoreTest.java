@@ -23,17 +23,24 @@ public class MimicNodeStoreTest extends TestCase {
                                                 
     ProducerIdentifiedMessage pim2 = new ProducerIdentifiedMessage(nid2, 
                                                 new EventID(new byte[]{1,0,0,0,0,0,1,0}));
-                 
+    
+    SimpleNodeIdentInfoReplyMessage snii1 = new SimpleNodeIdentInfoReplyMessage(nid1,
+                                                new byte[]{1,'a','b','c'});
+    
     PropertyChangeListener listener;
     boolean listenerFired;
+    Message lastMessage;
     Connection connection = new AbstractConnection() {
-        public void put(Message msg, Connection sender) {}
+        public void put(Message msg, Connection sender) {
+            lastMessage = msg;
+        }
     };
     
     NodeID node = new NodeID(new byte[]{1,2,3,4,5,6});
                                    
     public void setUp() {
         store = new MimicNodeStore(connection, node);
+        lastMessage = null;
         
         listener = new PropertyChangeListener(){
             public void propertyChange(java.beans.PropertyChangeEvent e) { listenerFired = true; }
@@ -145,6 +152,38 @@ public class MimicNodeStoreTest extends TestCase {
         
         Assert.assertTrue(listenerFired);
     }
+    
+    public void testNoDefaultSimpleInfo() {
+        store.put(pim1,null);
+        Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
+        MimicNodeStore.NodeMemo memo = list.iterator().next();
+
+        Assert.assertNull(memo.getSimpleNodeIdent());
+    }
+
+    public void testSimpleInfoAvailableFromNode() {
+        store.put(pim1,null);
+        Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
+        MimicNodeStore.NodeMemo memo = list.iterator().next();
+        store.put(snii1, null);
+
+        Assert.assertNotNull(memo.getSimpleNodeIdent());
+        
+        Assert.assertEquals("abc", memo.getSimpleNodeIdent().getMfgName());
+    }
+
+    public void testSimpleInfoRetry() {
+        store.put(pim1,null);
+        Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
+        MimicNodeStore.NodeMemo memo = list.iterator().next();
+
+        Assert.assertNull(lastMessage);
+        store.put(new OptionalIntRejectedMessage(nid1,nid1,0x0c,1), null);
+        Assert.assertNotNull(lastMessage);
+        
+        Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(nid1, nid1) );
+    }
+    
     // from here down is testing infrastructure
     
     public MimicNodeStoreTest(String s) {

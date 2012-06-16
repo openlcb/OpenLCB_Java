@@ -92,6 +92,14 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
             return pSimpleNode;
         }
 
+        public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
+            if (msg.getMti() == 0x0c) {
+                // check for temporary error
+                // have to resend the SNII request
+                connection.put(new SimpleNodeIdentInfoRequestMessage(id, msg.getSourceNodeID()), null);
+            }
+        }
+        
         java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
         public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
         public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
