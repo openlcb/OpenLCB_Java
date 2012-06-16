@@ -8,7 +8,8 @@ import java.util.List;
 import java.nio.charset.Charset;
 
 /**
- * Simple Node Ident Protocol 
+ * Accumulates data from Simple Node Ident Protocol replies and 
+ * provides access to the resulting data.
  *
  * @see             "http://www.openlcb.org/trunk/specs/drafts/GenProtocolIdS.pdf"
  * @author			Bob Jacobsen   Copyright (C) 2012
