@@ -54,7 +54,13 @@ public class DatagramService extends MessageDecoder {
         // forward
         int retval = DEFAULT_ERROR_CODE;
         ReplyMemo replyMemo = new ReplyMemo(msg, downstream, here, this);
-        if (rcvMemo != null && rcvMemo.type == msg.getData()[0]) {
+        if (msg.getData() == null) {
+            new Exception("Unexpected null content of datagram").printStackTrace();
+        }
+        if (msg.getData() != null && msg.getData().length == 0) {
+            new Exception("Unexpected zero length content of datagram").printStackTrace();
+        }
+        if (rcvMemo != null && msg.getData()!=null && msg.getData().length > 0 && rcvMemo.type == msg.getData()[0]) {
             rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
             // check that a reply was sent
             if (! replyMemo.hasReplied())
