@@ -49,13 +49,15 @@ public class CdiMemConfigReader  {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(node, SPACE, nextAddress, LENGTH) {
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
-                    // handle return data, checking for null in string
+                    // handle return data, checking for null in string or zero-length reply
+                    if (data.length == 0) {
+                        done();
+                        return;  // don't do next request
+                    }
                     for (int i = 0; i<data.length; i++) {
                         if (data[i] == 0) {
-                            // done, return
-                            if (retval != null) 
-                                retval.provideReader(new java.io.StringReader(new String(buf)));
-                                return;
+                            done();
+                            return;  // don't do next request
                         }
                         buf.append((char)data[i]);
                     }
@@ -65,6 +67,12 @@ public class CdiMemConfigReader  {
                 }
             };
         service.request(memo);
+    }
+    
+    private void done() {
+        // done, pass back a reader based on the current buffer contents
+        if (retval != null) 
+            retval.provideReader(new java.io.StringReader(new String(buf)));
     }
     
     public interface ReaderAccess {
