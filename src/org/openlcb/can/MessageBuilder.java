@@ -70,49 +70,82 @@ public class MessageBuilder {
     HashMap<NodeID, List<Integer>> datagramData = new HashMap<NodeID, List<Integer>>();
     
     int getSourceID(CanFrame f) { return f.getHeader()&0x00000FFF; }
-    int getType(CanFrame f) { return ( f.getHeader() & 0x00FF0000 ) >> 16; }
+    int getMTI(CanFrame f) { return ( f.getHeader() & 0x00FFF000 ) >> 12; }
     EventID getEventID(CanFrame f) { return new EventID(f.getData()); }
     
     List<Message> processFormat0(CanFrame f) {
-        // simple MTI
+        // reserved
+        return null;
+    }
+
+    List<Message> processFormat1(CanFrame f) {
+        // MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
+        NodeID dest = null;
+        int mti = getMTI(f);
+        if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) // addressed message 
+            dest = map.getNodeID( ( (f.getElement(0) << 8) + f.getElement(1) ) & 0xFFF );
 
-        int type = getType(f);
-        switch (type) {
-            case 0x8A: 
-                retlist.add(new VerifyNodeIDNumberMessage(source));
-                return retlist;
-            case 0x8B: 
-                retlist.add(new VerifiedNodeIDNumberMessage(source));
-                return retlist;
-            case 0xA4: 
-                retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
-                return retlist;
-            case 0xA8: 
-                retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
-                return retlist;
-            case 0xAC: 
-                retlist.add(new LearnEventMessage(source, getEventID(f)));
-                return retlist;
-            case 0xAD: 
-                retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
-                return retlist;
-            case 0x08: 
+        MessageTypeIdentifier value = MessageTypeIdentifier.get(mti);
+        if (value == null) System.out.println(" found null from "+mti);
+        switch (value) {
+            case InitializationComplete: 
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
-            case 0x26: 
+            case VerifyNodeIdGlobal: 
+                retlist.add(new VerifyNodeIDNumberMessage(source));
+                return retlist;
+            case VerifiedNodeId: 
+                retlist.add(new VerifiedNodeIDNumberMessage(source));
+                return retlist;
+
+            case ProtocolSupportInquiry: 
+                retlist.add(new ProtocolIdentificationRequestMessage(source));
+                return retlist;
+            case ProtocolSupportReply: 
+                retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
+                return retlist;
+
+            case IdentifyConsumer:
+                retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
+                return retlist;
+            case ConsumerIdentified: 
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
                 return retlist;
-            case 0x2A: 
+            case IdentifyProducer: 
+                retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
+                return retlist;
+            case ProducerIdentified: 
                 retlist.add(new ProducerIdentifiedMessage(source, getEventID(f)));
+                return retlist;
+            case ProducerConsumerEventReport: 
+                retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
+                return retlist;
+
+            case LearnEvent: 
+                retlist.add(new LearnEventMessage(source, getEventID(f)));
+                return retlist;
+
+            case SimpleNodeIdentInfoRequest: 
+                retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
+                return retlist;
+            case SimpleNodeIdentInfoReply: 
+                byte[] content = f.getData();
+                byte[] data = new byte[content.length-1];
+                System.arraycopy(content, 1, data, 0, data.length);
+                
+                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,data));
+                return retlist;
+
+            case DatagramReceivedOK: 
+                retlist.add(new DatagramAcknowledgedMessage(source,dest));
+                return retlist;
+            case DatagramRejected: 
+                retlist.add(new DatagramRejectedMessage(source,dest,(int)f.bodyAsLong()));
                 return retlist;
             default: return null;
         }
-    }
-    List<Message> processFormat1(CanFrame f) {
-        // reserved
-        return null;
     }
     List<Message> processFormat2(CanFrame f) {
         // datagram only-segment
@@ -191,35 +224,8 @@ public class MessageBuilder {
         return retlist;
     }
     List<Message> processFormat6(CanFrame f) {
-        List<Message> retlist = new java.util.ArrayList<Message>();
-        NodeID source = map.getNodeID(getSourceID(f));
-        NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
-        int type = f.getElement(0);
-        switch (type) {
-            case 0x2E: 
-                retlist.add(new ProtocolIdentificationRequestMessage(source));
-                return retlist;
-            case 0x2F: 
-                retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
-                return retlist;
-            case 0x4C: 
-                retlist.add(new DatagramAcknowledgedMessage(source,dest));
-                return retlist;
-            case 0x4D: 
-                retlist.add(new DatagramRejectedMessage(source,dest,(int)f.bodyAsLong()));
-                return retlist;
-            case 0x52: 
-                retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
-                return retlist;
-            case 0x53: 
-                byte[] content = f.getData();
-                byte[] data = new byte[content.length-1];
-                System.arraycopy(content, 1, data, 0, data.length);
-                
-                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,data));
-                return retlist;
-            default: return null;
-        }
+        // reserved
+        return null;
     }
     List<Message> processFormat7(CanFrame f) {
         // stream data
@@ -309,7 +315,7 @@ public class MessageBuilder {
         @Override
         public void handleIdentifyConsumers(IdentifyConsumersMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setGlobalMessage(0xA4F);
+            f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyConsumer.mti());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             f.loadFromEid(msg.getEventID());
             retlist.add(f);
@@ -327,7 +333,7 @@ public class MessageBuilder {
         @Override
         public void handleIdentifyProducers(IdentifyProducersMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setGlobalMessage(0xA8F);
+            f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyProducer.mti());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             f.loadFromEid(msg.getEventID());
             retlist.add(f);
@@ -345,7 +351,8 @@ public class MessageBuilder {
         @Override
         public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x2B);
+            f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyProducer.mti());
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
@@ -362,7 +369,8 @@ public class MessageBuilder {
         @Override
         public void handleSimpleNodeIdentInfoRequest(SimpleNodeIdentInfoRequestMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x52);
+            f.setOpenLcbMTI(MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti());
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
@@ -399,9 +407,10 @@ public class MessageBuilder {
         @Override
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4D);
+            f.setOpenLcbMTI(MessageTypeIdentifier.DatagramRejected.mti());
+            f.setData(new byte[]{(byte)0, (byte)0, (byte)((msg.getCode()>>8)&0xFF), (byte)(msg.getCode()&0xFF)});
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            f.setData(new byte[]{(byte)0x4D, (byte)((msg.getCode()>>8)&0xFF), (byte)(msg.getCode()&0xFF)});
             retlist.add(f);
         }
         /**
@@ -410,7 +419,8 @@ public class MessageBuilder {
         @Override
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setAddressedMessage(map.getAlias(msg.getDestNodeID()), (byte)0x4C);
+            f.setOpenLcbMTI(MessageTypeIdentifier.DatagramReceivedOK.mti());
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }

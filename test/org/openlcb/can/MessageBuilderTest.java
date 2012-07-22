@@ -25,11 +25,11 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [18017123] 01 02 03 04 05 06
+        // looking for [19100123] 01 02 03 04 05 06
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x18087123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19100123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
     public void testVerifyNodeIDNumberMessage() {
@@ -39,11 +39,11 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [188AF123]
+        // looking for [19490123]
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x188a7123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19490123), toHexString(f0.getHeader()));
         compareContent(null, f0);
     }
     public void testVerifiedNodeIDNumberMessage() {
@@ -53,11 +53,11 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [188BF123] 01 02 03 04 05 06
+        // looking for [19170123] 01 02 03 04 05 06
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x188b7123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19170123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
 
@@ -68,11 +68,11 @@ public class MessageBuilderTest extends TestCase {
         
         List<OpenLcbCanFrame> list = b.processMessage(m);
         
-        // looking for [18adf123] 11 12 13 14 15 16 17 18
+        // looking for [195B4123] 11 12 13 14 15 16 17 18
         
         Assert.assertEquals("count", 1, list.size()); 
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x18ADf123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x195B4123), toHexString(f0.getHeader()));
         compareContent(event.getContents(), f0);
     }
 
@@ -148,7 +148,7 @@ public class MessageBuilderTest extends TestCase {
 
     public void testInitializationCompleteFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
-        frame.setHeader(0x18087123);
+        frame.setHeader(0x19100123);
         
         MessageBuilder b = new MessageBuilder(map);
         

@@ -85,6 +85,12 @@ public class OpenLcbCanFrame implements CanFrame {
       return (int)(id & MASK_SRC_ALIAS);
   }
 
+  void setDestAlias(int a) {
+    data[0] = (byte)((a>>8)&0xF);
+    data[1] = (byte)(a&0xFF);
+    length = (length<2) ? 2 : length;
+  }
+  
   void setFrameTypeCAN() {
     id &= ~MASK_FRAME_TYPE;     
   }
@@ -103,8 +109,7 @@ public class OpenLcbCanFrame implements CanFrame {
 
   void setVariableField(int f) {
     id &= ~MASK_VARIABLE_FIELD;
-    int temp = f;  // ensure 32 bit arithmetic
-    id |=  ((temp << SHIFT_VARIABLE_FIELD) & MASK_VARIABLE_FIELD);
+    id |=  ((f << SHIFT_VARIABLE_FIELD) & MASK_VARIABLE_FIELD);
   }
 
   int getVariableField() {
@@ -158,27 +163,16 @@ public class OpenLcbCanFrame implements CanFrame {
       int now = getVariableField() & ~MASK_OPENLCB_FORMAT;
       setVariableField( ((i << SHIFT_OPENLCB_FORMAT) & MASK_OPENLCB_FORMAT) | now);
   }
-
-  // is the variable field a destID?
-  boolean isOpenLcDestIdFormat() {
-      return ( getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_NON_DATAGRAM);
-  }
   
-  // is the variable field a stream ID?
-  boolean isOpenLcbStreamIdFormat() {
-      return ( getOpenLcbFormat() == MTI_FORMAT_STREAM_CODE);
-  }
-  
-  void setOpenLcbMTI(int fmt, int mtiHeaderByte) {
+  void setOpenLcbMTI(int mti) {
         setFrameTypeOpenLcb();
-        setVariableField(mtiHeaderByte);
-        setOpenLcbFormat(fmt);  // order matters here
+        setVariableField(mti | (FRAME_FORMAT_MTI << 12) );
   }
   
-  boolean isOpenLcbMTI(int fmt, int mtiHeaderByte) {
+  boolean isOpenLcbMTI(int mti) {
       return isFrameTypeOpenLcb() 
-                && ( getOpenLcbFormat() == fmt )
-                && ( (getVariableField()&~MASK_OPENLCB_FORMAT) == mtiHeaderByte );
+                && ( getOpenLcbFormat() == FRAME_FORMAT_MTI )
+                && ( (getVariableField()&~MASK_OPENLCB_FORMAT) == mti );
   }
 
   // end of OpenLCB format and decode support
@@ -187,30 +181,30 @@ public class OpenLcbCanFrame implements CanFrame {
   
   void setPCEventReport(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_PC_EVENT_REPORT);
+    setOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
     length=8;
     loadFromEid(eid);
   }
   
   boolean isPCEventReport() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_PC_EVENT_REPORT);
+      return isOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
   }
 
   void setLearnEvent(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_LEARN_EVENT);
+    setOpenLcbMTI(MessageTypeIdentifier.LearnEvent.mti());
     length=8;
     loadFromEid(eid);
   }
 
   boolean isLearnEvent() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_LEARN_EVENT);
+      return isOpenLcbMTI(MessageTypeIdentifier.LearnEvent.mti());
   }
 
   void setInitializationComplete(int alias, NodeID nid) {
     nodeAlias = alias;
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_INITIALIZATION_COMPLETE);
+    setOpenLcbMTI(MessageTypeIdentifier.InitializationComplete.mti());
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];
@@ -222,7 +216,7 @@ public class OpenLcbCanFrame implements CanFrame {
   }
   
   boolean isInitializationComplete() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_INITIALIZATION_COMPLETE);
+      return isOpenLcbMTI(MessageTypeIdentifier.InitializationComplete.mti());
   }
   
   EventID getEventID() {
@@ -234,22 +228,22 @@ public class OpenLcbCanFrame implements CanFrame {
   }
   
   boolean isVerifyNID() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_VERIFY_NID);
+      return isOpenLcbMTI(MessageTypeIdentifier.VerifyNodeIdGlobal.mti());
   }
 
   void setVerifyNID(NodeID nid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_VERIFY_NID);
+    setOpenLcbMTI(MessageTypeIdentifier.VerifyNodeIdGlobal.mti());
     length=0;
   }
 
   boolean isVerifiedNID() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_VERIFIED_NID);
+      return isOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeId.mti());
   }
 
   void setVerifiedNID(NodeID nid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_VERIFIED_NID);
+    setOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeId.mti());
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];
@@ -261,12 +255,12 @@ public class OpenLcbCanFrame implements CanFrame {
   }
 
   boolean isIdentifyConsumers() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_CONSUMERS);
+      return isOpenLcbMTI(MessageTypeIdentifier.IdentifyConsumer.mti());
   }
 
   void setConsumerIdentified(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_CONSUMER_IDENTIFIED);
+    setOpenLcbMTI(MessageTypeIdentifier.IdentifyConsumer.mti());
     length=8;
     loadFromEid(eid);
   }
@@ -274,18 +268,18 @@ public class OpenLcbCanFrame implements CanFrame {
   void setConsumerIdentifyRange(EventID eid, EventID mask) {
     // does send a message, but not complete yet - RGJ 2009-06-14
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_CONSUMERS_RANGE);
+    setOpenLcbMTI(MessageTypeIdentifier.ConsumerIdentifyRange.mti());
     length=8;
     loadFromEid(eid);
   }
 
   boolean isIdentifyProducers() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_PRODUCERS);
+      return isOpenLcbMTI(MessageTypeIdentifier.IdentifyProducer.mti());
   }
 
   void setProducerIdentified(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_PRODUCER_IDENTIFIED);
+    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentified.mti());
     length=8;
     loadFromEid(eid);
   }
@@ -293,31 +287,19 @@ public class OpenLcbCanFrame implements CanFrame {
   void setProducerIdentifyRange(EventID eid, EventID mask) {
     // does send a message, but not complete yet - RGJ 2009-06-14
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_PRODUCERS_RANGE);
+    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifyRange.mti());
     length=8;
     loadFromEid(eid);
   }
 
   boolean isIdentifyEventsGlobal() {
-      return isOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI, MTI_IDENTIFY_EVENTS);
+      return isOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
   }
 
   void setIdentifyEventsGlobal() {
     init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,MTI_IDENTIFY_EVENTS);
+    setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
     length=0;
-  }
-
-  void setGlobalMessage(int mti) {
-    init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_UNADDRESSED_MTI,mti);
-    length=0;
-  }
-  void setAddressedMessage(int destAlias, byte mti) {
-    init(nodeAlias);
-    setOpenLcbMTI(MTI_FORMAT_ADDRESSED_NON_DATAGRAM,destAlias);
-    length=1;
-    data[0] = mti;
   }
 
   void loadFromEid(EventID eid) {
@@ -336,15 +318,15 @@ public class OpenLcbCanFrame implements CanFrame {
   // general, but not efficient
   boolean isDatagram() {
       return isFrameTypeOpenLcb() 
-                && ( (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_ALL)
-                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST)
-                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_MID)
-                        || (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_LAST) )
+                && ( (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_ALL)
+                        || (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_FIRST)
+                        || (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_MID)
+                        || (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_LAST) )
                 && (nodeAlias == getVariableField() );
   }
   // just checks 1st, assumes datagram already checked.
   boolean isLastDatagram() {
-      return (getOpenLcbFormat() == MTI_FORMAT_ADDRESSED_DATAGRAM_LAST);
+      return (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_LAST);
   }
 
     /**
@@ -354,14 +336,14 @@ public class OpenLcbCanFrame implements CanFrame {
     init(nodeAlias);
     if (last) {
         if (first)
-            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_ALL,destAlias);
+            setVariableField((FRAME_FORMAT_ADDRESSED_DATAGRAM_ALL << 12 ) | destAlias);
         else
-            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_LAST,destAlias);
+            setVariableField((FRAME_FORMAT_ADDRESSED_DATAGRAM_LAST << 12 ) | destAlias);
     } else {
         if (first)
-            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST,destAlias);
+            setVariableField((FRAME_FORMAT_ADDRESSED_DATAGRAM_FIRST << 12 ) | destAlias);
         else
-            setOpenLcbMTI(MTI_FORMAT_ADDRESSED_DATAGRAM_MID,destAlias);
+            setVariableField((FRAME_FORMAT_ADDRESSED_DATAGRAM_MID << 12 ) | destAlias);
     }
     length=content.length;
     for (int i = 0; i< content.length; i++) {
@@ -400,42 +382,14 @@ public class OpenLcbCanFrame implements CanFrame {
     /**
      * OpenLCB CAN MTI format bits
      */
-    static final int MTI_FORMAT_UNADDRESSED_MTI          = 0; 
+    static final int FRAME_FORMAT_MTI                      = 1; 
     //
     //
-    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_ALL   = 2;
-    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_FIRST = 3;
-    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_MID   = 4;
-    static final int MTI_FORMAT_ADDRESSED_DATAGRAM_LAST  = 5;
-    static final int MTI_FORMAT_ADDRESSED_NON_DATAGRAM   = 6;
-    static final int MTI_FORMAT_STREAM_CODE              = 7;
-    
-    
-    /**
-     * Basic 12-bit header MTI definitions for OpenLCB on CAN.
-     */
-     
-    static final int MTI_INITIALIZATION_COMPLETE     = 0x087;
-    
-    static final int MTI_VERIFY_NID                  = 0x8A7;
-    static final int MTI_VERIFIED_NID                = 0x8B7;
-    
-    static final int MTI_IDENTIFY_CONSUMERS          = 0xA4F;
-    static final int MTI_IDENTIFY_CONSUMERS_RANGE    = 0x25F;
-    static final int MTI_CONSUMER_IDENTIFIED         = 0x26B;
-    
-    static final int MTI_IDENTIFY_PRODUCERS          = 0xA8F;
-    static final int MTI_IDENTIFY_PRODUCERS_RANGE    = 0x29F;
-    static final int MTI_PRODUCER_IDENTIFIED         = 0x2AB;
-        
-    static final int MTI_IDENTIFY_EVENTS             = 0xAB7;  // global form
-
-    static final int MTI_LEARN_EVENT                 = 0xACF;
-    static final int MTI_PC_EVENT_REPORT             = 0xADF;
-
-    /**
-     * Basic 8-bit header MTI definitions for OpenLCB on CAN, go in data[0]
-     */
-
+    static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_ALL   = 2;
+    static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_FIRST = 3;
+    static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_MID   = 4;
+    static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_LAST  = 5;
+    static final int FRAME_FORMAT_ADDRESSED_NON_DATAGRAM   = 6;
+    static final int FRAME_FORMAT_STREAM_CODE              = 7;
 
 }
