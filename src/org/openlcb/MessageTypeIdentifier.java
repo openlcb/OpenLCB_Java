@@ -21,65 +21,78 @@ public enum MessageTypeIdentifier {
         // Arguments are 
         //    addressed?
         //    contains Event ID?
-        //    Flags in Header?
         //    Simple node message?
+        //    Upper special bits (nibble)
         //    Priority Group
         //    Type number
+        //    Modifier (0-3)
+        //    Name
         
-        InitializationComplete      ( false, false, false, false, 0x0, 0x08, "InitializationComplete"), 
-        VerifyNodeIdAddressed       ( true,  false, false, false, 0x0, 0x0A, "VerifyNodeIdAddressed"),
-        VerifyNodeIdGlobal          ( false, false, false, true,  0x0, 0x0A, "VerifyNodeIdGlobal"),
-        VerifiedNodeId              ( false, false, false, true,  0x0, 0x0B, "VerifiedNodeId"),
-        OptionalInteractionRejected ( true,  false, false, false, 0x0, 0x0C, "OptionalInteractionRejected"),
-        TerminateDueToError         ( true,  false, false, false, 0x0, 0x0D, "TerminateDueToError"),
+        InitializationComplete      ( false, false, false, 0, 0,  8, 0, "InitializationComplete"), 
+        VerifyNodeIdAddressed       ( true,  false, false, 0, 1,  4, 0, "VerifyNodeIdAddressed"),
+        VerifyNodeIdGlobal          ( false, false, true,  0, 1,  4, 0, "VerifyNodeIdGlobal"),
+        VerifiedNodeId              ( false, false, true,  0, 0, 11, 0, "VerifiedNodeId"),
+        OptionalInteractionRejected ( true,  false, false, 0, 0,  3, 0, "OptionalInteractionRejected"),
+        TerminateDueToError         ( true,  false, false, 0, 0,  5, 0, "TerminateDueToError"),
 
-        ProtocolSupportInquiry      ( true,  false, false, false, 0x1, 0x0E, "ProtocolSupportInquiry"),
-        ProtocolSupportReply        ( true,  false, false, false, 0x1, 0x0F, "ProtocolSupportReply"),
+        ProtocolSupportInquiry      ( true,  false, false, 0, 2,  1, 0, "ProtocolSupportInquiry"),
+        ProtocolSupportReply        ( true,  false, false, 0, 1, 19, 0, "ProtocolSupportReply"),
         
-        IdentifyConsumer            ( false, true,  false, true,  0x1, 0x04, "IdentifyConsumer"),
-        ConsumerIdentifyRange       ( false, true,  false, false, 0x1, 0x05, "ConsumerIdentifyRange"),
-        ConsumerIdentified          ( false, true,  true,  false, 0x1, 0x06, "ConsumerIdentified"),
+        IdentifyConsumer            ( false, true,  true,  0, 2,  7, 0, "IdentifyConsumer"),
+        ConsumerIdentifyRange       ( false, true,  false, 0, 1,  5, 0, "ConsumerIdentifyRange"),
+        ConsumerIdentified          ( false, true,  false, 0, 1,  6, 0, "ConsumerIdentified"),
         
-        IdentifyProducer            ( false, true,  false, true,  0x1, 0x08, "IdentifyProducer"),
-        ProducerIdentifyRange       ( false, true,  false, false, 0x1, 0x09, "ProducerIdentifyRange"),
-        ProducerIdentified          ( false, true,  true,  false, 0x1, 0x0A, "ProducerIdentified"),
+        IdentifyProducer            ( false, true,  true,  0, 2,  8, 0, "IdentifyProducer"),
+        ProducerIdentifyRange       ( false, true,  false, 0, 1,  9, 0, "ProducerIdentifyRange"),
+        ProducerIdentified          ( false, true,  false, 0, 1, 10, 0, "ProducerIdentified"),
         
-        IdentifyEventsAddressed     ( true,  false, false, false, 0x1, 0x0B, "IdentifyEventsAddressed"),
-        IdentifyEventsGlobal        ( false, false, false, true,  0x1, 0x0B, "IdentifyEventsGlobal"),
+        IdentifyEventsAddressed     ( true,  false, false, 0, 2, 11, 0, "IdentifyEventsAddressed"),
+        IdentifyEventsGlobal        ( false, false, true,  0, 2, 11, 0, "IdentifyEventsGlobal"),
         
-        LearnEvent                  ( false, true,  false, true,  0x1, 0x0C, "LearnEvent"),
-        ProducerConsumerEventReport ( false, true,  false, true,  0x1, 0x0D, "ProducerConsumerEventReport"),
+        LearnEvent                  ( false, true,  true,  0, 1,  12, 0, "LearnEvent"),
+        ProducerConsumerEventReport ( false, true,  true,  0, 1,  13, 0, "ProducerConsumerEventReport"),
         
-        SimpleNodeIdentInfoRequest  ( true,  false, false, false, 0x2, 0x12, "SimpleNodeIdentInfoRequest"),
-        SimpleNodeIdentInfoReply    ( true,  false, false, false, 0x2, 0x13, "SimpleNodeIdentInfoReply"),
+        SimpleNodeIdentInfoRequest  ( true,  false, false, 0, 3,  15, 0, "SimpleNodeIdentInfoRequest"),
+        SimpleNodeIdentInfoReply    ( true,  false, false, 0, 2,  16, 0, "SimpleNodeIdentInfoReply"),
 
-        Datagram                    ( true,  false, false, false, 0x2, 0x00, "Datagram"),
-        DatagramReceivedOK          ( true,  false, false, false, 0x2, 0x0C, "DatagramReceivedOK"),
-        DatagramRejected            ( true,  false, false, false, 0x2, 0x0D, "DatagramRejected"),
+        Datagram                    ( true,  false, false, 1, 3,   2, 0, "Datagram"),
+        DatagramReceivedOK          ( true,  false, false, 0, 2,  17, 0, "DatagramReceivedOK"),
+        DatagramRejected            ( true,  false, false, 0, 2,  18, 0, "DatagramRejected"),
 
-        StreamInitiateRequest       ( true,  false, false, false, 0x2, 0x0E, "StreamInitiateRequest"),
-        StreamInitiateReply         ( true,  false, false, false, 0x2, 0x0F, "StreamDataSend"),
-        StreamDataSend              ( true,  false, false, false, 0x3, 0x09, "StreamDataSend"),
-        StreamDataProceed           ( true,  false, false, false, 0x3, 0x0A, "StreamDataProceed"),
-        StreamDataComplete          ( true,  false, false, false, 0x3, 0x0B, "StreamDataComplete");
+        StreamInitiateRequest       ( true,  false, false, 0, 3,   6, 0, "StreamInitiateRequest"),
+        StreamInitiateReply         ( true,  false, false, 0, 2,   3, 0, "StreamInitiateReply"),
+        StreamDataSend              ( true,  false, false, 1, 3,  28, 0, "StreamDataSend"),
+        StreamDataProceed           ( true,  false, false, 0, 2,   4, 0, "StreamDataProceed"),
+        StreamDataComplete          ( true,  false, false, 0, 2,   5, 0, "StreamDataComplete");
        
-        MessageTypeIdentifier(boolean addressed, boolean hasEventID, boolean hasFlagsInHeader,
-                              boolean isSimpleModeMessage, int priorityGroup, int typeNumber, String name) {
+        private static java.util.Map<Integer, MessageTypeIdentifier> mapping;
+        private static  java.util.Map<Integer, MessageTypeIdentifier> getMap() {
+            if (mapping == null)
+                mapping = new java.util.HashMap<Integer, MessageTypeIdentifier>();
+            return mapping;
+        }
+        
+        MessageTypeIdentifier(boolean addressed, boolean hasEventID, boolean isSimpleModeMessage, 
+                                int upper, int priorityGroup, int typeNumber, int modifier, String name) {
             this.addressed = addressed;
             this.hasEventID = hasEventID;
-            this.hasFlagsInHeader = hasFlagsInHeader;
+            this.modifier = modifier;
             this.isSimpleModeMessage = isSimpleModeMessage;
             this.priorityGroup = priorityGroup;
             this.typeNumber = typeNumber;
+            this.upper = upper;
             this.name = name;
+            
+            getMap().put(Integer.valueOf(mti()), this);
         }
         
         boolean addressed;
         boolean hasEventID;
-        boolean hasFlagsInHeader;
+        int     modifier;
         boolean isSimpleModeMessage;
         int     priorityGroup;
         int     typeNumber;
+        int     upper;
         
         String name;
         
@@ -87,16 +100,26 @@ public enum MessageTypeIdentifier {
             return name;
         }
 
-        public long mti() {
-            long retval = 0x1000;
-            if (addressed)           retval = retval | 0x0004;
-            if (hasEventID)          retval = retval | 0x0002;
-            if (hasFlagsInHeader)    retval = retval | 0x0001;
-            if (isSimpleModeMessage) retval = retval | 0x0800;
-            
-            retval = retval | (priorityGroup << 4+5);
-            retval = retval | (typeNumber << 4);
-            
+        public int mti() {
+            int retval = 0x0000;
+
+            retval = retval | (upper << 12);
+            retval = retval | (priorityGroup << 10);
+            retval = retval | (typeNumber << 5);
+
+            if (addressed)           retval = retval | 0x0008;
+            if (hasEventID)          retval = retval | 0x0004;
+            if (modifier != 0)       retval = retval | modifier;
+            if (isSimpleModeMessage) retval = retval | 0x0010;
+                    
             return retval;
         }
+        
+        /**
+         * Provide the enum object matching a particular MTI value
+         */
+        public static MessageTypeIdentifier get(int mti) {
+            return mapping.get(Integer.valueOf(mti));
+        }
+        
 }

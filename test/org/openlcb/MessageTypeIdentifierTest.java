@@ -38,52 +38,63 @@ public class MessageTypeIdentifierTest extends TestCase {
     public void testMtiValues() {
         MessageTypeIdentifier mti;
         
-        Assert.assertEquals(0x1080, MessageTypeIdentifier.InitializationComplete.mti());
-        Assert.assertEquals(0x10A4, MessageTypeIdentifier.VerifyNodeIdAddressed.mti());
-        Assert.assertEquals(0x18A0, MessageTypeIdentifier.VerifyNodeIdGlobal.mti());
-        Assert.assertEquals(0x18B0, MessageTypeIdentifier.VerifiedNodeId.mti());
-        Assert.assertEquals(0x10C4, MessageTypeIdentifier.OptionalInteractionRejected.mti());
-        Assert.assertEquals(0x10D4, MessageTypeIdentifier.TerminateDueToError.mti());
+        Assert.assertEquals(0x0100, MessageTypeIdentifier.InitializationComplete.mti());
+        Assert.assertEquals(0x0488, MessageTypeIdentifier.VerifyNodeIdAddressed.mti());
+        Assert.assertEquals(0x0490, MessageTypeIdentifier.VerifyNodeIdGlobal.mti());
+        Assert.assertEquals(0x0170, MessageTypeIdentifier.VerifiedNodeId.mti());
+        Assert.assertEquals(0x0068, MessageTypeIdentifier.OptionalInteractionRejected.mti());
+        Assert.assertEquals(0x00A8, MessageTypeIdentifier.TerminateDueToError.mti());
 
-        Assert.assertEquals(0x12E4, MessageTypeIdentifier.ProtocolSupportInquiry.mti());
-        Assert.assertEquals(0x12F4, MessageTypeIdentifier.ProtocolSupportReply.mti());
+        Assert.assertEquals(0x0828, MessageTypeIdentifier.ProtocolSupportInquiry.mti());
+        Assert.assertEquals(0x0668, MessageTypeIdentifier.ProtocolSupportReply.mti());
 
-        Assert.assertEquals(0x1A42, MessageTypeIdentifier.IdentifyConsumer.mti());
-        Assert.assertEquals(0x1252, MessageTypeIdentifier.ConsumerIdentifyRange.mti());
-        Assert.assertEquals(0x1263, MessageTypeIdentifier.ConsumerIdentified.mti());
+        Assert.assertEquals(0x08F4, MessageTypeIdentifier.IdentifyConsumer.mti());
+        Assert.assertEquals(0x04A4, MessageTypeIdentifier.ConsumerIdentifyRange.mti());
+        Assert.assertEquals(0x04C4, MessageTypeIdentifier.ConsumerIdentified.mti());
 
-        Assert.assertEquals(0x1A82, MessageTypeIdentifier.IdentifyProducer.mti());
-        Assert.assertEquals(0x1292, MessageTypeIdentifier.ProducerIdentifyRange.mti());
-        Assert.assertEquals(0x12A3, MessageTypeIdentifier.ProducerIdentified.mti());
+        Assert.assertEquals(0x0914, MessageTypeIdentifier.IdentifyProducer.mti());
+        Assert.assertEquals(0x0524, MessageTypeIdentifier.ProducerIdentifyRange.mti());
+        Assert.assertEquals(0x0544, MessageTypeIdentifier.ProducerIdentified.mti());
 
-        Assert.assertEquals(0x12B4, MessageTypeIdentifier.IdentifyEventsAddressed.mti());
-        Assert.assertEquals(0x1AB0, MessageTypeIdentifier.IdentifyEventsGlobal.mti());
+        Assert.assertEquals(0x0968, MessageTypeIdentifier.IdentifyEventsAddressed.mti());
+        Assert.assertEquals(0x0970, MessageTypeIdentifier.IdentifyEventsGlobal.mti());
 
-        Assert.assertEquals(0x1AC2, MessageTypeIdentifier.LearnEvent.mti());
-        Assert.assertEquals(0x1AD2, MessageTypeIdentifier.ProducerConsumerEventReport.mti());
+        Assert.assertEquals(0x0594, MessageTypeIdentifier.LearnEvent.mti());
+        Assert.assertEquals(0x05B4, MessageTypeIdentifier.ProducerConsumerEventReport.mti());
 
-        Assert.assertEquals(0x1524, MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti());
-        Assert.assertEquals(0x1534, MessageTypeIdentifier.SimpleNodeIdentInfoReply.mti());
+        Assert.assertEquals(0x0DE8, MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti());
+        Assert.assertEquals(0x0A08, MessageTypeIdentifier.SimpleNodeIdentInfoReply.mti());
 
-        Assert.assertEquals(0x1404, MessageTypeIdentifier.Datagram.mti());
-        Assert.assertEquals(0x14C4, MessageTypeIdentifier.DatagramReceivedOK.mti());
-        Assert.assertEquals(0x14D4, MessageTypeIdentifier.DatagramRejected.mti());
+        Assert.assertEquals(0x1C48, MessageTypeIdentifier.Datagram.mti());
+        Assert.assertEquals(0x0A28, MessageTypeIdentifier.DatagramReceivedOK.mti());
+        Assert.assertEquals(0x0A48, MessageTypeIdentifier.DatagramRejected.mti());
 
-        Assert.assertEquals(0x14E4, MessageTypeIdentifier.StreamInitiateRequest.mti());
-        Assert.assertEquals(0x14F4, MessageTypeIdentifier.StreamInitiateReply.mti());
-        Assert.assertEquals(0x1694, MessageTypeIdentifier.StreamDataSend.mti());
-        Assert.assertEquals(0x16A4, MessageTypeIdentifier.StreamDataProceed.mti());
-        Assert.assertEquals(0x16B4, MessageTypeIdentifier.StreamDataComplete.mti());
+        Assert.assertEquals(0x0CC8, MessageTypeIdentifier.StreamInitiateRequest.mti());
+        Assert.assertEquals(0x0868, MessageTypeIdentifier.StreamInitiateReply.mti());
+        Assert.assertEquals(0x1F88, MessageTypeIdentifier.StreamDataSend.mti());
+        Assert.assertEquals(0x0888, MessageTypeIdentifier.StreamDataProceed.mti());
+        Assert.assertEquals(0x08A8, MessageTypeIdentifier.StreamDataComplete.mti());
     }
 
     public void testForOverlaps() {
-        ArrayList<Long> mtis = new ArrayList<Long>();
+        ArrayList<Integer> mtis = new ArrayList<Integer>();
         for (MessageTypeIdentifier item : MessageTypeIdentifier.values()) {
             if (mtis.contains(item.mti())) {
                 Assert.fail("MTI "+item.mti()+" is a duplicate, 2nd is "+item.toString());
             }
             mtis.add(item.mti());
         }
+    }
+    
+    public void testMap() {
+        Assert.assertEquals(MessageTypeIdentifier.InitializationComplete, 
+            MessageTypeIdentifier.get(MessageTypeIdentifier.InitializationComplete.mti()));
+
+        Assert.assertEquals(MessageTypeIdentifier.SimpleNodeIdentInfoRequest, 
+            MessageTypeIdentifier.get(MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()));
+
+        Assert.assertEquals(MessageTypeIdentifier.Datagram, 
+            MessageTypeIdentifier.get(MessageTypeIdentifier.Datagram.mti()));
     }
     
     // from here down is testing infrastructure
