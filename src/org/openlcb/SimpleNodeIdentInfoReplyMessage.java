@@ -5,7 +5,7 @@ import net.jcip.annotations.*;
 import edu.umd.cs.findbugs.annotations.*; 
 
 /**
- * Reply message for the Simple Node Ident Info protocol 
+ * Reply message for the Simple Node Ident Info protocol.
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision: 529 $
@@ -14,6 +14,9 @@ import edu.umd.cs.findbugs.annotations.*;
 @ThreadSafe
 public class SimpleNodeIdentInfoReplyMessage extends Message {
     
+    /**
+     * @param dataIn the data content without extra wire-protocol bytes
+     */
     public SimpleNodeIdentInfoReplyMessage(NodeID source, byte[] dataIn) {
         super(source);
         this.data = new byte[dataIn.length];
