@@ -132,8 +132,8 @@ public class MessageBuilder {
                 return retlist;
             case SimpleNodeIdentInfoReply: 
                 byte[] content = f.getData();
-                byte[] data = new byte[content.length-1];
-                System.arraycopy(content, 1, data, 0, data.length);
+                byte[] data = new byte[content.length-2];
+                System.arraycopy(content, 2, data, 0, data.length);
                 
                 retlist.add(new SimpleNodeIdentInfoReplyMessage(source,data));
                 return retlist;
