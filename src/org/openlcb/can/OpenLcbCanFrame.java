@@ -296,12 +296,6 @@ public class OpenLcbCanFrame implements CanFrame {
       return isOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
   }
 
-  void setIdentifyEventsGlobal() {
-    init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
-    length=0;
-  }
-
   void loadFromEid(EventID eid) {
     length = 8;
     byte[] val = eid.getContents();
