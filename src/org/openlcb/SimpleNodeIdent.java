@@ -9,7 +9,7 @@ import java.nio.charset.Charset;
 
 /**
  * Accumulates data from Simple Node Ident Protocol replies and 
- * provides access to the resulting data.
+ * provides access to the resulting data to represent a single node.
  *
  * @see             "http://www.openlcb.org/trunk/specs/drafts/GenProtocolIdS.pdf"
  * @author			Bob Jacobsen   Copyright (C) 2012
@@ -18,15 +18,28 @@ import java.nio.charset.Charset;
  */
 public class SimpleNodeIdent {
     
+    /*
+     * @param msg Message, already known to be from proper node.
+     */
     public SimpleNodeIdent( SimpleNodeIdentInfoReplyMessage msg) {
         byte data[] = msg.getData();
         for (int i = 0; i < data.length ; i++ ) {
            bytes[next++] = (byte)data[i];
         }
     }
-    public SimpleNodeIdent() {
+    public SimpleNodeIdent(NodeID source, NodeID dest) {
+        this.source = source;
+        this.dest = dest;
     }
 
+    NodeID source;
+    NodeID dest;
+    
+    void start(Connection connection) {
+        next = 0;
+        connection.put(new SimpleNodeIdentInfoRequestMessage(source, dest), null);
+    }
+    
     static final Charset UTF8 = Charset.forName("UTF8");
 
     static final int MAX_REPLY_LENGTH = 256; // TODO from standard
