@@ -5,6 +5,7 @@ package org.openlcb.swing.networktree;
 import javax.swing.*;
 import javax.swing.tree.*;
 import java.beans.PropertyChangeListener;
+import java.util.List;
 
 import org.openlcb.*;
 
@@ -38,9 +39,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
 
                 if (e.getPropertyName().equals("updateProtocol")) {
-                    getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Protocols"), getThis(),
-                                 getThis().getChildCount());
-                
+                    updateProtocolIdent((ProtocolIdentification)e.getNewValue());                
                 }
                 if (e.getPropertyName().equals("updateSimpleNodeIdent")) {
                     updateSimpleNodeIdent((SimpleNodeIdent)e.getNewValue());
@@ -59,8 +58,12 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         });
         
         // see if simple ID info already present
-        SimpleNodeIdent id = store.getSimpleNodeIdent(memo.getNodeID());
-        if (id != null) updateSimpleNodeIdent(id);  // otherwise, will be notified later
+        SimpleNodeIdent snii = store.getSimpleNodeIdent(memo.getNodeID());
+        if (snii != null) updateSimpleNodeIdent(snii);  // otherwise, will be notified later
+
+        // see if protocol info already present
+        ProtocolIdentification pip = store.getProtocolIdentification(memo.getNodeID());
+        if (pip != null) updateProtocolIdent(pip);  // otherwise, will be notified later
     }
     
     void updateSimpleNodeIdent(SimpleNodeIdent e) {
@@ -123,6 +126,20 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             }
         } else {
             simpleInfoUserDescNode.setUserObject("Desc: "+e.getUserDesc());
+        }
+    }
+    
+    void updateProtocolIdent(ProtocolIdentification pi) {
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Supported Protocols");
+        getTreeModel().insertNodeInto(node, getThis(),
+                     getThis().getChildCount());
+
+        List<String> protocols = pi.getProtocols();
+
+        for (String s : protocols) {
+
+            getTreeModel().insertNodeInto(new DefaultMutableTreeNode(s), node,
+                         node.getChildCount());
         }
     }
     
