@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProtocolIdentificationRequestMessage extends Message {
+public class ProtocolIdentificationRequestMessage extends AddressedMessage {
     
-    public ProtocolIdentificationRequestMessage(NodeID source) {
-        super(source);
+    public ProtocolIdentificationRequestMessage(NodeID source, NodeID dest) {
+        super(source, dest);
     }
         
     /**
