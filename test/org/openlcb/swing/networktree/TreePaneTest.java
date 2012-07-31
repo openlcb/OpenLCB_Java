@@ -82,7 +82,7 @@ public class TreePaneTest extends TestCase {
         Message msg;
         msg = new ProducerIdentifiedMessage(nid2, eventA);
         store.put(msg, null);
-        msg = new ProtocolIdentificationReplyMessage(nid2, 0x03);
+        msg = new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L);
         store.put(msg, null);
     }
         
@@ -91,7 +91,7 @@ public class TreePaneTest extends TestCase {
         Message msg;
         msg = new ProducerIdentifiedMessage(nid2, eventA);
         store.put(msg, null);
-        msg = new ProtocolIdentificationReplyMessage(nid2, 0x03);
+        msg = new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L);
         store.put(msg, null);
 
         msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
