@@ -140,10 +140,11 @@ public class CdiPanel extends JPanel {
                  } else {
                      System.out.println("could not process type of " + it);
                  }
-        }
+            }
         }
         
         JPanel ret = new util.CollapsiblePanel(name, p);
+        // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
         return ret;
     }
@@ -180,7 +181,8 @@ public class CdiPanel extends JPanel {
     }
 
     DisplayPane createGroupPane(CdiRep.Group item, long origin, int space) {
-        return new GroupPane(item, origin, space);
+        DisplayPane ret = new GroupPane(item, origin, space);
+        return ret;        
     }
     
     class GroupPane extends DisplayPane {
@@ -227,6 +229,10 @@ public class CdiPanel extends JPanel {
                         origin = origin +it.getOffset();
                         size = size + it.getOffset();
                         
+                        // Following code smells bad.  CdiRep is a representational
+                        // class, shouldn't contain a "makeRepresentation" method,
+                        // but some sort of dispatch would be better than this.
+                        
                         if (it instanceof CdiRep.Group) {
                             pane = createGroupPane((CdiRep.Group) it, origin, space);
                         } else if (it instanceof CdiRep.BitRep) {
@@ -242,7 +248,7 @@ public class CdiPanel extends JPanel {
                             size = size + pane.getVarSize();
                             origin = pane.getOrigin() + pane.getVarSize();
                             currentPane.add(pane);
-                        } else {
+                        } else { // pane == null, either didn't select a type or something went wrong in creation.
                             System.out.println("could not process type of " + it);
                         }
                     }
