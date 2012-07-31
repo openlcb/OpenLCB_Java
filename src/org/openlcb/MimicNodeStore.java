@@ -46,11 +46,17 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         NodeMemo memo = map.get(dest);
         if (memo == null) {
             return null;
-        } else if (memo.getSimpleNodeIdent() != null) {
-            return memo.getSimpleNodeIdent();
         } else {
-            connection.put(new SimpleNodeIdentInfoRequestMessage(node, dest), null);
+            return memo.getSimpleNodeIdent();
+        }
+    }
+    
+    public ProtocolIdentification getProtocolIdentification(NodeID dest) {
+        NodeMemo memo = map.get(dest);
+        if (memo == null) {
             return null;
+        } else {
+            return memo.getProtocolIdentification();
         }
     }
     
@@ -76,6 +82,10 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
             pcs.firePropertyChange("updateProtocol", null, pIdent);
         }  
         public ProtocolIdentification getProtocolIdentification() {
+            if (pIdent == null) {
+                pIdent = new ProtocolIdentification(node, id);
+                pIdent.start(connection);
+            }
             return pIdent;
         }
 
@@ -89,6 +99,10 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
             pcs.firePropertyChange("updateSimpleNodeIdent", null, pSimpleNode);
         }  
         public SimpleNodeIdent getSimpleNodeIdent() {
+            if (pSimpleNode == null) {
+                pSimpleNode = new SimpleNodeIdent(node, id);
+                pSimpleNode.start(connection);
+            }
             return pSimpleNode;
         }
 
