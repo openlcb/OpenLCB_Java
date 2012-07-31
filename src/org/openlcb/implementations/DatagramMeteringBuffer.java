@@ -3,6 +3,9 @@ package org.openlcb.implementations;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.openlcb.*;
 
 /**
@@ -17,7 +20,6 @@ import org.openlcb.*;
  *<p>
  *<ul>
  *<li>Does not parallelize Datagrams to separate nodes
- *<li>Does not yet check NAK for transient vs permanent
  *<li>Needs to timeout and resume operation if no reply received
  *</ul>
  *<p>
@@ -27,7 +29,7 @@ import org.openlcb.*;
  */
 public class DatagramMeteringBuffer extends MessageDecoder {
 
-    final static int TIMEOUT = 2000;
+    final static int TIMEOUT = 700;
     
     public DatagramMeteringBuffer(Connection toDownstream) {
         this.toDownstream = toDownstream;
@@ -71,7 +73,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             currentMemo.put(msg, sender);
         }
     }
-    
+        
     class MessageMemo extends MessageDecoder {
         DatagramMessage message;
         Connection toDownstream;
@@ -85,13 +87,41 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         
         public void sendIt() {
             currentMemo = this;
-            toDownstream.put(message, fromDownstream);
+            forwardDownstream();
         }
+
+        void forwardDownstream() {
+            toDownstream.put(message, fromDownstream);
+            startTimeout();
+        }
+        
+        Timer timer;
+        void startTimeout() {
+            timer = new Timer();
+            TimerTask task = new TimerTask(){
+                public void run(){
+                    timerExpired();
+                }
+            };
+            timer.schedule(task, TIMEOUT);
+            
+        }
+        void endTimeout() {
+            timer.cancel();
+        }
+        void timerExpired() {
+            // should not happen, but if it does, 
+            // fabricate a permanent error and forward up
+            DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
+            handleDatagramRejected(msg, null);
+        }
+
         /**
          * Handle "Datagram Acknowledged" message
          */
         @Override
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
+            endTimeout();
             // forward message upstream
             toUpstream.put(msg, toUpstream);
             
@@ -110,9 +140,10 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 toUpstream.put(msg, toUpstream);
                 return;
             }
+            endTimeout();
             // check if resend permitted
             if (msg.canResend()) {
-                toDownstream.put(message, fromDownstream);
+                forwardDownstream();
             } else {
                 // forward upstream to originator and let them sort it out
                 toUpstream.put(msg, toUpstream);
