@@ -13,6 +13,7 @@ public class ConfigurationPortalTest extends TestCase {
     boolean result;
     
     NodeID nodeID1 = new NodeID(new byte[]{1,2,3,4,5,6});
+    NodeID nodeID2 = new NodeID(new byte[]{1,2,3,4,5,7});
 
     Connection connection = new AbstractConnection(){
         public void put(Message m, Connection node) {
@@ -43,7 +44,7 @@ public class ConfigurationPortalTest extends TestCase {
                 result = true;
             }
         };
-        Message m = new ProtocolIdentificationRequestMessage(nodeID1);
+        Message m = new ProtocolIdentificationRequestMessage(nodeID1, nodeID2);
         
         n.put(m, null);
         
