@@ -11,7 +11,8 @@ import junit.framework.TestSuite;
  */
 public class SimpleNodeIdentTest extends TestCase {
     public void testCtor() {
-        new SimpleNodeIdent();
+        new SimpleNodeIdent(new NodeID(new byte[]{1,3,3,4,5,6}),
+                            new NodeID(new byte[]{1,3,3,4,5,7}));
     }
         
     public void testCreationFromMessage() {

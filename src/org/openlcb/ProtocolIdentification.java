@@ -49,12 +49,29 @@ public class ProtocolIdentification {
     }
        
     long value = 0;  // multiple bits, e.g. from a node
-    
+    NodeID source;
+    NodeID dest;
+
     public ProtocolIdentification( ProtocolIdentificationReplyMessage msg) {
         value = msg.getValue();
     }
     public ProtocolIdentification() {
         value = 0;
     }
+    public ProtocolIdentification(NodeID source, NodeID dest) {
+        this.source = source;
+        this.dest = dest;
+        value = 0;
+    }
+
+    void start(Connection connection) {
+        connection.put(new ProtocolIdentificationRequestMessage(source, dest), null);
+    }
     
+    public long getValue() {
+        return value;
+    }    
+    public List<String> getProtocols() {
+        return Protocols.decode(value);
+    }
 }

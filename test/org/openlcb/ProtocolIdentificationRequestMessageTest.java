@@ -17,18 +17,27 @@ public class ProtocolIdentificationRequestMessageTest extends TestCase {
 
     public void testEqualsSame() {
         Message m1 = new ProtocolIdentificationRequestMessage(
-                               nodeID1 );
+                               nodeID1, nodeID2 );
         Message m2 = new ProtocolIdentificationRequestMessage(
-                               nodeID1 );
+                               nodeID1, nodeID2 );
     
         Assert.assertTrue(m1.equals(m2));
     }
 
-    public void testNotEqualsDifferentNode() {
+    public void testNotEqualsDifferentSrcNode() {
         Message m1 = new ProtocolIdentificationRequestMessage(
-                                nodeID1 );
+                                nodeID1, nodeID2 );
         Message m2 = new ProtocolIdentificationRequestMessage(
-                                nodeID2 );
+                                nodeID2, nodeID2 );
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+
+    public void testNotEqualsDifferentDestNode() {
+        Message m1 = new ProtocolIdentificationRequestMessage(
+                                nodeID2, nodeID1 );
+        Message m2 = new ProtocolIdentificationRequestMessage(
+                                nodeID2, nodeID2 );
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -42,7 +51,7 @@ public class ProtocolIdentificationRequestMessageTest extends TestCase {
                 result = true;
             }
         };
-        Message m = new ProtocolIdentificationRequestMessage(nodeID1);
+        Message m = new ProtocolIdentificationRequestMessage(nodeID1, nodeID2);
         
         n.put(m, null);
         

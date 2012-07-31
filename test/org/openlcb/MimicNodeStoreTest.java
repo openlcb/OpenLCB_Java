@@ -97,14 +97,14 @@ public class MimicNodeStoreTest extends TestCase {
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         MimicNodeStore.NodeMemo memo = list.iterator().next();
 
-        Assert.assertNull(memo.getProtocolIdentification());
+        Assert.assertNotNull(memo.getProtocolIdentification());
     }
 
     public void testProtocolInfoAvailableFromNode() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         MimicNodeStore.NodeMemo memo = list.iterator().next();
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
 
         Assert.assertNotNull(memo.getProtocolIdentification());
     }
@@ -120,7 +120,7 @@ public class MimicNodeStoreTest extends TestCase {
         store.put(pim1,null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
         Assert.assertTrue(listenerFired);
         
     }
@@ -138,10 +138,10 @@ public class MimicNodeStoreTest extends TestCase {
         store.put(pim2,null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0x03), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid2, 0x03), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L), null);
         Assert.assertTrue(listenerFired);
         
     }
@@ -158,7 +158,7 @@ public class MimicNodeStoreTest extends TestCase {
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         MimicNodeStore.NodeMemo memo = list.iterator().next();
 
-        Assert.assertNull(memo.getSimpleNodeIdent());
+        Assert.assertNotNull(memo.getSimpleNodeIdent());
     }
 
     public void testSimpleInfoAvailableFromNode() {
