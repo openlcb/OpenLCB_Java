@@ -101,7 +101,7 @@ public class MessageBuilder {
                 return retlist;
 
             case ProtocolSupportInquiry: 
-                retlist.add(new ProtocolIdentificationRequestMessage(source));
+                retlist.add(new ProtocolIdentificationRequestMessage(source, dest));
                 return retlist;
             case ProtocolSupportReply: 
                 retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
