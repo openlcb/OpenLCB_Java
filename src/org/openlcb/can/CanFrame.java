@@ -21,7 +21,18 @@ public interface CanFrame {
     
     public int getNumDataElements();
     public int getElement(int n);
+    
+    /**
+     * Returns a long from all bytes of the CAN frame body.
+     * Does not skip 1st address bytes in an OpenLCB header
+     */
     public long bodyAsLong();
+    
+    /**
+     * Returns a long from data bytes from the CAN frame body.
+     * Skips 1st address bytes in an OpenLCB header
+     */
+    public long dataAsLong();
     
     public byte[] getData();
 
