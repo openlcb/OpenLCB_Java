@@ -100,11 +100,21 @@ public class MessageBuilder {
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
 
+            case OptionalInteractionRejected: {
+                    int d2 = f.getNumDataElements() >= 2 ? f.getElement(2) : 0;
+                    int d3 = f.getNumDataElements() >= 3 ? f.getElement(3) : 0;
+                    int d4 = f.getNumDataElements() >= 4 ? f.getElement(4) : 0;
+                    int d5 = f.getNumDataElements() >= 5 ? f.getElement(5) : 0;
+                    int retmti = ((d2&0xff)<<8) | (d3&0xff);
+                    int code = ((d4&0xff)<<8) | (d5&0xff);;
+                    retlist.add(new OptionalIntRejectedMessage(source, dest,retmti,code));
+                    return retlist;
+                }
             case ProtocolSupportInquiry: 
                 retlist.add(new ProtocolIdentificationRequestMessage(source, dest));
                 return retlist;
             case ProtocolSupportReply: 
-                retlist.add(new ProtocolIdentificationReplyMessage(source,f.bodyAsLong()));
+                retlist.add(new ProtocolIdentificationReplyMessage(source,f.dataAsLong()));
                 return retlist;
 
             case IdentifyConsumer:
@@ -142,7 +152,7 @@ public class MessageBuilder {
                 retlist.add(new DatagramAcknowledgedMessage(source,dest));
                 return retlist;
             case DatagramRejected: 
-                retlist.add(new DatagramRejectedMessage(source,dest,(int)f.bodyAsLong()));
+                retlist.add(new DatagramRejectedMessage(source,dest,(int)f.dataAsLong()));
                 return retlist;
             default: return null;
         }
@@ -299,6 +309,18 @@ public class MessageBuilder {
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
+
+        /**
+         * Handle "Protocol Identification Inquiry (Request)" message
+         */
+        public void handleProtocolIdentificationRequest(ProtocolIdentificationRequestMessage msg, Connection sender){
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.ProtocolSupportInquiry.mti());
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
+        }
+
         /**
          * Handle "Producer/Consumer Event Report" message
          */
