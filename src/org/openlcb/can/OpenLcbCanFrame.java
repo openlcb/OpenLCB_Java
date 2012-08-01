@@ -44,7 +44,14 @@ public class OpenLcbCanFrame implements CanFrame {
     public long bodyAsLong() {
         long retval = 0;
         for (int i = 0 ; i<data.length; i++) {
-            retval = retval << 8 | (data[0]&0xFF);
+            retval = retval << 8 | (data[i]&0xFF);
+        }
+        return retval;
+    }
+    public long dataAsLong() {
+        long retval = 0;
+        for (int i = 2 ; i<data.length; i++) {
+            retval = retval << 8 | (data[i]&0xFF);
         }
         return retval;
     }
