@@ -107,7 +107,7 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         }
 
         public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
-            if (msg.getMti() == 0x0c) {
+            if (msg.getMti() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
                 // have to resend the SNII request
                 connection.put(new SimpleNodeIdentInfoRequestMessage(id, msg.getSourceNodeID()), null);
