@@ -15,20 +15,22 @@ import java.util.List;
  */
 public class ProtocolIdentification {
 
-    public enum Protocols {
-        ProtocolIdentification( 0x800000000000L,"ProtocolIdentification"), 
-        Datagram(               0x400000000000L,"Datagram"),
-        Stream(                 0x200000000000L,"Stream"), 
-        Configuration(          0x100000000000L,"Configuration"),
-        Reservation(            0x080000000000L,"Reservation"),
-        ProducerConsumer(       0x040000000000L,"ProducerConsumer"),
-        Identification(         0x020000000000L,"Identification"),
+    public enum Protocol {
+        ProtocolIdentification(  0x800000000000L,"ProtocolIdentification"), 
+        Datagram(                0x400000000000L,"Datagram"),
+        Stream(                  0x200000000000L,"Stream"), 
+        Configuration(           0x100000000000L,"Configuration"),
+        Reservation(             0x080000000000L,"Reservation"),
+        ProducerConsumer(        0x040000000000L,"ProducerConsumer"),
+        Identification(          0x020000000000L,"Identification"),
         TeachingLearningConfiguration(0x010000000000L,"TeachingLearningConfiguration"),
-        RemoteButton(           0x008000000000L,"RemoteButton"),
-        AbbreviatedDefaultCDI(  0x004000000000L,"AbbreviatedDefaultCDI"),
-        Display(                0x002000000000L,"Display");
+        RemoteButton(            0x008000000000L,"RemoteButton"),
+        AbbreviatedDefaultCDI(   0x004000000000L,"AbbreviatedDefaultCDI"),
+        Display(                 0x002000000000L,"Display"),
+        SimpleNodeID(            0x001000000000L,"SNII"),
+        ConfigurationDescription(0x000800000000L,"CDI");
        
-        Protocols(long value, String name) {
+        Protocol(long value, String name) {
             this.value = value;
             this.name = name;
         }
@@ -38,11 +40,19 @@ public class ProtocolIdentification {
         boolean supports(long r) {
             return ( (this.value & r) != 0 );
         }
+        public String getName() { return name; }
         
-        static List<String> decode(long r) {
+        static List<String> decodeNames(long r) {
             ArrayList<String> retval = new ArrayList<String>();
-            for (Protocols t : Protocols.values()) {
+            for (Protocol t : Protocol.values()) {
                 if ( t.supports(r) ) retval.add(t.name);
+            }
+            return retval;
+        }
+        static List<Protocol> decode(long r) {
+            ArrayList<Protocol> retval = new ArrayList<Protocol>();
+            for (Protocol t : Protocol.values()) {
+                if ( t.supports(r) ) retval.add(t);
             }
             return retval;
         }
@@ -71,7 +81,10 @@ public class ProtocolIdentification {
     public long getValue() {
         return value;
     }    
-    public List<String> getProtocols() {
-        return Protocols.decode(value);
+    public List<Protocol> getProtocols() {
+        return Protocol.decode(value);
+    }
+    public List<String> getProtocolNames() {
+        return Protocol.decodeNames(value);
     }
 }
