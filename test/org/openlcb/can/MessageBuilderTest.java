@@ -203,6 +203,42 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(13,data[4]);
     }
     
+    public void testPipReplyFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19668071); 
+        frame.setData(new byte[]{0x02, (byte)0xB4, (byte)0xD5, 0x00, 0x00, 0x00, 0x00, 0x00});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof ProtocolIdentificationReplyMessage);  
+        
+        Assert.assertTrue(((ProtocolIdentificationReplyMessage)msg).getValue() == 0xD50000000000L);    
+    }
+    
+    public void testOptionalRejectFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19068071); 
+        frame.setData(new byte[]{0x02, 0x02, (byte)0x12, 0x34, 0x56, 0x78, 0x00, 0x00});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof OptionalIntRejectedMessage);  
+        
+        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getMti());    
+        Assert.assertEquals(0x5678, ((OptionalIntRejectedMessage)msg).getCode());    
+    }
+    
+
     // from here down is testing infrastructure
     
     public MessageBuilderTest(String s) {
