@@ -3,12 +3,15 @@ package org.openlcb.swing.networktree;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
+import javax.swing.*;
+import javax.swing.tree.*;
+import javax.swing.event.*;
+
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import javax.swing.*;
 /**
  * Simulate nine nodes interacting on a single gather/scatter
  * "link", and feed them to monitor.
@@ -37,6 +40,8 @@ public class TreePaneTest extends TestCase {
     EventID eventB = new EventID(new byte[]{1,0,0,0,0,0,2,0});
     EventID eventC = new EventID(new byte[]{1,0,0,0,0,0,3,0});
     
+    Message pipmsg = new ProtocolIdentificationReplyMessage(nid2, 0xF01800000000L);
+    
     JFrame frame;
     TreePane pane;
     Connection connection = new AbstractConnection() {
@@ -53,9 +58,18 @@ public class TreePaneTest extends TestCase {
         // Test is really popping a window before doing all else
         frame = new JFrame();
         frame.setTitle("TreePane Test");
-        TreePane pane = new TreePane();
+        pane = new TreePane();
         frame.add( pane );
-        pane.initComponents(store, null, null);
+        pane.initComponents(store, null, null, 
+                new NodeTreeRep.SelectionKeyLoader() {
+                    public NodeTreeRep.SelectionKey cdiKey(String name, NodeID node) {
+                        return new NodeTreeRep.SelectionKey(name, node) {
+                            public void select(DefaultMutableTreeNode rep) {
+                                System.out.println("Making special fuss over: "+rep+" for "+name+" on "+node);
+                            }
+                        };
+                    }
+                });
         frame.pack();
         frame.setMinimumSize(new java.awt.Dimension(200,200));
         frame.setVisible(true);
@@ -82,8 +96,7 @@ public class TreePaneTest extends TestCase {
         Message msg;
         msg = new ProducerIdentifiedMessage(nid2, eventA);
         store.put(msg, null);
-        msg = new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L);
-        store.put(msg, null);
+        store.put(pipmsg, null);
     }
         
     public void testWith1stSNII() {
@@ -91,8 +104,7 @@ public class TreePaneTest extends TestCase {
         Message msg;
         msg = new ProducerIdentifiedMessage(nid2, eventA);
         store.put(msg, null);
-        msg = new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L);
-        store.put(msg, null);
+        store.put(pipmsg, null);
 
         msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
                     new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
@@ -100,6 +112,36 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
     }
         
+    public void testWithSelect() {
+        frame.setTitle("listener test");
+        
+        pane.addTreeSelectionListener(new TreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent e) {
+                JTree tree = (JTree) e.getSource();
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+                                   tree.getLastSelectedPathComponent();
+            
+                if (node == null) return;
+                System.out.print("Test prints selected treenode "+node);
+                if (node.getUserObject() instanceof NodeTreeRep.SelectionKey) {
+                    System.out.println(" and invokes");
+                    ((NodeTreeRep.SelectionKey)node.getUserObject()).select((DefaultMutableTreeNode)node);
+                } else {
+                    System.out.println();
+                }
+            }
+        });
+        Message msg;
+        msg = new ProducerIdentifiedMessage(nid2, eventA);
+        store.put(msg, null);
+        store.put(pipmsg, null);
+
+        msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
+                    new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
+                );
+        store.put(msg, null);
+    }
+    
    
     // from here down is testing infrastructure
     

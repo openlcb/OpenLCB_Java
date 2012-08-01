@@ -25,11 +25,14 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     DefaultMutableTreeNode getThis() { return this; }
     DefaultTreeModel getTreeModel() { return treeModel; }
     
-    public NodeTreeRep(MimicNodeStore.NodeMemo memo, MimicNodeStore store, DefaultTreeModel treeModel) {
+    SelectionKeyLoader loader;
+        
+    public NodeTreeRep(MimicNodeStore.NodeMemo memo, MimicNodeStore store, DefaultTreeModel treeModel, SelectionKeyLoader loader) {
 	    super("Node");
 	    this.memo = memo;
 	    this.store = store;
 	    this.treeModel = treeModel;
+	    this.loader = loader;
     }
     
     void initConnections() {
@@ -45,31 +48,44 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                     updateSimpleNodeIdent((SimpleNodeIdent)e.getNewValue());
                 }
                 if (e.getPropertyName().equals("updateConsumers")) {
-                    getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Consumers"), getThis(),
+                    getTreeModel().insertNodeInto(newNode("Supported Consumers"), getThis(),
                                  getThis().getChildCount());
                 
                 }
                 if (e.getPropertyName().equals("updateProducers")) {
-                    getTreeModel().insertNodeInto(new DefaultMutableTreeNode("Supported Producers"), getThis(),
+                    getTreeModel().insertNodeInto(newNode("Supported Producers"), getThis(),
                                  getThis().getChildCount());
                 
                 }
             }
         });
         
+        // see if protocol info already present
+        ProtocolIdentification pip = store.getProtocolIdentification(memo.getNodeID());
+        if (pip != null) updateProtocolIdent(pip);  // otherwise, will be notified later
+
         // see if simple ID info already present
         SimpleNodeIdent snii = store.getSimpleNodeIdent(memo.getNodeID());
         if (snii != null) updateSimpleNodeIdent(snii);  // otherwise, will be notified later
 
-        // see if protocol info already present
-        ProtocolIdentification pip = store.getProtocolIdentification(memo.getNodeID());
-        if (pip != null) updateProtocolIdent(pip);  // otherwise, will be notified later
+    }
+    
+    DefaultMutableTreeNode newNode(String name, SelectionKey key) {
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode(name);
+        node.setUserObject(key);
+        return node;
+    }
+    
+    DefaultMutableTreeNode newNode(String name) {
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode(name);
+        node.setUserObject(new SelectionKey(name, memo.getNodeID()));
+        return node;
     }
     
     void updateSimpleNodeIdent(SimpleNodeIdent e) {
         if (simpleInfoMfgNode == null) {
             if (e.getMfgName().replace(" ","").length()>0) {
-                simpleInfoMfgNode = new DefaultMutableTreeNode("Mfg: "+e.getMfgName());
+                simpleInfoMfgNode = newNode("Mfg: "+e.getMfgName());
                 getTreeModel().insertNodeInto(simpleInfoMfgNode, 
                             getThis(),
                             getThis().getChildCount());
@@ -79,7 +95,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
         if (simpleInfoModelNode == null) {
             if (e.getModelName().replace(" ","").length()>0) {
-                simpleInfoModelNode = new DefaultMutableTreeNode("Mod: "+e.getModelName());
+                simpleInfoModelNode = newNode("Mod: "+e.getModelName());
                 getTreeModel().insertNodeInto(simpleInfoModelNode, 
                             getThis(),
                             getThis().getChildCount());
@@ -89,7 +105,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
         if (simpleInfoHardwareVersionNode == null) {
             if (e.getHardwareVersion().replace(" ","").length()>0) {
-                simpleInfoHardwareVersionNode = new DefaultMutableTreeNode("Hardware: "+e.getHardwareVersion());
+                simpleInfoHardwareVersionNode = newNode("Hardware: "+e.getHardwareVersion());
                 getTreeModel().insertNodeInto(simpleInfoHardwareVersionNode, 
                             getThis(),
                             getThis().getChildCount());
@@ -99,7 +115,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
         if (simpleInfoSoftwareVersionNode == null) {
             if (e.getSoftwareVersion().replace(" ","").length()>0) {
-                simpleInfoSoftwareVersionNode = new DefaultMutableTreeNode("Software: "+e.getSoftwareVersion());
+                simpleInfoSoftwareVersionNode = newNode("Software: "+e.getSoftwareVersion());
                 getTreeModel().insertNodeInto(simpleInfoSoftwareVersionNode, 
                             getThis(),
                             getThis().getChildCount());
@@ -119,7 +135,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
         if (simpleInfoUserDescNode == null ) { 
             if (e.getUserDesc().replace(" ","").length()>0) {
-                simpleInfoUserDescNode = new DefaultMutableTreeNode("Desc: "+e.getUserDesc());
+                simpleInfoUserDescNode = newNode("Desc: "+e.getUserDesc());
                 getTreeModel().insertNodeInto(simpleInfoUserDescNode, 
                             getThis(),
                             getThis().getChildCount());
@@ -129,17 +145,39 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
     }
     
+    DefaultMutableTreeNode pipNode;
+    
     void updateProtocolIdent(ProtocolIdentification pi) {
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode("Supported Protocols");
-        getTreeModel().insertNodeInto(node, getThis(),
-                     getThis().getChildCount());
+        if (pi.getValue() != 0) {
 
-        List<String> protocols = pi.getProtocols();
-
-        for (String s : protocols) {
-
-            getTreeModel().insertNodeInto(new DefaultMutableTreeNode(s), node,
-                         node.getChildCount());
+            if (pipNode == null) {
+                pipNode = newNode("Supported Protocols");
+                getTreeModel().insertNodeInto(pipNode, getThis(),
+                         getThis().getChildCount());
+            }
+                
+            List<ProtocolIdentification.Protocol> protocols = pi.getProtocols();
+    
+            for (ProtocolIdentification.Protocol p : protocols) {
+                DefaultMutableTreeNode node = null;
+                
+                // try to figure out type
+                switch (p) {
+                    case ConfigurationDescription:
+                        node = newNode(p.getName(), loader.cdiKey(p.getName(), memo.getNodeID()));
+                        break;
+                    case ProtocolIdentification:
+                    case Datagram:
+                    case Configuration:
+                    case SimpleNodeID:
+                    default:
+                        node = newNode(p.getName());
+                        break;
+                }
+                
+                getTreeModel().insertNodeInto(node, pipNode,
+                             pipNode.getChildCount());
+            }
         }
     }
     
@@ -157,4 +195,45 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         return memo.getNodeID().toString();
     }
 	
+	
+	/**
+	 * When a JTree node is selected, it's user object
+	 * (of this class) is pulled and invoked.
+	 *
+	 * Inherit from this to modify.
+	 */
+	static public class SelectionKey {
+	    public SelectionKey(String name, NodeID node) { this.name = name; this.node = node; }
+	    protected String name;
+	    protected NodeID node;
+	    public void select(DefaultMutableTreeNode rep) {
+	        System.out.println("Selected: "+rep+" for "+name+" on "+node);
+	    }
+	    public String toString() {
+	        return name;
+	    }
+	}
+	
+	/**
+	* Invoked for various protocols to load the
+	* selection key object
+	*/
+	static public class SelectionKeyLoader {
+	    public SelectionKey pipKey(String name, NodeID node) {
+	        return new SelectionKey(name, node);
+	    }
+	    public SelectionKey sniiKey(String name, NodeID node) {
+	        return new SelectionKey(name, node);
+	    }
+	    public SelectionKey datagramKey(String name, NodeID node) {
+	        return new SelectionKey(name, node);
+	    }
+	    public SelectionKey configurationKey(String name, NodeID node) {
+	        return new SelectionKey(name, node);
+	    }
+	    public SelectionKey cdiKey(String name, NodeID node) {
+	        return new SelectionKey(name, node);
+	    }
+	}
+
 }

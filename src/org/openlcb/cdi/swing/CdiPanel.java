@@ -20,12 +20,25 @@ public class CdiPanel extends JPanel {
 
     public CdiPanel () { super(); }
     
+    /**
+     * @param accessor Provides access for read, write operations back to layout
+     * @param factory Implements hooks for optional interface elements
+     */
+    public void initComponents(ReadWriteAccess accessor, GuiItemFactory factory) {
+        initComponents(accessor);
+        this.factory = new GuiItemFactory();
+    }
+
+    /**
+     * @param accessor Provides access for read, write operations back to layout
+     */
     public void initComponents(ReadWriteAccess accessor) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.accessor = accessor;
     }
     
     ReadWriteAccess accessor;
+    GuiItemFactory factory;
     
     public void loadCDI(CdiRep c) {
         add(createIdentificationPane(c));
@@ -547,18 +560,34 @@ public class CdiPanel extends JPanel {
      }
 
      /** 
-      * Memo class for adding access to e.g. a MemoryConfig service.
+      * Provide access to e.g. a MemoryConfig service.
       * 
       * Default just writes output for debug
       */
-     abstract public static class ReadWriteAccess {
-            abstract public void doWrite(long address, int space, byte[] data);
-            abstract public void doRead(long address, int space, int length, final ReadReturn handler);
-     }
-     /**
-      * Memo class for handling read-return data
-      */
-     abstract public class ReadReturn {
-         abstract public void returnData(byte[] data);
-     }
+    public static class ReadWriteAccess {
+        public void doWrite(long address, int space, byte[] data) {
+            System.out.println("Write to "+address+" in space "+space);
+        }
+        public void doRead(long address, int space, int length, final ReadReturn handler) {
+            System.out.println("Read from "+address+" in space "+space);
+        }
+    }
+     
+    /** 
+     * Handle GUI hook requests if needed
+     * 
+     * Default behavior is to do nothing
+     */
+    public static class GuiItemFactory {
+        public JButton readButton(JButton button) {
+            return button;
+        }
+    }
+     
+    /**
+     * Memo class for handling read-return data
+     */
+    abstract public class ReadReturn {
+        abstract public void returnData(byte[] data);
+    }
 }
