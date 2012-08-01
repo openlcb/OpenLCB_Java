@@ -15,43 +15,56 @@ public class ProtocolIdentificationTest extends TestCase {
     }
     
     public void testDecode0() {
-        java.util.List result = ProtocolIdentification.Protocols.decode(0x000000000000L);
+        java.util.List result = ProtocolIdentification.Protocol.decode(0x000000000000L);
         
         Assert.assertEquals("length", 0, result.size());
     }
     
     public void testDecode1() {
-        java.util.List result = ProtocolIdentification.Protocols.decode(0x800000000000L);
+        java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x800000000000L);
         
         Assert.assertEquals("length", 1, result.size());
         Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
     }
     
     public void testDecode2() {
-        java.util.List result = ProtocolIdentification.Protocols.decode(0x880000000000L);
+        java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x880000000000L);
         
         Assert.assertEquals("length", 2, result.size());
         Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
         Assert.assertEquals("result 2", "Reservation", result.get(1));
     }
 
+    public void testDecode3() {
+        java.util.List result = ProtocolIdentification.Protocol.decodeNames(0xF01800000000L);
+        
+        Assert.assertEquals("length", 6, result.size());
+        Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
+        Assert.assertEquals("result 2", "Datagram", result.get(1));
+        Assert.assertEquals("result 3", "Stream", result.get(2));
+        Assert.assertEquals("result 4", "Configuration", result.get(3));
+        Assert.assertEquals("result 5", "SNII", result.get(4));
+        Assert.assertEquals("result 6", "CDI", result.get(5));
+    }
+
     public void testSupports1() {
-        ProtocolIdentification.Protocols p = ProtocolIdentification.Protocols.Datagram;
+        ProtocolIdentification.Protocol p = ProtocolIdentification.Protocol.Datagram;
         
         Assert.assertTrue("supports", p.supports(~0));
     }
     
     public void testSupports2() {
-        ProtocolIdentification.Protocols p = ProtocolIdentification.Protocols.Datagram;
+        ProtocolIdentification.Protocol p = ProtocolIdentification.Protocol.Datagram;
         
         Assert.assertTrue("supports", !p.supports(0));
     }
     
     public void testCreationFromMessage() {
-        new ProtocolIdentification(
+        ProtocolIdentification pi = new ProtocolIdentification(
             new ProtocolIdentificationReplyMessage(
                 new NodeID(new byte[]{1,3,3,4,5,6}), 
                 0x03));
+        Assert.assertTrue((long)0x03 == pi.getValue());
     }
     
     // from here down is testing infrastructure
