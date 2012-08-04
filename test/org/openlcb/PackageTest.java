@@ -30,6 +30,7 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
 
         suite.addTest(UtilitiesTest.suite());
+        suite.addTest(VersionTest.suite());
 
         suite.addTest(EventIDTest.suite());
         suite.addTest(NodeIDTest.suite());

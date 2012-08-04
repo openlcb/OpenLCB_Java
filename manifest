@@ -3,10 +3,10 @@ Main-Class: scenarios.ScenarioRunner
 Class-Path: lib/junit.jar lib/jdom.jar lib/jlfgr-1_0.jar
 
 Name: org.openlcb
-Specification-Title: “OpenLCB”
-Specification-Version: “0.6.0”
-Specification-Vendor: “OpenLCB group"
-Package-Title: “openlcb”
-Package-Version: “0.6.2”
-Package-Vendor: “OpenLCB group”
+Specification-Title: OpenLCB
+Specification-Version: 0.6.1
+Specification-Vendor: OpenLCB group
+Package-Title: openlcb
+Package-Version: 0.6.3
+Package-Vendor: OpenLCB group
  
