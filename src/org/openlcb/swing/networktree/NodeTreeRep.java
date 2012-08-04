@@ -167,9 +167,17 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                         node = newNode(p.getName(), loader.cdiKey(p.getName(), memo.getNodeID()));
                         break;
                     case ProtocolIdentification:
+                        node = newNode(p.getName(), loader.pipKey(p.getName(), memo.getNodeID()));
+                        break;
                     case Datagram:
+                        node = newNode(p.getName(), loader.datagramKey(p.getName(), memo.getNodeID()));
+                        break;
                     case Configuration:
+                        node = newNode(p.getName(), loader.configurationKey(p.getName(), memo.getNodeID()));
+                        break;
                     case SimpleNodeID:
+                        node = newNode(p.getName(), loader.sniiKey(p.getName(), memo.getNodeID()));
+                        break;
                     default:
                         node = newNode(p.getName());
                         break;
@@ -189,7 +197,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     DefaultMutableTreeNode simpleInfoUserDescNode;
     
     /**
-     * Provides the node label in the tree
+     * Provides the node label in the tree.
+     * Currently implemented as toString name of underling nodeID.
      */
     public String toString() {
         return memo.getNodeID().toString();
@@ -206,8 +215,13 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
 	    public SelectionKey(String name, NodeID node) { this.name = name; this.node = node; }
 	    protected String name;
 	    protected NodeID node;
+	    
+	    /**
+	     * Override here to change behavior when 
+	     * treenode is selected.
+	     */
 	    public void select(DefaultMutableTreeNode rep) {
-	        System.out.println("Selected: "+rep+" for "+name+" on "+node);
+	        // System.out.println("Selected: "+rep+" for "+name+" on "+node);
 	    }
 	    public String toString() {
 	        return name;
