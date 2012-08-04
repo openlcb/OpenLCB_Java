@@ -101,10 +101,10 @@ public class MessageBuilder {
                 return retlist;
 
             case OptionalInteractionRejected: {
-                    int d2 = f.getNumDataElements() >= 2 ? f.getElement(2) : 0;
-                    int d3 = f.getNumDataElements() >= 3 ? f.getElement(3) : 0;
-                    int d4 = f.getNumDataElements() >= 4 ? f.getElement(4) : 0;
-                    int d5 = f.getNumDataElements() >= 5 ? f.getElement(5) : 0;
+                    int d2 = f.getNumDataElements() >= 3 ? f.getElement(2) : 0;
+                    int d3 = f.getNumDataElements() >= 4 ? f.getElement(3) : 0;
+                    int d4 = f.getNumDataElements() >= 5 ? f.getElement(4) : 0;
+                    int d5 = f.getNumDataElements() >= 6 ? f.getElement(5) : 0;
                     int retmti = ((d2&0xff)<<8) | (d3&0xff);
                     int code = ((d4&0xff)<<8) | (d5&0xff);;
                     retlist.add(new OptionalIntRejectedMessage(source, dest,retmti,code));
