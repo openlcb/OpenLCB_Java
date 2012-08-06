@@ -102,7 +102,6 @@
 
   <target name="run" depends="compile, tests" description="build and run test suite">
     <java classname="AllTest"
-          dir=".." 
 	  fork="yes" >
        <classpath refid="project.class.path"    />
        <sysproperty key="java.security.policy" value="lib/security.policy"/> 
