@@ -75,6 +75,8 @@ public class PackageTest extends TestCase {
 
         suite.addTest(GatewayTest.suite());
 
+        suite.addTest(ThrottleTest.suite());
+
         suite.addTest(MimicNodeStoreTest.suite());
 
         // test implementation classes

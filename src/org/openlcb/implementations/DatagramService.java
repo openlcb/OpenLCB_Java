@@ -44,6 +44,16 @@ public class DatagramService extends MessageDecoder {
     }
 
     /**
+     * Send data to layout
+     */
+    public void sendData(NodeID dest, int[] data){
+        DatagramServiceTransmitMemo memo = new DatagramServiceTransmitMemo(dest, data);
+        xmtMemo = memo;
+        Message m = new DatagramMessage(here, memo.dest, memo.data);
+        downstream.put(m, this);
+    }
+
+    /**
      * Handle "Datagram" message from layout
      */
     @Override
