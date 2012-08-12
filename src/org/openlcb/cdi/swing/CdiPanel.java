@@ -451,7 +451,6 @@ public class CdiPanel extends JPanel {
                     } else {
                         String key = ""+value;
                         String entry = map.getEntry(key);
-                        System.out.println("found key "+key+" entry "+entry);
                         box.setSelectedItem(entry);
                     }
                }
@@ -475,7 +474,6 @@ public class CdiPanel extends JPanel {
                         // have to get key from stored value
                         String entry = (String) box.getSelectedItem();
                         String key = map.getKey(entry);
-                        System.out.println("found key "+key+" entry "+entry);
                         value = Long.parseLong(key);
                     }
                     int i = 0;
