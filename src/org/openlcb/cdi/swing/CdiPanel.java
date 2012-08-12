@@ -540,15 +540,16 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     byte[] data = textField.getText().getBytes(UTF8);
-                    byte[] content = new byte[size];
-                    for (int i = 0; i < size-1; i++)
-                        if (i<data.length)
-                            content[i] = data[i];
-                        else 
-                            content[i] = 0;
-                    content[size-1] = 0;
-                    // write it back
-                    textField.setText(new String(content, UTF8));
+                    byte[] content = new byte[(data.length+1 > size) ? size : data.length+1];
+                    for (int i = 0; i < content.length-1; i++) {
+                        content[i] = data[i];
+                    }
+                    content[content.length-1] = 0;
+
+                    // write it back in case of truncation
+                    byte[] writeBack = new byte[content.length-1];
+                    for (int i = 0; i< writeBack.length; i++) writeBack[i] = content[i];
+                    textField.setText(new String(writeBack, UTF8));
                     // and to the node
                     accessor.doWrite(getOrigin(), getVarSpace(), content);
                 }
