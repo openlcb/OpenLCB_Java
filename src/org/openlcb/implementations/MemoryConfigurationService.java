@@ -34,8 +34,10 @@ public class MemoryConfigurationService {
             public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) { 
                 service.acceptData(0);
                 if (readMemo != null) {
-                    byte[] content = new byte[data.length-6];
-                    for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6];
+                    // figure out address space uses byte?
+                    boolean spaceByte = ((data[1] & 0x03) == 0);
+                    byte[] content = new byte[data.length-6+(spaceByte ? -1 : 0)];
+                    for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6+(spaceByte?1:0)];
                     McsReadMemo memo = readMemo;
                     readMemo = null;
                     memo.handleReadData(dest, memo.space, memo.address, content);
