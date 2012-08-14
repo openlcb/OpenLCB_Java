@@ -525,7 +525,14 @@ public class CdiPanel extends JPanel {
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
-                    textField.setText(new String(data, UTF8));
+                    int first;
+                    for (first = 0; first < data.length; first++)
+                        if (data[first] == 0) break;
+                    
+                    // first contains the index of the 1st null
+                    byte[] store = new byte[first]; // bytes to first null
+                    System.arraycopy(data, 0, store, 0, first);
+                    textField.setText(new String(store, UTF8));
                 }
             };
             b.addActionListener(new java.awt.event.ActionListener() {
@@ -541,15 +548,14 @@ public class CdiPanel extends JPanel {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     byte[] data = textField.getText().getBytes(UTF8);
                     byte[] content = new byte[(data.length+1 > size) ? size : data.length+1];
-                    for (int i = 0; i < content.length-1; i++) {
-                        content[i] = data[i];
-                    }
+                    System.arraycopy(data, 0, content, 0, content.length-1);
                     content[content.length-1] = 0;
 
                     // write it back in case of truncation
                     byte[] writeBack = new byte[content.length-1];
-                    for (int i = 0; i< writeBack.length; i++) writeBack[i] = content[i];
+                    System.arraycopy(content, 0, writeBack, 0, writeBack.length);
                     textField.setText(new String(writeBack, UTF8));
+                    
                     // and to the node
                     accessor.doWrite(getOrigin(), getVarSpace(), content);
                 }
