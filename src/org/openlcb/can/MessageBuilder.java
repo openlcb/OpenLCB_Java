@@ -78,15 +78,74 @@ public class MessageBuilder {
         return null;
     }
 
+    class AccumulationMemo {
+        long header;
+        NodeID source;
+        NodeID dest;
+        byte[] data;
+        
+        public AccumulationMemo(long header, NodeID source, NodeID dest, byte[] data) {
+            this.header = header;
+            this.source = source;
+            this.dest = dest;
+            this.data = data;
+        }
+        
+        public boolean equals(Object obj) {
+            if (! (obj instanceof AccumulationMemo) )
+                    return false;
+            
+            AccumulationMemo other = (AccumulationMemo)obj;
+            if (header != other.header) return false;
+            if ( ! source.equals(other.source)) return false;
+            if ( ! dest.equals(other.dest)) return false;
+            return true;
+        }
+        
+        // data varies in length, not considered.
+        public int hashCode() {
+            return (int)(header+dest.hashCode()+source.hashCode());
+        }
+    }
+    
+    HashMap<Integer, AccumulationMemo> accumulations = new HashMap<Integer, AccumulationMemo>();
+    
     List<Message> processFormat1(CanFrame f) {
         // MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
         NodeID dest = null;
         int mti = getMTI(f);
-        if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) // addressed message 
+        byte[] data = f.getData();
+        
+        if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) {
+            // addressed message 
             dest = map.getNodeID( ( (f.getElement(0) << 8) + f.getElement(1) ) & 0xFFF );
-
+            
+            AccumulationMemo mnew = new AccumulationMemo(f.getHeader(), source, dest, data);
+            // is header already in map?
+            AccumulationMemo mold = accumulations.get(f.getHeader());
+            if (mold == null) {
+                // no - start accumulation
+                accumulations.put(f.getHeader(),mnew);
+                mold = mnew;
+            } else {
+                // combine data into old one
+                byte[] newdata = new byte[mold.data.length+mnew.data.length-2];  // skip address
+                System.arraycopy(mold.data, 0, newdata, 0, mold.data.length);
+                System.arraycopy(mnew.data, 2, newdata, mold.data.length, mnew.data.length-2);
+                mold.data = newdata;
+            }
+            // see if final bit active
+            if ( (f.getElement(0) & 0x10 ) != 0) {
+                // no, accumulate
+                return retlist; // which is null right now
+            } 
+            // we're going to continue processing with the accumulated data
+            data = mold.data;
+            accumulations.remove(f.getHeader());
+        }
+        
         MessageTypeIdentifier value = MessageTypeIdentifier.get(mti);
         if (value == null) System.out.println(" found null from "+mti);
         switch (value) {
@@ -101,10 +160,10 @@ public class MessageBuilder {
                 return retlist;
 
             case OptionalInteractionRejected: {
-                    int d2 = f.getNumDataElements() >= 3 ? f.getElement(2) : 0;
-                    int d3 = f.getNumDataElements() >= 4 ? f.getElement(3) : 0;
-                    int d4 = f.getNumDataElements() >= 5 ? f.getElement(4) : 0;
-                    int d5 = f.getNumDataElements() >= 6 ? f.getElement(5) : 0;
+                    int d2 = data.length >= 3 ? f.getElement(2) : 0;
+                    int d3 = data.length >= 4 ? f.getElement(3) : 0;
+                    int d4 = data.length >= 5 ? f.getElement(4) : 0;
+                    int d5 = data.length >= 6 ? f.getElement(5) : 0;
                     int retmti = ((d2&0xff)<<8) | (d3&0xff);
                     int code = ((d4&0xff)<<8) | (d5&0xff);;
                     retlist.add(new OptionalIntRejectedMessage(source, dest,retmti,code));
@@ -141,11 +200,10 @@ public class MessageBuilder {
                 retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
                 return retlist;
             case SimpleNodeIdentInfoReply: 
-                byte[] content = f.getData();
-                byte[] data = new byte[content.length-2];
-                System.arraycopy(content, 2, data, 0, data.length);
+                byte[] content = new byte[data.length-2];
+                System.arraycopy(data, 2, content, 0, content.length);
                 
-                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,data));
+                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,content));
                 return retlist;
 
             case DatagramReceivedOK: 

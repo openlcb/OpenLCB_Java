@@ -274,6 +274,51 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
+    public void testAccumulateSniipReply() {
+        // start frame
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071); 
+        frame.setData(new byte[]{0x12, 0x02, 0x12, 0x34});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 0, list.size()); 
+        
+        // end frame
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071); 
+        frame.setData(new byte[]{0x22, 0x02, 0x56, 0x78});
+                
+        list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof SimpleNodeIdentInfoReplyMessage);  
+        
+        Assert.assertEquals(0x12, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[0]);    
+        Assert.assertEquals(0x34, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[1]);    
+        Assert.assertEquals(0x56, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[2]);    
+        Assert.assertEquals(0x78, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[3]);  
+        
+        // check for no stored state
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071); 
+        frame.setData(new byte[]{0x02, 0x02, 0x12, 0x34});
+
+        list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        msg = list.get(0);
+        Assert.assertTrue(msg instanceof SimpleNodeIdentInfoReplyMessage);  
+        
+        Assert.assertEquals(2, ((SimpleNodeIdentInfoReplyMessage)msg).getData().length);    
+        Assert.assertEquals(0x12, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[0]);    
+        Assert.assertEquals(0x34, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[1]);    
+        
+          
+    }
 
     // from here down is testing infrastructure
     
