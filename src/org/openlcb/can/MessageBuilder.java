@@ -147,7 +147,14 @@ public class MessageBuilder {
         }
         
         MessageTypeIdentifier value = MessageTypeIdentifier.get(mti);
-        if (value == null) System.out.println(" found null from "+mti);
+        if (value == null) {
+            // something bad happened
+            String mtiString = "000"+Integer.toHexString(mti).toUpperCase();
+            mtiString = mtiString.substring(mtiString.length()-3);
+            System.out.println(" failed to parse MTI 0x"+mtiString);
+            return retlist;  // nothing in it from this
+        }
+        
         switch (value) {
             case InitializationComplete: 
                 retlist.add(new InitializationCompleteMessage(source));

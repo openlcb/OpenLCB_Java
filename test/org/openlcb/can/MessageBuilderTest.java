@@ -274,6 +274,19 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
+    public void testBogusMti() {
+        // should emit "failed to parse MTI 0x541"
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19541071); 
+        frame.setData(new byte[]{0x02, 0x02, (byte)0x12, 0x34});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 0, list.size()); 
+    }
+
     public void testAccumulateSniipReply() {
         // start frame
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
