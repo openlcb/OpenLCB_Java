@@ -32,17 +32,36 @@ public class MemConfigReadWritePaneTest extends TestCase {
     };
     
     MimicNodeStore store;
+    MemoryConfigurationService service;
+    DatagramService dgs;
+
     MemConfigReadWritePane pane;
 
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nidHere);
         store.addNode(nidThere);
+        dgs = new DatagramService(null, null);
         
+        service = new MemoryConfigurationService(nidHere, dgs) {
+            public void request(MemoryConfigurationService.McsWriteMemo memo) {
+            }
+        
+            public void request(MemoryConfigurationService.McsReadMemo memo) {
+            }
+        
+            public void request(MemoryConfigurationService.McsConfigMemo memo) {
+            }
+            
+            public void request(MemoryConfigurationService.McsAddrSpaceMemo memo) {
+            }
+        };
+
         // Test is really popping a window before doing all else
         frame = new JFrame();
         frame.setTitle("MemConfigReadWritePane Test");
 
-        pane = new MemConfigReadWritePane(store);
+        pane = new MemConfigReadWritePane(nidThere, store, service);
+        pane.initComponents();
         frame.add(pane);
         
         frame.pack();
