@@ -369,7 +369,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
                     flag = true;
                 }
                 @Override
-                public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
                     flag = true;
                 }
             };
