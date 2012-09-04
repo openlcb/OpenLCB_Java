@@ -42,6 +42,18 @@ public class MemoryConfigurationService {
                     readMemo = null;
                     memo.handleReadData(dest, memo.space, memo.address, content);
                 }    
+                if (addrSpaceMemo != null) {
+                    // doesn't handle decode of desc string, but should
+                    int space = data[2]&0xFF;
+                    long highAddress = ((data[3]&0xFF)<<24)|((data[4]&0xFF)<<16)|((data[5]&0xFF)<<8)|(data[6]&0xFF);
+                    int flags = data[7]&0xFF;
+                    long lowAddress = 0;  // doesn't handle optional value
+                    
+                    McsAddrSpaceMemo memo = addrSpaceMemo;
+                    addrSpaceMemo = null;
+                    memo.handleAddrSpaceData(dest, space, highAddress, lowAddress, flags, "");
+                }    
+                // config memo may trigger address space read, so do second
                 if (configMemo != null) {
                     // doesn't handle decode of name string, but should
                     int commands = (data[2]<<8)+data[3];
@@ -51,17 +63,6 @@ public class MemoryConfigurationService {
                     McsConfigMemo memo = configMemo;
                     configMemo = null;
                     memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
-                }    
-                if (addrSpaceMemo != null) {
-                    // doesn't handle decode of desc string, but should
-                    int space = data[2];
-                    long highAddress = (data[3]<<24)+(data[4]<<16)+(data[5]<<8)+data[6];
-                    int flags = data[7];
-                    long lowAddress = 0;  // doesn't handle optional value
-                    
-                    McsAddrSpaceMemo memo = addrSpaceMemo;
-                    addrSpaceMemo = null;
-                    memo.handleConfigData(dest, space, highAddress, lowAddress, flags, "");
                 }    
             }
         });
@@ -351,7 +352,7 @@ public class MemoryConfigurationService {
         /**
          * Overload this for notification of data.
          */
-        public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+        public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
         }
 
     }
