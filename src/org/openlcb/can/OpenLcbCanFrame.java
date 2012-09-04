@@ -286,7 +286,7 @@ public class OpenLcbCanFrame implements CanFrame {
 
   void setProducerIdentified(EventID eid) {
     init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentified.mti());
+    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifiedUnknown.mti());
     length=8;
     loadFromEid(eid);
   }

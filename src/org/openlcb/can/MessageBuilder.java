@@ -186,13 +186,17 @@ public class MessageBuilder {
             case IdentifyConsumer:
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
-            case ConsumerIdentified: 
+            case ConsumerIdentifiedUnknown: 
+            case ConsumerIdentifiedValid: 
+            case ConsumerIdentifiedInvalid: 
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
                 return retlist;
             case IdentifyProducer: 
                 retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
                 return retlist;
-            case ProducerIdentified: 
+            case ProducerIdentifiedUnknown: 
+            case ProducerIdentifiedValid: 
+            case ProducerIdentifiedInvalid: 
                 retlist.add(new ProducerIdentifiedMessage(source, getEventID(f)));
                 return retlist;
             case ProducerConsumerEventReport: 

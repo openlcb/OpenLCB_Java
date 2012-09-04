@@ -40,11 +40,15 @@ public enum MessageTypeIdentifier {
         
         IdentifyConsumer            ( false, true,  true,  0, 2,  7, 0, "IdentifyConsumer"),
         ConsumerIdentifyRange       ( false, true,  false, 0, 1,  5, 0, "ConsumerIdentifyRange"),
-        ConsumerIdentified          ( false, true,  false, 0, 1,  6, 0, "ConsumerIdentified"),
+        ConsumerIdentifiedUnknown   ( false, true,  false, 0, 1,  6, 3, "ConsumerIdentifiedUnknown"),
+        ConsumerIdentifiedValid     ( false, true,  false, 0, 1,  6, 0, "ConsumerIdentifiedValid"),
+        ConsumerIdentifiedInvalid   ( false, true,  false, 0, 1,  6, 1, "ConsumerIdentifiedInvalid"),
         
         IdentifyProducer            ( false, true,  true,  0, 2,  8, 0, "IdentifyProducer"),
         ProducerIdentifyRange       ( false, true,  false, 0, 1,  9, 0, "ProducerIdentifyRange"),
-        ProducerIdentified          ( false, true,  false, 0, 1, 10, 0, "ProducerIdentified"),
+        ProducerIdentifiedUnknown   ( false, true,  false, 0, 1, 10, 3, "ProducerIdentifiedUnknown"),
+        ProducerIdentifiedValid     ( false, true,  false, 0, 1, 10, 0, "ProducerIdentifiedValid"),
+        ProducerIdentifiedInvalid   ( false, true,  false, 0, 1, 10, 1, "ProducerIdentifiedInvalid"),
         
         IdentifyEventsAddressed     ( true,  false, false, 0, 2, 11, 0, "IdentifyEventsAddressed"),
         IdentifyEventsGlobal        ( false, false, true,  0, 2, 11, 0, "IdentifyEventsGlobal"),
@@ -106,10 +110,10 @@ public enum MessageTypeIdentifier {
             retval = retval | (upper << 12);
             retval = retval | (priorityGroup << 10);
             retval = retval | (typeNumber << 5);
+            retval = retval | (modifier & 0x03);
 
             if (addressed)           retval = retval | 0x0008;
             if (hasEventID)          retval = retval | 0x0004;
-            if (modifier != 0)       retval = retval | modifier;
             if (isSimpleModeMessage) retval = retval | 0x0010;
                     
             return retval;
