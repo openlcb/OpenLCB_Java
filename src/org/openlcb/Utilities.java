@@ -37,6 +37,18 @@ public class Utilities {
 
     @CheckReturnValue
     @NonNull
+    static public String toHexSpaceString(byte[] array) {
+        StringBuffer buff = new StringBuffer();
+        for (int i = 0; i < array.length; i++) {
+            buff.append(" ");
+            buff.append(Utilities.toHexPair(array[i]));
+        }
+        String retval = new String(buff);
+        return retval.substring(1);
+    }
+
+    @CheckReturnValue
+    @NonNull
     static public String toHexDotsString(int[] array) {
         StringBuffer buff = new StringBuffer();
         for (int i = 0; i < array.length; i++) {
