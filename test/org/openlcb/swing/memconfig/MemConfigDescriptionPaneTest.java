@@ -41,9 +41,8 @@ public class MemConfigDescriptionPaneTest extends TestCase {
     
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nidHere);
-        dgs = new DatagramService(null, null);
-        
         store.addNode(nidThere);
+        dgs = new DatagramService(null, null);
         
         spaceCount = 3;
         service = new MemoryConfigurationService(nidHere, dgs) {
@@ -59,7 +58,7 @@ public class MemConfigDescriptionPaneTest extends TestCase {
             }
             
             public void request(MemoryConfigurationService.McsAddrSpaceMemo memo) {
-                if (spaceCount-- > 0) memo.handleConfigData(nidThere, spaceCount, spaceCount*256, 0, 0, "");
+                if (spaceCount-- > 0) memo.handleAddrSpaceData(nidThere, spaceCount, spaceCount*256, 0, 0, "");
             }
         };
         

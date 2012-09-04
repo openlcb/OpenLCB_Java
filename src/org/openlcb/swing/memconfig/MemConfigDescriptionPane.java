@@ -71,15 +71,21 @@ public class MemConfigDescriptionPane extends JPanel  {
     }
     
     void readSpace(NodeID dest, final int highSpace, final int lowSpace) {
-        if (highSpace < lowSpace) return;
+        if (highSpace < lowSpace) {
+            // done, no further reads
+            // force a layout
+            revalidate();
+            if (getTopLevelAncestor() instanceof JFrame) ((JFrame)getTopLevelAncestor()).pack();
+            return;
+        }
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
             new MemoryConfigurationService.McsAddrSpaceMemo(node, highSpace) {
-                public void handleConfigData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
                     // new line with values
                     JPanel p = new JPanel();
                     p.setLayout(new java.awt.FlowLayout());
                     MemConfigDescriptionPane.this.add(p);
-                    p.add(new JLabel("Space "+space+": "));
+                    p.add(new JLabel("Space: 0x"+Utilities.toHexPair(space)));
                     p.add(new JLabel("High address: 0x"+Long.toHexString(hiAddress).toUpperCase()));
                     // and read next space
                     readSpace(dest, highSpace-1, lowSpace);
