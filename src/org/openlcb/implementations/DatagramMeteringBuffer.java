@@ -135,7 +135,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         @Override
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender) {
             // check if this is from right source & to us
-            if ( ! (msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
+            if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
                 // not for us, just forward
                 toUpstream.put(msg, toUpstream);
                 return;
