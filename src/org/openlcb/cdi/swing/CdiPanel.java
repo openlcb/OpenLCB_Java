@@ -26,7 +26,9 @@ public class CdiPanel extends JPanel {
      */
     public void initComponents(ReadWriteAccess accessor, GuiItemFactory factory) {
         initComponents(accessor);
-        this.factory = new GuiItemFactory();
+        // ensure not null
+        if (factory != null)
+            this.factory = factory;
     }
 
     /**
@@ -35,6 +37,7 @@ public class CdiPanel extends JPanel {
     public void initComponents(ReadWriteAccess accessor) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.accessor = accessor;
+        this.factory = new GuiItemFactory(); // default with no behavior
     }
     
     ReadWriteAccess accessor;
@@ -198,7 +201,7 @@ public class CdiPanel extends JPanel {
         return ret;        
     }
     
-    class GroupPane extends DisplayPane {
+    public class GroupPane extends DisplayPane {
         GroupPane(CdiRep.Group item, long origin, int space){
             super(origin, space);
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -211,6 +214,8 @@ public class CdiPanel extends JPanel {
                 add(createDescriptionPane(d));
             }
 
+            factory.handleGroupPaneStart(this);
+            
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
             if (p2 != null) {
@@ -231,7 +236,11 @@ public class CdiPanel extends JPanel {
                     currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
                     name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
                     currentPane.setBorder(BorderFactory.createTitledBorder(name));
+                    
+                    factory.handleGroupPaneStart(currentPane);
+                    
                     add(currentPane);
+                    
                 }
                 java.util.List<CdiRep.Item> items = item.getItems();
                 if (items != null) {
@@ -266,8 +275,10 @@ public class CdiPanel extends JPanel {
                         }
                     }
                 }
+                factory.handleGroupPaneEnd(currentPane);
+
             }
-           
+            if (rep != 1) factory.handleGroupPaneEnd(this);  // if 1, currentpane is this
         }
         
     }
@@ -276,7 +287,7 @@ public class CdiPanel extends JPanel {
         return new BitPane(item, origin, space);
     }
 
-    class BitPane extends DisplayPane {
+    public class BitPane extends DisplayPane {
 
         BitPane(CdiRep.BitRep item, long origin, int space) {
             super(origin, space);
@@ -308,7 +319,7 @@ public class CdiPanel extends JPanel {
             p3.add(new JComboBox(labels));
 
             JButton b;
-            b = new JButton("Read");
+            b = factory.handleReadButton(new JButton("Read"));
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
@@ -324,7 +335,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            b = new JButton("Write");
+            b = factory.handleWriteButton(new JButton("Write"));
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -340,7 +351,7 @@ public class CdiPanel extends JPanel {
         return new EventIdPane(item,start,space);
     }
 
-    class EventIdPane extends DisplayPane {
+    public class EventIdPane extends DisplayPane {
 
         JFormattedTextField textField;
         
@@ -363,11 +374,11 @@ public class CdiPanel extends JPanel {
             p3.setLayout(new FlowLayout());
             add(p3);
 
-            textField = EventIdTextField.getEventIdTextField();
+            textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
             p3.add(textField);
 
             JButton b;
-            b = new JButton("Read");
+            b = factory.handleReadButton(new JButton("Read"));
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
@@ -381,7 +392,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            b = new JButton("Write");
+            b = factory.handleWriteButton(new JButton("Write"));
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -398,7 +409,7 @@ public class CdiPanel extends JPanel {
         return new IntPane(item, origin, space);
     }
 
-    class IntPane extends DisplayPane {
+    public class IntPane extends DisplayPane {
 
         JTextField textField = null;
         JComboBox box = null;
@@ -438,7 +449,7 @@ public class CdiPanel extends JPanel {
             }
 
             JButton b;
-            b = new JButton("Read");
+            b = factory.handleReadButton(new JButton("Read"));
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
@@ -462,7 +473,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            b = new JButton("Write");
+            b = factory.handleWriteButton(new JButton("Write"));
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -495,7 +506,7 @@ public class CdiPanel extends JPanel {
     
     static final Charset UTF8 = Charset.forName("UTF8");
     
-    class StringPane extends DisplayPane {
+    public class StringPane extends DisplayPane {
         JTextField textField;
         
         StringPane(CdiRep.StringRep item, long origin, int space) {
@@ -515,13 +526,13 @@ public class CdiPanel extends JPanel {
             p3.setLayout(new FlowLayout());
             add(p3);
 
-            textField = new JTextField(size);
+            textField = factory.handleStringValue(new JTextField(size));
             
             p3.add(textField);
             textField.setToolTipText("String of up to "+size+" characters");
 
             JButton b;
-            b = new JButton("Read");
+            b = factory.handleReadButton(new JButton("Read"));
             final ReadReturn handler = new ReadReturn() {
                 @Override
                 public void returnData(byte[] data) {
@@ -542,7 +553,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            b = new JButton("Write");
+            b = factory.handleWriteButton(new JButton("Write"));
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -584,9 +595,25 @@ public class CdiPanel extends JPanel {
      * Default behavior is to do nothing
      */
     public static class GuiItemFactory {
-        public JButton readButton(JButton button) {
+        public JButton handleReadButton(JButton button) {
             return button;
         }
+        public JButton handleWriteButton(JButton button) {
+            return button;
+        }
+        public void handleGroupPaneStart(JPanel pane) {
+            return;
+        }
+        public void handleGroupPaneEnd(JPanel pane) {
+            return;
+        }
+        public JFormattedTextField handleEventIdTextField(JFormattedTextField field) {
+            return field;
+        }
+        public JTextField handleStringValue(JTextField value) {
+            return value;
+        }
+
     }
      
     /**
