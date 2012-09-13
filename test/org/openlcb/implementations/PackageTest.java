@@ -49,6 +49,8 @@ public class PackageTest extends TestCase {
 
         suite.addTest(MemoryConfigurationServiceTest.suite());
 
+        suite.addTest(org.openlcb.implementations.throttle.PackageTest.suite());
+
         return suite;
     }
 }
