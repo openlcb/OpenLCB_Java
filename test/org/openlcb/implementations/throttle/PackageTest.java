@@ -31,6 +31,7 @@ public class PackageTest extends TestCase {
 
         suite.addTest(Float16Test.suite());
         suite.addTest(ThrottleSpeedDatagramTest.suite());
+        suite.addTest(ThrottleImplementationTest.suite());
 
         return suite;
     }
