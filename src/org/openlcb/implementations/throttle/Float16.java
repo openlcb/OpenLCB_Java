@@ -16,7 +16,10 @@ import org.openlcb.*;
 public class Float16 {
 
     public Float16(float f) {
-        double d = f;
+        this((double)f);
+    }
+    
+    public Float16(double d) {
         if (d == 0.0) {
             byte1 = 0;
             byte2 = 0;
@@ -43,7 +46,7 @@ public class Float16 {
         }
         
         int ch =  ((int)(d*1024.))&0x3FF;
-        if ((((int)(d*1024.))&0x400) != 0x400) System.out.println("normalization failed for "+f+" with d="+d+" exp="+exp);
+        if ((((int)(d*1024.))&0x400) != 0x400) System.out.println("normalization failed with d="+d+" exp="+exp);
         int bits = ch | (exp<<10);
         if (sign) bits = bits | 0x8000;
         
