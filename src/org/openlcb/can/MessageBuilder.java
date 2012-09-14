@@ -159,8 +159,14 @@ public class MessageBuilder {
             case InitializationComplete: 
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
-            case VerifyNodeIdGlobal: 
-                retlist.add(new VerifyNodeIDNumberMessage(source));
+            case VerifyNodeIdGlobal:
+                // check for content
+                if (data.length >= 6) {
+                    NodeID node = new NodeID(data);
+                    retlist.add(new VerifyNodeIDNumberMessage(source, node));
+                } else {
+                    retlist.add(new VerifyNodeIDNumberMessage(source));
+                }
                 return retlist;
             case VerifiedNodeId: 
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
@@ -376,6 +382,8 @@ public class MessageBuilder {
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setVerifyNID(msg.getSourceNodeID());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            if (msg.getContent() != null) 
+                f.setData(msg.getContent().getContents());
             retlist.add(f);
         }
 

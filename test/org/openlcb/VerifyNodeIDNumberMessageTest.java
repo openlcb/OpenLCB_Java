@@ -21,11 +21,29 @@ public class VerifyNodeIDNumberMessageTest extends TestCase {
         Assert.assertTrue(m1.equals(m2));
     }
 
+    public void testEqualsSameWithContent() {
+        Message m1 = new VerifyNodeIDNumberMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}));
+        Message m2 = new VerifyNodeIDNumberMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}) );
+    
+        Assert.assertTrue(m1.equals(m2));
+    }
+
     public void testNotEqualsDifferent() {
         Message m1 = new VerifyNodeIDNumberMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}) );
         Message m2 = new VerifyNodeIDNumberMessage(
                                             new NodeID(new byte[]{1,3,3,4,5,6}) );
+    
+        Assert.assertTrue( ! m1.equals(m2));
+    }
+
+    public void testEqualsContentMatters() {
+        Message m1 = new VerifyNodeIDNumberMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}) );
+        Message m2 = new VerifyNodeIDNumberMessage(
+                                            new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,0}) );
     
         Assert.assertTrue( ! m1.equals(m2));
     }
