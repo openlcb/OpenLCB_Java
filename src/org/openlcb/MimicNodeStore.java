@@ -42,6 +42,20 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         return memo;
     }
     
+    /**
+     * If node not present, initiate process to find it.
+     * @return NodeMemo already known, but note you have to 
+     * register listeners before calling in any case
+     */
+    public NodeMemo findNode(NodeID id) {
+        NodeMemo memo = map.get(id);
+        if (memo != null) return memo;
+        
+        // create and send targeted request
+        connection.put(new VerifyNodeIDNumberMessage(id, id), null);
+        return null;
+    }
+    
     public SimpleNodeIdent getSimpleNodeIdent(NodeID dest) {
         NodeMemo memo = map.get(dest);
         if (memo == null) {

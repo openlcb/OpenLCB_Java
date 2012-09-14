@@ -184,6 +184,25 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(nid1, nid1) );
     }
     
+    public void testFindNodeNotPresent() {
+        MimicNodeStore.NodeMemo retval = store.findNode(nid1);
+
+        Assert.assertTrue(retval == null);
+        Assert.assertTrue(lastMessage.equals(new VerifyNodeIDNumberMessage(nid1, nid1)));
+        
+    }
+    
+    public void testFindNodePresent() {
+        store.put(pim1,null);
+
+        MimicNodeStore.NodeMemo  retval = store.findNode(nid1);
+        
+        Assert.assertTrue(retval != null);
+        Assert.assertTrue(lastMessage == null);
+        
+    }
+    
+    
     // from here down is testing infrastructure
     
     public MimicNodeStoreTest(String s) {
