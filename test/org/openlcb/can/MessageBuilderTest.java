@@ -18,6 +18,10 @@ public class MessageBuilderTest extends TestCase {
     public void testCtor() {
     }
     
+    /** ****************************************************
+     * Tests of messages into frames
+     ***************************************************** */
+     
     public void testInitializationCompleteMessage() {
         
         Message m = new InitializationCompleteMessage(source);
@@ -32,7 +36,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("header", toHexString(0x19100123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
-    public void testVerifyNodeIDNumberMessage() {
+    public void testVerifyNodeIDNumberMessageEmpty() {
         
         Message m = new VerifyNodeIDNumberMessage(source);
         MessageBuilder b = new MessageBuilder(map);
@@ -46,6 +50,21 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("header", toHexString(0x19490123), toHexString(f0.getHeader()));
         compareContent(null, f0);
     }
+    public void testVerifyNodeIDNumberMessageWithContent() {
+        
+        Message m = new VerifyNodeIDNumberMessage(source, source);
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+        
+        // looking for [19490123]
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19490123), toHexString(f0.getHeader()));
+        compareContent(source.getContents(), f0);
+    }
+
     public void testVerifiedNodeIDNumberMessage() {
         
         Message m = new VerifiedNodeIDNumberMessage(source);
@@ -146,6 +165,11 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{31}, f1);
     }
 
+
+    /** ****************************************************
+     * Tests of messages into frames
+     ***************************************************** */
+
     public void testInitializationCompleteFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19100123);
@@ -160,6 +184,36 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertTrue(msg instanceof InitializationCompleteMessage);        
     }
     
+    public void testVerifyNodeEmptyFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19490123);
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage); 
+        Assert.assertEquals(new VerifyNodeIDNumberMessage(source), msg);
+    }
+    public void testVerifyNodeContentFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19490123);
+        frame.setData(new byte[]{1,2,3,4,5,6});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage);        
+        Assert.assertEquals(new VerifyNodeIDNumberMessage(source, source), msg);
+    }
+
     public void testSingleFrameDatagram() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x1A321123);
