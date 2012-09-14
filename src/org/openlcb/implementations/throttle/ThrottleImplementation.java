@@ -32,9 +32,9 @@ public class ThrottleImplementation {
     
     NodeID createNodeIdFromDcc(int dccAddress, boolean dccLongAddress) {
         if (dccLongAddress)
-            return new NodeID(new byte[]{6,0,0,0,(byte)((dccAddress>>8) & 0xFF), (byte)(dccAddress & 0xFF)});
+            return new NodeID(new byte[]{6,1,0,0,(byte)((dccAddress>>8) & 0xFF), (byte)(dccAddress & 0xFF)});
         else
-            return new NodeID(new byte[]{6,0,0,0,0, (byte)(dccAddress & 0xFF)});
+            return new NodeID(new byte[]{6,1,0,0,0, (byte)(dccAddress & 0xFF)});
     }
     
     public void start() {
