@@ -5,6 +5,7 @@ package org.openlcb.swing;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.beans.PropertyChangeListener;
+import java.awt.Dimension;
 
 import org.openlcb.*;
 import org.openlcb.implementations.*;
@@ -22,6 +23,8 @@ public class NodeSelector extends JPanel  {
     JComboBox box;
     public NodeSelector(MimicNodeStore store) {
         this.store = store;
+        
+        this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
         box = new JComboBox();
         add(box);
@@ -50,5 +53,4 @@ public class NodeSelector extends JPanel  {
     public Object getSelectedItem() {
         return box.getSelectedItem();
     }
-    
 }
