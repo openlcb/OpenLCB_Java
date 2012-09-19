@@ -24,17 +24,22 @@ import java.util.concurrent.*;
  */
 
 public class Hub {
-    public final static int PORT = 12345;
+    public final static int DEFAULT_PORT = 12021;
     final static int CAPACITY = 20;  // not too long, to reduce delay
     
     public Hub() {
+        this(Hub.DEFAULT_PORT);
+    }
+    
+    public Hub(int port) {
+        this.port = port;
         // create array server thread
         Thread t = new Thread() {
             public void run() {
                 while (true) {
                     try {
                         Memo m = queue.take();
-                        for ( ReaderThread e : threads) {
+                        for ( Forwarding e : threads) {
                             e.forward(m);
                         }
                     } catch (InterruptedException e) {
@@ -48,25 +53,35 @@ public class Hub {
     }
     
     ArrayBlockingQueue<Memo> queue = new ArrayBlockingQueue<Memo>(CAPACITY, true);  //fairness
-    ArrayList<ReaderThread> threads = new ArrayList<ReaderThread>();
+    ArrayList<Forwarding> threads = new ArrayList<Forwarding>();
+    int port;
     
     ServerSocket service;
 
     public void start() {
         try {
-            service = new ServerSocket(PORT);
+            service = new ServerSocket(port);
             while (true) {
                 Socket clientSocket = service.accept();
                 ReaderThread r = new ReaderThread(clientSocket);
-                threads.add(r);
+                addForwarder(r);
                 r.start();
-                System.out.println("Connection started with "+getRemoteSocketAddress(clientSocket));
+                notifyOwner("Connection started with "+getRemoteSocketAddress(clientSocket));
             }
         } catch (IOException e) {
             System.err.println("main loop failed "+e);
         }
     }
-        
+    
+    public int getPort() { return port; }
+    public void addForwarder(Forwarding f) {
+        threads.add(f);
+    }
+    
+    public void notifyOwner(String line) {
+        System.out.println(line);
+    }
+    
     // from jmri.util.SocketUtil
     String getRemoteSocketAddress(Socket socket) {
         try {
@@ -86,7 +101,11 @@ public class Hub {
         }
     }
     
-    class ReaderThread extends Thread {
+    public interface Forwarding {
+        public void forward(Memo m);
+    }
+    
+    class ReaderThread extends Thread implements Forwarding {
     
         ReaderThread(Socket clientSocket) {
             this.clientSocket = clientSocket;
@@ -113,10 +132,10 @@ public class Hub {
                 System.err.println(e);
             }
             threads.remove(this);
-            System.out.println("Connection ended with "+getRemoteSocketAddress(clientSocket));
+            notifyOwner("Connection ended with "+getRemoteSocketAddress(clientSocket));
         }
         
-        void forward(Memo m) {
+        public void forward(Memo m) {
             if (m.source != this) {
                 output.println(m.line); 
             }
@@ -124,11 +143,11 @@ public class Hub {
         
     }
     
-    class Memo {
-        String line;
-        ReaderThread source;
+    public class Memo {
+        public String line;
+        public Forwarding source;
         
-        Memo(String line, ReaderThread source) {
+        Memo(String line, Forwarding source) {
             this.line = line;
             this.source = source;
         }
