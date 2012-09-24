@@ -29,13 +29,42 @@ public class NodeIDTest extends TestCase {
         Assert.fail("Should have thrown exception");
     }
     
-    public void testNOKArg() {
+    public void testOKArg() {
         new NodeID(new byte[]{1,2,3,4,5,6});
+    }
+    
+    public void testNullStringArg() {
+        try {
+            new NodeID((String)null);
+        } catch (IllegalArgumentException e) { return; }
+        Assert.fail("Should have thrown exception");
+    }
+
+    public void testTooLongStringArg() {
+        // shouldn't throw, just takes 1st part
+        new NodeID("1.2.3.4.5.6.7");
+    }
+
+    public void testTooShortStringArg() {
+        try {
+            new NodeID("1.2.3.4.5");
+        } catch (IllegalArgumentException e) { return; }
+        Assert.fail("Should have thrown exception");
+    }
+    
+    public void testOKStringArg() {
+        new NodeID("1.2.3.4.5.6");
     }
     
     public void testEqualsSame() {
         NodeID e1 = new NodeID(new byte[]{1,2,3,4,5,6});
         NodeID e2 = new NodeID(new byte[]{1,2,3,4,5,6});
+        Assert.assertTrue(e1.equals(e2));
+    }
+    
+    public void testEqualsSameString() {
+        NodeID e1 = new NodeID(new byte[]{1,2,3,4,5,6});
+        NodeID e2 = new NodeID("1.2.3.4.5.6");
         Assert.assertTrue(e1.equals(e2));
     }
     

@@ -38,6 +38,18 @@ public class NodeID {
             this.contents[i] = contents[i];
     }
     
+    @CheckReturnValue
+    public NodeID(@NonNull String value) {
+        if (value == null)
+            throw new java.lang.IllegalArgumentException("null argument invalid");
+        byte[] contents = org.openlcb.Utilities.bytesFromHexString(value);
+        if (contents.length < BYTECOUNT)
+            throw new java.lang.IllegalArgumentException("Wrong NodeID length: "+contents.length);
+        this.contents = new byte[BYTECOUNT];
+        for (int i = 0; i < BYTECOUNT; i++)
+            this.contents[i] = contents[i];
+    }
+
     byte[] contents;
 
     @CheckReturnValue
