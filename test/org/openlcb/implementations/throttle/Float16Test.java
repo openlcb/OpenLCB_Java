@@ -50,6 +50,11 @@ public class Float16Test extends TestCase {
         Assert.assertEquals("100", 0x5640, f.getInt());
     }
     
+    public void test1p2AsBits() {
+        f = new Float16(1.2001953f);
+        Assert.assertEquals("1.2", 15565, f.getInt());
+    }
+    
     public void testMaxAsBits() {
         f = new Float16(65504.0f);
         Assert.assertEquals("65504", 0x7BFF, f.getInt());
@@ -83,6 +88,11 @@ public class Float16Test extends TestCase {
     public void test100AsFloat() {
         f = new Float16(0x5640);
         Assert.assertEquals("100", 100.0f, f.getFloat());
+    }
+    
+    public void test1p2AsFloat() {
+        f = new Float16(15565);
+        Assert.assertEquals("1.2", 1.2001953f, f.getFloat());
     }
     
     // from here down is testing infrastructure
