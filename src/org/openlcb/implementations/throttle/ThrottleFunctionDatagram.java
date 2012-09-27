@@ -29,7 +29,11 @@ public class ThrottleFunctionDatagram {
     int state;
     
     public int[] getData() {
-        int[] data = new int[]{0x30,0x11, number>>8, number&0xFF, state>>8, state&0xFF};
+        int[] data = new int[]{0x20,  // mem config
+                                0x00, // mem write
+                                0x00,0x00,0x00, 0x00+number*2,  // address
+                                0xF9, // space
+                                (state>>8)&0xFF, state&0xFF};   // value
         return data;
     }
 }
