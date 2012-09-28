@@ -71,27 +71,49 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(0x00, content[3]);
     }
     
-    public void testSetF0On() {
+    public void testSetF1On() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
         messagesReceived = new java.util.ArrayList<Message>();
         
-        t.setFunction(0, 1); // F0 is on
+        t.setFunction(1, 1); // F0 is on
         
         Assert.assertEquals(messagesReceived.size(), 1);
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
         
         int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
-        Assert.assertEquals(9, content.length);
+        Assert.assertEquals(8, content.length);
         Assert.assertEquals(0x20, content[0]);
         Assert.assertEquals(0x00, content[1]); // command
         Assert.assertEquals(0x00, content[2]);
         Assert.assertEquals(0x00, content[3]);
         Assert.assertEquals(0x00, content[4]);
-        Assert.assertEquals(2*0+0x00, content[5]);  // address
+        Assert.assertEquals(1,    content[5]);  // address
         Assert.assertEquals(0xF9, content[6]); // address space
-        Assert.assertEquals(0x00, content[7]); // data MSB
-        Assert.assertEquals(0x01, content[8]); // data LSB
+        Assert.assertEquals(0x01, content[7]); // data
+        
+    }
+    
+    public void testSetF2Off() {
+        ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
+        t.start();
+        messagesReceived = new java.util.ArrayList<Message>();
+        
+        t.setFunction(2, 0); // F0 is on
+        
+        Assert.assertEquals(messagesReceived.size(), 1);
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+        
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertEquals(8, content.length);
+        Assert.assertEquals(0x20, content[0]);
+        Assert.assertEquals(0x00, content[1]); // command
+        Assert.assertEquals(0x00, content[2]);
+        Assert.assertEquals(0x00, content[3]);
+        Assert.assertEquals(0x00, content[4]);
+        Assert.assertEquals(2,    content[5]);  // address
+        Assert.assertEquals(0xF9, content[6]); // address space
+        Assert.assertEquals(0x00, content[7]); // data
         
     }
     
