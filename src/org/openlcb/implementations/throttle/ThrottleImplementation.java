@@ -13,24 +13,23 @@ import org.openlcb.implementations.DatagramService;
  */
 public class ThrottleImplementation {
 
-    public ThrottleImplementation(int dccAddress, boolean dccLongAddress, 
+    public ThrottleImplementation(NodeID node, 
                                   MimicNodeStore store, DatagramService service) {
-        this.dccAddress = dccAddress;
-        this.dccLongAddress = dccLongAddress;
+        this.dest = node;
         this.store = store;
         this.service = service;
-        
-        dest = createNodeIdFromDcc(dccAddress, dccLongAddress);
     }
 
-    int dccAddress;
-    boolean dccLongAddress;
+    public ThrottleImplementation(int dccAddress, boolean dccLongAddress, 
+                                  MimicNodeStore store, DatagramService service) {
+        this(createNodeIdFromDcc(dccAddress, dccLongAddress), store, service);
+    }
+
     MimicNodeStore store;
     DatagramService service;
-    
     NodeID dest;
     
-    NodeID createNodeIdFromDcc(int dccAddress, boolean dccLongAddress) {
+    static NodeID createNodeIdFromDcc(int dccAddress, boolean dccLongAddress) {
         if (dccLongAddress)
             return new NodeID(new byte[]{6,1,0,0,(byte)((dccAddress>>8) & 0xFF), (byte)(dccAddress & 0xFF)});
         else
