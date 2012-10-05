@@ -11,7 +11,8 @@ import java.nio.charset.Charset;
  * Accumulates data from Simple Node Ident Protocol replies and 
  * provides access to the resulting data to represent a single node.
  *
- * @see             "http://www.openlcb.org/trunk/specs/drafts/GenProtocolIdS.pdf"
+ * @see             "http://www.openlcb.org/trunk/specs/drafts/GenSimpleNodeInfoS.pdf"
+ * @see             "http://www.openlcb.org/trunk/specs/drafts/GenSimpleNodeInfoTN.pdf"
  * @author			Bob Jacobsen   Copyright (C) 2012
  * @version			$Revision: 18542 $
  *
@@ -22,10 +23,7 @@ public class SimpleNodeIdent {
      * @param msg Message, already known to be from proper node.
      */
     public SimpleNodeIdent( SimpleNodeIdentInfoReplyMessage msg) {
-        byte data[] = msg.getData();
-        for (int i = 0; i < data.length ; i++ ) {
-           bytes[next++] = (byte)data[i];
-        }
+        addMsg(msg);
     }
     public SimpleNodeIdent(NodeID source, NodeID dest) {
         this.source = source;
@@ -47,12 +45,31 @@ public class SimpleNodeIdent {
     int next = 0;
    
     public void addMsg(SimpleNodeIdentInfoReplyMessage msg) {
+        // if complete, restart with handling this message
+        if (contentComplete()) {
+            bytes = new byte[MAX_REPLY_LENGTH];
+            next = 0;
+        }
         byte data[] = msg.getData();
+        System.out.println("add "+next+" "+data.length);
         for (int i = 0; i < data.length ; i++ ) {
            bytes[next++] = (byte)data[i];
         }
     }
-        
+    
+    /**
+     * Check whether enough messages have arrived to
+     * completely fill content.
+     */
+    public boolean contentComplete() {
+        // this is for the version 1 case only
+        int strings = 0;
+        for (int i=0; i<next; i++) {
+            if (bytes[i] == 0) strings++;
+        }
+        return strings == 6;
+    }
+    
     public String getMfgName() {
         int len = 1;
         int start = 1;
@@ -60,6 +77,7 @@ public class SimpleNodeIdent {
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
        String s = new String(bytes,start, len-start, UTF8);
+       System.out.println("now "+next+" "+start+" "+len);
        if (s == null) return "";
        else return s;
     }

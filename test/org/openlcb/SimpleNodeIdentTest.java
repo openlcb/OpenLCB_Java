@@ -22,6 +22,7 @@ public class SimpleNodeIdentTest extends TestCase {
                 new byte[]{1,'a','b','c',0,'z','y','x'}));
                 
         Assert.assertEquals("abc", id.getMfgName());
+        Assert.assertFalse("not complete", id.contentComplete());
     }
     
     public void testCreationFromTwoMessages() {
@@ -36,6 +37,7 @@ public class SimpleNodeIdentTest extends TestCase {
 
         Assert.assertEquals("abc", id.getMfgName());
         Assert.assertEquals("zyx", id.getModelName());
+        Assert.assertFalse("not complete", id.contentComplete());
     }
 
     public void testSpannedCreationFromTwoMessages() {
@@ -51,6 +53,7 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertEquals("abcdefg", id.getMfgName());
         Assert.assertEquals("AB", id.getModelName());
         Assert.assertEquals("Z", id.getHardwareVersion());
+        Assert.assertFalse("not complete", id.contentComplete());
     }
 
     public void testCreationWithUserPart() {
@@ -65,6 +68,28 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertEquals("A", id.getSoftwareVersion());
         Assert.assertEquals("us", id.getUserName());
         Assert.assertEquals("34", id.getUserDesc());
+        Assert.assertTrue("complete", id.contentComplete());
+    }
+
+    public void testOverrunMessage() {
+        SimpleNodeIdent id = new SimpleNodeIdent(
+            new SimpleNodeIdentInfoReplyMessage(
+                new NodeID(new byte[]{1,2,3,4,5,6}), 
+                new byte[]{1,'a','b',0,'1',0,'2',0,'A',0,1,'u','s',0,'3','4',0}));
+
+        Assert.assertEquals("ab", id.getMfgName());
+        Assert.assertEquals("1", id.getModelName());
+        Assert.assertEquals("2", id.getHardwareVersion());
+        Assert.assertEquals("A", id.getSoftwareVersion());
+        Assert.assertEquals("us", id.getUserName());
+        Assert.assertEquals("34", id.getUserDesc());
+        Assert.assertTrue("complete", id.contentComplete());
+
+        id.addMsg(
+            new SimpleNodeIdentInfoReplyMessage(
+                new NodeID(new byte[]{1,2,3,4,5,6}), 
+                new byte[]{1,'s','t','a','r','t','s',0}));
+        Assert.assertEquals("starts", id.getMfgName());
     }
 
 
