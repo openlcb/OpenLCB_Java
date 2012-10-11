@@ -31,7 +31,7 @@ public class ThrottleImplementation {
     
     static NodeID createNodeIdFromDcc(int dccAddress, boolean dccLongAddress) {
         if (dccLongAddress)
-            return new NodeID(new byte[]{6,1,0,0,(byte)((dccAddress>>8) & 0xFF), (byte)(dccAddress & 0xFF)});
+            return new NodeID(new byte[]{6,1,0,0,(byte)(((dccAddress>>8) & 0xFF) | 0xC0), (byte)(dccAddress & 0xFF)});
         else
             return new NodeID(new byte[]{6,1,0,0,0, (byte)(dccAddress & 0xFF)});
     }
@@ -42,10 +42,18 @@ public class ThrottleImplementation {
     
     /**
      * @param speed Desired speed in scale meters/second. By convention, 100 m/sec is full speed
-     * for DCC locomotives. Negative is reverse motion.
+     * for DCC locomotives.
      */
-    public void setSpeed(double speed) {
-        ThrottleSpeedDatagram tsd = new ThrottleSpeedDatagram(speed);
+    public void setSpeed(double speed, boolean forward) {
+        ThrottleSpeedDatagram tsd = new ThrottleSpeedDatagram(speed, forward);
+        service.sendData(dest, tsd.getData());
+    }
+    
+    /**
+     * Set emergency stop; unset by any following setSpeed command
+     */
+    public void doEmergencyStop() {
+        ThrottleSpeedDatagram tsd = new ThrottleSpeedDatagram();
         service.sendData(dest, tsd.getData());
     }
     
