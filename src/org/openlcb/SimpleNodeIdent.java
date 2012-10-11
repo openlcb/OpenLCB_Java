@@ -51,7 +51,6 @@ public class SimpleNodeIdent {
             next = 0;
         }
         byte data[] = msg.getData();
-        System.out.println("add "+next+" "+data.length);
         for (int i = 0; i < data.length ; i++ ) {
            bytes[next++] = (byte)data[i];
         }
