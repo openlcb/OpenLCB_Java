@@ -30,6 +30,11 @@ public class Float16Test extends TestCase {
         Assert.assertEquals("zero", 0, f.getInt());
     }
     
+    public void testNegZeroAsBits() {
+        f = new Float16(0.0, false);
+        Assert.assertEquals("neg zero", 0x8000, f.getInt());
+    }
+    
     public void testOneAsBits() {
         f = new Float16(1.0f);
         Assert.assertEquals("one", 0x3C00, f.getInt());
