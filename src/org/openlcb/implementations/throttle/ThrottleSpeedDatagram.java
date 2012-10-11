@@ -33,17 +33,32 @@ public class ThrottleSpeedDatagram {
      * @param speed Desired speed in scale meters/second. By convention, 100 m/sec is full speed
      * for DCC locomotives.
      */
-    public ThrottleSpeedDatagram(double speed) {
+    public ThrottleSpeedDatagram(double speed, boolean forward) {
         this.speed = speed;
+        this.forward = forward;
+    }
+    
+    /**
+     * Create datagram for emergency stop
+     */
+    public ThrottleSpeedDatagram() {
+        this.estop = true;
     }
     
     NodeID dest;
     double speed;
+    boolean forward;
+    boolean estop = false;
     
     public int[] getData() {
-        Float16 fs = new Float16(speed);
-        int fsi = fs.getInt();
-        int[] data = new int[]{0x30,0x01,(fsi>>8)&0xFF, fsi&0xFF};
-        return data;
+        if (estop) {
+            int[] data = new int[]{0x30,0x00};
+            return data;
+        } else {
+            Float16 fs = new Float16(speed, forward);
+            int fsi = fs.getInt();
+            int[] data = new int[]{0x30,0x01,(fsi>>8)&0xFF, fsi&0xFF};
+            return data;
+        }
     }
 }

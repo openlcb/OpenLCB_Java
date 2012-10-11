@@ -50,16 +50,33 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0) instanceof VerifyNodeIDNumberMessage);
         VerifyNodeIDNumberMessage v = (VerifyNodeIDNumberMessage)messagesReceived.get(0);
         
-        Assert.assertEquals(new NodeID(new byte[]{0x06, 0x01, 0,0, 1234/256, (byte)(1234&0xFF)}), v.getContent());
+        Assert.assertEquals(new NodeID(new byte[]{0x06, 0x01, 0,0, (byte)(1234/256 | 0xC0), (byte)(1234&0xFF)}), v.getContent());
 
     }
     
-    public void testSetSpeed() {
+    public void testSetSpeed100() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
         messagesReceived = new java.util.ArrayList<Message>();
         
-        t.setSpeed(0.0);
+        t.setSpeed(100.0, true);
+        Assert.assertEquals(messagesReceived.size(), 1);
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+        
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertEquals(4, content.length);
+        Assert.assertEquals(0x30, content[0]);
+        Assert.assertEquals(0x01, content[1]);
+        Assert.assertEquals(0x56, content[2]);
+        Assert.assertEquals(0x40, content[3]);
+    }
+
+    public void testSetSpeedZero() {
+        ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
+        t.start();
+        messagesReceived = new java.util.ArrayList<Message>();
+        
+        t.setSpeed(0.0, true);
         Assert.assertEquals(messagesReceived.size(), 1);
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
         
@@ -68,6 +85,23 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(0x30, content[0]);
         Assert.assertEquals(0x01, content[1]);
         Assert.assertEquals(0x00, content[2]);
+        Assert.assertEquals(0x00, content[3]);
+    }
+    
+    public void testSetSpeedReverseZero() {
+        ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
+        t.start();
+        messagesReceived = new java.util.ArrayList<Message>();
+        
+        t.setSpeed(0.0, false);
+        Assert.assertEquals(messagesReceived.size(), 1);
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+        
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertEquals(4, content.length);
+        Assert.assertEquals(0x30, content[0]);
+        Assert.assertEquals(0x01, content[1]);
+        Assert.assertEquals(0x80, content[2]);
         Assert.assertEquals(0x00, content[3]);
     }
     
