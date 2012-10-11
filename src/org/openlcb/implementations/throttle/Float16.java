@@ -16,20 +16,26 @@ import org.openlcb.*;
 public class Float16 {
 
     public Float16(float f) {
-        this((double)f);
+        this((double)f, (f>=0.0f));
     }
     
     public Float16(double d) {
+        this(d, (d>=0.0f));
+    }
+
+    /**
+     * This allows the use of the -0.0 value if needed. That's not handled
+     * by the other constructors
+     */
+    Float16(double d, boolean positive) {
         if (d == 0.0) {
             byte1 = 0;
+            if (!positive) byte1 = (byte)0x80;
             byte2 = 0;
             return;
         }
         
-        boolean sign = false;
-        
-        if (d < 0) {
-            sign = true;
+        if (d<0) {
             d = -1 * d;
         }
         int exp = 15;
@@ -48,7 +54,7 @@ public class Float16 {
         int ch =  ((int)(d*1024.))&0x3FF;
         if ((((int)(d*1024.))&0x400) != 0x400) System.out.println("normalization failed with d="+d+" exp="+exp);
         int bits = ch | (exp<<10);
-        if (sign) bits = bits | 0x8000;
+        if (!positive) bits = bits | 0x8000;
         
         byte1 = (byte)((bits >> 8)&0xFF);
         byte2 = (byte)(bits&0xFF);
