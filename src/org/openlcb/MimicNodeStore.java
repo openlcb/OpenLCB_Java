@@ -123,6 +123,11 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
             if (msg.getMti() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
+                if ( (msg.getCode() & 0x1000 ) == 0) {
+                    // not a temporary error, assume a permanent error
+                    System.out.println("Permanent error geting Simple Node Info for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    return;
+                }
                 // have to resend the SNII request
                 connection.put(new SimpleNodeIdentInfoRequestMessage(node, msg.getSourceNodeID()), null);
             }
