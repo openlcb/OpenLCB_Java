@@ -46,4 +46,8 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
     @Override
     public int getMTI() { return MTI_DATAGRAM_RCV_OK; }
 
+    @Override
+    public String toString() {
+        return getSourceNodeID().toString()+" Datagram Acknowledged";
+    }
 }

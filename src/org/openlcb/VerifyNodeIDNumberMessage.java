@@ -62,8 +62,8 @@ public class VerifyNodeIDNumberMessage extends Message {
 
     public String toString() {
         return getSourceNodeID().toString()
-                +" Verify Node ID number"
-                + ((content != null) ? (" for "+content) : (" for all nodes"));    
+                +" Verify Node ID Number: "
+                + ((content != null) ? (content+" only") : ("all nodes"));    
     }
 
     public int getMTI() { return MTI_VERIFY_NID; }

@@ -81,4 +81,19 @@ public class DatagramMessage extends AddressedMessage {
     
     @Override
     public int getMTI() { return MTI_DATAGRAM; }
+
+    @Override
+    public String toString() {
+        StringBuilder value = new StringBuilder(getSourceNodeID().toString());
+        value.append(" Datagram: ");  
+        
+        int n = getData().length;
+        boolean first = true;
+        for (int i = 0; i<n; i++) {
+            if (!first) value.append(".");
+            value.append(Integer.toHexString((int)(data[i]&0xFF)).toUpperCase());
+            first = false;
+        }
+        return new String(value);   
+    }
 }
