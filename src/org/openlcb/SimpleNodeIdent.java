@@ -76,7 +76,6 @@ public class SimpleNodeIdent {
         for (; len < bytes.length; len++)
             if (bytes[len] == 0) break;
        String s = new String(bytes,start, len-start, UTF8);
-       System.out.println("now "+next+" "+start+" "+len);
        if (s == null) return "";
        else return s;
     }
