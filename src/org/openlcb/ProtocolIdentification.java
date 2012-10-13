@@ -28,7 +28,10 @@ public class ProtocolIdentification {
         AbbreviatedDefaultCDI(   0x004000000000L,"AbbreviatedDefaultCDI"),
         Display(                 0x002000000000L,"Display"),
         SimpleNodeID(            0x001000000000L,"SNII"),
-        ConfigurationDescription(0x000800000000L,"CDI");
+        ConfigurationDescription(0x000800000000L,"CDI"),
+        TractionControl(         0x000400000000L,"Train"),
+        FunctionDescription(     0x000200000000L,"FDI"),
+        DccCommandStation(       0x000100000000L,"DccCS");
        
         Protocol(long value, String name) {
             this.value = value;
