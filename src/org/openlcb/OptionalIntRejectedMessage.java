@@ -52,10 +52,15 @@ public class OptionalIntRejectedMessage extends AddressedMessage {
         decoder.handleOptionalIntRejected(this, sender);
      }
     
-    public String toString() {
-        return getSourceNodeID().toString()
-                +" Optional Interaction Rejected";   
-    }
-
     public int getMTI() { return MTI_OPT_INT_REJECTED; }
+
+    @Override
+    public String toString() {
+        StringBuilder value = new StringBuilder(getSourceNodeID().toString());
+        value.append(" Optional Interaction Rejected for MTI 0x");  
+        value.append(Integer.toHexString((int)(getMti()&0xFFF)).toUpperCase());  
+        value.append(" code 0x");  
+        value.append(Integer.toHexString((int)(getCode()&0xFFFF)).toUpperCase());  
+        return new String(value);   
+    }
 }
