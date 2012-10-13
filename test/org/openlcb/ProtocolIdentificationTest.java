@@ -47,6 +47,16 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 6", "CDI", result.get(5));
     }
 
+    public void testDecode4() {
+        java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x000F00000000L);
+        
+        Assert.assertEquals("length", 4, result.size());
+        Assert.assertEquals("result 1", "CDI", result.get(0));
+        Assert.assertEquals("result 2", "Train", result.get(1));
+        Assert.assertEquals("result 3", "FDI", result.get(2));
+        Assert.assertEquals("result 4", "DccCS", result.get(3));
+    }
+
     public void testSupports1() {
         ProtocolIdentification.Protocol p = ProtocolIdentification.Protocol.Datagram;
         
