@@ -336,6 +336,7 @@ public class MessageBuilderTest extends TestCase {
         
         MessageBuilder b = new MessageBuilder(map);
         
+        System.out.println("Expect next line to be \" failed to parse MTI 0x541\"");
         List<Message> list = b.processFrame(frame);
         
         Assert.assertEquals("count", 0, list.size()); 
