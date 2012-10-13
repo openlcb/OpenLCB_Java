@@ -52,7 +52,7 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
         if (memo != null) return memo;
         
         // create and send targeted request
-        connection.put(new VerifyNodeIDNumberMessage(id, id), null);
+        connection.put(new VerifyNodeIDNumberMessage(node, id), null);
         return null;
     }
     
@@ -124,7 +124,7 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
             if (msg.getMti() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
                 // have to resend the SNII request
-                connection.put(new SimpleNodeIdentInfoRequestMessage(id, msg.getSourceNodeID()), null);
+                connection.put(new SimpleNodeIdentInfoRequestMessage(node, msg.getSourceNodeID()), null);
             }
         }
         

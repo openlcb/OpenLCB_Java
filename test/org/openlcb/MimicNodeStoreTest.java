@@ -36,10 +36,10 @@ public class MimicNodeStoreTest extends TestCase {
         }
     };
     
-    NodeID node = new NodeID(new byte[]{1,2,3,4,5,6});
+    NodeID src = new NodeID(new byte[]{1,2,3,4,5,6});
                                    
     public void setUp() {
-        store = new MimicNodeStore(connection, node);
+        store = new MimicNodeStore(connection, src);
         lastMessage = null;
         
         listener = new PropertyChangeListener(){
@@ -178,17 +178,17 @@ public class MimicNodeStoreTest extends TestCase {
         MimicNodeStore.NodeMemo memo = list.iterator().next();
 
         Assert.assertNull(lastMessage);
-        store.put(new OptionalIntRejectedMessage(nid1,nid1,0x0DE8,1), null);
+        store.put(new OptionalIntRejectedMessage(nid1,src,0x0DE8,1), null);
         Assert.assertNotNull(lastMessage);
         
-        Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(nid1, nid1) );
+        Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(src, nid1) );
     }
     
     public void testFindNodeNotPresent() {
         MimicNodeStore.NodeMemo retval = store.findNode(nid1);
 
         Assert.assertTrue(retval == null);
-        Assert.assertTrue(lastMessage.equals(new VerifyNodeIDNumberMessage(nid1, nid1)));
+        Assert.assertTrue(lastMessage.equals(new VerifyNodeIDNumberMessage(src, nid1)));
         
     }
     
