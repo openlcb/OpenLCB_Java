@@ -27,48 +27,56 @@ public class Utilities {
     @NonNull
     static public String toHexSpaceString(int[] array) {
         StringBuffer buff = new StringBuffer();
+        boolean first = true;
         for (int i = 0; i < array.length; i++) {
-            buff.append(" ");
+            if (!first) buff.append(" ");
+            first = false;
             buff.append(Utilities.toHexPair(array[i]));
         }
         String retval = new String(buff);
-        return retval.substring(1);
+        return retval;
     }
 
     @CheckReturnValue
     @NonNull
     static public String toHexSpaceString(byte[] array) {
         StringBuffer buff = new StringBuffer();
+        boolean first = true;
         for (int i = 0; i < array.length; i++) {
-            buff.append(" ");
+            if (!first) buff.append(" ");
+            first = false;
             buff.append(Utilities.toHexPair(array[i]));
         }
         String retval = new String(buff);
-        return retval.substring(1);
+        return retval;
     }
 
     @CheckReturnValue
     @NonNull
     static public String toHexDotsString(int[] array) {
         StringBuffer buff = new StringBuffer();
+        boolean first = true;
         for (int i = 0; i < array.length; i++) {
-            buff.append(".");
+            if (!first) buff.append(".");
+            first = false;
             buff.append(Utilities.toHexPair(array[i]));
         }
         String retval = new String(buff);
-        return retval.substring(1);
+        return retval;
     }
 
     @CheckReturnValue
     @NonNull
     static public String toHexDotsString(byte[] array) {
         StringBuffer buff = new StringBuffer();
+        boolean first = true;
         for (int i = 0; i < array.length; i++) {
-            buff.append(".");
+            if (!first) buff.append(".");
+            first = false;
             buff.append(Utilities.toHexPair(array[i]));
         }
         String retval = new String(buff);
-        return retval.substring(1);
+        return retval;
     }
 
     /**
