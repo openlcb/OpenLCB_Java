@@ -31,6 +31,20 @@ public class UtilitiesTest extends TestCase {
         Assert.assertEquals("0A.0B.12", Utilities.toHexDotsString(new int[]{0x0A, 0x0B, 0x12}));
     }
 
+    public void testSpaceByteArrayZeroLen() {
+        Assert.assertEquals("", Utilities.toHexSpaceString(new int[]{}));
+    }
+    public void testSpaceIntArrayZeroLen() {
+        Assert.assertEquals("", Utilities.toHexSpaceString(new byte[]{}));
+    }
+
+    public void testDotByteArrayZeroLen() {
+        Assert.assertEquals("", Utilities.toHexDotsString(new int[]{}));
+    }
+    public void testDotIntArrayZeroLen() {
+        Assert.assertEquals("", Utilities.toHexDotsString(new byte[]{}));
+    }
+
     public void testToByteArray() {
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A 0B 12")));
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A.0B.12")));
