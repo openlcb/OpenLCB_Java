@@ -59,7 +59,7 @@ public class ConsumerIdentifiedMessage extends Message {
     @Override
     public String toString() {
         return super.toString()
-                +" Consumer identified for "+eventID.toString();     
+                +" Consumer Identified for "+eventID.toString();     
     }
 
     public int getMTI() { return MTI_CONSUMER_IDENTIFIED; }
