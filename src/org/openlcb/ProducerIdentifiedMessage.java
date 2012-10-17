@@ -47,7 +47,7 @@ public class ProducerIdentifiedMessage extends Message {
     } 
 
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Producer identified for "+eventID.toString();     
     }
 

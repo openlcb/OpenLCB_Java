@@ -48,7 +48,7 @@ public class IdentifyConsumersMessage extends Message {
      }
 
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Identify Consumers with "+eventID.toString();     
     }
 

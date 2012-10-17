@@ -30,7 +30,7 @@ public class IdentifyEventsMessage extends AddressedMessage {
         decoder.handleIdentifyEvents(this, sender);
      }
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Identify Events ";   
     }
 

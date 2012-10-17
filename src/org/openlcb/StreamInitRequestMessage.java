@@ -12,17 +12,15 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamInitRequestMessage extends Message {
+public class StreamInitRequestMessage extends AddressedMessage {
     
     public StreamInitRequestMessage(NodeID source, NodeID dest, 
                     int bufferSize, int sourceStreamID) {
-        super(source);
-        this.dest = dest;
+        super(source, dest);
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
     }
     
-    NodeID dest;
     int bufferSize;
     int sourceStreamID;
     
@@ -44,15 +42,14 @@ public class StreamInitRequestMessage extends Message {
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
         StreamInitRequestMessage p = (StreamInitRequestMessage) o;
-        if (!dest.equals(p.dest)) return false;
         if (bufferSize != p.bufferSize) return false;
         if (sourceStreamID != p.sourceStreamID) return false;
-        return true;
+        return super.equals(o);
     } 
 
     public String toString() {
-        return getSourceNodeID().toString()
-                +" StreamInitRequest "+dest.toString()    
+        return super.toString()
+                +" StreamInitRequest "    
                 +" SSID "+sourceStreamID
                 +" bsize "+bufferSize;     
     }

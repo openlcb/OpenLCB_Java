@@ -186,7 +186,7 @@ public class MessageBuilder {
                 retlist.add(new ProtocolIdentificationRequestMessage(source, dest));
                 return retlist;
             case ProtocolSupportReply: 
-                retlist.add(new ProtocolIdentificationReplyMessage(source,f.dataAsLong()));
+                retlist.add(new ProtocolIdentificationReplyMessage(source, dest, f.dataAsLong()));
                 return retlist;
 
             case IdentifyConsumer:
@@ -220,7 +220,7 @@ public class MessageBuilder {
                 byte[] content = new byte[data.length-2];
                 System.arraycopy(data, 2, content, 0, content.length);
                 
-                retlist.add(new SimpleNodeIdentInfoReplyMessage(source,content));
+                retlist.add(new SimpleNodeIdentInfoReplyMessage(source, dest, content));
                 return retlist;
 
             case DatagramReceivedOK: 

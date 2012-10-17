@@ -30,7 +30,7 @@ public class ProtocolIdentificationRequestMessage extends AddressedMessage {
         decoder.handleProtocolIdentificationRequest(this, sender);
      }
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Protocol Identification Request ";   
     }
 

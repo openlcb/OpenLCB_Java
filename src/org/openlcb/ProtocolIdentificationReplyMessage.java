@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProtocolIdentificationReplyMessage extends Message {
+public class ProtocolIdentificationReplyMessage extends AddressedMessage {
     
-    public ProtocolIdentificationReplyMessage(NodeID source, long value) {
-        super(source);
+    public ProtocolIdentificationReplyMessage(NodeID source, NodeID dest, long value) {
+        super(source, dest);
         this.value = value;
     }
         
@@ -49,8 +49,9 @@ public class ProtocolIdentificationReplyMessage extends Message {
         decoder.handleProtocolIdentificationReply(this, sender);
      }
     
+    @Override
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Protocol Identification Reply with value "+value;   
     }
 

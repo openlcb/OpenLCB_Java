@@ -52,4 +52,8 @@ abstract public class AddressedMessage extends Message {
      @Override
      public int hashCode() { return super.hashCode()+getDestNodeID().hashCode(); }
 
+    @Override
+    public String toString() {
+        return getSourceNodeID().toString()+" - "+getDestNodeID();
+    }
 }

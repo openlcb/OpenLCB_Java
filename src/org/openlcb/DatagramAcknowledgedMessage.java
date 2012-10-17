@@ -48,6 +48,6 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
 
     @Override
     public String toString() {
-        return getSourceNodeID().toString()+" Datagram Acknowledged";
+        return super.toString()+" Datagram Acknowledged";
     }
 }

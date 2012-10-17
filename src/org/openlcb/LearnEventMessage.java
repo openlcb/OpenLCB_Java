@@ -45,7 +45,7 @@ public class LearnEventMessage extends Message {
     } 
 
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" LearnEvent "+eventID.toString();     
     }
      

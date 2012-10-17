@@ -17,18 +17,18 @@ public class SimpleNodeIdentInfoReplyMessageTest extends TestCase {
 
     public void testEqualsSame() {
         Message m1 = new SimpleNodeIdentInfoReplyMessage(
-                               nodeID1, new byte[]{1,2});
+                               nodeID1, nodeID2, new byte[]{1,2});
         Message m2 = new SimpleNodeIdentInfoReplyMessage(
-                               nodeID1, new byte[]{1,2});
+                               nodeID1, nodeID2, new byte[]{1,2});
     
         Assert.assertTrue(m1.equals(m2));
     }
 
     public void testNotEqualsDifferentNode() {
         Message m1 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2});
+                                nodeID1, nodeID2, new byte[]{1,2});
         Message m2 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID2, new byte[]{1,2});
+                                nodeID2, nodeID2, new byte[]{1,2});
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -36,26 +36,26 @@ public class SimpleNodeIdentInfoReplyMessageTest extends TestCase {
 
     public void testNotEqualsDifferentValue() {
         Message m1 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2});
+                                nodeID1, nodeID2, new byte[]{1,2});
         Message m2 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{3,1});
+                                nodeID1, nodeID2, new byte[]{3,1});
     
         Assert.assertTrue( ! m1.equals(m2));
     }
 
     public void testNotEqualsDifferentValueLength() {
         Message m1 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2});
+                                nodeID1, nodeID2, new byte[]{1,2});
         Message m2 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2,3});
+                                nodeID1, nodeID2, new byte[]{1,2,3});
     
         Assert.assertTrue( ! m1.equals(m2));
     }
     public void testNotEqualsDifferentValueLengthBis() {
         Message m1 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2,3});
+                                nodeID1, nodeID2, new byte[]{1,2,3});
         Message m2 = new SimpleNodeIdentInfoReplyMessage(
-                                nodeID1, new byte[]{1,2});
+                                nodeID1, nodeID2, new byte[]{1,2});
     
         Assert.assertTrue( ! m1.equals(m2));
     }
@@ -69,7 +69,7 @@ public class SimpleNodeIdentInfoReplyMessageTest extends TestCase {
                 result = true;
             }
         };
-        Message m = new SimpleNodeIdentInfoReplyMessage(nodeID1, new byte[]{1,2});
+        Message m = new SimpleNodeIdentInfoReplyMessage(nodeID1, nodeID2, new byte[]{1,2});
         
         n.put(m, null);
         

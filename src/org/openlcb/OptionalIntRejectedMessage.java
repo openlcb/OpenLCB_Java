@@ -56,7 +56,7 @@ public class OptionalIntRejectedMessage extends AddressedMessage {
 
     @Override
     public String toString() {
-        StringBuilder value = new StringBuilder(getSourceNodeID().toString());
+        StringBuilder value = new StringBuilder(super.toString());
         value.append(" Optional Interaction Rejected for MTI 0x");  
         value.append(Integer.toHexString((int)(getMti()&0xFFF)).toUpperCase());  
         value.append(" code 0x");  

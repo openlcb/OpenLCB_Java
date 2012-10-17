@@ -46,7 +46,7 @@ public class SimpleNodeIdentInfoRequestMessage extends AddressedMessage {
      }
     
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Simple Node Ident Info Request";   
     }
 

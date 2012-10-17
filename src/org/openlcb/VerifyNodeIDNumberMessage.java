@@ -61,7 +61,7 @@ public class VerifyNodeIDNumberMessage extends Message {
      }
 
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Verify Node ID Number: "
                 + ((content != null) ? (content+" only") : ("all nodes"));    
     }

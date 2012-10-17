@@ -30,7 +30,7 @@ public class InitializationCompleteMessage extends Message {
         decoder.handleInitializationComplete(this, sender);
      }
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Initialization Complete";    
     }
 

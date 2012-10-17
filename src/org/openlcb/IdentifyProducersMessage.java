@@ -48,7 +48,7 @@ public class IdentifyProducersMessage extends Message {
      }
 
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Identify Producers with "+eventID.toString();     
     }
 

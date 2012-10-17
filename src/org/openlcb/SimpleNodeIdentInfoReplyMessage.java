@@ -12,13 +12,13 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class SimpleNodeIdentInfoReplyMessage extends Message {
+public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
     
     /**
      * @param dataIn the data content without extra wire-protocol bytes
      */
-    public SimpleNodeIdentInfoReplyMessage(NodeID source, byte[] dataIn) {
-        super(source);
+    public SimpleNodeIdentInfoReplyMessage(NodeID source, NodeID dest, byte[] dataIn) {
+        super(source, dest);
         this.data = new byte[dataIn.length];
         System.arraycopy(dataIn, 0, this.data, 0, dataIn.length);
     }
@@ -29,6 +29,7 @@ public class SimpleNodeIdentInfoReplyMessage extends Message {
      * To be equal, messages have to have the
      * same type and content
      */
+    @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (! (o instanceof SimpleNodeIdentInfoReplyMessage))
@@ -61,8 +62,9 @@ public class SimpleNodeIdentInfoReplyMessage extends Message {
         decoder.handleSimpleNodeIdentInfoReply(this, sender);
      }
     
+    @Override
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Simple Node Ident Info with content "+getData();   
     }
 
