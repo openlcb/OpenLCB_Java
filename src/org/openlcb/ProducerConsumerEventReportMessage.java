@@ -45,7 +45,7 @@ public class ProducerConsumerEventReportMessage extends Message {
     } 
     
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Producer/Consumer Event Report with "+eventID.toString();     
     }
     

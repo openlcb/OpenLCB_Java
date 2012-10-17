@@ -60,5 +60,10 @@ abstract public class Message implements OpenLcb {
      @Override
      public int hashCode() { return getSourceNodeID().hashCode(); }
     
+     @Override
+     public String toString() {
+        return getSourceNodeID().toString()+"                    ";  
+     }
+
      abstract public int getMTI();
 }

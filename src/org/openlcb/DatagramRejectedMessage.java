@@ -70,4 +70,10 @@ public class DatagramRejectedMessage extends AddressedMessage {
     public boolean canResend() { 
         return (code & DATAGRAM_REJECTED_RESEND_MASK) == DATAGRAM_REJECTED_RESEND_MASK;
     }
+
+    @Override
+    public String toString() {
+        return super.toString()+" Datagram Rejected";
+    }
+
 }

@@ -12,18 +12,16 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamInitReplyMessage extends Message {
+public class StreamInitReplyMessage extends AddressedMessage {
     
     public StreamInitReplyMessage(NodeID source, NodeID dest, 
             int bufferSize, int sourceStreamID, int destStreamID) {
-        super(source);
-        this.dest = dest;
+        super(source, dest);
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
         this.destStreamID = destStreamID;
     }
     
-    NodeID dest;
     int bufferSize;
     int sourceStreamID;
     int destStreamID;
@@ -46,16 +44,15 @@ public class StreamInitReplyMessage extends Message {
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
         StreamInitReplyMessage p = (StreamInitReplyMessage) o;
-        if (!dest.equals(p.dest)) return false;
         if (bufferSize != p.bufferSize) return false;
         if (sourceStreamID != p.sourceStreamID) return false;
         if (destStreamID != p.destStreamID) return false;
-        return true;
+        return super.equals(o);
     } 
 
     public String toString() {
-        return getSourceNodeID().toString()
-                +" StreamInitReply "+dest.toString()
+        return super.toString()
+                +" StreamInitReply"
                 +" SSID "+sourceStreamID
                 +" DSID "+destStreamID
                 +" bsize "+bufferSize;     

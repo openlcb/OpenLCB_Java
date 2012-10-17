@@ -58,7 +58,7 @@ public class ConsumerIdentifiedMessage extends Message {
     
     @Override
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Consumer identified for "+eventID.toString();     
     }
 

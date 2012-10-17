@@ -40,7 +40,7 @@ public class TreePaneTest extends TestCase {
     EventID eventB = new EventID(new byte[]{1,0,0,0,0,0,2,0});
     EventID eventC = new EventID(new byte[]{1,0,0,0,0,0,3,0});
     
-    Message pipmsg = new ProtocolIdentificationReplyMessage(nid2, 0xF01800000000L);
+    Message pipmsg = new ProtocolIdentificationReplyMessage(nid2, nid2, 0xF01800000000L);
     
     JFrame frame;
     TreePane pane;
@@ -106,7 +106,7 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
         store.put(pipmsg, null);
 
-        msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
+        msg = new SimpleNodeIdentInfoReplyMessage(nid2, nid2, 
                     new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
                 );
         store.put(msg, null);
@@ -136,7 +136,7 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
         store.put(pipmsg, null);
 
-        msg = new SimpleNodeIdentInfoReplyMessage(nid2, 
+        msg = new SimpleNodeIdentInfoReplyMessage(nid2, nid2, 
                     new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
                 );
         store.put(msg, null);

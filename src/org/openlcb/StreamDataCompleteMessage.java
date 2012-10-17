@@ -12,15 +12,13 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamDataCompleteMessage extends Message {
+public class StreamDataCompleteMessage extends AddressedMessage {
     
     public StreamDataCompleteMessage(NodeID source, NodeID dest,
                 int sourceStreamID, int destStreamID) {
-        super(source);
-        this.dest = dest;
+        super(source, dest);
     }
         
-    NodeID dest;
     int sourceStreamID;
     int destStreamID;
 
@@ -39,15 +37,14 @@ public class StreamDataCompleteMessage extends Message {
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
         StreamDataCompleteMessage p = (StreamDataCompleteMessage) o;
-        if (!dest.equals(p.dest)) return false;
         if (sourceStreamID != p.sourceStreamID) return false;
         if (destStreamID != p.destStreamID) return false;
         return true;
     } 
 
     public String toString() {
-        return getSourceNodeID().toString()
-                +" StreamDataComplete "+dest.toString();     
+        return super.toString()
+                +" StreamDataComplete";     
     }
 
     public int getMTI() { return MTI_STREAM_DATA_COMPLETE; }

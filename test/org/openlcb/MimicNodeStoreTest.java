@@ -24,7 +24,7 @@ public class MimicNodeStoreTest extends TestCase {
     ProducerIdentifiedMessage pim2 = new ProducerIdentifiedMessage(nid2, 
                                                 new EventID(new byte[]{1,0,0,0,0,0,1,0}));
     
-    SimpleNodeIdentInfoReplyMessage snii1 = new SimpleNodeIdentInfoReplyMessage(nid1,
+    SimpleNodeIdentInfoReplyMessage snii1 = new SimpleNodeIdentInfoReplyMessage(nid1, nid2,
                                                 new byte[]{1,'a','b','c'});
     
     PropertyChangeListener listener;
@@ -104,7 +104,7 @@ public class MimicNodeStoreTest extends TestCase {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         MimicNodeStore.NodeMemo memo = list.iterator().next();
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, nid2, 0xF00000000000L), null);
 
         Assert.assertNotNull(memo.getProtocolIdentification());
     }
@@ -120,7 +120,7 @@ public class MimicNodeStoreTest extends TestCase {
         store.put(pim1,null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, nid2, 0xF00000000000L), null);
         Assert.assertTrue(listenerFired);
         
     }
@@ -138,10 +138,10 @@ public class MimicNodeStoreTest extends TestCase {
         store.put(pim2,null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid1, 0xF00000000000L), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid1, nid2, 0xF00000000000L), null);
         Assert.assertFalse(listenerFired);
 
-        store.put(new ProtocolIdentificationReplyMessage(nid2, 0xF00000000000L), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid2, nid2, 0xF00000000000L), null);
         Assert.assertTrue(listenerFired);
         
     }

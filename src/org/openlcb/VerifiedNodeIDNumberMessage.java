@@ -30,7 +30,7 @@ public class VerifiedNodeIDNumberMessage extends Message {
         decoder.handleVerifiedNodeIDNumber(this, sender);
      }
     public String toString() {
-        return getSourceNodeID().toString()
+        return super.toString()
                 +" Verified Node ID Number";     
     }
 
