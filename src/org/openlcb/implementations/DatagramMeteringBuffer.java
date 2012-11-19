@@ -107,12 +107,14 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             
         }
         void endTimeout() {
-            timer.cancel();
+            if (timer != null) timer.cancel();
+            else System.out.println("Found timer null for datagram "+(message != null ? message.toString() : " == null"));
         }
         void timerExpired() {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
             DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
+            System.out.println("Never received reply for datagram "+(message != null ? message.toString() : " == null"));
             handleDatagramRejected(msg, null);
         }
 
