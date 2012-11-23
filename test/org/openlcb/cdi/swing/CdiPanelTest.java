@@ -46,7 +46,7 @@ public class CdiPanelTest extends TestCase {
         },
         new CdiPanel.GuiItemFactory() {
             public JButton handleReadButton(JButton button) {
-                System.out.println("process button");
+                //System.out.println("process button");
                 button.setBorder(BorderFactory.createLineBorder(java.awt.Color.yellow));
                 return button;
         }
