@@ -131,6 +131,16 @@ public class MimicNodeStore extends MessageDecoder implements Connection {
                 // have to resend the SNII request
                 connection.put(new SimpleNodeIdentInfoRequestMessage(node, msg.getSourceNodeID()), null);
             }
+            if (msg.getMti() == MessageTypeIdentifier.ProtocolSupportInquiry.mti()) {
+                // check for temporary error
+                if ( (msg.getCode() & 0x1000 ) == 0) {
+                    // not a temporary error, assume a permanent error
+                    System.out.println("Permanent error geting Protocol Identification information for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    return;
+                }
+                // have to resend the PIP request
+                connection.put(new ProtocolIdentificationRequestMessage(node, msg.getSourceNodeID()), null);
+            }
         }
         
         java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
