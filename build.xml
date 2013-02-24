@@ -34,6 +34,7 @@
   <path id="project.class.path">
     <pathelement location="." />
     <pathelement location="lib/junit.jar" />
+    <pathelement location="lib/xercesImpl.jar" /> <!-- only needed for tests compile and run -->
     <pathelement location="lib/jdom.jar" />
     <pathelement location="lib/jlfgr-1_0.jar" />
     <pathelement location="lib/annotations.jar" /> <!-- only needed for compile -->
