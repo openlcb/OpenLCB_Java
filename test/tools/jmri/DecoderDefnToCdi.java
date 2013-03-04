@@ -39,6 +39,7 @@ public class DecoderDefnToCdi {
     public void convert(Element inRoot) throws org.jdom.DataConversionException {
         addHeader(inRoot);
         addAcdiElement();
+        addCommonCDI();
         addDefaultCVs();
         addVariables(inRoot);
     }
@@ -68,20 +69,66 @@ public class DecoderDefnToCdi {
         root.addContent(id);
     }
 
+    public void addCommonCDI() {
+        Element segment = new Element("segment");
+        segment.setAttribute("space","253");
+        segment.setAttribute("origin","256");
+        segment.addContent(new Element("name").addContent("DCC Controls"));
+        segment.addContent(new Element("description").addContent("DCC-specific control items"));
+        root.addContent(segment);
+        
+        Element i;
+        Element map;
+        Element relation;
+        
+        i = new Element("int");
+        i.addContent(new Element("name").addContent("Programming Mode"));
+        map = new Element("map");
+        i.addContent(map);
+        relation = new Element("relation");
+        map.addContent(relation);
+        relation.addContent(new Element("property").addContent("Register Mode"));
+        relation.addContent(new Element("value").addContent("1"));
+        relation = new Element("relation");
+        map.addContent(relation);
+        relation.addContent(new Element("property").addContent("Paged Mode"));
+        relation.addContent(new Element("value").addContent("2"));
+        segment.addContent(i);
+
+        i = new Element("int");
+        i.setAttribute("size", "2");
+        i.addContent(new Element("name").addContent("DCC Address"));
+        segment.addContent(i);
+
+        i = new Element("int");
+        i.addContent(new Element("name").addContent("Speed Steps"));
+        segment.addContent(i);
+
+        i = new Element("int");
+        i.addContent(new Element("name").addContent("Single Index CV Address"));
+        segment.addContent(i);
+
+        i = new Element("int");
+        i.setAttribute("size", "2");
+        i.addContent(new Element("name").addContent("Double Index CV Addresses"));
+        segment.addContent(i);
+
+    }
+      
     public void addAcdiElement() {
         root.addContent(new Element("acdi"));
     }
       
     public void addDefaultCVs() {
         Element segment = new Element("segment");
-        segment.setAttribute("origin","1");
+        segment.setAttribute("origin","4278190081");  // 255.0.0.1
         segment.setAttribute("space","253");
         
         Element group = new Element("group");
         group.setAttribute("replication","256");
         group.addContent(new Element("name").addContent("CVs"));
-        group.addContent(new Element("repname").addContent("CV"));
         group.addContent(new Element("description").addContent("Raw CV access"));
+        group.addContent(new Element("repname").addContent("CV"));
         segment.addContent(group);
 
         Element intElement = new Element("int");
@@ -119,26 +166,29 @@ public class DecoderDefnToCdi {
                         Element en = (Element) on;
                         if (en.getAttributeValue("lang", "xml").equals("")) name = en.getText();
                     }
+                    
+                    long cv = e.getAttribute("CV").getIntValue();
+                    
                     // find subtype and process
                     Element type;
                     type = e.getChild("decVal");
                     if (type != null) {
-                        segment.addContent(handleDecVal(type, e.getAttributeValue("CV"), name, comment, e.getAttributeValue("mask")));
+                        segment.addContent(handleDecVal(type, cv, name, comment, e.getAttributeValue("mask")));
                         continue;
                     }
                     type = e.getChild("enumVal");
                     if (type != null) {
-                        segment.addContent(handleEnumVal(type, e.getAttributeValue("CV"), name, comment, e.getAttributeValue("mask")));
+                        segment.addContent(handleEnumVal(type, cv, name, comment, e.getAttributeValue("mask")));
                         continue;
                     }
                     type = e.getChild("shortAddressVal");
                     if (type != null) {
-                        segment.addContent(handleShortAddressVal(type, e.getAttributeValue("CV"), name, comment));
+                        segment.addContent(handleShortAddressVal(type, cv, name, comment));
                         continue;
                     }
                     type = e.getChild("longAddressVal");
                     if (type != null) {
-                        segment.addContent(handleLongAddressVal(type, e.getAttributeValue("CV"), name, comment));
+                        segment.addContent(handleLongAddressVal(type, cv, name, comment));
                         continue;
                     }
                 }
@@ -146,7 +196,7 @@ public class DecoderDefnToCdi {
         } 
     }
     
-    public Element handleDecVal(Element type, String cv, String name, String comment, String mask) {
+    public Element handleDecVal(Element type, long cv, String name, String comment, String mask) {
         Element r;
         if (mask != null && !mask.equals("")) {
             r = new Element("bit");
@@ -155,13 +205,13 @@ public class DecoderDefnToCdi {
         } else {
             r = new Element("int");
         }
-        r.setAttribute("origin", cv);
+        r.setAttribute("origin", ""+(4278190080L+cv));
         r.addContent(new Element("name").addContent(name));
         if (comment != null && !comment.equals("")) r.addContent(new Element("description").addContent(comment));
         return r;
     }
     
-    public Element handleEnumVal(Element type, String cv, String name, String comment, String mask) 
+    public Element handleEnumVal(Element type, long cv, String name, String comment, String mask) 
             throws org.jdom.DataConversionException {
         Element r;
         if (mask != null && !mask.equals("")) {
@@ -171,7 +221,7 @@ public class DecoderDefnToCdi {
         } else {
             r = new Element("int");
         }
-        r.setAttribute("origin", cv);
+        r.setAttribute("origin", ""+(4278190080L+cv));
         r.addContent(new Element("name").addContent(name));
         if (comment != null && !comment.equals("")) r.addContent(new Element("description").addContent(comment));
         
@@ -200,17 +250,17 @@ public class DecoderDefnToCdi {
         return r;
     }
     
-    public Element handleShortAddressVal(Element type, String cv, String name, String comment) {
+    public Element handleShortAddressVal(Element type, long cv, String name, String comment) {
         Element r = new Element("int");
-        r.setAttribute("origin", cv);
+        r.setAttribute("origin", ""+(4278190080L+cv));
         r.addContent(new Element("name").addContent(name));
         if (comment != null && !comment.equals("")) r.addContent(new Element("description").addContent(comment));
         return r;
     }
     
-    public Element handleLongAddressVal(Element type, String cv, String name, String comment) {
+    public Element handleLongAddressVal(Element type, long cv, String name, String comment) {
         Element r = new Element("int");
-        r.setAttribute("origin", cv);
+        r.setAttribute("origin", ""+(4278190080L+cv));
         r.setAttribute("size", "2");
         r.addContent(new Element("name").addContent(name));
         if (comment != null && !comment.equals("")) r.addContent(new Element("description").addContent(comment));
