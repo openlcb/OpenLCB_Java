@@ -85,14 +85,27 @@ public class DecoderDefnToCdi {
         i.addContent(new Element("name").addContent("Programming Mode"));
         map = new Element("map");
         i.addContent(map);
+
         relation = new Element("relation");
         map.addContent(relation);
-        relation.addContent(new Element("property").addContent("Register Mode"));
-        relation.addContent(new Element("value").addContent("1"));
+        relation.addContent(new Element("property").addContent("1"));
+        relation.addContent(new Element("value").addContent("Register Mode"));
+
         relation = new Element("relation");
         map.addContent(relation);
-        relation.addContent(new Element("property").addContent("Paged Mode"));
-        relation.addContent(new Element("value").addContent("2"));
+        relation.addContent(new Element("property").addContent("2"));
+        relation.addContent(new Element("value").addContent("Paged Mode"));
+
+        relation = new Element("relation");
+        map.addContent(relation);
+        relation.addContent(new Element("property").addContent("4"));
+        relation.addContent(new Element("value").addContent("Direct Bit Mode"));
+
+        relation = new Element("relation");
+        map.addContent(relation);
+        relation.addContent(new Element("property").addContent("5"));
+        relation.addContent(new Element("value").addContent("Direct Byte Mode"));
+
         segment.addContent(i);
 
         i = new Element("int");
@@ -311,7 +324,7 @@ public class DecoderDefnToCdi {
         DecoderDefnToCdi c= new DecoderDefnToCdi();
         c.init();
         
-        String filename = "/Users/jake/JMRI/projects/HEAD/xml/decoders/0NMRA.xml";
+        String filename = "/Users/jake/JMRI/projects/HEAD/xml/decoders/SoundTraxx_Tsu_Steam.xml";
         Element inRoot = c.getFileRoot(filename);
         
         c.convert(inRoot);
