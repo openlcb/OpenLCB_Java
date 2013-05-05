@@ -336,6 +336,10 @@ public class DecoderDefnToCdi {
     
     // Main entry point
     static public void main(String[] args) throws org.jdom.DataConversionException {
+        if (args.length>=1) System.err.println("Argument 00: "+args[0]);
+        if (args.length>=2) System.err.println("Argument 01: "+args[1]);
+        System.err.println("Argument 00: "+args[0]);
+        
         DecoderDefnToCdi c= new DecoderDefnToCdi();
         c.init();
         
