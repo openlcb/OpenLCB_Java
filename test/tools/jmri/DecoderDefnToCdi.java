@@ -28,14 +28,26 @@ public class DecoderDefnToCdi {
     
     public void init() {
         root = new Element("cdi");
+        
+        // add schema definitions
         root.setAttribute("noNamespaceSchemaLocation", // NOI18N
                 "http://openlcb.org/trunk/specs/schema/cdi.xsd", // NOI18N
                 org.jdom.Namespace.getNamespace("xsi", // NOI18N
                 "http://www.w3.org/2001/XMLSchema-instance")); // NOI18N
 
         doc = new Document(root);
+
+        // no DOCTYPE defined; this is a schema-only format
         
+        // add XSLT processing instruction
+        // <?xml-stylesheet type="text/xsl" href="http://openlcb.org/trunk/prototypes/xml/xslt/cdi.xsl"?>
+        java.util.Map<String,String> m = new java.util.HashMap<String,String>();
+        m.put("type", "text/xsl");
+        m.put("href", "http://openlcb.org/trunk/prototypes/xml/xslt/cdi.xsl");
+        ProcessingInstruction p = new ProcessingInstruction("xml-stylesheet", m);
+        doc.addContent(0,p);
     }
+    
     public void convert(Element inRoot) throws org.jdom.DataConversionException {
         addHeader(inRoot);
         addAcdiElement();
@@ -314,9 +326,12 @@ public class DecoderDefnToCdi {
         return root;
     }
     
-    void prettyPrint(Element element) {
-        XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());
-        System.out.println(out.outputString(element));
+    void prettyPrint(Document d) {
+        Format f = Format.getPrettyFormat();
+        f.setOmitDeclaration(false);
+        
+        XMLOutputter out = new XMLOutputter(f);
+        System.out.println(out.outputString(d));
     }
     
     // Main entry point
@@ -329,7 +344,7 @@ public class DecoderDefnToCdi {
         
         c.convert(inRoot);
         
-        c.prettyPrint(c.root);      
+        c.prettyPrint(c.doc);      
     }
 
 }
