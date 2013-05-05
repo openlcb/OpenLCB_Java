@@ -336,19 +336,20 @@ public class DecoderDefnToCdi {
     
     // Main entry point
     static public void main(String[] args) throws org.jdom.DataConversionException {
-        if (args.length>=1) System.err.println("Argument 00: "+args[0]);
-        if (args.length>=2) System.err.println("Argument 01: "+args[1]);
-        System.err.println("Argument 00: "+args[0]);
+        if (args.length == 0) {
+            System.err.println("Usage: ./runtest.csh tools.jmri.DecoderDefnToCdi /Users/jake/JMRI/projects/HEAD/xml/decoders/SoundTraxx_Tsu_Steam.xml > SoundTraxx_Tsu_Steam.cdi.xml");
+        } else {
+            // normal operation
         
-        DecoderDefnToCdi c= new DecoderDefnToCdi();
-        c.init();
+            DecoderDefnToCdi c= new DecoderDefnToCdi();
+            c.init();
         
-        String filename = "/Users/jake/JMRI/projects/HEAD/xml/decoders/SoundTraxx_Tsu_Steam.xml";
-        Element inRoot = c.getFileRoot(filename);
+            Element inRoot = c.getFileRoot(args[0]);
         
-        c.convert(inRoot);
+            c.convert(inRoot);
         
-        c.prettyPrint(c.doc);      
+            c.prettyPrint(c.doc);
+        }
     }
 
 }
