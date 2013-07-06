@@ -38,11 +38,13 @@ public class Hub {
             public void run() {
                 while (true) {
                     try {
+                        // as items arrive in queue, forward to every available connection
                         Memo m = queue.take();
                         for ( Forwarding e : threads) {
                             e.forward(m);
                         }
                     } catch (InterruptedException e) {
+                        System.err.println("Hub: Interrupted in queue handling loop");
                         System.err.println(e);
                     }
                 }
@@ -66,10 +68,12 @@ public class Hub {
                 ReaderThread r = new ReaderThread(clientSocket);
                 addForwarder(r);
                 r.start();
+                // not setting Daemon, so program will wait for thread to end before terminating
                 notifyOwner("Connection started with "+getRemoteSocketAddress(clientSocket));
             }
         } catch (IOException e) {
-            System.err.println("main loop failed "+e);
+            System.err.println("Hub: Exception in main loop");
+            System.err.println(e);
         }
     }
     
@@ -127,16 +131,24 @@ public class Hub {
                 }
      
             } catch (IOException e) {
+                System.err.println("Hub: Error while handling input from "+getRemoteSocketAddress(clientSocket));
                 System.err.println(e);
             } catch (InterruptedException e) {
+                System.err.println("Hub: Interrupted while handling input from "+getRemoteSocketAddress(clientSocket));
                 System.err.println(e);
             }
             threads.remove(this);
             notifyOwner("Connection ended with "+getRemoteSocketAddress(clientSocket));
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                System.err.println("Hub: Error while closing socket at end of connection");
+                System.err.println(e);
+            }
         }
         
         public void forward(Memo m) {
-            if (m.source != this) {
+            if (! this.equals(m.source)) {
                 output.println(m.line); 
             }
         }
