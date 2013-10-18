@@ -45,9 +45,11 @@ public class MemoryConfigurationService {
                 if (addrSpaceMemo != null) {
                     // doesn't handle decode of desc string, but should
                     int space = data[2]&0xFF;
-                    long highAddress = ((data[3]&0xFF)<<24)|((data[4]&0xFF)<<16)|((data[5]&0xFF)<<8)|(data[6]&0xFF);
+                    long highAddress = (((long)data[3]&0xFF)<<24)|(((long)data[4]&0xFF)<<16)|(((long)data[5]&0xFF)<<8)|((long)data[6]&0xFF);
                     int flags = data[7]&0xFF;
-                    long lowAddress = 0;  // doesn't handle optional value
+                    long lowAddress = 0;  
+                    if (data.length >= 11) 
+                        lowAddress = (((long)data[8]&0xFF)<<24)|(((long)data[9]&0xFF)<<16)|(((long)data[10]&0xFF)<<8)|((long)data[11]&0xFF);
                     
                     McsAddrSpaceMemo memo = addrSpaceMemo;
                     addrSpaceMemo = null;
