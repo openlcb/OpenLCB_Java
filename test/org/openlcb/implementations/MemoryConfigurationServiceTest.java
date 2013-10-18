@@ -360,7 +360,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
-    public void testGetAddrSpace() {
+    public void testGetAddrSpace1() {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
             new MemoryConfigurationService.McsAddrSpaceMemo(farID, space) {
@@ -371,6 +371,10 @@ public class MemoryConfigurationServiceTest extends TestCase {
                 @Override
                 public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
                     flag = true;
+                    // check contents
+                    Assert.assertTrue("space", space == 0xFD);
+                    Assert.assertTrue("hiAddress", hiAddress == 0x12345678L);                 
+                    Assert.assertTrue("lowAddress", lowAddress == 0x00L);                 
                 }
             };
 
@@ -405,7 +409,58 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(!flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
+                
+    }
+    public void testGetAddrSpace2() {
+        int space = 0xFD;
+        MemoryConfigurationService.McsAddrSpaceMemo memo = 
+            new MemoryConfigurationService.McsAddrSpaceMemo(farID, space) {
+                @Override
+                public void handleWriteReply(int code) { 
+                    flag = true;
+                }
+                @Override
+                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+                    flag = true;
+                    // check contents
+                    Assert.assertTrue("space", space == 0xFD);
+                    Assert.assertTrue("hiAddress", hiAddress == 0xFFFFFFFFL);                 
+                    Assert.assertTrue("lowAddress", lowAddress == 0x12345678L);                 
+                }
+            };
+
+        // test executes the callbacks instantly; real connections might not
+        Assert.assertTrue(!flag);
+        service.request(memo);
+        Assert.assertTrue(!flag);
         
+        // should have sent datagram
+         Assert.assertEquals(1,messagesReceived.size());
+         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+        // check format of datagram read
+        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+        Assert.assertTrue(content.length == 3);
+        Assert.assertEquals("datagram type", 0x20, content[0]);
+        Assert.assertEquals("addr space command", 0x84, (content[1]&0xFC));
+        Assert.assertEquals("space", space, (content[2]));
+                
+        // datagram reply comes back 
+        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+        
+        // now return data
+        flag = false;
+        content = new int[]{0x20, 0x85, space, 0xFF, 0xFF, 0xFF, 0xFF, 0x55, 0x12, 0x34, 0x56, 0x78};
+        m = new DatagramMessage(farID, hereID, content);
+
+        Assert.assertTrue(!flag);
+        datagramService.put(m, null);
+        Assert.assertTrue(flag);
+                
     }
 
     // from here down is testing infrastructure
