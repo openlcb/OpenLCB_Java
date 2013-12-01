@@ -17,7 +17,6 @@ public class AliasMapTest extends TestCase {
         AliasMap map = new AliasMap();
         
         Assert.assertEquals("get Alias", -1, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
-
         Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
     
@@ -28,6 +27,7 @@ public class AliasMapTest extends TestCase {
         f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
         map.processFrame(f);
         Assert.assertEquals("check NodeID", new NodeID(new byte[]{0,1,2,3,4,5}), map.getNodeID(0x123));
+        Assert.assertEquals("check alias", 0x123, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
     }
     
     public void testAfterInsert() {
@@ -35,6 +35,21 @@ public class AliasMapTest extends TestCase {
         
         map.insert(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
         Assert.assertEquals("check NodeID", new NodeID(new byte[]{0,1,2,3,4,5}), map.getNodeID(0x123));
+        Assert.assertEquals("check alias", 0x123, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
+    }
+    
+    public void testAfterAMR() {
+        AliasMap map = new AliasMap();
+        
+        map.insert(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        
+        // remove with AMR
+        OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
+        f.setAMR(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        map.processFrame(f);
+
+        Assert.assertEquals("get Alias", -1, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
+        Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
     
     // from here down is testing infrastructure
