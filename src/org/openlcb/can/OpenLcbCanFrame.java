@@ -129,6 +129,8 @@ public class OpenLcbCanFrame implements CanFrame {
  
   static final int RIM_VAR_FIELD = 0x0700;
   static final int AMD_VAR_FIELD = 0x0701;
+  static final int AME_VAR_FIELD = 0x0702;
+  static final int AMR_VAR_FIELD = 0x0703;
 
   void setCIM(int i, int testval, int alias) {
     init(alias);
@@ -156,7 +158,26 @@ public class OpenLcbCanFrame implements CanFrame {
   boolean isAliasMapDefinition() {
       return isFrameTypeCAN() && getVariableField() == AMD_VAR_FIELD;
   }
+  boolean isAliasMapEnquiry() {
+      return isFrameTypeCAN() && getVariableField() == AME_VAR_FIELD;
+  }
+  boolean isAliasMapReset() {
+      return isFrameTypeCAN() && getVariableField() == AMR_VAR_FIELD;
+  }
 
+  void setAMR(int alias, NodeID nid) {
+    init(alias);
+    setFrameTypeCAN();
+    setVariableField(AMR_VAR_FIELD);
+    length=6;
+    byte[] val = nid.getContents();
+    data[0] = val[0];
+    data[1] = val[1];
+    data[2] = val[2];
+    data[3] = val[3];
+    data[4] = val[4];
+    data[5] = val[5];
+  }
 
   // end of CAN-level messages
   
