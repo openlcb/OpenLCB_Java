@@ -67,6 +67,7 @@ public class CdiPanel extends JPanel {
         JPanel p1 = new JPanel();
         p.add(p1);
         p1.setLayout(new util.javaworld.GridLayout2(4,2));
+        p1.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         p1.add(new JLabel("Manufacturer: "));
         p1.add(new JLabel(id.getManufacturer()));
@@ -80,9 +81,14 @@ public class CdiPanel extends JPanel {
         p1.add(new JLabel("Software Version: "));
         p1.add(new JLabel(id.getSoftwareVersion()));
         
+        p1.setMaximumSize(p1.getPreferredSize());
+        
         // include map if present
         JPanel p2 = createPropertyPane(id.getMap());
-        if (p2!=null) p.add(p2);
+        if (p2!=null) {
+            p2.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p.add(p2);
+        }
         
         JPanel ret = new util.CollapsiblePanel("Identification", p);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -92,6 +98,7 @@ public class CdiPanel extends JPanel {
     JPanel createPropertyPane(CdiRep.Map map) {
         if (map != null) {
             JPanel p2 = new JPanel();
+            p2.setAlignmentX(Component.LEFT_ALIGNMENT);
             p2.setBorder(BorderFactory.createTitledBorder("Properties"));
             
             java.util.List keys = map.getKeys();
@@ -106,6 +113,7 @@ public class CdiPanel extends JPanel {
                 p2.add(new JLabel(map.getEntry(key)));
                 
             }
+            p2.setMaximumSize(p2.getPreferredSize());
             return p2;
         } else 
             return null;
@@ -291,6 +299,7 @@ public class CdiPanel extends JPanel {
 
         BitPane(CdiRep.BitRep item, long origin, int space) {
             super(origin, space);
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? item.getName() : "Bit");
             setBorder(BorderFactory.createTitledBorder(name));
@@ -314,9 +323,15 @@ public class CdiPanel extends JPanel {
             }
 
             JPanel p3 = new JPanel();
-            p3.setLayout(new FlowLayout());
+            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
-            p3.add(new JComboBox(labels));
+
+            p3.add(new JComboBox(labels) {
+                    public java.awt.Dimension getMaximumSize() {
+                        return getPreferredSize();
+                    }
+                });
 
             JButton b;
             b = factory.handleReadButton(new JButton("Read"));
@@ -344,6 +359,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+            p3.add(Box.createHorizontalGlue());
         }
     }
 
@@ -371,10 +387,11 @@ public class CdiPanel extends JPanel {
             
             JPanel p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-            p3.setLayout(new FlowLayout());
+            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
 
             textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
+            textField.setMaximumSize(textField.getPreferredSize());
             p3.add(textField);
 
             JButton b;
@@ -401,7 +418,7 @@ public class CdiPanel extends JPanel {
                  }
             });
             p3.add(b);
-
+            p3.add(Box.createHorizontalGlue());
         }
     }
     
@@ -431,7 +448,7 @@ public class CdiPanel extends JPanel {
             
             JPanel p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-            p3.setLayout(new FlowLayout());
+            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
 
             // see if map is present
@@ -439,11 +456,19 @@ public class CdiPanel extends JPanel {
             map = item.getMap();
             if ((map != null) && (map.getKeys().size() > 0)) {
                 // map present, make selection box
-                box = new JComboBox(map.getValues().toArray(new String[]{""}));
+                box = new JComboBox(map.getValues().toArray(new String[]{""})) {
+                    public java.awt.Dimension getMaximumSize() {
+                        return getPreferredSize();
+                    }
+                };
                 p3.add(box);
             } else {
                 // map not present, just an entry box
-                textField = new JTextField(24);
+                textField = new JTextField(24) {
+                    public java.awt.Dimension getMaximumSize() {
+                        return getPreferredSize();
+                    }
+                };
                 p3.add(textField);
                 textField.setToolTipText("Signed integer value of up to "+size+" bytes");
             }
@@ -497,6 +522,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+            p3.add(Box.createHorizontalGlue());
         }
     }
 
@@ -523,10 +549,15 @@ public class CdiPanel extends JPanel {
             
             JPanel p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-            p3.setLayout(new FlowLayout());
+            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
 
-            textField = factory.handleStringValue(new JTextField(size));
+            textField = new JTextField(size) {
+                public java.awt.Dimension getMaximumSize() {
+                    return getPreferredSize();
+                }
+            };
+            textField = factory.handleStringValue(textField);
             
             p3.add(textField);
             textField.setToolTipText("String of up to "+size+" characters");
@@ -572,6 +603,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+            p3.add(Box.createHorizontalGlue());
         }
      }
 
