@@ -96,7 +96,7 @@ public class CdiPanelTest extends TestCase {
         Element root = null;
         try {
             SAXBuilder builder = new SAXBuilder("org.apache.xerces.parsers.SAXParser", false);  // argument controls validation
-            Document doc = builder.build(new BufferedInputStream(new FileInputStream(new File("0nmraCDI.xml"))));
+            Document doc = builder.build(new BufferedInputStream(new FileInputStream(new File("NMRAnetDatabaseTrainNode.xml"))));
             root = doc.getRootElement();
         } catch (Exception e) { System.out.println("While reading file: "+e);}
         
