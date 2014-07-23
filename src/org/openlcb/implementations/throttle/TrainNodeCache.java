@@ -11,9 +11,14 @@ import org.openlcb.*;
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
  */
-public class TrainNodeCache extends AbstractNodeCache {
+public class TrainNodeCache extends AbstractNodeCache<TrainNode> {
 
     public TrainNodeCache() {
         super(new EventID("01.01.00.00.00.00.03.01"));
     }
+    
+    protected TrainNode newObject(NodeID id) {
+        return new TrainNode(id);
+    }
+
 }
