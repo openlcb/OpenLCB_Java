@@ -139,7 +139,7 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
+                <classpath mode="compile">lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
                 <built-to>classes</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>1.6</source-level>
@@ -147,7 +147,7 @@
             <compilation-unit>
                 <package-root>test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src</classpath>
+                <classpath mode="compile">lib/junit.jar:lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src</classpath>
                 <built-to>classes</built-to>
                 <source-level>1.6</source-level>
             </compilation-unit>

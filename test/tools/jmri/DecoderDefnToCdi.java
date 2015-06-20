@@ -8,10 +8,10 @@ import java.net.URL;
 import java.util.Iterator;
 import javax.swing.*;
 
-import org.jdom.*;
-import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
+import org.jdom2.*;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 
 /**
  * Small stand-alone utility to read a JMRI
@@ -32,7 +32,7 @@ public class DecoderDefnToCdi {
         // add schema definitions
         root.setAttribute("noNamespaceSchemaLocation", // NOI18N
                 "http://openlcb.org/trunk/specs/schema/cdi.xsd", // NOI18N
-                org.jdom.Namespace.getNamespace("xsi", // NOI18N
+                org.jdom2.Namespace.getNamespace("xsi", // NOI18N
                 "http://www.w3.org/2001/XMLSchema-instance")); // NOI18N
 
         doc = new Document(root);
@@ -48,7 +48,7 @@ public class DecoderDefnToCdi {
         doc.addContent(0,p);
     }
     
-    public void convert(Element inRoot) throws org.jdom.DataConversionException {
+    public void convert(Element inRoot) throws org.jdom2.DataConversionException {
         addHeader(inRoot);
         addAcdiElement();
         addCommonCDI();
@@ -166,7 +166,7 @@ public class DecoderDefnToCdi {
     }
     
     public void addVariables(Element inRoot) 
-        throws org.jdom.DataConversionException {
+        throws org.jdom2.DataConversionException {
         Element vs = inRoot.getChild("decoder").getChild("variables");
 
         Element segment = new Element("segment");
@@ -237,7 +237,7 @@ public class DecoderDefnToCdi {
     }
     
     public Element handleEnumVal(Element type, long cv, String name, String comment, String mask) 
-            throws org.jdom.DataConversionException {
+            throws org.jdom2.DataConversionException {
         Element r;
         if (mask != null && !mask.equals("")) {
             r = new Element("bit");
@@ -335,7 +335,7 @@ public class DecoderDefnToCdi {
     }
     
     // Main entry point
-    static public void main(String[] args) throws org.jdom.DataConversionException {
+    static public void main(String[] args) throws org.jdom2.DataConversionException {
         if (args.length == 0) {
             System.err.println("Usage: ./runtest.csh tools.jmri.DecoderDefnToCdi /Users/jake/JMRI/projects/HEAD/xml/decoders/SoundTraxx_Tsu_Steam.xml > SoundTraxx_Tsu_Steam.cdi.xml");
         } else {
