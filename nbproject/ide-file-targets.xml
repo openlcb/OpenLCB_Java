@@ -20,7 +20,7 @@
         </ant>
         <java classname="${run.class}" failonerror="true" fork="true">
             <classpath>
-                <pathelement path="lib/junit.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src"/>
+                <pathelement path="lib/junit.jar:lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src"/>
                 <pathelement location="classes"/>
             </classpath>
         </java>
@@ -35,7 +35,7 @@
         </ant>
         <java classname="${run.class}" failonerror="true" fork="true">
             <classpath>
-                <pathelement path="lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar"/>
+                <pathelement path="lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar"/>
                 <pathelement location="classes"/>
             </classpath>
         </java>

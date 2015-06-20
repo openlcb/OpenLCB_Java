@@ -1,7 +1,7 @@
 package org.openlcb.cdi.jdom;
 
-import org.jdom.Attribute;
-import org.jdom.Element;
+import org.jdom2.Attribute;
+import org.jdom2.Element;
 import org.openlcb.cdi.CdiRep;
 
 /**
@@ -118,7 +118,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
         
         @Override
@@ -127,7 +127,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
     }
 
@@ -212,7 +212,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e) { return 0; }
+            } catch (org.jdom2.DataConversionException e) { return 0; }
         }
     }
 
@@ -225,7 +225,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
         
         @Override
@@ -234,7 +234,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 0;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
         
         @Override
@@ -264,7 +264,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
     }
     
@@ -280,7 +280,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
     }
     
@@ -294,7 +294,7 @@ public class JdomCdiRep implements CdiRep {
             try {
                 if (a == null) return 1;
                 else return a.getIntValue();
-            } catch (org.jdom.DataConversionException e1) { return 0; }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
     }
 

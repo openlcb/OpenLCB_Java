@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: scenarios.ScenarioRunner
-Class-Path: lib/junit.jar lib/jdom.jar lib/jlfgr-1_0.jar
+Class-Path: lib/junit.jar lib/jdom-2.0.5.jar lib/jdom.jar lib/jlfgr-1_0.jar
 
 Name: org.openlcb
 Specification-Title: OpenLCB

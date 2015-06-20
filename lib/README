@@ -7,9 +7,11 @@ Specific components:
 
 jdom.jar                
  version 1.1
+jdom-2.0.5.jar
  Used for testing only, not in main jar
  from <jdom.org>
- 
+
+
 junit.jar
  version 3.8.2
  Used for testing only, not at runtime
