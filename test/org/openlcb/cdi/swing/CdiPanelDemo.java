@@ -77,7 +77,8 @@ public class CdiPanelDemo extends TestCase {
             new org.openlcb.cdi.jdom.JdomCdiRep(root)
         );
         
-        f.add( m );
+        JScrollPane sp = new JScrollPane(m);
+        f.add( sp );
 
         // show
         f.pack();
