@@ -23,7 +23,9 @@ public class NodeIdTextField extends JFormattedTextField  {
         
         retval.setValue("00.00.00.00.00.00");
         retval.setToolTipText("NodeID as six-byte dotted-hex string, e.g. 01.02.0A.AB.34.56");
-          
+        retval.setDragEnabled(true);
+        retval.setTransferHandler(new EventIdTextField.CustomTransferHandler());
+        
         return retval;
     }
     
