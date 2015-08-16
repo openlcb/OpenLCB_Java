@@ -15,8 +15,17 @@ import org.openlcb.*;
  * </ul>
  *
  * Does not handle retry of negative replies. For that, see {@link DatagramMeteringBuffer}.
+ * <p>
+ * Multiple copies of this can exist.  
+ * <ul>
+ * <li>Replies to sent datagrams are processed one-by-one here. This object
+ *      can send to multiple destination nodes, but it cannot overlap sent messages:
+ *      each send&amp;reply must be complete before the next is started.
+ * <li>Incoming datagrams for this node are forwarded to the receiving
+ *      code, regardless of whether the sending node was ever a destination.
+ * </ul>
  *
- * @author  Bob Jacobsen   Copyright 2012
+ * @author  Bob Jacobsen   Copyright 2012, 2015
  * @version $Revision$
  */
 public class DatagramService extends MessageDecoder {
@@ -72,7 +81,7 @@ public class DatagramService extends MessageDecoder {
         }
         if (rcvMemo != null && msg.getData()!=null && msg.getData().length > 0 && rcvMemo.type == msg.getData()[0]) {
             rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
-            // check that a reply was sent
+            // check that client replied
             if (! replyMemo.hasReplied())
                 System.err.println("No internal reply received to datagram with contents "+Utilities.toHexDotsString(msg.getData()));
         } else {
@@ -83,7 +92,7 @@ public class DatagramService extends MessageDecoder {
     }
 
     /**
-     * Handle positive datagram reply message from layout
+     * Handle negative datagram reply message from layout
      */
     @Override
     public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
@@ -94,7 +103,7 @@ public class DatagramService extends MessageDecoder {
     }
 
     /**
-     * Handle negative datagram reply message from layout
+     * Handle positive datagram reply message from layout
      */
     @Override
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
@@ -139,6 +148,12 @@ public class DatagramService extends MessageDecoder {
         @Override
         public int hashCode() { return type; }
         
+        /*
+         * Client tells the datagram service that
+         * it's accepted the data and the buffer 
+         * can be reused.
+         * @param resultCode  zero for OK, or as documented in Datagram spec for reply
+         */
         public void acceptData(int resultCode) {
 
         }
@@ -174,7 +189,7 @@ public class DatagramService extends MessageDecoder {
             this.service = service;
         }
         /**
-         * called to indicate whether the data was accepted or not
+         * called to indicate whether the datagram was accepted or not
          * @param resultCode 0 for OK, non-zero for error reply
          */
         public void acceptData(int resultCode) {
@@ -190,6 +205,7 @@ public class DatagramService extends MessageDecoder {
             }
 
         }
+        
         boolean hasReplied() { return replied; }
 
     }
