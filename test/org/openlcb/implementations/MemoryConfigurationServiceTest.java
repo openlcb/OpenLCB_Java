@@ -212,6 +212,121 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    public void testTwoSimpleReadsInSequence() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        int length = 4;
+        MemoryConfigurationService.McsReadMemo memo = 
+            new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
+                @Override
+                public void handleWriteReply(int code) { 
+                    flag = true;
+                }
+                @Override
+                public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) { 
+                    flag = true;
+                    Assert.assertEquals("space", space, readSpace);
+                    Assert.assertEquals("address", address, readAddress);
+                    Assert.assertEquals("data length", 1, readData.length);
+                    Assert.assertEquals("data[0]", 0xAA, readData[0]&0xFF);
+                }
+            };
+
+        // start of 1st pass
+        {
+            // test executes the callbacks instantly; real connections might not
+            Assert.assertTrue(!flag);
+            service.request(memo);
+            Assert.assertTrue(!flag);
+        
+            // should have sent datagram
+             Assert.assertEquals(1,messagesReceived.size());
+             Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+            // check format of datagram read
+            int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+            Assert.assertTrue(content.length >= 6);
+            Assert.assertEquals("datagram type", 0x20, content[0]);
+            Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
+        
+            Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
+        
+            if (space >= 0xFD) {
+                Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
+                Assert.assertEquals("data length", length, content[6]);
+            } else {
+                Assert.assertEquals("space byte", space, content[6]);
+                Assert.assertEquals("data length", length, content[7]);
+            }
+        
+            // datagram reply comes back 
+            Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+            Assert.assertTrue(!flag);
+            datagramService.put(m, null);
+            Assert.assertTrue(flag);
+        
+            // now return data
+            flag = false;
+            content[1] = content[1]|0x04;  //change command to response
+            content[content.length-1] = 0xAA;  // 1st data byte
+        
+            m = new DatagramMessage(farID, hereID, content);
+
+            Assert.assertTrue(!flag);
+            datagramService.put(m, null);
+            Assert.assertTrue(flag);
+        }  
+        
+        // start of 2nd pass
+        messagesReceived = new java.util.ArrayList<Message>();
+        flag = false;
+        {
+            // test executes the callbacks instantly; real connections might not
+            Assert.assertTrue(!flag);
+            service.request(memo);
+            Assert.assertTrue(!flag);
+        
+            // should have sent datagram
+             Assert.assertEquals(1,messagesReceived.size());
+             Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
+
+            // check format of datagram read
+            int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
+            Assert.assertTrue(content.length >= 6);
+            Assert.assertEquals("datagram type", 0x20, content[0]);
+            Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
+        
+            Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
+        
+            if (space >= 0xFD) {
+                Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
+                Assert.assertEquals("data length", length, content[6]);
+            } else {
+                Assert.assertEquals("space byte", space, content[6]);
+                Assert.assertEquals("data length", length, content[7]);
+            }
+        
+            // datagram reply comes back 
+            Message m = new DatagramAcknowledgedMessage(farID, hereID);
+
+            Assert.assertTrue(!flag);
+            datagramService.put(m, null);
+            Assert.assertTrue(flag);
+        
+            // now return data
+            flag = false;
+            content[1] = content[1]|0x04;  //change command to response
+            content[content.length-1] = 0xAA;  // 1st data byte
+        
+            m = new DatagramMessage(farID, hereID, content);
+
+            Assert.assertTrue(!flag);
+            datagramService.put(m, null);
+            Assert.assertTrue(flag);
+        }
+    }
+
     public void testSimpleReadFails() {
         int space = 0xFD;
         long address = 0x12345678;
