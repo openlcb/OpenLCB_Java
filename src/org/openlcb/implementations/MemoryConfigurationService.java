@@ -6,10 +6,11 @@ import org.openlcb.NodeID;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
- * 
+ * <p>
  * Meant to shield the using code from all the details of that
  * process via read and write primitives.
- *
+ * <p>
+ * Can accept requests without the using code having to serialize them.
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision: -1 $
@@ -77,10 +78,14 @@ public class MemoryConfigurationService {
         });
     }
     
+    
     NodeID here;
     DatagramService downstream;
     
-    
+    public MemoryConfigurationService(MemoryConfigurationService mcs) {
+        this(mcs.here, mcs.downstream);
+    }
+
     public void request(McsWriteMemo memo) {
         // forward as write Datagram
         WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
