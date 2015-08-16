@@ -3,7 +3,10 @@ org.openlcb.can
 org.openlcb.cdi
 org.openlcb.cdi.jdom
 org.openlcb.cdi.swing
+org.openlcb.hub
 org.openlcb.implementations
+org.openlcb.implementations.throttle
+org.openlcb.implementations.throttle.dcc
 org.openlcb.swing
 org.openlcb.swing.memconfig
 org.openlcb.swing.networktree

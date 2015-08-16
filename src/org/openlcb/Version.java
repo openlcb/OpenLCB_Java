@@ -30,11 +30,11 @@ public class Version {
      
     /* Specification modifier - updated periodically
      */
-    static final public int specMod = 1;
+    static final public int specMod = 4;
 
     /* Library modifier - updated periodically
      */
-    static final public int libMod = 3;
+    static final public int libMod = 4;
 
 
     /**
