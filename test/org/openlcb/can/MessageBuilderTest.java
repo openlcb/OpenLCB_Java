@@ -226,6 +226,8 @@ public class MessageBuilderTest extends TestCase {
         Message msg = list.get(0);
         
         Assert.assertTrue(msg instanceof DatagramMessage);        
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", destination, ((AddressedMessage)msg).getDestNodeID());
     }
     
     public void testTwoFrameDatagram() {
@@ -388,6 +390,27 @@ public class MessageBuilderTest extends TestCase {
           
     }
 
+    public void testAliasExtraction() {
+    
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1AFFF123);
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof DatagramMessage);        
+
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
+    }
+    
     // from here down is testing infrastructure
     
     public MessageBuilderTest(String s) {
@@ -415,6 +438,7 @@ public class MessageBuilderTest extends TestCase {
     AliasMap map = new AliasMap();
     
     public void setUp() {
+        map = new AliasMap();
         map.insert(0x0123, source);
         map.insert(0x321, destination);
     }
