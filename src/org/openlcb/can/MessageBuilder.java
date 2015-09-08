@@ -120,8 +120,7 @@ public class MessageBuilder {
         
         if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) {
             // addressed message 
-            dest = map.getNodeID( ( (f.getElement(0) << 8) + f.getElement(1) ) & 0xFFF );
-            
+            dest = map.getNodeID( ( (f.getElement(0) << 8) + (f.getElement(1) & 0xff) ) & 0xFFF );
             AccumulationMemo mnew = new AccumulationMemo(f.getHeader(), source, dest, data);
             // is header already in map?
             AccumulationMemo mold = accumulations.get(f.getHeader());
