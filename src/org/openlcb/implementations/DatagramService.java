@@ -83,7 +83,7 @@ public class DatagramService extends MessageDecoder {
             rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
             // check that client replied
             if (! replyMemo.hasReplied())
-                System.err.println("No internal reply received to datagram with contents "+Utilities.toHexDotsString(msg.getData()));
+                System.err.println("No internal reply received to datagram with contents "+Utilities.toHexDotsString(msg.getData())); //log
         } else {
             // reject
             replyMemo.acceptData(retval);
@@ -108,9 +108,10 @@ public class DatagramService extends MessageDecoder {
     @Override
     public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
         if (xmtMemo != null && msg.getDestNodeID().equals(here) && xmtMemo.dest.equals(msg.getSourceNodeID()) ) {
-            xmtMemo.handleReply(0);
+            DatagramServiceTransmitMemo temp = xmtMemo;
+            xmtMemo = null;
+            temp.handleReply(0);
         }
-        xmtMemo = null;
     }
 
     DatagramServiceReceiveMemo rcvMemo;
@@ -218,7 +219,7 @@ public class DatagramService extends MessageDecoder {
      // TODO are these really immutable, given that subclass will inherit and change them?
     @Immutable
     @ThreadSafe    
-    static protected class DatagramServiceTransmitMemo {
+    static public class DatagramServiceTransmitMemo {
         public DatagramServiceTransmitMemo(NodeID dest, int[] data) {
             this.data = data;
             this.dest = dest;

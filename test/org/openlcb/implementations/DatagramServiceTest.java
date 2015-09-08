@@ -36,6 +36,7 @@ public class DatagramServiceTest extends TestCase {
     public void testCtorViaSetup() {
     }
     
+
     public void testRcvMemoIsRealClass() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20);
@@ -51,20 +52,32 @@ public class DatagramServiceTest extends TestCase {
     public void testXmtMemoIsRealClass() {
         DatagramService.DatagramServiceTransmitMemo m20 = 
             new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1});
+
         DatagramService.DatagramServiceTransmitMemo m21 = 
             new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1});
         DatagramService.DatagramServiceTransmitMemo m22 = 
             new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{2});
         DatagramService.DatagramServiceTransmitMemo m23 = 
             new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1,2});
+        DatagramService.DatagramServiceTransmitMemo m24 = 
+            new DatagramService.DatagramServiceTransmitMemo(hereID,new int[]{1,2});
         
+        Assert.assertTrue(!m20.equals(null));
+        Assert.assertTrue(!m21.equals(null));
+        Assert.assertTrue(!m22.equals(null));
+        Assert.assertTrue(!m23.equals(null));
+        Assert.assertTrue(!m24.equals(null));
+
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m21));
-        Assert.assertTrue(!m20.equals(null));
-        Assert.assertTrue(!m20.equals(m22));
-        Assert.assertTrue(!m20.equals(m23));
-        Assert.assertTrue(!m22.equals(m20));
-        Assert.assertTrue(!m23.equals(m20));
+
+        Assert.assertTrue(!m21.equals(m22));
+        Assert.assertTrue(!m21.equals(m23));
+        Assert.assertTrue(!m21.equals(m24));
+        Assert.assertTrue(!m22.equals(m23));
+        Assert.assertTrue(!m22.equals(m24));
+        Assert.assertTrue(!m23.equals(m24));
+        
         
     }
 
