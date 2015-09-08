@@ -410,7 +410,29 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("source", source, msg.getSourceNodeID());
         Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
     }
+
+    public void testAddressedMessageAliasExtraction() {
     
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A28123);
+        frame.setData(new byte[]{(byte)0x0F, (byte)0xFF});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size()); 
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof AddressedMessage);        
+
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
+    }
+
     // from here down is testing infrastructure
     
     public MessageBuilderTest(String s) {
