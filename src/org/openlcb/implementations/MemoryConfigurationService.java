@@ -27,12 +27,15 @@ public class MemoryConfigurationService {
         
         // connect to be notified of config service
         downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo(DATAGRAM_TYPE){
+            // Process a datagram received here; previous request state part of decoding
+            //
             // does not allow for overlapping operations, either to a single node nor or multiple types
             // nor to multiple nodes
             //
             // doesn't check for match of reply to memo, but eventually should.
             @Override
             public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) { 
+                //log System.out.println("OLCB: handleData");
                 service.acceptData(0);
                 if (readMemo != null) {
                     // figure out address space uses byte?
@@ -74,6 +77,13 @@ public class MemoryConfigurationService {
                     configMemo = null;
                     memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
                 }    
+                if (writeMemo != null) {
+                    // needs code to handle delayed reply
+                    System.err.println("MemoryConfiguration Service: Code for delayed reply not yet present"); //log
+                    McsWriteMemo memo = writeMemo;
+                    writeMemo = null;
+                    //memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
+                }    
             }
         });
     }
@@ -86,8 +96,10 @@ public class MemoryConfigurationService {
         this(mcs.here, mcs.downstream);
     }
 
+    McsWriteMemo writeMemo; // can receive a delayed reply
     public void request(McsWriteMemo memo) {
         // forward as write Datagram
+        writeMemo = memo;
         WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
         downstream.sendData(dg);
     }
@@ -233,7 +245,6 @@ public class MemoryConfigurationService {
         public int hashCode() { return this.data.length+this.data[0]+dest.hashCode()+((int)address)+space; }
         
         /**
-         * Overload this for notification of response
          * @param code 0 for OK, non-zero for error reply
          */
         public void handleWriteReply(int code) { 
@@ -266,6 +277,10 @@ public class MemoryConfigurationService {
             this.memo = memo;
         }
         McsWriteMemo memo;
+        /** 
+         * Handle immediate write reply from datagram.
+         * Should refer back to the memo request
+         */
         public void handleReply(int code) { 
             memo.handleWriteReply(code);
         }
