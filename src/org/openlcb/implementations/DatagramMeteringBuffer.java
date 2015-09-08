@@ -123,10 +123,16 @@ public class DatagramMeteringBuffer extends MessageDecoder {
          */
         @Override
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
+            // check if this is from right source & to us
+            if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
+                // not for us, just forward
+                toUpstream.put(msg, toUpstream);
+                return;
+            }
             endTimeout();
             // forward message upstream
             toUpstream.put(msg, toUpstream);
-            
+
             // and allow sending another
             new Thread(new Consumer(queue)).start();
         }
