@@ -34,7 +34,7 @@ public class Version {
 
     /* Library modifier - updated periodically
      */
-    static final public int libMod = 4;
+    static final public int libMod = 5;
 
 
     /**
