@@ -8,6 +8,7 @@ import org.openlcb.OlcbInterface;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * CanInterface collects all objects necessary to operate a standards-compliant node that connects
@@ -31,6 +32,7 @@ public class CanInterface {
     /// Objects waiting for startup.
     private final List<ConnectionListener> listeners = new ArrayList<>();
     private final NodeID nodeId;
+    private final NIDaAlgorithm aliasWatcher;
 
     boolean initialized = false;
 
@@ -40,11 +42,12 @@ public class CanInterface {
         this.nodeId = interfaceId;
 
         // Creates high-level OpenLCB interface.
-        olcbInterface = new OlcbInterface(frameRenderer);
+        olcbInterface = new OlcbInterface(nodeId, frameRenderer);
 
         // Creates CAN-level OpenLCB objects.
         aliasMap = new AliasMap();
         messageBuilder = new MessageBuilder(aliasMap);
+        aliasWatcher = new NIDaAlgorithm(interfaceId, frameOutput);
 
         this.frameInput = new FrameParser();
         new Thread(new Runnable() {
@@ -70,6 +73,20 @@ public class CanInterface {
 
     public void initialize() {
         // Do initialization tasks here.
+        final Semaphore sema = new Semaphore(1, true);
+        sema.acquireUninterruptibly();
+
+        aliasWatcher.start(new Runnable() {
+            @Override
+            public void run() {
+                sema.release();
+            }
+        });
+        // Waits for alias allocation to complete.
+        sema.acquireUninterruptibly();
+        // Stores local node alias.
+        aliasMap.insert(aliasWatcher.getNIDa(), nodeId);
+        /// @TODO(balazs.racz): If the alias changes, we need to update the local alias map.
 
         // Notify all listeners waiting for init. Call them outside of the lock.
         List<ConnectionListener> listeners_copy = new ArrayList<>();
@@ -86,14 +103,13 @@ public class CanInterface {
     class FrameParser implements CanFrameListener {
         @Override
         public void send(CanFrame frame) {
+            aliasWatcher.send(frame);
             List<Message> l = messageBuilder.processFrame(frame);
             for (Message m : l) {
-                olcbInterface.inputConnection().put(m, null);
+                olcbInterface.getInputConnection().put(m, null);
             }
         }
     }
-
-
 
     class FrameRenderer implements Connection {
         @Override
