@@ -4,6 +4,7 @@ import org.openlcb.*;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 import static java.lang.Thread.sleep;
 
@@ -22,12 +23,19 @@ public class NIDaAlgorithm implements CanFrameListener {
     private Runnable done;
     private CanFrameListener sendInterface;
     private Timer timer;
-    private final TimerTask task = new TimerTask() {
+    private TimerTask task;
+    private static Logger logger = Logger.getLogger(new Object(){}.getClass().getSuperclass()
+            .getName());
+
+    private synchronized void scheduleTimer(long delay) {
+        task = new TimerTask() {
         @Override
         public void run() {
             timerExpired();
         }
-    };
+        };
+        timer.schedule(task, delay);
+    }
 
     public NIDaAlgorithm(NodeID n) {
         nid = n;
@@ -42,7 +50,7 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public void start(Runnable done) {
         this.done = done;
-        timer.schedule(task, 100);
+        scheduleTimer(100);
     }
 
     public OpenLcbCanFrame nextFrame() {
@@ -50,7 +58,9 @@ public class NIDaAlgorithm implements CanFrameListener {
         if (index<4) {
             f = new OpenLcbCanFrame(nida.getNIDa());
             long id = nid.toLong();
-            f.setCIM(index, (int)((id >> ((3-index) * 12)) & 0xfff), nida.getNIDa());
+            int varfield = (int)((id >> ((3-index) * 12)) & 0xfff);
+            logger.fine(String.format("Sending CID frame, id %x, varfield %x", id, varfield));
+            f.setCIM(index, varfield, nida.getNIDa());
         } else if (index == 4) {
             f = new OpenLcbCanFrame(nida.getNIDa());
             f.setRIM(nida.getNIDa());
@@ -90,9 +100,10 @@ public class NIDaAlgorithm implements CanFrameListener {
     }
 
     protected void cancelTimer() {
-        if (task.cancel()) {
+        if (timer == null) return; // Probably running from a unit test.
+        if (task == null || task.cancel()) {
             // Task was not yet run.
-            timer.schedule(task, 0);
+            scheduleTimer(0);
         }
     }
     
@@ -101,7 +112,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             while (index < 4) {
                 sendInterface.send(nextFrame());
             }
-            timer.schedule(task, 200);
+            scheduleTimer(200);
         } else if (index == 4) {
             sendInterface.send(nextFrame());
             if (done != null) {
