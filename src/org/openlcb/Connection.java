@@ -31,8 +31,7 @@ public interface Connection {
     /** 
      * Internal listener class definition
      */
-    public class ConnectionListener {
-        public void connectionActive(Connection c) {
-        }
+    public abstract class ConnectionListener {
+        public abstract void connectionActive(Connection c);
     }
 }
