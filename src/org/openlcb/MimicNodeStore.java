@@ -13,7 +13,7 @@ import java.beans.PropertyChangeListener;
  * @author  Bob Jacobsen   Copyright 2011
  * @version $Revision$
  */
-public class MimicNodeStore extends MessageDecoder implements Connection {
+public class MimicNodeStore extends AbstractConnection {
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
         this.node = node;
