@@ -21,7 +21,13 @@ public class OpenLcbCanFrame implements CanFrame {
         this.nodeAlias = nodeAlias;
         init(nodeAlias);
     }
-    
+
+    public OpenLcbCanFrame(CanFrame frame) {
+        this.id = frame.getHeader();
+        this.nodeAlias = getSourceAlias();
+        setData(frame.getData());
+    }
+
     // Data is stored in completed form as
     // a header and data content; accessors go
     // back and forth to individual fields.
