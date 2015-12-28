@@ -105,6 +105,7 @@ public class CanInterface {
         public void send(CanFrame frame) {
             aliasWatcher.send(frame);
             List<Message> l = messageBuilder.processFrame(frame);
+            if (l == null) return;
             for (Message m : l) {
                 olcbInterface.getInputConnection().put(m, null);
             }
