@@ -74,7 +74,18 @@ public class NodeID {
             +contents[4]<<20
             +contents[5]<<25;
     } 
-    
+
+    public long toLong() {
+        long retval = 0;
+        retval |= contents[0]; retval <<= 8;
+        retval |= contents[1]; retval <<= 8;
+        retval |= contents[2]; retval <<= 8;
+        retval |= contents[3]; retval <<= 8;
+        retval |= contents[4]; retval <<= 8;
+        retval |= contents[5];
+        return retval;
+    }
+
     @CheckReturnValue
     @NonNull
     public byte[] getContents() {
