@@ -77,12 +77,12 @@ public class NodeID {
 
     public long toLong() {
         long retval = 0;
-        retval |= contents[0]; retval <<= 8;
-        retval |= contents[1]; retval <<= 8;
-        retval |= contents[2]; retval <<= 8;
-        retval |= contents[3]; retval <<= 8;
-        retval |= contents[4]; retval <<= 8;
-        retval |= contents[5];
+        retval |= contents[0] & 0xff; retval <<= 8;
+        retval |= contents[1] & 0xff; retval <<= 8;
+        retval |= contents[2] & 0xff; retval <<= 8;
+        retval |= contents[3] & 0xff; retval <<= 8;
+        retval |= contents[4] & 0xff; retval <<= 8;
+        retval |= contents[5] & 0xff;
         return retval;
     }
 
