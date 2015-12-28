@@ -22,7 +22,7 @@ import org.jdom2.input.SAXBuilder;
  * @author  Bob Jacobsen   Copyright 2012, 2015
  * @version $Revision: 2175 $
  */
-public class CdiPanelDemo extends TestCase {
+public class CdiPanelDemo {
         
     public CdiPanelDemo() {
     }
