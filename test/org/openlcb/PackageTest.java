@@ -81,6 +81,7 @@ public class PackageTest extends TestCase {
 
         // test implementation classes
         suite.addTest(org.openlcb.implementations.PackageTest.suite());
+        suite.addTest(org.openlcb.messages.PackageTest.suite());
         suite.addTest(org.openlcb.swing.PackageTest.suite());
         suite.addTest(org.openlcb.cdi.PackageTest.suite());
         
