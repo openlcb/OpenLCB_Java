@@ -5,7 +5,9 @@ import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -89,7 +91,10 @@ public class OlcbInterface {
     }
 
     class MessageDispatcher extends AbstractConnection {
-        private Set<Connection> listeners = new HashSet<>();
+        // This is not the ideal container for add/remove, but keeping the ordering of
+        // registrations is useful in ensuring that the system components receive the messages
+        // earlier as the later-registered user components.
+        private List<Connection> listeners = new ArrayList<>();
         public void registerMessageListener(Connection c) {
             listeners.add(c);
         }
