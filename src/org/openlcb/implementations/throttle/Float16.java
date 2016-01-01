@@ -64,7 +64,12 @@ public class Float16 {
         byte1 = (byte)((i>>8)&0xFF);
         byte2 = (byte)(i&0xFF);
     }
-    
+
+    public Float16(byte b1, byte b2) {
+        byte1 = b1;
+        byte2 = b2;
+    }
+
     byte byte1, byte2;
     
     public int getInt() { 
