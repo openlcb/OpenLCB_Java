@@ -1,7 +1,5 @@
 package org.openlcb.implementations.throttle;
 
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
 import org.openlcb.*;
 
 /**
@@ -11,14 +9,17 @@ import org.openlcb.*;
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
  */
-public class TrainNodeCache extends AbstractNodeCache<TrainNode> {
+public class TrainNodeCache extends AbstractNodeCache<RemoteTrainNode> {
 
-    public TrainNodeCache() {
-        super(new EventID("01.01.00.00.00.00.03.01"));
+    private final OlcbInterface iface;
+
+    public TrainNodeCache(OlcbInterface iface) {
+        super(CommonIdentifiers.IS_TRAIN);
+        this.iface = iface;
     }
     
-    protected TrainNode newObject(NodeID id) {
-        return new TrainNode(id);
+    protected RemoteTrainNode newObject(NodeID id) {
+        return new RemoteTrainNode(id);
     }
 
 }
