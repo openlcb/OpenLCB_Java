@@ -11,8 +11,7 @@ import org.openlcb.messages.TractionControlRequestMessage;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import sun.org.mozilla.javascript.Function;
+import java.util.logging.Logger;
 
 /**
  * Traction protocol based implementation of the throttle. This differs from {@ref
@@ -22,6 +21,9 @@ import sun.org.mozilla.javascript.Function;
  * Created by bracz on 12/30/15.
  */
 public class TractionThrottle extends MessageDecoder {
+    private static Logger logger = Logger.getLogger(new Object() {
+    }.getClass().getSuperclass()
+            .getName());
     private final OlcbInterface iface;
     RemoteTrainNode trainNode;
     boolean assigned = false;
@@ -83,7 +85,8 @@ public class TractionThrottle extends MessageDecoder {
         functions.clear();
     }
 
-    /** Initiates fetching the current speed from the OpenLCB node. When the speed value arrives,
+    /**
+     * Initiates fetching the current speed from the OpenLCB node. When the speed value arrives,
      * the property change listener will be called on the speed object.
      */
     public void querySpeed() {
@@ -92,8 +95,10 @@ public class TractionThrottle extends MessageDecoder {
         iface.getOutputConnection().put(m, this);
     }
 
-    /** Initiates fetching the current value of a given function from the OpenLCB node. When the
+    /**
+     * Initiates fetching the current value of a given function from the OpenLCB node. When the
      * function value arrives, the property change listener will be called on the function object.
+     *
      * @param fn the number of the function (address in OLCB land)
      */
     public void queryFunction(int fn) {
@@ -106,7 +111,9 @@ public class TractionThrottle extends MessageDecoder {
         return getFunctionInfo(fn).shared;
     }
 
-    /** Creates or returns the FunctionInfo structure for a given function number. */
+    /**
+     * Creates or returns the FunctionInfo structure for a given function number.
+     */
     private synchronized FunctionInfo getFunctionInfo(int fn) {
         FunctionInfo v = functions.get(fn);
         if (v == null) {
@@ -153,8 +160,10 @@ public class TractionThrottle extends MessageDecoder {
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             // Invalid message.
-
+            logger.warning("Invalid traction message " +msg.toString());
+            return;
         }
+        logger.info("Unhandled traction message " +msg.toString());
     }
 
     public String getStatus() {
@@ -206,4 +215,5 @@ public class TractionThrottle extends MessageDecoder {
             fn = num;
         }
     }
+
 }
