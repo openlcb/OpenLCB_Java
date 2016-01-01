@@ -70,7 +70,10 @@ public class Float16 {
     public int getInt() { 
         return ((byte1&0xFF)<<8)|(byte2&0xFF); 
     }
-    
+
+    public byte getByte1() { return byte1; }
+    public byte getByte2() { return byte2; }
+
     public float getFloat() { 
         if (byte1 == 0 && byte2 == 0) return 0.0f;
         int ch = (byte2&0xFF) | ((byte1&0x3)<<8) | 0x400;
