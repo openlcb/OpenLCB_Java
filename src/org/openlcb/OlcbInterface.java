@@ -3,6 +3,7 @@ package org.openlcb;
 import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.Set;
 public class OlcbInterface {
 
     /// Object for sending messages to the network.
-    private final Connection outputConnection;
+    protected final Connection outputConnection;
     private final OutputConnectionSniffer wrappedOutputConnection = new OutputConnectionSniffer();
     /// Object for taking incoming messages and forwarding them to the necessary handlers.
     private final MessageDispatcher inputConnection;
@@ -52,6 +53,7 @@ public class OlcbInterface {
         inputConnection.registerMessageListener(nodeStore);
         inputConnection.registerMessageListener(dmb.connectionForRepliesFromDownstream());
         inputConnection.registerMessageListener(dcs);
+        new VerifyNodeIdHandler(nodeId, this); // will register itself.
 
         outputConnection.registerStartNotification(new Connection.ConnectionListener() {
             @Override
