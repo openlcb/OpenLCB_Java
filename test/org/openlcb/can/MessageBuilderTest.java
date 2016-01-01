@@ -478,6 +478,39 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("payload", "12 34", Utilities.toHexSpaceString(((AddressedPayloadMessage)msg).getPayload()));
     }
 
+    public void testTractionProxyReplyParseMulti() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x191E8123);
+        frame.setData(new byte[]{0x13, 0x21, 0x12, 0x34, 3, 4, 5, 6});
+
+        MessageBuilder b = new MessageBuilder(map);
+        List<Message> list = b.processFrame(new OpenLcbCanFrame(frame));
+
+        if (list != null) {
+            Assert.assertEquals("count", 0, list.size());
+        }
+
+        frame.setData(new byte[]{0x33, 0x21, 0x5, 0x4, 13, 14, 15, 16});
+        list = b.processFrame(new OpenLcbCanFrame(frame));
+
+        if (list != null) {
+            Assert.assertEquals("count", 0, list.size());
+        }
+
+        frame.setData(new byte[]{0x23, 0x21, 17, 18});
+        list = b.processFrame(new OpenLcbCanFrame(frame));
+
+        Assert.assertNotNull(list);
+        Assert.assertEquals("count", 1, list.size());
+
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof TractionProxyReplyMessage);
+        Assert.assertEquals("payload", "12 34 03 04 05 06 05 04 0D 0E 0F 10 11 12", Utilities
+                .toHexSpaceString(((AddressedPayloadMessage) msg).getPayload()));
+        Assert.assertEquals("srcnode", source, msg.getSourceNodeID());
+        Assert.assertEquals("dstnode", destination, ((AddressedPayloadMessage) msg).getDestNodeID());
+    }
+
     public void testAliasExtraction() {
     
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
