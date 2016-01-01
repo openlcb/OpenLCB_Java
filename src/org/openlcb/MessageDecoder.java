@@ -1,5 +1,10 @@
 package org.openlcb;
 
+import org.openlcb.messages.TractionControlReplyMessage;
+import org.openlcb.messages.TractionControlRequestMessage;
+import org.openlcb.messages.TractionProxyReplyMessage;
+import org.openlcb.messages.TractionProxyRequestMessage;
+
 /**
  * This class provides a basic double-dispatch mechanism for handling
  * messages.  OpenLCB messages in this implementation
@@ -174,6 +179,34 @@ public class MessageDecoder extends AbstractConnection {
      * Handle "Optional Interaction Rejected" message
      */
     public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+
+    /**
+     * Handle "Traction Control Request" message
+     */
+    public void handleTractionControlRequest(TractionControlRequestMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
+    /**
+     * Handle "Traction Control Reply" message
+     */
+    public void handleTractionControlReply(TractionControlReplyMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
+    /**
+     * Handle "Traction Proxy Request" message
+     */
+    public void handleTractionProxyRequest(TractionProxyRequestMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
+    /**
+     * Handle "Traction Proxy Reply" message
+     */
+    public void handleTractionProxyReply(TractionProxyReplyMessage msg, Connection sender) {
         defaultHandler(msg, sender);
     }
 }

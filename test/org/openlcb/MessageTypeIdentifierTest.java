@@ -66,6 +66,11 @@ public class MessageTypeIdentifierTest extends TestCase {
         Assert.assertEquals(0x0594, MessageTypeIdentifier.LearnEvent.mti());
         Assert.assertEquals(0x05B4, MessageTypeIdentifier.ProducerConsumerEventReport.mti());
 
+        Assert.assertEquals(0x05EB, MessageTypeIdentifier.TractionControlRequest.mti());
+        Assert.assertEquals(0x01E9, MessageTypeIdentifier.TractionControlReply.mti());
+        Assert.assertEquals(0x05EA, MessageTypeIdentifier.TractionProxyRequest.mti());
+        Assert.assertEquals(0x01E8, MessageTypeIdentifier.TractionProxyReply.mti());
+
         Assert.assertEquals(0x0DE8, MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti());
         Assert.assertEquals(0x0A08, MessageTypeIdentifier.SimpleNodeIdentInfoReply.mti());
 

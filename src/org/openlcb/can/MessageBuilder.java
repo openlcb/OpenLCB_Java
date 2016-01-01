@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.openlcb.*;
+import org.openlcb.messages.TractionControlReplyMessage;
+import org.openlcb.messages.TractionControlRequestMessage;
+import org.openlcb.messages.TractionProxyReplyMessage;
+import org.openlcb.messages.TractionProxyRequestMessage;
 
 /**
  * Converts CAN frame messages to regular messages
@@ -117,7 +121,9 @@ public class MessageBuilder {
         NodeID dest = null;
         int mti = getMTI(f);
         byte[] data = f.getData();
-        
+
+        byte[] content = null;
+
         if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) {
             // addressed message 
             dest = map.getNodeID( ( (f.getElement(0) << 8) + (f.getElement(1) & 0xff) ) & 0xFFF );
@@ -143,6 +149,9 @@ public class MessageBuilder {
             // we're going to continue processing with the accumulated data
             data = mold.data;
             accumulations.remove(f.getHeader());
+
+            content = new byte[data.length-2];
+            System.arraycopy(data, 2, content, 0, content.length);
         }
         
         MessageTypeIdentifier value = MessageTypeIdentifier.get(mti);
@@ -187,7 +196,18 @@ public class MessageBuilder {
             case ProtocolSupportReply: 
                 retlist.add(new ProtocolIdentificationReplyMessage(source, dest, f.dataAsLong()));
                 return retlist;
-
+            case TractionControlRequest:
+                retlist.add(new TractionControlRequestMessage(source, dest, content));
+                return retlist;
+            case TractionControlReply:
+                retlist.add(new TractionControlReplyMessage(source, dest, content));
+                return retlist;
+            case TractionProxyRequest:
+                retlist.add(new TractionProxyRequestMessage(source, dest, content));
+                return retlist;
+            case TractionProxyReply:
+                retlist.add(new TractionProxyReplyMessage(source, dest, content));
+                return retlist;
             case IdentifyConsumer:
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
@@ -215,10 +235,7 @@ public class MessageBuilder {
             case SimpleNodeIdentInfoRequest: 
                 retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
                 return retlist;
-            case SimpleNodeIdentInfoReply: 
-                byte[] content = new byte[data.length-2];
-                System.arraycopy(data, 2, content, 0, content.length);
-                
+            case SimpleNodeIdentInfoReply:
                 retlist.add(new SimpleNodeIdentInfoReplyMessage(source, dest, content));
                 return retlist;
 
@@ -353,7 +370,27 @@ public class MessageBuilder {
             
             return retlist;
         }
-                
+
+        private void handleAddressedPayloadMessage(AddressedPayloadMessage msg, Connection sender) {
+            byte[] payload = msg.getPayload();
+            if (payload == null) {
+                payload = new byte[0];
+            }
+            for (int i = 0; i < Math.max(1, payload.length); i += 6) {
+                // Note that the order of these calls are carefully chosen so that internally
+                // OpenLcbCanFrame does not overwrite parts of the payload with each other.
+                OpenLcbCanFrame f = new OpenLcbCanFrame(map.getAlias(msg.getSourceNodeID()));
+                f.setOpenLcbMTI(msg.getEMTI().mti());
+                int thislen = Math.min(6, payload.length - i);
+                byte[] data = new byte[thislen + 2];
+                System.arraycopy(payload, i, data, 2, thislen);
+                f.setData(data);
+                f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+                f.setContinuation(i == 0, (i + 6 >= payload.length));
+                retlist.add(f);
+            }
+        }
+
         /**
          * Handle "Initialization Complete" message
          */
@@ -461,6 +498,36 @@ public class MessageBuilder {
         public void handleLearnEvent(LearnEventMessage msg, Connection sender){
             defaultHandler(msg, sender);
         }
+
+        @Override
+        /**
+         * Handle "Traction Control Request" message
+         */
+        public void handleTractionControlRequest(TractionControlRequestMessage msg, Connection sender) {
+            handleAddressedPayloadMessage(msg, sender);
+        }
+
+        /**
+         * Handle "Traction Control Reply" message
+         */
+        public void handleTractionControlReply(TractionControlReplyMessage msg, Connection sender) {
+            handleAddressedPayloadMessage(msg, sender);
+        }
+
+        /**
+         * Handle "Traction Proxy Request" message
+         */
+        public void handleTractionProxyRequest(TractionProxyRequestMessage msg, Connection sender) {
+            handleAddressedPayloadMessage(msg, sender);
+        }
+
+        /**
+         * Handle "Traction Proxy Reply" message
+         */
+        public void handleTractionProxyReply(TractionProxyReplyMessage msg, Connection sender) {
+            handleAddressedPayloadMessage(msg, sender);
+        }
+
         /**
          * Handle "Simple Node Ident Info Request" message
          */

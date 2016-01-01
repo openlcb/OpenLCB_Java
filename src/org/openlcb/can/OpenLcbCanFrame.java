@@ -103,7 +103,14 @@ public class OpenLcbCanFrame implements CanFrame {
     data[1] = (byte)(a&0xFF);
     length = (length<2) ? 2 : length;
   }
-  
+
+    /** Sets the continuation bits for an addressed frame. */
+  void setContinuation(boolean first, boolean last) {
+      data[0] &= CONTINUATION_BITS_MASK;
+      if (!first) data[0] |= CONTINUATION_BITS_NOT_FIRST_FRAME;
+      if (!last) data[0] |= CONTINUATION_BITS_NOT_LAST_FRAME;
+  }
+
   void setFrameTypeCAN() {
     id &= ~MASK_FRAME_TYPE;     
   }
@@ -419,5 +426,10 @@ public class OpenLcbCanFrame implements CanFrame {
     static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_LAST  = 5;
     static final int FRAME_FORMAT_ADDRESSED_NON_DATAGRAM   = 6;
     static final int FRAME_FORMAT_STREAM_CODE              = 7;
+
+    // Continuation bits
+    static final byte CONTINUATION_BITS_MASK = (byte) 0xCF;
+    static final byte CONTINUATION_BITS_NOT_FIRST_FRAME = (byte) 0x20;
+    static final byte CONTINUATION_BITS_NOT_LAST_FRAME = (byte) 0x10;
 
 }
