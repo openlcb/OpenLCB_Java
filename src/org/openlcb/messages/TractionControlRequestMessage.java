@@ -45,7 +45,7 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         this.payload = payload.clone();
     }
 
-    static TractionControlRequestMessage createSetSpeed(NodeID source, NodeID dest, boolean
+    public static TractionControlRequestMessage createSetSpeed(NodeID source, NodeID dest, boolean
             isForward, double speed) {
         if (isForward) {
             if (speed < 0) speed = -speed;
@@ -57,47 +57,45 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
-    static TractionControlRequestMessage createGetSpeed(NodeID source, NodeID dest) {
+    public static TractionControlRequestMessage createGetSpeed(NodeID source, NodeID dest) {
         return new TractionControlRequestMessage(source, dest, new byte[]{CMD_GET_SPEED});
     }
 
-    static TractionControlRequestMessage createSetFn(NodeID source, NodeID dest, int fn, int val) {
+    public static TractionControlRequestMessage createSetFn(NodeID source, NodeID dest, int fn, int val) {
         byte[] payload = new byte[]{CMD_SET_FN, (byte) ((fn >> 16) & 0xff), (byte) ((fn >> 8) &
                 0xff), (byte) (fn & 0xff), (byte) ((val >> 8) & 0xff), (byte) (val & 0xff)};
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
-    static TractionControlRequestMessage createGetFn(NodeID source, NodeID dest, int fn) {
+    public static TractionControlRequestMessage createGetFn(NodeID source, NodeID dest, int fn) {
         byte[] payload = new byte[]{CMD_GET_FN, (byte) ((fn >> 16) & 0xff), (byte) ((fn >> 8) &
                 0xff), (byte) (fn & 0xff)};
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
     // Assigns the 'source' as controller id.
-    static TractionControlRequestMessage createAssignController(NodeID source, NodeID dest) {
+    public static TractionControlRequestMessage createAssignController(NodeID source, NodeID dest) {
         byte[] payload = new byte[]{CMD_CONTROLLER, SUBCMD_CONTROLLER_ASSIGN, 0, 1, 2, 3, 4, 5, 6};
         System.arraycopy(source.getContents(), 0, payload, 3, 6);
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
     // Releases the controller, filling source as the controlling id.
-    static TractionControlRequestMessage createReleaseController(NodeID source, NodeID dest) {
+    public static TractionControlRequestMessage createReleaseController(NodeID source, NodeID dest) {
         byte[] payload = new byte[]{CMD_CONTROLLER, SUBCMD_CONTROLLER_RELEASE, 0, 1, 2, 3, 4, 5, 6};
         System.arraycopy(source.getContents(), 0, payload, 3, 6);
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
-    // Releases the controller, filling source as the controlling id.
-    static TractionControlRequestMessage createQueryController(NodeID source, NodeID dest) {
+    public static TractionControlRequestMessage createQueryController(NodeID source, NodeID dest) {
         byte[] payload = new byte[]{CMD_CONTROLLER, SUBCMD_CONTROLLER_QUERY};
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
-    // Releases the controller, filling source as the controlling id.
-    static TractionControlRequestMessage createControllerChangeNotify(NodeID source, NodeID dest,
-                                                                      NodeID new_controller) {
+    public static TractionControlRequestMessage createControllerChangeNotify(NodeID source, NodeID dest,
+                                                                      NodeID newController) {
         byte[] payload = new byte[]{CMD_CONTROLLER, SUBCMD_CONTROLLER_CHANGE, 0, 1, 2, 3, 4, 5, 6};
-        System.arraycopy(new_controller.getContents(), 0, payload, 3, 6);
+        System.arraycopy(newController.getContents(), 0, payload, 3, 6);
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
