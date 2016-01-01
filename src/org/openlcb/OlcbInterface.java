@@ -73,6 +73,14 @@ public class OlcbInterface {
     /** Accessor for client libraries to send messages out. */
     public Connection getOutputConnection() { return wrappedOutputConnection; }
 
+    public NodeID getNodeId() { return nodeId; }
+
+    public MimicNodeStore getNodeStore() { return nodeStore; }
+
+    public DatagramService getDatagramService() { return dcs; }
+
+    public MemoryConfigurationService getMemoryConfigurationService() { return mcs; }
+
     public void registerMessageListener(Connection c) {
         inputConnection.registerMessageListener(c);
     }
