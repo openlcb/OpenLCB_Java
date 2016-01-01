@@ -25,11 +25,15 @@ public class VersionedValue<T> {
 
     public boolean set(int atVersion, T t) {
         T old;
+        boolean updated = false;
         synchronized (this) {
             if (atVersion <= version) return false;
             version = atVersion;
             if (nextVersion <= atVersion) {
                 nextVersion = atVersion + 1;
+            }
+            if (data.equals(t)) {
+                return true;
             }
             old = data;
             data = t;
