@@ -1,6 +1,10 @@
 package org.openlcb.can;
 
 import org.openlcb.*;
+import org.openlcb.messages.TractionControlReplyMessage;
+import org.openlcb.messages.TractionControlRequestMessage;
+import org.openlcb.messages.TractionProxyReplyMessage;
+import org.openlcb.messages.TractionProxyRequestMessage;
 
 import java.util.List;
 
@@ -93,6 +97,75 @@ public class MessageBuilderTest extends TestCase {
         CanFrame f0 = list.get(0);
         Assert.assertEquals("header", toHexString(0x195B4123), toHexString(f0.getHeader()));
         compareContent(event.getContents(), f0);
+    }
+
+    public void testTractionControlRequestMessageSingle() {
+        Message m = new TractionControlRequestMessage(source, destination, new byte[]{(byte)0xCC,
+                (byte)0xAA, 0x55, 4, 5, 6});
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x195EB123), toHexString(f0.getHeader()));
+        compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
+    }
+
+    public void testTractionControlRequestMessageMulti() {
+        Message m = new TractionControlRequestMessage(source, destination, new byte[]{(byte)0xCC,
+                (byte)0xAA, 0x55, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14});
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 3, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(0).getHeader()));
+        Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(1).getHeader()));
+        Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(2).getHeader()));
+        compareContent(Utilities.bytesFromHexString("13 21 CC AA 55 04 05 06"), list.get(0));
+        compareContent(Utilities.bytesFromHexString("33 21 07 08 09 0a 0b 0c"), list.get(1));
+        compareContent(Utilities.bytesFromHexString("23 21 0d 0e"), list.get(2));
+    }
+
+    public void testTractionControlReplyMessage() {
+        Message m = new TractionControlReplyMessage(source, destination, new byte[]{(byte)0xCC,
+                (byte)0xAA, 0x55, 4, 5, 6});
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x191E9123), toHexString(f0.getHeader()));
+        compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
+    }
+
+    public void testTractionProxyRequestMessage() {
+        Message m = new TractionProxyRequestMessage(source, destination, new byte[]{(byte)0xCC,
+                (byte)0xAA, 0x55, 4, 5, 6});
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x195EA123), toHexString(f0.getHeader()));
+        compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
+    }
+
+    public void testTractionProxyReplyMessage() {
+        Message m = new TractionProxyReplyMessage(source, destination, new byte[]{(byte)0xCC,
+                (byte)0xAA, 0x55, 4, 5, 6});
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x191E8123), toHexString(f0.getHeader()));
+        compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
     }
 
     public void testDatagramMessageShort() {
@@ -388,6 +461,21 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0x34, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[1]);    
         
           
+    }
+
+    public void testTractionControlRequestParseSingle() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x195EB123);
+        frame.setData(new byte[]{0x03, 0x21, 0x12, 0x34});
+
+        MessageBuilder b = new MessageBuilder(map);
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof TractionControlRequestMessage);
+        Assert.assertEquals("payload", "12 34", Utilities.toHexSpaceString(((AddressedPayloadMessage)msg).getPayload()));
     }
 
     public void testAliasExtraction() {
