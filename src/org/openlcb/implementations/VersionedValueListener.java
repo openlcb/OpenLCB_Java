@@ -10,7 +10,7 @@ import java.beans.PropertyChangeListener;
  */
 public abstract class VersionedValueListener<T> implements PropertyChangeListener {
     int ownerVersion;
-    VersionedValue<T> parent;
+    protected VersionedValue<T> parent;
 
     public VersionedValueListener(VersionedValue<T> parent) {
         this.parent = parent;
