@@ -5,7 +5,7 @@ import net.jcip.annotations.ThreadSafe;
 import org.openlcb.*;
 
 /**
- * Represents a TrainNode, a node that implements the Train protocol.
+ * Represents local view about a remote Train Node, a node that implements the Traction protocol.
  *
  *
  * @author  Bob Jacobsen   Copyright 2012
@@ -13,12 +13,12 @@ import org.openlcb.*;
  */
 @Immutable
 @ThreadSafe
-public class TrainNode {
+public class RemoteTrainNode {
 
-    public TrainNode(NodeID node) {
+    public RemoteTrainNode(NodeID node) {
         this.node = node;
     }    
     NodeID node;
     
-    public NodeID getNode() { return node; }
+    public NodeID getNodeId() { return node; }
 }

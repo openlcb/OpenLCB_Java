@@ -1,6 +1,5 @@
 package org.openlcb.implementations.throttle;
 
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -32,8 +31,8 @@ public class PackageTest extends TestCase {
         suite.addTest(Float16Test.suite());
         suite.addTest(ThrottleSpeedDatagramTest.suite());
         suite.addTest(ThrottleImplementationTest.suite());
-        suite.addTest(TrainNodeTest.suite());
-        suite.addTest(TrainNodeCacheTest.suite());
+        suite.addTest(RemoteTrainNodeTest.suite());
+        suite.addTest(RemoteTrainNodeCacheTest.suite());
 
         suite.addTest(org.openlcb.implementations.throttle.dcc.PackageTest.suite());
 
