@@ -5,27 +5,30 @@ import net.jcip.annotations.*;
 import edu.umd.cs.findbugs.annotations.*; 
 
 /**
- * Stream Initialization Request message implementation
+ * Stream Initialization Reply message implementation
  *
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
 @Immutable
 @ThreadSafe
-public class StreamInitRequestMessage extends AddressedMessage {
+public class StreamInitiateReplyMessage extends AddressedMessage {
     
-    public StreamInitRequestMessage(NodeID source, NodeID dest, 
-                    int bufferSize, int sourceStreamID) {
+    public StreamInitiateReplyMessage(NodeID source, NodeID dest,
+            int bufferSize, byte sourceStreamID, byte destStreamID) {
         super(source, dest);
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
+        this.destStreamID = destStreamID;
     }
     
     int bufferSize;
-    int sourceStreamID;
+    byte sourceStreamID;
+    byte destStreamID;
     
     public int getBufferSize() { return bufferSize; }
-    public int getSourceStreamID() { return sourceStreamID; }
+    public byte getDestinationStreamID() { return destStreamID; }
+    public byte getSourceStreamID() { return sourceStreamID; } //dph 20151229
     
     /**
      * Implement message-type-specific
@@ -36,23 +39,25 @@ public class StreamInitRequestMessage extends AddressedMessage {
      */
      @Override
      public void applyTo(MessageDecoder decoder, Connection sender) {
-        decoder.handleStreamInitRequest(this, sender);
+        decoder.handleStreamInitiateReply(this, sender);
      }
 
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
-        StreamInitRequestMessage p = (StreamInitRequestMessage) o;
+        StreamInitiateReplyMessage p = (StreamInitiateReplyMessage) o;
         if (bufferSize != p.bufferSize) return false;
         if (sourceStreamID != p.sourceStreamID) return false;
+        if (destStreamID != p.destStreamID) return false;
         return super.equals(o);
     } 
 
     public String toString() {
         return super.toString()
-                +" StreamInitRequest "    
+                +" StreamInitiateReply"
                 +" SSID "+sourceStreamID
+                +" DSID "+destStreamID
                 +" bsize "+bufferSize;     
     }
 
-    public int getMTI() { return MTI_STREAM_INIT_REQUEST; }
+    public int getMTI() { return MTI_STREAM_INIT_REPLY; }
 }

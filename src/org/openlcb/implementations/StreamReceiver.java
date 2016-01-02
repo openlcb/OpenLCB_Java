@@ -20,18 +20,18 @@ public class StreamReceiver extends MessageDecoder {
     NodeID far;
     Connection connection;
 
-    int sourceStreamID;
-    int destStreamID = 3;  //  notional value
+    byte sourceStreamID;
+    byte destStreamID = 3;  //  notional value
 
     /**
      * Handle "Stream Init Request" message
      */
-    public void handleStreamInitRequest(StreamInitRequestMessage msg, Connection sender){
+    public void handleStreamInitiateRequest(StreamInitiateRequestMessage msg, Connection sender){
         // send reply with same length
         int len = msg.getBufferSize();
         sourceStreamID = msg.getSourceStreamID();
 
-        Message m = new StreamInitReplyMessage(here, far, len, sourceStreamID, destStreamID);
+        Message m = new StreamInitiateReplyMessage(here, far, len, sourceStreamID, destStreamID);
         connection.put(m, this);
     }
 

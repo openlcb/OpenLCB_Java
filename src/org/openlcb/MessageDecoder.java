@@ -124,13 +124,13 @@ public class MessageDecoder extends AbstractConnection {
     /**
      * Handle "Stream Init Request" message
      */
-    public void handleStreamInitRequest(StreamInitRequestMessage msg, Connection sender){
+    public void handleStreamInitiateRequest(StreamInitiateRequestMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
     /**
      * Handle "Stream Init Reply" message
      */
-    public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
+    public void handleStreamInitiateReply(StreamInitiateReplyMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
     /**
