@@ -15,7 +15,7 @@ import org.openlcb.*;
  */
 public class StreamTransmitter extends MessageDecoder {
 
-    public StreamTransmitter(NodeID here, NodeID far, int bufferSize, int[] bytes, Connection c) {
+    public StreamTransmitter(NodeID here, NodeID far, int bufferSize, byte[] bytes, Connection c) {
         this.here = here;
         this.far = far;
         this.bufferSize = bufferSize;
@@ -23,27 +23,27 @@ public class StreamTransmitter extends MessageDecoder {
         this.connection = c;
         
         // start negotiation
-        StreamInitRequestMessage m = new StreamInitRequestMessage(here, far, bufferSize, destStreamID);
+        StreamInitiateRequestMessage m = new StreamInitiateRequestMessage(here, far, bufferSize, sourceStreamID, destStreamID);
         connection.put(m, this);
     }
     
     NodeID here;
     NodeID far;
     int bufferSize; 
-    int[] bytes;
+    byte[] bytes;
     Connection connection;
     int nextIndex;
     
-    int destStreamID;
-    int sourceStreamID = 4;  // notional value 
+    byte destStreamID;
+    byte sourceStreamID = 4;  // notional value
     
     /**
      * Handle "Stream Init Reply" message
      */
-    public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
+    public void handleStreamInitiateReply(StreamInitiateReplyMessage msg, Connection sender){
         // pick up buffer size to use
         this.bufferSize = msg.getBufferSize();
-        this.destStreamID = msg.getDestStreamID();
+        this.destStreamID = msg.getDestinationStreamID();
         
         // init transfer
         nextIndex = 0;
@@ -54,7 +54,7 @@ public class StreamTransmitter extends MessageDecoder {
 
     void sendNext() {
         int size = Math.min(bufferSize, bytes.length-nextIndex);
-        int[] data = new int[size];
+        byte[] data = new byte[size];
         // copy the needed data
         for (int i = 0; i<size; i++)
             data[i] = bytes[nextIndex+i];

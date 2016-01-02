@@ -13,6 +13,7 @@ import org.openlcb.NodeID;
  * Can accept requests without the using code having to serialize them.
  *
  * @author  Bob Jacobsen   Copyright 2012
+ * @author  David Harris   Copyright 2016
  * @version $Revision: -1 $
  */
 public class MemoryConfigurationService {
@@ -83,7 +84,25 @@ public class MemoryConfigurationService {
                     McsWriteMemo memo = writeMemo;
                     writeMemo = null;
                     //memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
-                }    
+                }
+                // dph
+                if (writeStreamMemo != null) {
+                    // receive destinationStreamID
+                    // figure out address space uses byte?
+                    boolean spaceByte = ((data[1] & 0x03) == 0);
+                    byte[] content;
+                    if ((data[1]&0x08) == 0) {
+                        // normal read reply
+                        content = new byte[data.length-6+(spaceByte ? -1 : 0)];
+                        for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6+(spaceByte?1:0)];
+                    } else {
+                        // error read reply, return zero length
+                        content = new byte[0];
+                    }
+                    McsWriteStreamMemo memo = writeStreamMemo;
+                    writeStreamMemo = null;
+                    memo.handleWriteStreamData(dest, memo.space, memo.address, content);
+                }
             }
         });
     }
@@ -109,6 +128,15 @@ public class MemoryConfigurationService {
         // forward as read Datagram
         readMemo = memo;
         ReadDatagramMemo dg = new ReadDatagramMemo(memo.dest, memo.space, memo.address, memo.count, memo);
+        downstream.sendData(dg);
+    }
+
+    // dph
+    McsWriteStreamMemo writeStreamMemo;
+    public void request(McsWriteStreamMemo memo) {
+        // forward as read Datagram
+        writeStreamMemo = memo;
+        WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
         downstream.sendData(dg);
     }
 
@@ -284,9 +312,61 @@ public class MemoryConfigurationService {
         public void handleReply(int code) { 
             memo.handleWriteReply(code);
         }
-        
-
     }
+
+    
+    // dph
+    // need sourceStreamID
+    @Immutable
+    @ThreadSafe
+    static public class McsWriteStreamMemo extends McsWriteMemo {
+        public McsWriteStreamMemo(NodeID dest, int space, long address, byte[] data) {
+            super( dest, space, address, data);
+            this.address = address;
+            this.space = space;
+            this.dest = dest;
+            this.data = data;
+        }
+
+        byte[] data;
+        final long address;
+        final int space;
+        final NodeID dest;
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o == null) return false;
+            if (! (o instanceof McsWriteStreamMemo)) return false;
+            McsWriteStreamMemo m = (McsWriteStreamMemo) o;
+            if (this.dest != m.dest) return false;
+            if (this.space != m.space) return false;
+            if (this.address != m.address) return false;
+            return this.data.length == m.data.length;  // is this ok???????????
+            //return true;  // is this ok???????????
+        }
+        
+        @Override
+        public String toString() {
+            return "McsWriteStreamMemo: "+address;
+        }
+        
+        @Override
+        public int hashCode() { return dest.hashCode()+space+((int)address)+data.length; }
+        
+        /**
+         * Overload this for notification of failure reply
+         * @param code non-zero for error reply
+         */
+        public void handleWriteStreamReply(int code) {
+        }
+        
+        /**
+         * Overload this for notification of data.
+         */
+        public void handleWriteStreamData(NodeID dest, int space, long address, byte[] data) {
+        }
+    }
+    
     
     @Immutable
     @ThreadSafe    

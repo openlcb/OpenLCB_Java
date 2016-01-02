@@ -553,6 +553,136 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("source", source, msg.getSourceNodeID());
         Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
     }
+    
+    // dph Stream tests
+    public void testStreamInitiateRequestMessage() {
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
+        f.setHeader(0x19CC8123);
+        // dest(2), maxBuffer(2),flags(2),sourceStream, reserved
+        f.setData(new byte[]{(byte)0x0F, (byte)0xFF, 0, 6, 0, 0, 4, 0});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(f);
+        
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof StreamInitiateRequestMessage);
+        
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((StreamInitiateRequestMessage)msg).getDestNodeID());
+        Assert.assertEquals("max buffer ",6,f.getElement(0));
+        Assert.assertEquals("flags ",0,f.getElement(1));
+        Assert.assertEquals("sourceStreamID ",4,f.getElement(2));
+    }
+    public void testStreamInitiateReplyMessage() {
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
+        f.setHeader(0x19868123);
+        // dest(2), flags(2),sourceStream, destinationStream
+        f.setData(new byte[]{(byte)0x0F, (byte)0xFF, 0, 0, 4, 6});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(f);
+        
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof StreamInitiateReplyMessage);
+        int[] data =  ((DatagramMessage)msg).getData();
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((StreamInitiateReplyMessage)msg).getDestNodeID());
+        Assert.assertEquals("max buffer ",64,data[2]<<8+data[3]);
+        Assert.assertEquals("flags ",0,data[4]<<8+data[5]);
+        Assert.assertEquals("sourceStreamID ",4,data[6]);
+        Assert.assertEquals("destinationStreamID ",6,data[7]);
+    }
+    public void testTwoStreamData() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1F321123);
+        frame.setData(new byte[]{1,2,3,4,5});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertNull(list);
+        
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x1F321123);
+        frame.setData(new byte[]{11,12,13,14,15});
+        
+        list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof DatagramMessage);
+        int[] data =  ((DatagramMessage)msg).getData();
+        Assert.assertEquals(5, data.length);
+        Assert.assertEquals(1,data[0]);
+        Assert.assertEquals(2,data[1]);
+        Assert.assertEquals(3,data[2]);
+        Assert.assertEquals(4,data[3]);
+        Assert.assertEquals(5,data[4]);
+        Assert.assertEquals(11,data[5]);
+        Assert.assertEquals(12,data[6]);
+        Assert.assertEquals(13,data[7]);
+        Assert.assertEquals(14,data[8]);
+        Assert.assertEquals(15,data[9]);
+    }
+    public void testStreamDataProceedMessage() {
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19888123);
+        // sourceStream, destinationStream, flags(2)
+        frame.setData(new byte[]{(byte)0x0F, (byte)0xFF, 4, 6, 0, 0});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof StreamDataProceedMessage);
+        int[] data =  ((DatagramMessage)msg).getData();
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((StreamDataProceedMessage)msg).getDestNodeID());
+        Assert.assertEquals("sourceStreamID ",data[2],4);
+        Assert.assertEquals("destinationStreamID ",data[3],6);
+        Assert.assertEquals("flags ",data[4]<<8+data[5],0);
+    }
+    public void testStreamDataCompleteMessage() {
+        NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
+        map.insert(0x0FFF, high);
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x198A8123);
+        // sourceStream, destinationStream, flags(2)
+        frame.setData(new byte[]{(byte)0x0F, (byte)0xFF, 4, 6, 0, 0});
+        
+        MessageBuilder b = new MessageBuilder(map);
+        
+        List<Message> list = b.processFrame(frame);
+        
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        
+        Assert.assertTrue(msg instanceof StreamDataCompleteMessage);
+        int[] data =  ((DatagramMessage)msg).getData();
+        Assert.assertEquals("source", source, msg.getSourceNodeID());
+        Assert.assertEquals("destination", high, ((StreamDataCompleteMessage)msg).getDestNodeID());
+        Assert.assertEquals("sourceStreamID ",data[2],4);
+        Assert.assertEquals("destinationStreamID ",data[3],6);
+        Assert.assertEquals("flags ",data[4]<<8+data[5],0);
+    }
+    
+
 
     // from here down is testing infrastructure
     

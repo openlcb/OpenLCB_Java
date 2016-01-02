@@ -72,6 +72,8 @@ public class MessageBuilder {
     }
     
     HashMap<NodeID, List<Integer>> datagramData = new HashMap<NodeID, List<Integer>>();
+    // dph
+    HashMap<NodeID, List<Integer>> streamData = new HashMap<NodeID, List<Integer>>();
     
     int getSourceID(CanFrame f) { return f.getHeader()&0x00000FFF; }
     int getMTI(CanFrame f) { return ( f.getHeader() & 0x00FFF000 ) >> 12; }
@@ -211,7 +213,7 @@ public class MessageBuilder {
             case IdentifyConsumer:
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
-            case ConsumerIdentifiedUnknown: 
+            case ConsumerIdentifiedUnknown:
             case ConsumerIdentifiedValid: 
             case ConsumerIdentifiedInvalid: 
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
@@ -245,6 +247,21 @@ public class MessageBuilder {
             case DatagramRejected: 
                 retlist.add(new DatagramRejectedMessage(source,dest,(int)f.dataAsLong()));
                 return retlist;
+         // dph: add all stream messages reply and proceed.
+            case StreamInitiateRequest:
+                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
+                return retlist;
+            case StreamInitiateReply:
+                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
+                return retlist;
+            // case StreamData is Format 7
+            case StreamDataProceed:
+                retlist.add(new StreamDataProceedMessage(source,dest,content[2], content[3]));
+                return retlist;
+            case StreamDataComplete:
+                retlist.add(new StreamDataCompleteMessage(source,dest,content[2], content[3]));
+                return retlist;
+                
             default: return null;
         }
     }
@@ -330,7 +347,30 @@ public class MessageBuilder {
     }
     List<Message> processFormat7(CanFrame f) {
         // stream data
-        return null;
+        NodeID source = map.getNodeID(getSourceID(f));
+        int bufSize = 64; // need to define this  !!!!!!!!!!!!!!!!!!!!!!!!!!
+        List<Integer> list = streamData.get(source);
+        if (list == null) {
+            list = new ArrayList<Integer>();
+        }
+        int n = Math.min(bufSize, f.getNumDataElements());
+        if(n < bufSize) {
+            // won't fill buffer, so add all
+            for (int i = 0; i < f.getNumDataElements(); i++) list.add(f.getElement(i));
+            return null;
+        } else {
+            // got a full buffer, fill it and send it on
+            for (int i = 0; i < n; i++) list.add(f.getElement(i));
+            int[] data = new int[list.size()];
+            for(int i=0; i<bufSize; i++) data[i] = list.get(i);
+            List<Message> retlist = new java.util.ArrayList<Message>();
+            NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
+            retlist.add(new DatagramMessage(source, dest, data));
+            // make a new List and fill it with the rest of received data
+            list = new ArrayList<Integer>();
+            for (int i=n; i<f.getNumDataElements(); i++) list.add(f.getElement(i));
+            return retlist;
+        }
     }
         
 
@@ -592,37 +632,89 @@ public class MessageBuilder {
         /**
          * Handle "Stream Init Request" message
          */
+        //final int STREAMBUFFERSIZE 10;
         @Override
-        public void handleStreamInitRequest(StreamInitRequestMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+        public void handleStreamInitiateRequest(StreamInitiateRequestMessage msg, Connection sender){
+            //defaultHandler(msg, sender);
+            // dph
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.StreamInitiateRequest.mti());
+            // dest(2), maxBuffer(2),flags(2),sourceStream, reserved
+            f.setData(new byte[]{ (byte)0, (byte)0, 0, 64, 0, 0, msg.getSourceStreamID(), (byte)0 });
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Stream Init Reply" message
          */
         @Override
-        public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+        public void handleStreamInitiateReply(StreamInitiateReplyMessage msg, Connection sender){
+            //defaultHandler(msg, sender);
+            // dph
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.StreamInitiateReply.mti());
+            // dest(2), maxBufferSize(2), flags(2),sourceStream, destinationStream
+            f.setData(new byte[]{ (byte)0, (byte)0, 0, 64, msg.getSourceStreamID(), msg.getDestinationStreamID()  } );
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Stream Data Send" message
          */
         @Override
         public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            // dph
+            // must loop over data to send 8 byte chunks
+            // do we need to check the destinationStreamID????????????????????
+            int remains = msg.getData().length;
+            int j = 0;
+            // always sends at least one stream message, even with zero bytes  ???????
+            do {
+                int size = Math.min(8, remains);
+                byte[] data = new byte[size];
+                for (int i = 0; i<size; i++) {
+                    data[i] = msg.getData()[j++];
+                }
+                
+                OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+                f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataSend.mti());
+                f.setData(data);
+                f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+                f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                retlist.add(f);
+                
+                remains = remains - size;
+            } while (remains > 0);
         }
         /**
          * Handle "Stream Data Proceed" message
          */
         @Override
         public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            // dph
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataProceed.mti());
+            // sourceStream, destinationStream, flags(2)
+            f.setData(new byte[]{(byte)0, (byte)0, msg.getSourceStreamID(), msg.getDestinationStreamID(), 0, 0 });
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
         /**
          * Handle "Stream Data Complete" message
          */
         @Override
         public void handleStreamDataComplete(StreamDataCompleteMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            // dph
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataComplete.mti());
+            // sourceStream, destinationStream, flags(2)
+            f.setData(new byte[]{(byte)0, (byte)0, msg.getSourceStreamID(), msg.getDestinationStreamID(), 0, 0 });
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            retlist.add(f);
         }
     }
  }

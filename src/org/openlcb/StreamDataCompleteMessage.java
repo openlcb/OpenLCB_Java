@@ -15,12 +15,16 @@ import edu.umd.cs.findbugs.annotations.*;
 public class StreamDataCompleteMessage extends AddressedMessage {
     
     public StreamDataCompleteMessage(NodeID source, NodeID dest,
-                int sourceStreamID, int destStreamID) {
+                byte sourceStreamID, byte destStreamID) {
         super(source, dest);
     }
         
-    int sourceStreamID;
-    int destStreamID;
+    byte sourceStreamID;
+    byte destStreamID;
+    
+    public byte getSourceStreamID() { return sourceStreamID; }
+    public byte getDestinationStreamID() { return destStreamID; }
+
 
     /**
      * Implement message-type-specific

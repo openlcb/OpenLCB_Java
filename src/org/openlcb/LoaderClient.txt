@@ -1,0 +1,275 @@
+//
+//  LoaderClient.java
+//
+//
+//  Created by David on 2015-12-29.
+//
+//
+
+#include "LoaderClient.hpp"
+
+public class LoaderClient extends MessageDecoder {
+    enum state = { IDLE, ABORT, FREEZE, INITCOMPL, PIP, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
+    NodeID dest;
+    int space;
+    long address;
+    byte[] content
+    public abstract class LoaderStatusReporter {
+        public abstract void onProgress(float percent);
+        public abstract void onDone(int errorCode, String errorString);
+    }
+    
+    public LoaderClient(NodeID _dest, int _space, long _address, MemoryContents inputContent, LoaderStatusReporter _feedback) {
+        dest = _dest;
+        space = _space;
+        address = _address;
+        feedback = _feedback;
+    }
+    
+    /* Protocol:
+      ---> memconfig Freeze (DG)
+     (<--- DG ok)    -- node may reboot, and not be able to garantee this
+      <--- InitComplete
+      ---> PIPRequest
+      <--- PIPReply
+     IF streams implemented then use one:
+      ---> memconfig write stream request (DG)
+      <--- DG ok
+      <--- memconfig write stream reply (DG)
+      ---> DG ok
+      ---> StreamInitRequest
+      <--- StreamInitReply
+      ---> StreamDataSend
+      ...
+      ---> StreamDataComplete
+     ELSE use datagrams: 
+      ---> DatagramMessage
+      <--- DatagramAcknowledged
+      ...
+      ---> [stop sending data when run out of buffer]
+      <--- stream data proceed
+      ...
+      <--- DatagramAcknowledged
+     THEN:
+      ---> UnFreeze
+     
+     */
+    
+    
+    public boolean doLoad() {
+        log.info("LoaderClient: Freeze reply");
+        state = FREEZE;
+        sendFreeze();  // allow restarts
+    }
+    
+    final int DG_OK 0x000;     // double check these
+    final int DG_FAIL 0x100;   // note that this value is used in DGMeteringBuffer to denote time-out
+    final int DG_RESEND 0x200;
+    void sendFreeze() {
+        dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(destNodeID(),{0x20, 0xA1, space}) {
+            public void handleReply(int code) {
+                // super handleReply(code);  // is this needed?
+                log.info("LoaderClient: Freeze reply");
+                log.debug("LoaderClient: Start of handleFreezeReply "+code);
+                if((state==FREEZE)) {
+                    if(code==DG_OK)      { state = INITCOMPL; } // DG ok
+                    else if(code==DG_FAIL) { state = INITCOMPL; } // DG timed out, but ok timeouts
+                    else if(code&&DG_RESEND) { state = FREEZE; } // resend ok, so start again
+                    else state = FAIL;    // Apparently this node doesn't handle DGs
+                } else state = FAIL;
+            }
+        });
+    }
+    @Override
+    public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
+        log.debug("LoaderClient: handleInitializationComplete");
+        if (state == INITCOMPL && msg.source().equals(destNodeID())) { state = PIP; sendPipRequest(); }
+    }
+    void sendPipRequest() {
+        log.debug("LoaderClient: PIPRequestMessage");
+        Message msg = new PIPRequestMessage(destNodeID());
+        connection.put(msg, this);
+        //state = PIPREPLY;
+    }
+    @Override
+    public void handlePipReply(PipReplyMessage msg, Connection sender){
+        log.debug("LoaderClient: handlePipReply");
+        int retries = 0;
+        if (state == PIP && msg.source().equals(destNodeID())) {
+            if(msg.data[2]&0x20) {
+                state=FAIL;
+                onDone(FAIL, "Target node should not be in Operating state.");
+            }
+            else if(!(msg.data[2]&0x10)) {
+                state=FAIL; // not in FirmwareUpgrade Operating state
+                onDone(FAIL, "Target node is not in Firmware Upgrade state.");
+            }
+            else if(msg.data[0]&0x20) {
+                state = SETUPSTREAM;
+                setupStream();
+            } else if(msg.data[0]&0x40) {
+                state = DG;
+                sendDG();
+            } else {
+                state = FAIL;
+                onDone(FAIL, "Target node does not support Streams nor Datagram!?");
+            }
+        }
+    }
+    void setupStream() {
+        log.debug("LoaderClient: MemConfigWriteStreamRequest");
+        mcs.Write
+        
+        
+        /*
+        byte[] cmd = { 0x20, 0x20, 0x00, 0x00, 0x00, 0x00, space }; // write stream altspace start(4) space
+        dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(destNodeID(), cmd) {
+            public void handleReply(int code) {
+                log.debug("LoaderClient: MemConfigWriteStreamRequest "+code);
+                log.info("LoaderClient: MemConfigWriteStreamRequest reply");
+                if((state==SETUPSTREAM)) {
+                    if(code==DG_OK)      { state = INITCOMPL; } // DG ok
+                    else {
+                        state = FAIL;
+                        onDone(FAIL, "MemConfigWriteStreamRequest failed.");
+                    }
+                } else {
+                    state = FAIL;
+                    onDone(FAIL, "We got lost 1.");
+                }
+            }
+        });
+         */
+    }
+
+    int bufferSize;      // chunk size
+    int startaddr;
+    int endaddr;
+    int totalmsgs;
+    int sentmsgs;
+    int location;
+    float progress;
+    
+    int destStreamID;
+    int sourceStreamID = 4;  // notional value
+    void sendStream() {
+        log.debug("LoaderClient: sendStream");
+        // not implemented yet
+        state = FAIL;
+        StreamInitRequestMessage m = new StreamInitRequestMessage(here, destNodeID(), bufferSize, sourceStreamID);
+        connection.put(m, this);
+    }
+    public void handleStreamInitReply(StreamInitReplyMessage msg, Connection sender){
+        log.debug("LoaderClient: handleStreamInitReply");
+        // pick up buffer size to use
+        if(state==STREAM && sourceStreamID==msg.getSourceStreamID) {
+            this.bufferSize = msg.getBufferSize();
+            this.destStreamID = msg.getDestStreamID();
+            // init transfer
+            nextIndex = 0;
+            // send data
+            state=STREAMDATA;
+            sendStreamNext();
+        }
+    }
+    public void sendStreamNext() {
+        log.debug("LoaderClient: sendStreamNext");
+        int size = Math.min(bufferSize, bytes.length-nextIndex);
+        int[] data = new int[size];
+        // copy the needed data
+        for (int i=0; i<size; i++) data[i] = bytes[nextIndex+i];
+        nextIndex = nextIndex+size;
+        // send data
+        log.debug("LoaderClient: StreamDataSendMessage");
+        Message m = new StreamDataSendMessage(here, destNodeID(), data, destStreamID);
+        connection.put(m, this);
+        // are we done?
+        if (nextIndex < bytes.length) return; // wait for Data Proceed message
+        // yes, say we're done
+        log.debug("LoaderClient: StreamDataCompleteMessage");
+        m = new StreamDataCompleteMessage(here, far, sourceStreamID, destStreamID);
+        connection.put(m, this);
+        log.info("   LoaderClient: Streaming Download completed normally");
+        state = SUCCESS;
+    }
+    public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
+        sendStreamNext();
+    }
+
+    void sendDGSequence() {
+        log.debug("LoaderClient: sendDGSequence");
+        bufferSize = 64;
+        startaddr = 0x000000;
+        endaddr = 0xFFFFFF;
+        // fast scan to count messages to send for progress bar
+        location = inputContent.nextContent(startaddr);
+        totalmsgs = 0;
+        sentmsgs = 0;
+        do {
+            // we're assuming that data is pretty dense,
+            // so we can jump through in bufferSize-sized chunks
+            location = location + bufferSize;
+            totalmsgs++;
+            // update to the next location for data
+            int next = inputContent.nextContent(location);
+            if (next < 0) { break; }   // no data left
+            location = next;
+        } while (location <= endaddr);
+        log.info("LoaderClient: Expect downloading to send {} write messages", totalmsgs);
+        
+        // Start write sequence:
+        // find the initial location with data
+        location = inputContent.nextContent(startaddr);
+        sendDGNext();
+    }
+    
+    sendDGNext() {
+        log.debug("LoaderClient: sendDGNext");
+        SwingUtilities.invokeLater(() -> {
+            byte[] temp = new byte[bufferSize];
+            int count;
+            for (count = 0; count < bufferSize; count++) {
+                if (!inputContent.locationInUse(location+count)) {
+                    break;
+                }
+                temp[count] = (byte)inputContent.getLocation(location+count);
+            }
+            byte[] data = new byte[count];
+            System.arraycopy(temp, 0, data, 0, count);
+            int addr = location; // next call back might be instantaneous
+            location = location + count;
+            log.debug("LoaderClient: DG Data");
+            dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(destNodeID(),new int[]{data}) {
+                public void handleWriteReply(int code) {
+                    log.debug("LoaderClient: Start of DGNextReply "+code);
+                    progress = sentmsgs/totalmsgs*100;
+                    if ((++sentmsgs % 20) == 0) ; //updateGUI(state, progress); // callback for GUI
+                    if(state==DG && code==0x000) {
+                        location = inputContent.nextContent(location);
+                        if (location < 0) {
+                            log.info("   LoaderClient: Download completed normally");
+                            sendUnfreeze();
+                            state = SUCCESS;
+                        } else {
+                            log.debug("   LoaderClient: Continue to 0x{}", Integer.toHexString(location).toUpperCase());
+                            sendDGNext();
+                        }
+                    } else {
+                        // non-normal reply
+                        log.info("   LoaderClient: Done abnormal code:{}", code);
+                        state = FAIL;
+                        sendUnfreeze();
+                    }
+                });
+            }
+        });
+    }
+    void sendUnfreeze() {
+        log.debug("LoaderClient: sendUnfreeze");
+        dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(destNodeID(), {0x20, 0xA0, space}) {
+            public void handleReply(int code) {
+                log.info("LoaderClient: unfreeze reply");
+            }
+        });
+    }
+}
