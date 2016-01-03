@@ -18,6 +18,11 @@ public abstract class VersionedValueListener<T> implements PropertyChangeListene
         ownerVersion = parent.getVersion();
     }
 
+    /** Stops listening to changes of the parent. Call this before abandoning the instance. */
+    public void release() {
+        parent.removePropertyChangeListener(this);
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
         int pVersion = parent.getVersion();
