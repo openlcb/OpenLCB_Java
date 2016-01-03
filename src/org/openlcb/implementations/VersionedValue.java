@@ -9,7 +9,7 @@ public class VersionedValue<T> {
     int nextVersion;
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
 
-    public void VersionedValue(T t) {
+    public VersionedValue(T t) {
         version = 1;
         nextVersion = 2;
         data = t;
