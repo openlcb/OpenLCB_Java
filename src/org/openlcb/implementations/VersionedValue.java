@@ -23,6 +23,13 @@ public class VersionedValue<T> {
         return newVersion;
     }
 
+    public void set(T t) {
+        synchronized(this) {
+            int version = getNewVersion();
+            set(version, t);
+        }
+    }
+
     public boolean set(int atVersion, T t) {
         T old;
         boolean updated = false;
