@@ -47,6 +47,11 @@ public abstract class VersionedValueListener<T> implements PropertyChangeListene
         parent.set(newVersion, t);
     }
 
-    /// Called when the backend has to update its version.
+    /** Calls the updater with the latest data. */
+    public void pingUpdater() {
+        update(parent.getLatestData());
+    }
+
+    /** Called when the backend has to update its version. */
     public abstract void update(T t);
 }
