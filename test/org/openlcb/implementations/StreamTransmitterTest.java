@@ -34,7 +34,7 @@ public class StreamTransmitterTest extends TestCase {
                                                     
         Assert.assertTrue(messagesReceived.size() == 1); // startup message
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitiateRequestMessage(hereID, farID, 64, (byte)0, (byte)0)));
+                           .equals(new StreamInitiateRequestMessage(hereID, farID, 64, (byte)4, (byte)0)));
     }
     
     public void testShortStream() {
