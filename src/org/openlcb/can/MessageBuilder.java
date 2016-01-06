@@ -252,7 +252,7 @@ public class MessageBuilder {
                 retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
                 return retlist;
             case StreamInitiateReply:
-                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
+                retlist.add(new StreamInitiateReplyMessage(source,dest,content[0]<<8+content[1],content[2], content[3]));
                 return retlist;
             // case StreamData is Format 7
             case StreamDataProceed:
