@@ -50,6 +50,7 @@ public class PackageTest extends TestCase {
         suite.addTest(MemoryConfigurationServiceTest.suite());
 
         suite.addTest(org.openlcb.implementations.throttle.PackageTest.suite());
+        suite.addTest(new TestSuite(BitProducerConsumerTest.class));
 
         return suite;
     }

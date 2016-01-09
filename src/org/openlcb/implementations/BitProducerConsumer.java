@@ -38,6 +38,17 @@ public class BitProducerConsumer extends MessageDecoder {
         });
     }
 
+    public synchronized VersionedValue<Boolean> getValue(boolean defaultValue) {
+        if(value == null) {
+            value = new VersionedValue<>(defaultValue);
+        }
+        return value;
+    }
+
+    public VersionedValue<Boolean> getValue() {
+        return value;
+    }
+
     private EventState getOnEventState() {
         if (value == null) return EventState.Unknown;
         if (value.getLatestData()) return EventState.Valid;
