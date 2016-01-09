@@ -39,7 +39,7 @@ public class SingleProducerNodeTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0)
                            .equals(new InitializationCompleteMessage(nodeID)));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new ProducerIdentifiedMessage(nodeID, eventID)));
+                           .equals(new ProducerIdentifiedMessage(nodeID, eventID, EventState.Unknown)));
     }
     
     public void testSend() {
@@ -60,7 +60,7 @@ public class SingleProducerNodeTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0)
                            .equals(new InitializationCompleteMessage(nodeID)));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new ProducerIdentifiedMessage(nodeID, eventID)));
+                           .equals(new ProducerIdentifiedMessage(nodeID, eventID, EventState.Unknown)));
         node.send();
         Assert.assertTrue(messagesReceived.get(2)
                            .equals(new ProducerConsumerEventReportMessage(nodeID, eventID)));

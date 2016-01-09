@@ -54,7 +54,7 @@ public class EventFilterGatewayTest extends GatewayTest {
     public void testReqEventPassesEtoW() {
         buildGateway();
 
-        Message m1 = new ConsumerIdentifiedMessage(node2, eventA);
+        Message m1 = new ConsumerIdentifiedMessage(node2, eventA, EventState.Unknown);
         cW.put(m1, tW);
         checkMovedWestToEastOnly();
         
@@ -66,7 +66,7 @@ public class EventFilterGatewayTest extends GatewayTest {
     public void testReqEventPassesWtoE() {
         buildGateway();
 
-        Message m1 = new ConsumerIdentifiedMessage(node2, eventA);
+        Message m1 = new ConsumerIdentifiedMessage(node2, eventA, EventState.Unknown);
         cE.put(m1, tE);
         checkMovedEastToWestOnly();
         

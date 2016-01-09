@@ -214,17 +214,25 @@ public class MessageBuilder {
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
             case ConsumerIdentifiedUnknown:
-            case ConsumerIdentifiedValid: 
-            case ConsumerIdentifiedInvalid: 
-                retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f)));
+                retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f), EventState.Unknown));
+                return retlist;
+            case ConsumerIdentifiedValid:
+                retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f), EventState.Valid));
+                return retlist;
+            case ConsumerIdentifiedInvalid:
+                retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f), EventState.Invalid));
                 return retlist;
             case IdentifyProducer: 
                 retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
                 return retlist;
-            case ProducerIdentifiedUnknown: 
-            case ProducerIdentifiedValid: 
-            case ProducerIdentifiedInvalid: 
-                retlist.add(new ProducerIdentifiedMessage(source, getEventID(f)));
+            case ProducerIdentifiedUnknown:
+                retlist.add(new ProducerIdentifiedMessage(source, getEventID(f), EventState.Unknown));
+                return retlist;
+            case ProducerIdentifiedValid:
+                retlist.add(new ProducerIdentifiedMessage(source, getEventID(f), EventState.Valid));
+                return retlist;
+            case ProducerIdentifiedInvalid:
+                retlist.add(new ProducerIdentifiedMessage(source, getEventID(f), EventState.Invalid));
                 return retlist;
             case ProducerConsumerEventReport: 
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));

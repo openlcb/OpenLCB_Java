@@ -34,7 +34,7 @@ public class SingleConsumerNode extends SingleLinkNode {
     public void initialize() {
         super.initialize();
         // announce which event is being sent
-        connection.put(new ConsumerIdentifiedMessage(nodeID, eventID), this);
+        connection.put(new ConsumerIdentifiedMessage(nodeID, eventID, EventState.Unknown), this);
     }
     
     /**

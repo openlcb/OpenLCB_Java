@@ -19,10 +19,10 @@ public class MimicNodeStoreTest extends TestCase {
     NodeID nid2 = new NodeID(new byte[]{2,3,3,4,5,6});
     
     ProducerIdentifiedMessage pim1 = new ProducerIdentifiedMessage(nid1, 
-                                                new EventID(new byte[]{1,0,0,0,0,0,1,0}));
+                                                new EventID(new byte[]{1,0,0,0,0,0,1,0}), EventState.Unknown);
                                                 
     ProducerIdentifiedMessage pim2 = new ProducerIdentifiedMessage(nid2, 
-                                                new EventID(new byte[]{1,0,0,0,0,0,1,0}));
+                                                new EventID(new byte[]{1,0,0,0,0,0,1,0}), EventState.Unknown);
     
     SimpleNodeIdentInfoReplyMessage snii1 = new SimpleNodeIdentInfoReplyMessage(nid1, nid2,
                                                 new byte[]{1,'a','b','c'});

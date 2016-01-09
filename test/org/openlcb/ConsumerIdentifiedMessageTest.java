@@ -20,31 +20,39 @@ public class ConsumerIdentifiedMessageTest extends TestCase {
 
     public void testEqualsSame() {
         Message m1 = new ConsumerIdentifiedMessage(
-                               nodeID1, eventID1 );
+                               nodeID1, eventID1, EventState.Valid);
         Message m2 = new ConsumerIdentifiedMessage(
-                               nodeID1, eventID1 );
+                               nodeID1, eventID1, EventState.Valid);
     
         Assert.assertTrue(m1.equals(m2));
     }
 
     public void testNotEqualsDifferentNode() {
         Message m1 = new ConsumerIdentifiedMessage(
-                                nodeID1, eventID1 );
+                                nodeID1, eventID1, EventState.Valid);
         Message m2 = new ConsumerIdentifiedMessage(
-                                nodeID2, eventID1 );
+                                nodeID2, eventID1, EventState.Valid);
     
         Assert.assertTrue( ! m1.equals(m2));
     }
 
     public void testNotEqualsDifferentEvent() {
         Message m1 = new ConsumerIdentifiedMessage(
-                                nodeID1, eventID1 );
+                                nodeID1, eventID1, EventState.Valid);
         Message m2 = new ConsumerIdentifiedMessage(
-                                nodeID1, eventID2 );
+                                nodeID1, eventID2, EventState.Valid);
     
         Assert.assertTrue( ! m1.equals(m2));
     }
 
+    public void testNotEqualsDifferentState() {
+        Message m1 = new ConsumerIdentifiedMessage(
+                nodeID1, eventID1, EventState.Valid);
+        Message m2 = new ConsumerIdentifiedMessage(
+                nodeID1, eventID2, EventState.Unknown);
+
+        Assert.assertTrue( ! m1.equals(m2));
+    }
 
     public void testHandling() {
         result = false;
@@ -56,7 +64,7 @@ public class ConsumerIdentifiedMessageTest extends TestCase {
         };
         Message m = new ConsumerIdentifiedMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}),
-                                            eventID1 );
+                                            eventID1, EventState.Unknown);
         
         n.put(m, null);
         
