@@ -100,6 +100,10 @@ public class CanInterface {
         }
     }
 
+    public OlcbInterface getInterface() {
+        return olcbInterface;
+    }
+
     class FrameParser implements CanFrameListener {
         @Override
         public void send(CanFrame frame) {
