@@ -26,3 +26,7 @@ xercesImpl.jar:
     version Xerces-J 2.9.1
     from http://www.apache.org/dist/xerces/j/
     
+mockito-all-1.10.19.jar
+    Needed to build and run tests
+    version 1.10.19
+    downloaded from http://jcenter.bintray.com/org/mockito/mockito-core/1.10.19/

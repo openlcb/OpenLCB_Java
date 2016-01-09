@@ -35,6 +35,8 @@
     <pathelement location="." />
     <pathelement location="lib/junit.jar" />
     <pathelement location="lib/xercesImpl.jar" /> <!-- only needed for tests compile and run -->
+    <pathelement location="lib/mockito-all-1.10.19-javadoc.jar" /> <!-- only needed for tests compile and run -->
+    <pathelement location="lib/mockito-all-1.10.19.jar" /> <!-- only needed for tests compile and run -->
     <pathelement location="lib/jdom-2.0.5.jar" />
     <pathelement location="lib/jdom.jar" />
     <pathelement location="lib/jlfgr-1_0.jar" />
