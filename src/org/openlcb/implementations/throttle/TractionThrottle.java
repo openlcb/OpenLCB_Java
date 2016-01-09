@@ -21,6 +21,8 @@ import java.util.logging.Logger;
  * Created by bracz on 12/30/15.
  */
 public class TractionThrottle extends MessageDecoder {
+    public static final String UPDATE_PROP_ENABLED = "updateEnabled";
+    public static final String UPDATE_PROP_STATUS = "updateStatus";
     private static Logger logger = Logger.getLogger(new Object() {
     }.getClass().getSuperclass()
             .getName());
@@ -65,6 +67,7 @@ public class TractionThrottle extends MessageDecoder {
                 trainNode.getNodeId());
         iface.getOutputConnection().put(m, this);
         assigned = false;
+        setEnabled(false);
         setStatus("Released node.");
     }
 
@@ -173,7 +176,7 @@ public class TractionThrottle extends MessageDecoder {
     private void setStatus(String status) {
         String oldStatus = this.status;
         this.status = status;
-        firePropertyChange("updateStatus", oldStatus, this.status);
+        firePropertyChange(UPDATE_PROP_STATUS, oldStatus, this.status);
     }
 
     public boolean getEnabled() {
@@ -183,7 +186,7 @@ public class TractionThrottle extends MessageDecoder {
     private void setEnabled(boolean enabled_) {
         boolean old = enabled;
         enabled = enabled_;
-        firePropertyChange("updateEnabled", old, enabled);
+        firePropertyChange(UPDATE_PROP_ENABLED, old, enabled);
     }
 
     public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
