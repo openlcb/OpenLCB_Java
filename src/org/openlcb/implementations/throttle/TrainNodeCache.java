@@ -31,6 +31,10 @@ public class TrainNodeCache extends AbstractNodeCache<RemoteTrainNode> {
         });
     }
 
+    public void release() {
+        iface.unRegisterMessageListener(this);
+    }
+
     protected RemoteTrainNode newObject(NodeID id) {
         MimicNodeStore.NodeMemo memo = iface.getNodeStore().findNode(id);
         if (memo != null) {
