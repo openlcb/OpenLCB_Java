@@ -41,7 +41,7 @@ public class SingleConsumerNodeTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0)
                            .equals(new InitializationCompleteMessage(nodeID)));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new ConsumerIdentifiedMessage(nodeID, eventID)));
+                           .equals(new ConsumerIdentifiedMessage(nodeID, eventID, EventState.Unknown)));
     }
     
     public void testConsumeRight() {

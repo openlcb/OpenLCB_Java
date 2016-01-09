@@ -7,6 +7,7 @@ import junit.framework.TestSuite;
 
 import org.openlcb.CommonIdentifiers;
 import org.openlcb.EventID;
+import org.openlcb.EventState;
 import org.openlcb.FakeOlcbInterface;
 import org.openlcb.Message;
 import org.openlcb.NodeID;
@@ -90,13 +91,13 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         Assert.assertEquals(1, cache.getList().size());
 
         m = new ProducerIdentifiedMessage(new NodeID(new byte[]{1, 1, 0, 0, 4, 4}),
-                CommonIdentifiers.IS_TRAIN);
+                CommonIdentifiers.IS_TRAIN, EventState.Unknown);
         cache.put(m, null);
 
         Assert.assertEquals(1, cache.getList().size());
 
         m = new ProducerIdentifiedMessage(new NodeID(new byte[]{1, 1, 0, 0, 4, 5}), new EventID
-                ("01.01.00.00.00.00.03.03"));
+                ("01.01.00.00.00.00.03.03"), EventState.Unknown);
         cache.put(m, null);
 
         Assert.assertEquals(2, cache.getList().size());

@@ -30,7 +30,7 @@ public class SingleProducerNode extends SingleLinkNode {
     public void initialize() {
         super.initialize();
         // announce which event is being sent
-        connection.put(new ProducerIdentifiedMessage(nodeID, eventID), this);
+        connection.put(new ProducerIdentifiedMessage(nodeID, eventID, EventState.Unknown), this);
     }
     
     /**
