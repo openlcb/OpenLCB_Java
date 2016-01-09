@@ -237,7 +237,9 @@ public class MessageBuilder {
             case ProducerConsumerEventReport: 
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
                 return retlist;
-
+            case IdentifyEventsAddressed:
+                retlist.add(new IdentifyEventsMessage(source, dest));
+                return retlist;
             case LearnEvent: 
                 retlist.add(new LearnEventMessage(source, getEventID(f)));
                 return retlist;
@@ -270,7 +272,10 @@ public class MessageBuilder {
                 retlist.add(new StreamDataCompleteMessage(source,dest,content[2], content[3]));
                 return retlist;
                 
-            default: return null;
+            default:
+                System.out.println(String.format(" received unhandled MTI 0x%03X: %s",mti, value
+                        .toString()));
+                return null;
         }
     }
     List<Message> processFormat2(CanFrame f) {
@@ -508,7 +513,11 @@ public class MessageBuilder {
          */
         @Override
         public void handleConsumerIdentified(ConsumerIdentifiedMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(msg.getEventState().getConsumerIdentifierMti().mti());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
         }
         /**
          * Handle "Identify Producers" message
@@ -526,7 +535,11 @@ public class MessageBuilder {
          */
         @Override
         public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender){
-            defaultHandler(msg, sender);
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(msg.getEventState().getProducerIdentifierMti().mti());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
         }
         /**
          * Handle "Identify Event" message
