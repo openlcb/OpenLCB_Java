@@ -34,6 +34,7 @@ public class PackageTest extends TestCase {
         suite.addTest(NIDaTest.suite());
         suite.addTest(NIDaAlgorithmTest.suite());
         suite.addTest(AliasMapTest.suite());
+        suite.addTest(new TestSuite(GridConnectTest.class));
 
         return suite;
     }
