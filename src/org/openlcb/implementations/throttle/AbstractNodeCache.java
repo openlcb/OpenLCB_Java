@@ -24,6 +24,8 @@ import org.openlcb.ProducerIdentifiedMessage;
  */
 public abstract class AbstractNodeCache<T> extends MessageDecoder {
 
+    public static final String UPDATE_PROP_CACHE = "cache";
+
     public AbstractNodeCache(EventID indicator) {
         this.indicator = indicator;
     }
@@ -63,7 +65,7 @@ public abstract class AbstractNodeCache<T> extends MessageDecoder {
         list.add(node);
         int last = list.size() - 1;
         index.put(src, last);
-        firePropertyChange("cache", null, node);
+        firePropertyChange(UPDATE_PROP_CACHE, null, node);
     }
 
     @Override

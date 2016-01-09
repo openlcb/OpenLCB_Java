@@ -14,6 +14,9 @@ import java.beans.PropertyChangeListener;
  * @version $Revision$
  */
 public class MimicNodeStore extends AbstractConnection {
+
+    public static final String ADD_PROP_NODE = "AddNode";
+
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
         this.node = node;
@@ -37,7 +40,7 @@ public class MimicNodeStore extends AbstractConnection {
         if (memo == null) {
             memo = new NodeMemo(id);
             map.put(id, memo);
-            pcs.firePropertyChange("AddNode", null, memo);
+            pcs.firePropertyChange(ADD_PROP_NODE, null, memo);
         }
         return memo;
     }
@@ -81,6 +84,8 @@ public class MimicNodeStore extends AbstractConnection {
     public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
 
     public class NodeMemo extends MessageDecoder {
+        public static final String UPDATE_PROP_SIMPLE_NODE_IDENT = "updateSimpleNodeIdent";
+        public static final String UPDATE_PROP_PROTOCOL = "updateProtocol";
         NodeID id;
         
         public NodeMemo(NodeID id) { this.id = id; }
@@ -93,7 +98,7 @@ public class MimicNodeStore extends AbstractConnection {
         public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
             pIdent = new ProtocolIdentification(msg);
-            pcs.firePropertyChange("updateProtocol", null, pIdent);
+            pcs.firePropertyChange(UPDATE_PROP_PROTOCOL, null, pIdent);
         }  
         public ProtocolIdentification getProtocolIdentification() {
             if (pIdent == null) {
@@ -110,7 +115,7 @@ public class MimicNodeStore extends AbstractConnection {
                 pSimpleNode = new SimpleNodeIdent(msg);
             else
                 pSimpleNode.addMsg(msg);
-            pcs.firePropertyChange("updateSimpleNodeIdent", null, pSimpleNode);
+            pcs.firePropertyChange(UPDATE_PROP_SIMPLE_NODE_IDENT, null, pSimpleNode);
         }  
         public SimpleNodeIdent getSimpleNodeIdent() {
             if (pSimpleNode == null) {
