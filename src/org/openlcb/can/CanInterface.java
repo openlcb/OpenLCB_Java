@@ -84,6 +84,13 @@ public class CanInterface {
         });
         // Waits for alias allocation to complete.
         sema.acquireUninterruptibly();
+        // Acquires everybody else's alias.
+        OpenLcbCanFrame ameFrame = new OpenLcbCanFrame(0);
+        ameFrame.setAME(aliasWatcher.getNIDa(), null);
+        frameOutput.send(ameFrame);
+        try {
+            Thread.sleep(200);
+        } catch(InterruptedException e) {}
         // Stores local node alias.
         aliasMap.insert(aliasWatcher.getNIDa(), nodeId);
         /// @TODO(balazs.racz): If the alias changes, we need to update the local alias map.
@@ -108,6 +115,7 @@ public class CanInterface {
         @Override
         public void send(CanFrame frame) {
             aliasWatcher.send(frame);
+            aliasMap.processFrame(new OpenLcbCanFrame(frame));
             List<Message> l = messageBuilder.processFrame(frame);
             if (l == null) return;
             for (Message m : l) {
