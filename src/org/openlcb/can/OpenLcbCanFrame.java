@@ -2,6 +2,8 @@ package org.openlcb.can;
 
 import org.openlcb.*;
 
+import javax.annotation.Nullable;
+
 /**
  * Carry and work with a CAN frame in OpenLCB format.
  *
@@ -190,6 +192,24 @@ public class OpenLcbCanFrame implements CanFrame {
     data[3] = val[3];
     data[4] = val[4];
     data[5] = val[5];
+  }
+
+  void setAME(int alias, @Nullable NodeID nid) {
+    init(alias);
+    setFrameTypeCAN();
+    setVariableField(AME_VAR_FIELD);
+    if (nid == null) {
+        length = 0;
+    } else {
+        length=6;
+        byte[] val = nid.getContents();
+        data[0] = val[0];
+        data[1] = val[1];
+        data[2] = val[2];
+        data[3] = val[3];
+        data[4] = val[4];
+        data[5] = val[5];
+    }
   }
 
   // end of CAN-level messages
