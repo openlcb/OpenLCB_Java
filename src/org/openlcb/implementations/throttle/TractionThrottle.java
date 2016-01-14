@@ -45,6 +45,7 @@ public class TractionThrottle extends MessageDecoder {
         }
     };
     private Map<Integer, FunctionInfo> functions = new HashMap<>();
+    private boolean pendingAssign = false;
 
     public TractionThrottle(OlcbInterface iface) {
         this.iface = iface;
@@ -75,6 +76,7 @@ public class TractionThrottle extends MessageDecoder {
     private void assign() {
         setStatus("Assigning node...");
         iface.registerMessageListener(this);
+        pendingAssign = true;
         Message m = TractionControlRequestMessage.createAssignController(iface.getNodeId(),
                 trainNode.getNodeId());
         iface.getOutputConnection().put(m, this);
@@ -85,9 +87,10 @@ public class TractionThrottle extends MessageDecoder {
         setStatus("Enabled.");
         setEnabled(true);
         querySpeed();
-        // Ensures that whenever the function objects are requested they will be queried from the
-        // backend anew.
-        functions.clear();
+        // Refreshes functions after getting the definite promise from the node.
+        for (FunctionInfo f : functions.values()) {
+            queryFunction(f.fn);
+        }
     }
 
     /**
@@ -122,9 +125,12 @@ public class TractionThrottle extends MessageDecoder {
     private synchronized FunctionInfo getFunctionInfo(int fn) {
         FunctionInfo v = functions.get(fn);
         if (v == null) {
+            logger.warning("Creating function " + fn);
             v = new FunctionInfo(fn);
             functions.put(fn, v);
-            queryFunction(fn);
+            if (!pendingAssign) {
+                queryFunction(fn);
+            }
         }
         return v;
     }
@@ -142,6 +148,7 @@ public class TractionThrottle extends MessageDecoder {
             if (msg.getCmd() == TractionControlReplyMessage.CMD_CONTROLLER &&
                     msg.getSubCmd() == TractionControlReplyMessage.SUBCMD_CONTROLLER_ASSIGN) {
                 byte result = msg.getAssignControllerReply();
+                pendingAssign = false;
                 if (result == 0) {
                     assignComplete();
                 } else if ((result & 1) != 0) {
@@ -156,7 +163,10 @@ public class TractionThrottle extends MessageDecoder {
                 return;
             }
             if (msg.getCmd() == TractionControlReplyMessage.CMD_GET_FN) {
-                getFunctionInfo(msg.getFnNumber()).fnUpdater.setFromOwner(msg.getFnVal() != 0);
+                int fn = msg.getFnNumber();
+                int val = msg.getFnVal();
+                logger.warning("Function response: train function " + fn + " value " + val);
+                getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
                 return;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
