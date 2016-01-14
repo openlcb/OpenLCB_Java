@@ -32,7 +32,7 @@ public class TractionThrottle extends MessageDecoder {
     boolean enabled = false;
     String status;
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
-    private VersionedValue<Float> speed;
+    private VersionedValue<Float> speed = new VersionedValue<>(0.0f);
     private VersionedValueListener<Float> speedUpdater = new VersionedValueListener<Float>(speed) {
         @Override
         public void update(Float t) {
@@ -68,11 +68,13 @@ public class TractionThrottle extends MessageDecoder {
         iface.getOutputConnection().put(m, this);
         assigned = false;
         setEnabled(false);
+        iface.unRegisterMessageListener(this);
         setStatus("Released node.");
     }
 
     private void assign() {
         setStatus("Assigning node...");
+        iface.registerMessageListener(this);
         Message m = TractionControlRequestMessage.createAssignController(iface.getNodeId(),
                 trainNode.getNodeId());
         iface.getOutputConnection().put(m, this);
@@ -83,7 +85,7 @@ public class TractionThrottle extends MessageDecoder {
         setStatus("Enabled.");
         setEnabled(true);
         querySpeed();
-        // Ensures that whenever the function objects are requested they will be queriedfrom the
+        // Ensures that whenever the function objects are requested they will be queried from the
         // backend anew.
         functions.clear();
     }
@@ -131,10 +133,6 @@ public class TractionThrottle extends MessageDecoder {
         return speed;
     }
 
-    private void internalSetSpeed(Float16 newSpeed) {
-
-    }
-
     @Override
     public void handleTractionControlReply(TractionControlReplyMessage msg, Connection sender) {
         if (trainNode == null) return;
@@ -174,6 +172,7 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     private void setStatus(String status) {
+        logger.warning("Throttle status: " + status);
         String oldStatus = this.status;
         this.status = status;
         firePropertyChange(UPDATE_PROP_STATUS, oldStatus, this.status);
@@ -203,7 +202,7 @@ public class TractionThrottle extends MessageDecoder {
 
     private class FunctionInfo {
         int fn;
-        VersionedValue<Boolean> shared;
+        VersionedValue<Boolean> shared = new VersionedValue<>(false);
         VersionedValueListener<Boolean> fnUpdater = new VersionedValueListener<Boolean>(shared) {
             @Override
             public void update(Boolean aBoolean) {

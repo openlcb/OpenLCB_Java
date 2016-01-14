@@ -6,9 +6,7 @@ import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Collects all objects necessary to run an OpenLCB standards-compatible interface.
@@ -38,8 +36,9 @@ public class OlcbInterface {
 
     /**
      * Creates the message-level interface.
-     * @param nodeId_ is the node ID for the node on this interface. Will send out a node
-     *                initialized ready with this node ID.
+     *
+     * @param nodeId_           is the node ID for the node on this interface. Will send out a node
+     *                          initialized ready with this node ID.
      * @param outputConnection_ implements the hardware interface for sending messages to the
      *                          network. Usually this is an internal object of the CanInterface.
      */
@@ -66,26 +65,43 @@ public class OlcbInterface {
         });
     }
 
-    /** Accessor for the outside interface for arriving inbound messages.
+    /**
+     * Accessor for the outside interface for arriving inbound messages.
+     *
      * @return the Connection that the incoming messages (from the network) have to be forwarded
-     * to. */
+     * to.
+     */
     public Connection getInputConnection() {
         return inputConnection;
     }
-    /** Accessor for client libraries to send messages out. */
-    public Connection getOutputConnection() { return wrappedOutputConnection; }
 
-    public NodeID getNodeId() { return nodeId; }
+    /**
+     * Accessor for client libraries to send messages out.
+     */
+    public Connection getOutputConnection() {
+        return wrappedOutputConnection;
+    }
 
-    public MimicNodeStore getNodeStore() { return nodeStore; }
+    public NodeID getNodeId() {
+        return nodeId;
+    }
 
-    public DatagramService getDatagramService() { return dcs; }
+    public MimicNodeStore getNodeStore() {
+        return nodeStore;
+    }
 
-    public MemoryConfigurationService getMemoryConfigurationService() { return mcs; }
+    public DatagramService getDatagramService() {
+        return dcs;
+    }
+
+    public MemoryConfigurationService getMemoryConfigurationService() {
+        return mcs;
+    }
 
     public void registerMessageListener(Connection c) {
         inputConnection.registerMessageListener(c);
     }
+
     public void unRegisterMessageListener(Connection c) {
         inputConnection.unRegisterMessageListener(c);
     }
@@ -95,15 +111,27 @@ public class OlcbInterface {
         // registrations is useful in ensuring that the system components receive the messages
         // earlier as the later-registered user components.
         private List<Connection> listeners = new ArrayList<>();
-        public void registerMessageListener(Connection c) {
-            listeners.add(c);
+        private List<Connection> pendingListeners = new ArrayList<>();
+        private List<Connection> unpendingListeners = new ArrayList<>();
+
+        public synchronized void registerMessageListener(Connection c) {
+            pendingListeners.add(c);
         }
-        public void unRegisterMessageListener(Connection c) {
-            listeners.remove(c);
+
+        public synchronized void unRegisterMessageListener(Connection c) {
+            unpendingListeners.add(c);
         }
 
         @Override
         public void put(Message msg, Connection sender) {
+            if (!pendingListeners.isEmpty() || !unpendingListeners.isEmpty()) {
+                synchronized (this) {
+                    listeners.addAll(pendingListeners);
+                    pendingListeners.clear();
+                    listeners.removeAll(unpendingListeners);
+                    unpendingListeners.clear();
+                }
+            }
             for (Connection c : listeners) {
                 c.put(msg, sender);
             }
@@ -111,9 +139,9 @@ public class OlcbInterface {
     }
 
     /**
-    * Performs local feedback of addressed and global messages. This class is on the critical
-    * path to sending messages.
-    */
+     * Performs local feedback of addressed and global messages. This class is on the critical
+     * path to sending messages.
+     */
     class OutputConnectionSniffer implements Connection {
         @Override
         public void put(Message msg, Connection sender) {
