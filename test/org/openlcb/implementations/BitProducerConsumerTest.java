@@ -160,6 +160,29 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectNoFrames();
     }
 
+    public void testGenerateEvents() throws Exception {
+        VersionedValue<Boolean> v = pc.getValue(false);
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19545333N0504030201000708;");
+
+        expectNoFrames();
+
+        v.set(false);
+        expectNoFrames();
+
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        v.set(true);
+        expectNoFrames();
+
+        v.set(false);
+        expectFrame(":X195B4333N0504030201000709;");
+        expectNoFrames();
+    }
+
     @Override
     protected void tearDown() throws Exception {
         expectNoFrames();

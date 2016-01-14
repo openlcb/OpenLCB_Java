@@ -40,7 +40,7 @@ public class BitProducerConsumer extends MessageDecoder {
 
     public synchronized VersionedValue<Boolean> getValue(boolean defaultValue) {
         if(value == null) {
-            value = new VersionedValue<>(defaultValue);
+            setValueFromNetwork(defaultValue);
         }
         return value;
     }
