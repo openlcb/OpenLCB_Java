@@ -19,6 +19,16 @@ import org.openlcb.NodeID;
 public class MemoryConfigurationService {
 
     private static final int DATAGRAM_TYPE = 0x20;
+
+    public static final int SPACE_CDI = 0xFF;
+    public static final int SPACE_ALL_MEM = 0xFE;
+    public static final int SPACE_CONFIG = 0xFD;
+    public static final int SPACE_ACDI_CONST = 0xFC;
+    public static final int SPACE_ACDI_USER = 0xFB;
+    public static final int SPACE_TRACTION_FDI = 0xFA;
+    public static final int SPACE_TRACTION_FUNCTION = 0xF9;
+
+
     /**
      * @param downstream Connection in the direction of the layout
      */
