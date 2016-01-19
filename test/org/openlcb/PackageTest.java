@@ -78,6 +78,9 @@ public class PackageTest extends TestCase {
         suite.addTest(ThrottleTest.suite());
 
         suite.addTest(MimicNodeStoreTest.suite());
+        
+        suite.addTest(LoaderClientTest.suite());
+        
 
         // test implementation classes
         suite.addTest(org.openlcb.implementations.PackageTest.suite());

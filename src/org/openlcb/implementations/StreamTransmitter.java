@@ -16,6 +16,7 @@ import org.openlcb.*;
 public class StreamTransmitter extends MessageDecoder {
 
     public StreamTransmitter(NodeID here, NodeID far, int bufferSize, byte[] bytes, Connection c) {
+        //System.out.println("StreamTransmitter");
         this.here = here;
         this.far = far;
         this.bufferSize = bufferSize;
@@ -41,6 +42,7 @@ public class StreamTransmitter extends MessageDecoder {
      * Handle "Stream Init Reply" message
      */
     public void handleStreamInitiateReply(StreamInitiateReplyMessage msg, Connection sender){
+        //System.out.println("StreamTransmitter handleStreamInitiateReply");
         // pick up buffer size to use
         this.bufferSize = msg.getBufferSize();
         this.destStreamID = msg.getDestinationStreamID();
@@ -53,6 +55,7 @@ public class StreamTransmitter extends MessageDecoder {
     }
 
     void sendNext() {
+        //System.out.println("StreamTransmitter sendNext");
         int size = Math.min(bufferSize, bytes.length-nextIndex);
         byte[] data = new byte[size];
         // copy the needed data
@@ -65,7 +68,7 @@ public class StreamTransmitter extends MessageDecoder {
         connection.put(m, this);
         
         // are we done?
-        if (nextIndex < bytes.length) return; // wait for Data Proceed message
+        if (nextIndex < bytes.length) return; // no, wait for Data Proceed message
         
         // yes, say we're done
         m = new StreamDataCompleteMessage(here, far, sourceStreamID, destStreamID);
@@ -76,6 +79,7 @@ public class StreamTransmitter extends MessageDecoder {
      * Handle "Stream Data Proceed" message
      */
     public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
+        //System.out.println("StreamTransmitter handleStreamDataProceed");
         sendNext();
     }
     
