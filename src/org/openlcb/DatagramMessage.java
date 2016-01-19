@@ -85,7 +85,7 @@ public class DatagramMessage extends AddressedMessage {
     @Override
     public String toString() {
         StringBuilder value = new StringBuilder(super.toString());
-        value.append(" Datagram: ");  
+        value.append(" Datagram: ");
         
         int n = getData().length;
         boolean first = true;

@@ -1,0 +1,42 @@
+package org.openlcb.implementations;
+
+import org.openlcb.*;
+
+import junit.framework.Assert;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+/**
+ * @author  David Harris   Copyright 2016
+ */
+
+public class LoaderTest extends TestCase {
+
+    NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
+    NodeID farID  = new NodeID(new byte[]{1,1,1,1,1,1});
+    
+    byte[] data;
+
+    java.util.ArrayList<Message> messagesReceived;
+    
+    public void testInitialization() {
+        messagesReceived = new java.util.ArrayList<Message>();
+        Connection testConnection = new AbstractConnection(){
+            public void put(Message msg, Connection sender) {
+                messagesReceived.add(msg);
+            }
+        };
+        LoaderStatusReporter reporter(int errorCode, String errorString) {};
+        LoaderClient xmt = new LoaderClient( hereID,farID,
+                                             45, 0,          // space, address
+                                             data,           // data
+                                             reporter()
+                                             testConnection);
+        
+        Assert.assertTrue(messagesReceived.size() == 1); // startup message
+        Assert.assertTrue(messagesReceived.get(0)
+                          .equals(new StreamInitiateRequestMessage(hereID, farID, 64, (byte)4, (byte)0)));
+    }
+
+}

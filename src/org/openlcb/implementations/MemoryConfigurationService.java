@@ -86,6 +86,7 @@ public class MemoryConfigurationService {
                     //memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
                 }
                 // dph
+                
                 if (writeStreamMemo != null) {
                     // receive destinationStreamID
                     // figure out address space uses byte?
@@ -101,8 +102,9 @@ public class MemoryConfigurationService {
                     }
                     McsWriteStreamMemo memo = writeStreamMemo;
                     writeStreamMemo = null;
-                    memo.handleWriteStreamData(dest, memo.space, memo.address, content);
+                    //memo.handleWriteStreamData(dest, memo.space, memo.address, content);
                 }
+                
             }
         });
     }
@@ -134,9 +136,11 @@ public class MemoryConfigurationService {
     // dph
     McsWriteStreamMemo writeStreamMemo;
     public void request(McsWriteStreamMemo memo) {
-        // forward as read Datagram
+        // forward as write Datagram
+                                      //System.out.println("writeStreamMemo: "+memo.dest+","+memo.space+","+memo.address);
+                                      // System.out.println("writeStreamMemo: "+memo.dest);
         writeStreamMemo = memo;
-        WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
+        WriteStreamMemo dg = new WriteStreamMemo(memo.dest, memo.space, memo.address, memo);
         downstream.sendData(dg);
     }
 
@@ -205,6 +209,53 @@ public class MemoryConfigurationService {
 
     }
 
+    @Immutable
+    @ThreadSafe
+    static public class McsWriteStreamMemo {
+        public McsWriteStreamMemo(NodeID dest, int space, long address) {
+            //super(dest, space, address);
+            this.address = address;
+            this.space = space;
+            this.dest = dest;
+            this.data = null;
+        }
+        
+        //final int count;
+        final long address;
+        final int space;
+        final NodeID dest;
+        final byte[] data;
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o == null) return false;
+            if (! (o instanceof McsWriteMemo)) return false;
+            McsWriteMemo m = (McsWriteMemo) o;
+            if (this.dest != m.dest) return false;
+            if (this.space != m.space) return false;
+            if (this.address != m.address) return false;
+            return this.data.length == m.data.length;
+        }
+        
+        @Override
+        public String toString() {
+            return "McsWriteStreamMemo: "+address;
+        }
+        
+        @Override
+        public int hashCode() { return dest.hashCode()+space+((int)address)+data.length; }
+        
+        /**
+         * Overload this for notification of failure reply
+         * @param code non-zero for error reply
+         */
+
+        public void handleReply(int code){}
+        public void handleWriteReply(int code){}
+        public void handleWriteStreamReply(int code) {}
+    }
+    
+    
     @Immutable
     @ThreadSafe    
     static public class ReadDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
@@ -319,51 +370,44 @@ public class MemoryConfigurationService {
     // need sourceStreamID
     @Immutable
     @ThreadSafe
-    static public class McsWriteStreamMemo extends McsWriteMemo {
-        public McsWriteStreamMemo(NodeID dest, int space, long address, byte[] data) {
-            super( dest, space, address, data);
-            this.address = address;
-            this.space = space;
-            this.dest = dest;
-            this.data = data;
+    static public class WriteStreamMemo extends DatagramService.DatagramServiceTransmitMemo  {
+//        public WriteStreamMemo(NodeID dest, int space, long address, byte[] content, McsWriteMemo memo) {
+      public WriteStreamMemo(NodeID dest, int space, long address, McsWriteStreamMemo memo) {
+          super(dest);
+          this.space=space;
+          this.address = address;
+          boolean spaceByte = false;
+          if (space<0xFD) spaceByte = true;
+          this.data = new int[6+(spaceByte ? 1 : 0)+1];
+          this.data[0] = DATAGRAM_TYPE;
+          this.data[1] = 0x20;
+          if (space >= 0xFD) this.data[1] |= space&0x3;
+          
+          this.data[2] = (int)(address>>24)&0xFF;
+          this.data[3] = (int)(address>>16)&0xFF;
+          this.data[4] = (int)(address>>8 )&0xFF;
+          this.data[5] = (int)(address    )&0xFF;
+          
+          if (spaceByte) {
+              this.data[6] = space;
+              this.data[7] = 0x04;
+          } else this.data[6] = 0x04;   // srcStreamID???? why do we need this?
+          
+          
+          //for (int i = 0; i < content.length; i++)
+          //    this.data[6+(spaceByte ? 1 : 0)+i] = content[i];
+          
+          this.memo = memo;
         }
-
-        byte[] data;
-        final long address;
-        final int space;
-        final NodeID dest;
-        
-        @Override
-        public boolean equals(Object o) {
-            if (o == null) return false;
-            if (! (o instanceof McsWriteStreamMemo)) return false;
-            McsWriteStreamMemo m = (McsWriteStreamMemo) o;
-            if (this.dest != m.dest) return false;
-            if (this.space != m.space) return false;
-            if (this.address != m.address) return false;
-            return this.data.length == m.data.length;  // is this ok???????????
-            //return true;  // is this ok???????????
-        }
-        
-        @Override
-        public String toString() {
-            return "McsWriteStreamMemo: "+address;
-        }
-        
-        @Override
-        public int hashCode() { return dest.hashCode()+space+((int)address)+data.length; }
-        
+        int space;
+        long address;
+        McsWriteStreamMemo memo;
         /**
-         * Overload this for notification of failure reply
-         * @param code non-zero for error reply
+         * Handle immediate write reply from datagram.
+         * Should refer back to the memo request
          */
-        public void handleWriteStreamReply(int code) {
-        }
-        
-        /**
-         * Overload this for notification of data.
-         */
-        public void handleWriteStreamData(NodeID dest, int space, long address, byte[] data) {
+        public void handleReply(int code) {
+            memo.handleWriteReply(code);
         }
     }
     

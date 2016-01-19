@@ -47,8 +47,19 @@ public class StreamDataSendMessage extends AddressedMessage {
     } 
 
     public String toString() {
-        return super.toString()
-                +" StreamDataSend "+data;     
+        StringBuilder value = new StringBuilder(super.toString());
+        value.append(" Stream: ");
+        
+        int n = data.length;
+        if(n>16) n=16;
+        boolean first = true;
+        for (int i = 0; i<n; i++) {
+            if (!first) value.append(".");
+            value.append(Integer.toHexString((int)(data[i]&0xFF)).toUpperCase());
+            first = false;
+        }
+        if(data.length>16) value.append(" ...");
+        return new String(value);
     }
 
     public int getMTI() { return MTI_STREAM_DATA_SEND; }
