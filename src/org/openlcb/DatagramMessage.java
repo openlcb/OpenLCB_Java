@@ -86,8 +86,8 @@ public class DatagramMessage extends AddressedMessage {
     public String toString() {
         StringBuilder value = new StringBuilder(super.toString());
         value.append(" Datagram: ");
-        
         int n = getData().length;
+        value.append("("+n+") ");
         boolean first = true;
         for (int i = 0; i<n; i++) {
             if (!first) value.append(".");

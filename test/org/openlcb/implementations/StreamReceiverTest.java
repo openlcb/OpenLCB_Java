@@ -67,7 +67,7 @@ public class StreamReceiverTest extends TestCase {
 
         // send one data message
         messagesReceived = new java.util.ArrayList<Message>();
-        m = new StreamDataSendMessage(farID, hereID, new byte[64], (byte)0);
+        m = new StreamDataSendMessage(farID, hereID, new int[64]);
         
         rcv.put(m, null);
         

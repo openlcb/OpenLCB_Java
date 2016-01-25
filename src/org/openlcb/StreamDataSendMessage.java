@@ -14,17 +14,18 @@ import edu.umd.cs.findbugs.annotations.*;
 @ThreadSafe
 public class StreamDataSendMessage extends AddressedMessage {
     
-    public StreamDataSendMessage(NodeID source, NodeID dest, byte[] data,
-                    byte destStreamID) {
+//    public StreamDataSendMessage(NodeID source, NodeID dest, byte[] data,
+//                    byte destStreamID) {
+    public StreamDataSendMessage(NodeID source, NodeID dest, int[] data) {
         super(source, dest);
         this.data = data;
-        this.destStreamID = destStreamID;
+        //this.destStreamID = destStreamID;
     }
         
-    byte[] data;
+    int[] data;
     byte destStreamID;
     byte getDestinationStreamID() { return destStreamID; }
-    public byte[] getData() { return data; }
+    public int[] getData() { return data; }
     /**
      * Implement message-type-specific
      * processing when this message
