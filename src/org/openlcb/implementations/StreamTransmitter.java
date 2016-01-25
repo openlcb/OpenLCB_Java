@@ -15,7 +15,7 @@ import org.openlcb.*;
  */
 public class StreamTransmitter extends MessageDecoder {
 
-    public StreamTransmitter(NodeID here, NodeID far, int bufferSize, byte[] bytes, Connection c) {
+    public StreamTransmitter(NodeID here, NodeID far, int bufferSize, int[] bytes, Connection c) {
         //System.out.println("StreamTransmitter");
         this.here = here;
         this.far = far;
@@ -31,7 +31,7 @@ public class StreamTransmitter extends MessageDecoder {
     NodeID here;
     NodeID far;
     int bufferSize; 
-    byte[] bytes;
+    int[] bytes;
     Connection connection;
     int nextIndex;
     
@@ -57,14 +57,14 @@ public class StreamTransmitter extends MessageDecoder {
     void sendNext() {
         //System.out.println("StreamTransmitter sendNext");
         int size = Math.min(bufferSize, bytes.length-nextIndex);
-        byte[] data = new byte[size];
+        int[] data = new int[size];
         // copy the needed data
         for (int i = 0; i<size; i++)
             data[i] = bytes[nextIndex+i];
         nextIndex = nextIndex+size;
         
         // send data
-        Message m = new StreamDataSendMessage(here, far, data, destStreamID);
+        Message m = new StreamDataSendMessage(here, far, data);
         connection.put(m, this);
         
         // are we done?

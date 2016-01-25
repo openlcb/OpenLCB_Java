@@ -23,8 +23,9 @@ import org.openlcb.StreamInitiateReplyMessage;
 //#include "LoaderClient.hpp"
 
 public class LoaderClient extends MessageDecoder {
-    enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
+    enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, PIPREPLY, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
     Connection connection;
+    Connection fromDownstream;
     MemoryConfigurationService mcs;
     DatagramService dcs;
     MimicNodeStore store;
@@ -37,22 +38,14 @@ public class LoaderClient extends MessageDecoder {
     byte[] content;
     LoaderStatusReporter feedback;
     
-    public abstract class LoaderStatusReporter {
+    public static abstract class LoaderStatusReporter {
         public abstract void onProgress(float percent);
         public abstract void onDone(int errorCode, String errorString);
     }
     
-    public LoaderClient(NodeID _src, NodeID _dest, int _space, long _address, byte[] _content, LoaderStatusReporter _feedback, Connection _connection, MemoryConfigurationService _mcs, DatagramService _dcs ) {
-        src = _src;
-        dest = _dest;
-        space = _space;
-        address = _address;
-        content = _content.clone();
-                                      // System.out.println("LoaderClient: content="+content);
-        feedback = _feedback;
+    public LoaderClient( Connection _connection, MemoryConfigurationService _mcs, DatagramService _dcs ) {
+                                       //System.out.println("LoaderClient init");
         connection = _connection;
-        //dcs = new DatagramService(src, connection);
-        //mcs = new MemoryConfigurationService(src, dcs);
         dcs = _dcs;
         mcs = _mcs;
     }
@@ -87,8 +80,14 @@ public class LoaderClient extends MessageDecoder {
      */
     
     
-    public void doLoad() {
-        state = State.FREEZE;
+    public void doLoad(NodeID _src, NodeID _dest, int _space, long _address, byte[] _content, LoaderStatusReporter _feedback) {
+        src = _src;
+        dest = _dest;
+        space = _space;
+        address = _address;
+        content = _content;
+        state = State.IDLE;
+        feedback = _feedback;
         sendFreeze();  // allow restarts
     }
     
@@ -96,60 +95,65 @@ public class LoaderClient extends MessageDecoder {
     final int DG_FAIL = 0x0100;   // note that this value is used in DGMeteringBuffer to denote time-out
     final int DG_RESEND = 0x0200;
     void sendFreeze() {
-                                      // System.out.println("lSendFreeze ");
-        //DatagramTransmitter d0 = new DatagramTransmitter(src, dest, new int[]{0x20, 0xA1, space}, connection);
-        
+                                                // System.out.println("lSendFreeze ");
+        state = State.FREEZE;
+                                                // System.out.println("lsendFREEZE Enter: "+state);
         dcs.sendData(
             new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA1, space}) {
                 @Override
                 public void handleReply(int code) {
-                                                  // System.out.println("Freeze handleReply: ");
-                  if((state==State.FREEZE)) {
-                      if(code==DG_OK)      { state = State.INITCOMPL; } // DG ok
-                      else if(code==DG_FAIL) { state = State.INITCOMPL; } // DG timed out, but ok timeouts
-                      //else if((code&DG_RESEND)!=0) { state = State.FREEZE; } // resend ok, so start again
-                      else state = State.FAIL;    // Apparently this node doesn't handle DGs
-                  } else state = State.FAIL;
+                                                // System.out.println("lFreeze handleReply: "+code);
+                  //if((state==State.FREEZE)) {
+                  //    if(code==DG_OK)      { state = State.INITCOMPL; } // DG ok
+                  //    else if(code==DG_FAIL) { state = State.INITCOMPL; } // DG timed out, but ok timeouts
+                  //    else state = State.FAIL;    // Apparently this node doesn't handle DGs
+                  //}
+                  state = State.PIP;
+                  sendPipRequest();
+                                                //System.out.println("lhandleFreeze Reply Exit: "+state);
                 }
             });
     }
-    @Override
+    //@Override
     public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
-                                      // System.out.println("lhandleInitializationComplete");
-        if (state == State.FREEZE && msg.getSourceNodeID().equals(dest)) { state = State.PIP; sendPipRequest(); }
-        if (state == State.INITCOMPL && msg.getSourceNodeID().equals(dest)) { state = State.PIP; sendPipRequest(); }
+                                        //System.out.println("lhandleInitializationComplete state: "+state);
+//        if (state == State.FREEZE && msg.getSourceNodeID().equals(dest)) { state = State.PIP; sendPipRequest(); }
+//        if (state == State.INITCOMPL && msg.getSourceNodeID().equals(dest)) { state = State.PIP; sendPipRequest(); }
     }
     void sendPipRequest() {
-                                      // System.out.println("lSendPipRequest ");
+        state = State.PIPREPLY;
+                                       //System.out.println("lSendPipRequest "+state);
         Message msg = new ProtocolIdentificationRequestMessage(src, dest);
         connection.put(msg, this);
-        //state = PIPREPLY;
     }
     @Override
     public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
-                                      // System.out.println("lhandleProtocolIdentificationReply");
-        int retries = 0;
-        if (state == State.PIP && msg.getSourceNodeID().equals(dest)) {
-            if((msg.getValue()&0x00200000)!=0) {
+                                       //System.out.println("lhandleProtocolIdentificationReply Enter:"+state);
+                                       // System.out.println("lmsg.getSourceNodeID():"+msg.getSourceNodeID());
+                                //System.out.println("lmsg.getValue():"+String.format("0x%12X",msg.getValue()));
+        if (state == State.PIPREPLY && msg.getSourceNodeID().equals(dest)) {
+            if((msg.getValue()&0x000010000000L)==0) {
                 state=State.FAIL;
-                feedback.onDone(0, "Loader: Target node should not be in Operating state.");
+                feedback.onDone(0, "Loader: Target node does not support Firmware Upgrade Protocol.");
             }
-            else if((msg.getValue()&0x00100000)==0) {
-                state=State.FAIL; // not in FirmwareUpgrade Operating state
-                feedback.onDone(0, "Loader: Target node is not in Firmware Upgrade state.");
+            else if((msg.getValue()&0x000020000000L)==0) {
+                state=State.FAIL;
+                feedback.onDone(0, "Loader: Target node is not in Upgrade Operating state.");
             }
-            else if((msg.getValue()&0x20000000)!=0) {
+            else if((msg.getValue()&0x200000000000L)!=0) {
                 state = State.SETUPSTREAM;
+                                    //System.out.println("lStream ok:"+state);
                 setupStream();
-            } else if((msg.getValue()&0x40000000)!=0) {
+            } else if((msg.getValue()&0x400000000000L)!=0) {
                 state = State.DG;
-                //feedback.onDone(0, "BollicksDG!?");
+                                    //System.out.println("lDGs ok:"+state);
                sendDGs();
             } else {
                 state = State.FAIL;
-                feedback.onDone(0, "Loader: Target node does not support Streams nor Datagram!?");
+                feedback.onDone(0, "Loader: Target node does not support Streams nor Datagrams!?");
             }
         }
+                                    //System.out.println("lhandleProtocolIdentificationReply Exit:"+state);
     }
 
     int bufferSize;      // chunk size
@@ -163,7 +167,8 @@ public class LoaderClient extends MessageDecoder {
     
     byte destStreamID;
     byte sourceStreamID = 4;  // notional value
-    
+
+// ============================= STREAMS ==============================================
     void setupStream() {
                                       // System.out.println("lSetup Stream ");
         bufferSize = 64;
@@ -204,14 +209,15 @@ public class LoaderClient extends MessageDecoder {
     }
     public void sendStreamNext() {
         int size = Math.min(bufferSize, content.length-nextIndex);
-        byte[] data = new byte[size];
+        int[] data = new int[size];
         // copy the needed data
         for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
-        nextIndex = nextIndex+size;
                                          // System.out.println("\nsendStreamNext: "+data);
-        Message m = new StreamDataSendMessage(src, dest, data, destStreamID);
+        Message m = new StreamDataSendMessage(src, dest, data);
         connection.put(m, this);
         // are we done?
+        nextIndex = nextIndex+size;
+        feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
         if (nextIndex < content.length) return; // wait for Data Proceed message
         // yes, say we're done
         m = new StreamDataCompleteMessage(src, dest, sourceStreamID, destStreamID);
@@ -219,43 +225,62 @@ public class LoaderClient extends MessageDecoder {
         sendUnfreeze();
         state = State.SUCCESS;
     }
+    //public void sendStreamComplete() {
+        //connection.put(new StreamDataCompleteMessage(src, dest, sourceStreamID, destStreamID), this);
+    //    sendUnfreeze();
+    //}
     public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
                                       // System.out.println("handleStreamDataProceed");
         sendStreamNext();
     }
     
+    
+// ============================= DATAGRAMS ==============================================
     void sendDGs() {
-                                      // System.out.println("\nlsendDGs: ");
+                                       //System.out.println("\nlsendDGs: ");
         nextIndex = 0;
-        bufferSize = 8;
+        bufferSize = 64;
         sendDGNext();
     }
     void sendDGNext() {
         int size = Math.min(bufferSize, content.length-nextIndex);
-                                      // System.out.println("lbufferSize: "+bufferSize);
-                                      // System.out.println("lsize: "+size);
-            int[] data = new int[size];
-            // copy the needed data
-            for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
-            nextIndex = nextIndex+size;
-        dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(dest, data) {
+                                    //System.out.println("lsendDGNext Enter: "+state);
+                                    //System.out.println("content.length: "+content.length);
+                                    //System.out.println("nextIndex: "+nextIndex);
+                                    //System.out.println("lbufferSize: "+bufferSize);
+                                    //System.out.println("lsize: "+size);
+        byte[] data = new byte[size];
+        // copy the needed data
+        for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
+        
+                                    //System.out.println("lsendDGNext mcs.request(new McsWriteMemo: "+state);
+        mcs.request(new McsWriteMemo(dest, space, nextIndex, data) {
             @Override
-            public void handleReply(int code) {
-                                              // System.out.println("lDG handleReply");
-                sendDGNext();
+            public void handleWriteReply(int code) {
+                                    //System.out.println("Reply mcs.request McsWriteMemo handleWriteReply: "+code);
+                if(nextIndex<content.length) sendDGNext();
+                else {
+                    sendUnfreeze();
+                    state = State.SUCCESS;
+                }
             }
         });
-            // are we done?
-        if( nextIndex < content.length ) return;
-        sendUnfreeze();
-        state = State.SUCCESS;
-
+        
+        feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
+        
+        // are we done?
+        nextIndex = nextIndex+size;
+        return;
     }
     
     void sendUnfreeze() {
                                       // System.out.println("lsendUnfreeze");
         dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA0, space}) {
+            @Override
             public void handleReply(int code) {
+                System.out.println("lc-sendUnfreeze reply: "+state);
+                feedback.onProgress((float)100.0);
+                feedback.onDone(0,"Success");
             }
         });
     }

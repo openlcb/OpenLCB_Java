@@ -3,7 +3,7 @@ package org.openlcb;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 import org.openlcb.LoaderClient;
-//import org.openlcb.DatagramAcknowledged;
+import org.openlcb.LoaderClient.LoaderStatusReporter;
 
 import junit.framework.Assert;
 import junit.framework.Test;
@@ -99,69 +99,156 @@ public class LoaderClientTest extends TestCase {
  ---> UnFreeze
  
  */
+    
+    //public void testFake() {}
+
+    public void testLoaderClientDGPIPFail1() {
+        data =new byte[80];
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 0xEF, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
+        System.out.println("LC1 Expect 'Not supported' error.");
+        Assert.assertEquals("Freeze", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 0xEF})));
+        messagesReceived.clear();
+        dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
+        xmt.put(new InitializationCompleteMessage(farID), null);
+        Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
+        messagesReceived.clear();
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x400000000000L), null);
+    }
+    
+    
+    public void testLoaderClientDGPIPFail2() {
+        data =new byte[80];
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 0xEF, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
+        System.out.println("LC2 Expect 'Not in Upgrade state' error.");
+        Assert.assertEquals("Freeze", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 0xEF})));
+        messagesReceived.clear();
+        dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
+        xmt.put(new InitializationCompleteMessage(farID), null);
+        Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
+        messagesReceived.clear();
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x000010000000L), null);
+    }
+    
+    
+    public void testLoaderClientDGPIPFail3() {
+        data =new byte[80];
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 0xEF, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
+        System.out.println("LC3 Expect 'Node does not support DGs/Streams.' error.");
+        Assert.assertEquals("Freeze", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 0xEF})));
+        messagesReceived.clear();
+        dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
+        xmt.put(new InitializationCompleteMessage(farID), null);
+        Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
+        messagesReceived.clear();
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x000030000000L), null);
+    }
+
 
     public void testLoaderClientDG() {
-        reporter = null;
-
-        data =new byte[]{1,2,3,4,5,6,7,8,9,10};
-        LoaderClient xmt = new LoaderClient( hereID,farID, 45, 0, data, reporter, testConnection, mcs, dcs);
-        xmt.doLoad();
+        data =new byte[80];
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 0xEF, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                //System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
     // Freeze
         Assert.assertEquals("Freeze", 1, messagesReceived.size());
-                                // System.out.println("testLoaderClientDG freeze");
-        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 45})));
+                                //System.out.println("testLoaderClientDG freeze");
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 0xEF})));
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
         xmt.put(new InitializationCompleteMessage(farID), null);
     // PIPRequest
         Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
                                 //System.out.println("testLoaderClientDG PIPRequest");
-        Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID))); // DGs ok
+        Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
+    // DGs ok
         messagesReceived.clear();
-        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x40100000), null);
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x400030000000L), null);
     // First DG
         Assert.assertEquals("first DG", 1, messagesReceived.size());
                                 //System.out.println("testLoaderClientDG first DG "+messagesReceived.size());
                                 //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
-        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new byte[]{1,2,3,4,5,6,7,8}))); // DGs ok
+        int[] data = new int[71];
+        data[0]=0x20; data[1]=0; data[2]=0; data[3]=0; data[4]=0; data[5]=0; data[6]=0xEF;
+        for(int i=7;i<71;i++) data[i]=0;
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,data))); // DG ok
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID),null);
     // Second DG
-        Assert.assertEquals("second DG", 2, messagesReceived.size());
+        Assert.assertEquals("second DG", 1, messagesReceived.size());
                                 //System.out.println("DG2: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
-                                //System.out.println("Unfreeze: "+(messagesReceived.get(1) != null ? messagesReceived.get(1).toString() : " == null"));
-        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new byte[]{9,10}))); // DGs ok
-        xmt.put(new DatagramAcknowledgedMessage(farID,hereID),null);
+        data = new int[7+16];
+        data[0]=0x20; data[1]=0; data[2]=0; data[3]=0; data[4]=0; data[5]=0x40; data[6]=0xEF;
+        for(int i=7;i<(7+16);i++) data[i]=0;
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,data))); // DG ok
+        messagesReceived.clear();
+        dcs.put(new DatagramAcknowledgedMessage(farID,hereID),null);
     // Unfreeze
-        Assert.assertTrue(messagesReceived.get(1).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45})));
+        Assert.assertEquals("Unfreeze", 1, messagesReceived.size());
+                                //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
+        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 0xEF})));
     }
 
-
+    
     
     public void testLoaderClientStream() {
-
-        reporter = null;
-        //new LoaderClient.LoaderStatusReporter
-        //(
-        //    void onProgress(float percent){};
-        //    void onDone(int errorCode, String errorString){};
-        //);
         data = new byte[]{'a','b','c','d','e','f','g','h','i','j'};
-        LoaderClient xmt = new LoaderClient( hereID,farID, 45, 0, data, reporter, testConnection, mcs, dcs);
-        xmt.doLoad();
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 45, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                //System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
     // Freeze
         Assert.assertEquals("Freeze", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 45})));
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
-        messagesReceived.clear();
+        //messagesReceived.clear();
         xmt.put(new InitializationCompleteMessage(farID), null);
     // PIPRequest
         Assert.assertEquals("PIPReq", 1, messagesReceived.size());
-                                   // System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID))); // DGs ok
         messagesReceived.clear();
-        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x20100000), null);
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x200030000000L), null);
     // McsWriteStream request
                                     //System.out.println(">>>test McsWriteStream request");
         Assert.assertEquals("McsWriteStream request", 1, messagesReceived.size());
@@ -170,55 +257,50 @@ public class LoaderClientTest extends TestCase {
         Message m = new DatagramAcknowledgedMessage(farID,hereID);
         dcs.put(m, null);
     // Stream Setup
-                                      // System.out.println(">>>test Stream Setup");
         Assert.assertEquals("StreamSetup", 1, messagesReceived.size());
-                                      // System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertTrue(messagesReceived.get(0).equals(new StreamInitiateRequestMessage(hereID,farID,64,(byte)4,(byte)0))); // Stream negn
         messagesReceived.clear();
         // *********** note small buffersize! **********
-                                      // System.out.println("tStreamInitiateReplyMessage");
         xmt.put(new StreamInitiateReplyMessage(hereID,farID,6,(byte)4,(byte)6), null);
     // Stream Data
-                                      // System.out.println(">>>Stream Data");
         Assert.assertEquals("stream data", 1, messagesReceived.size());
-                                      // System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new byte[]{'a','b','c','d','e','f'},(byte)6)));
+                                        //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'a','b','c','d','e','f'})));
         messagesReceived.clear();
-                                      // System.out.println(">>>StreamDataProceedMessage");
         xmt.put(new StreamDataProceedMessage(farID,hereID,(byte)4,(byte)6),null);
         Assert.assertEquals("second stream data, stream complete, unfreeze", 3, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new byte[]{'g','h','i','j'},(byte)6)));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'g','h','i','j'})));
         Assert.assertTrue(messagesReceived.get(1).equals(new StreamDataCompleteMessage(hereID,farID,(byte)4,(byte)6)));
     // Unfreeze
         Assert.assertTrue(messagesReceived.get(2).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45}))); // Unfreeze
         messagesReceived.clear();
     }
 
-    
+
     public void testLoaderClientStream2() {
-        
-        reporter = null;
-        //new LoaderClient.LoaderStatusReporter
-        //(
-        //    void onProgress(float percent){};
-        //    void onDone(int errorCode, String errorString){};
-        //);
         data = new byte[]{'a','b','c','d','e','f','g','h','i','j'};
-        LoaderClient xmt = new LoaderClient( hereID,farID, 45, 0, data, reporter, testConnection, mcs, dcs);
-        xmt.doLoad();
+        LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
+        xmt.doLoad(hereID,farID, 45, 0, data, new LoaderStatusReporter() {
+            public void onProgress(float percent) {
+                //System.out.println("onProcess:"+percent);
+            }
+            public void onDone(int errorCode, String errorString) {
+                System.out.println("onDone:"+errorCode+": "+errorString);
+            }
+        });
         // Freeze
         Assert.assertEquals("Freeze", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA1, 45})));
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
-        messagesReceived.clear();
+        //messagesReceived.clear();
         xmt.put(new InitializationCompleteMessage(farID), null);
         // PIPRequest
         Assert.assertEquals("PIPReq", 1, messagesReceived.size());
                                       // System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID))); // DGs ok
         messagesReceived.clear();
-        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x20100000), null);
+        xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x200030000000L), null);
         // McsWriteStream request
         Assert.assertEquals("McsWriteStream request", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0x20, 0x00, 0x00, 0x00, 0x00, 0x2D, 0x04})));
@@ -232,15 +314,15 @@ public class LoaderClientTest extends TestCase {
         xmt.put(new StreamInitiateReplyMessage(hereID,farID,64,(byte)4,(byte)6), null);
         // Stream Data
         Assert.assertEquals("stream data", 3, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new byte[]{'a','b','c','d','e','f','g','h','i','j'},(byte)6)));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'a','b','c','d','e','f','g','h','i','j'})));
         // StreamComplete
         Assert.assertTrue(messagesReceived.get(1).equals(new StreamDataCompleteMessage(hereID,farID,(byte)4,(byte)6)));
         // Unfreeze
         Assert.assertTrue(messagesReceived.get(2).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45}))); // Unfreeze
         messagesReceived.clear();
     }
-    
- 
+
+
     // from here down is testing infrastructure
     
     public LoaderClientTest(String s) {

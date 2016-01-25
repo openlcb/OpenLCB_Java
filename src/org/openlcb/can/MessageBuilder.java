@@ -378,7 +378,8 @@ public class MessageBuilder {
             for(int i=0; i<bufSize; i++) data[i] = list.get(i);
             List<Message> retlist = new java.util.ArrayList<Message>();
             NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
-            retlist.add(new DatagramMessage(source, dest, data));
+            //retlist.add(new DatagramMessage(source, dest, data));
+            retlist.add(new StreamDataSendMessage(source, dest, data));
             // make a new List and fill it with the rest of received data
             list = new ArrayList<Integer>();
             for (int i=n; i<f.getNumDataElements(); i++) list.add(f.getElement(i));
@@ -696,7 +697,7 @@ public class MessageBuilder {
                 int size = Math.min(8, remains);
                 byte[] data = new byte[size];
                 for (int i = 0; i<size; i++) {
-                    data[i] = msg.getData()[j++];
+                    data[i] = (byte)msg.getData()[j++];
                 }
                 
                 OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);

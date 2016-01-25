@@ -16,7 +16,7 @@ public class StreamTransmitterTest extends TestCase {
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID  = new NodeID(new byte[]{1,1,1,1,1,1});
     
-    byte[] data;
+    int[] data;
 
     java.util.ArrayList<Message> messagesReceived;
     
@@ -44,7 +44,7 @@ public class StreamTransmitterTest extends TestCase {
             }
         };
         
-        data = new byte[256];
+        data = new int[256];
         
         StreamTransmitter xmt = new StreamTransmitter(
                                             hereID,farID,
@@ -63,7 +63,7 @@ public class StreamTransmitterTest extends TestCase {
 
         Assert.assertEquals("1st messages", 2, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data, (byte)0)));
+                           .equals(new StreamDataSendMessage(hereID, farID, data)));
         Assert.assertTrue(messagesReceived.get(1)
                            .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
     }
@@ -76,7 +76,7 @@ public class StreamTransmitterTest extends TestCase {
             }
         };
         
-        data = new byte[512];
+        data = new int[512];
         
         StreamTransmitter xmt = new StreamTransmitter(
                                             hereID,farID,
@@ -96,7 +96,7 @@ public class StreamTransmitterTest extends TestCase {
         // should get a data message
         Assert.assertEquals("1st messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, new byte[256], (byte)0)));
+                           .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
 
         // reply to proceed
         m = new StreamDataProceedMessage(farID, hereID, (byte)0, (byte)0);
@@ -107,7 +107,7 @@ public class StreamTransmitterTest extends TestCase {
         // 2nd message should be followed by a Stream Data Complete message
         Assert.assertEquals("2nd messages", 2, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, new byte[256], (byte)0)));
+                           .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
         Assert.assertTrue(messagesReceived.get(1)
                            .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
 

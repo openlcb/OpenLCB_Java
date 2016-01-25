@@ -52,7 +52,7 @@ public class ProtocolIdentificationReplyMessage extends AddressedMessage {
     @Override
     public String toString() {
         return super.toString()
-                +" Protocol Identification Reply with value "+value;   
+                +" Protocol Identification Reply with value "+String.format("0x%12X",value);
     }
 
     public int getMTI() { return MTI_PROTOCOL_IDENT_REPLY; }
