@@ -134,11 +134,7 @@ public class LoaderClient extends MessageDecoder {
         if (state == State.PIPREPLY && msg.getSourceNodeID().equals(dest)) {
             if((msg.getValue()&0x000010000000L)==0) {
                 state=State.FAIL;
-                feedback.onDone(0, "Loader: Target node does not support Firmware Upgrade Protocol.");
-            }
-            else if((msg.getValue()&0x000020000000L)==0) {
-                state=State.FAIL;
-                feedback.onDone(0, "Loader: Target node is not in Upgrade Operating state.");
+                feedback.onDone(0, "Loader: Target node is not in Upgrade state.");
             }
             else if((msg.getValue()&0x200000000000L)!=0) {
                 state = State.SETUPSTREAM;
