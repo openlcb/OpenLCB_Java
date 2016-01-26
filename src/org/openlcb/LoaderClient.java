@@ -8,6 +8,8 @@ import org.openlcb.implementations.StreamTransmitter.*;
 import org.openlcb.implementations.DatagramTransmitter.*;
 import org.openlcb.ProtocolIdentificationReplyMessage;
 import org.openlcb.StreamInitiateReplyMessage;
+import java.util.Timer;
+import java.util.TimerTask;
 
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ public class LoaderClient extends MessageDecoder {
     MemoryConfigurationService mcs;
     DatagramService dcs;
     MimicNodeStore store;
+    String errorString;
 
     State state;
     NodeID src;
@@ -110,10 +113,34 @@ public class LoaderClient extends MessageDecoder {
                   //}
                   state = State.PIP;
                   sendPipRequest();
+                  startTimeout(3000);
                                                 //System.out.println("lhandleFreeze Reply Exit: "+state);
                 }
             });
     }
+    Timer timer;
+    void startTimeout(int period) {
+        timer = new Timer();
+        TimerTask task = new TimerTask(){
+            public void run(){
+                timerExpired();
+            }
+        };
+        timer.schedule(task, period);
+    }
+    void endTimeout() {
+        if (timer != null) timer.cancel();
+        else {
+            state = State.FAIL;
+            
+        }
+    }
+    void timerExpired() {
+        state = State.FAIL;
+        errorString = "Timed out";
+        sendUnfreeze();
+    }
+
     //@Override
     public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
                                         //System.out.println("lhandleInitializationComplete state: "+state);
@@ -131,10 +158,11 @@ public class LoaderClient extends MessageDecoder {
                                        //System.out.println("lhandleProtocolIdentificationReply Enter:"+state);
                                        // System.out.println("lmsg.getSourceNodeID():"+msg.getSourceNodeID());
                                 //System.out.println("lmsg.getValue():"+String.format("0x%12X",msg.getValue()));
+        endTimeout();
         if (state == State.PIPREPLY && msg.getSourceNodeID().equals(dest)) {
             if((msg.getValue()&0x000010000000L)==0) {
                 state=State.FAIL;
-                feedback.onDone(0, "Loader: Target node is not in Upgrade state.");
+                errorString = "Target not in Upgrade state.";
             }
             else if((msg.getValue()&0x200000000000L)!=0) {
                 state = State.SETUPSTREAM;
@@ -146,7 +174,7 @@ public class LoaderClient extends MessageDecoder {
                sendDGs();
             } else {
                 state = State.FAIL;
-                feedback.onDone(0, "Loader: Target node does not support Streams nor Datagrams!?");
+                errorString = "Target has no Streams nor Datagrams!";
             }
         }
                                     //System.out.println("lhandleProtocolIdentificationReply Exit:"+state);
@@ -160,7 +188,8 @@ public class LoaderClient extends MessageDecoder {
     int location;
     int nextIndex;
     float progress;
-    
+    float replyCount;
+    float expectedTransactions;
     byte destStreamID;
     byte sourceStreamID = 4;  // notional value
 
@@ -236,6 +265,8 @@ public class LoaderClient extends MessageDecoder {
                                        //System.out.println("\nlsendDGs: ");
         nextIndex = 0;
         bufferSize = 64;
+        replyCount = 0;
+        expectedTransactions = content.length / bufferSize;
         sendDGNext();
     }
     void sendDGNext() {
@@ -256,17 +287,30 @@ public class LoaderClient extends MessageDecoder {
                                     //System.out.println("Reply mcs.request McsWriteMemo handleWriteReply: "+code);
                 if(nextIndex<content.length) sendDGNext();
                 else {
-                    sendUnfreeze();
-                    state = State.SUCCESS;
+                    //sendUnfreeze();
+                    //state = State.SUCCESS;
                 }
             }
         });
         
-        feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
+        //feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
         
         // are we done?
         nextIndex = nextIndex+size;
         return;
+    }
+    public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender) {
+        //System.out.println("Reply mcs.requesthandleDatagramAcknowledged ");
+        if(state == State.DG && msg.getSourceNodeID().equals(dest)) {
+            replyCount++;
+            float p = 100.0F * replyCount / expectedTransactions;
+            feedback.onProgress(p);
+            if( p > 100.0F*(expectedTransactions-1)/expectedTransactions ) state=state.UNFREEEZE;
+        }
+        if(state == State.UNFREEEZE && msg.getSourceNodeID().equals(dest)) {
+            sendUnfreeze();
+            state = State.SUCCESS;
+        }
     }
     
     void sendUnfreeze() {
@@ -275,8 +319,15 @@ public class LoaderClient extends MessageDecoder {
             @Override
             public void handleReply(int code) {
                 System.out.println("lc-sendUnfreeze reply: "+state);
-                feedback.onProgress((float)100.0);
-                feedback.onDone(0,"Success");
+                if(state == State.SUCCESS) {
+                //    if(state == State.SUCCESS && msg.getSourceNodeID().equals(dest)) {
+                    feedback.onProgress((float)100.0);
+                    feedback.onDone(0,"Download Completed");
+                }
+                else {
+                    //feedback.onProgress((float)0.0);
+                    feedback.onDone(0,"Download Failed - "+errorString);
+                }
             }
         });
     }

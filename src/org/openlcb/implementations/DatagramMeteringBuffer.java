@@ -29,7 +29,8 @@ import org.openlcb.*;
  */
 public class DatagramMeteringBuffer extends MessageDecoder {
 
-    final static int TIMEOUT = 700;
+    //final static int TIMEOUT = 700;
+    final static int TIMEOUT = 3000;
     
     public DatagramMeteringBuffer(Connection toDownstream) {
         this.toDownstream = toDownstream;
