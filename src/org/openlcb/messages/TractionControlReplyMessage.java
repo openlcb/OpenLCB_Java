@@ -11,6 +11,8 @@ import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
 import org.openlcb.implementations.throttle.Float16;
 
+import java.util.logging.Logger;
+
 /**
  * Traction Control Reply message implementation.
  * <p/>
@@ -19,6 +21,9 @@ import org.openlcb.implementations.throttle.Float16;
 @Immutable
 @ThreadSafe
 public class TractionControlReplyMessage extends AddressedPayloadMessage {
+    private static Logger logger = Logger.getLogger(new Object() {
+    }.getClass().getSuperclass()
+            .getName());
     public final static byte CMD_GET_SPEED = TractionControlRequestMessage.CMD_GET_SPEED;
     public final static byte CMD_GET_FN = TractionControlRequestMessage.CMD_GET_FN;
 
@@ -61,7 +66,9 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
 
     // Valid only for set speed reply message
     public Float16 getSetSpeed() throws ArrayIndexOutOfBoundsException {
-        return new Float16(payload[1], payload[2]);
+        Float16 f = new Float16(payload[1], payload[2]);
+        logger.finest("Incoming float16 " + payload[1] + "." + payload[2] + "= " + f.getFloat());
+        return f;
     }
 
     // Valid only for set speed reply message
