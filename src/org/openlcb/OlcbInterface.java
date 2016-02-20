@@ -7,6 +7,8 @@ import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Collects all objects necessary to run an OpenLCB standards-compatible interface.
@@ -16,8 +18,12 @@ import java.util.List;
 public class OlcbInterface {
 
     /// Object for sending messages to the network.
+    protected final Connection internalOutputConnection;
+    /// Object we return to the customer when they ask for the output connection
     protected final Connection outputConnection;
-    private final OutputConnectionSniffer wrappedOutputConnection = new OutputConnectionSniffer();
+
+    private final OutputConnectionSniffer wrappedOutputConnection;
+    private final QueuedOutputConnection queuedOutputConnection;
     /// Object for taking incoming messages and forwarding them to the necessary handlers.
     private final MessageDispatcher inputConnection;
     private final NodeID nodeId;
@@ -44,7 +50,10 @@ public class OlcbInterface {
      */
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
         nodeId = nodeId_;
-        this.outputConnection = outputConnection_;
+        this.internalOutputConnection = outputConnection_;
+        this.wrappedOutputConnection = new OutputConnectionSniffer(internalOutputConnection);
+        this.queuedOutputConnection = new QueuedOutputConnection(this.wrappedOutputConnection);
+        this.outputConnection = this.queuedOutputConnection;
         inputConnection = new MessageDispatcher();
 
         nodeStore = new MimicNodeStore(getOutputConnection(), nodeId);
@@ -61,6 +70,14 @@ public class OlcbInterface {
             public void connectionActive(Connection c) {
                 Message m = new InitializationCompleteMessage(nodeId);
                 outputConnection.put(m, getInputConnection());
+                // Starts the output queue once we have the confirmation from the lower level that
+                // the connection is ready and we have enqueued the initialization complete message.
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        queuedOutputConnection.run();
+                    }
+                }).start();
             }
         });
     }
@@ -123,14 +140,12 @@ public class OlcbInterface {
         }
 
         @Override
-        public void put(Message msg, Connection sender) {
+        public synchronized void put(Message msg, Connection sender) {
             if (!pendingListeners.isEmpty() || !unpendingListeners.isEmpty()) {
-                synchronized (this) {
-                    listeners.addAll(pendingListeners);
-                    pendingListeners.clear();
-                    listeners.removeAll(unpendingListeners);
-                    unpendingListeners.clear();
-                }
+                listeners.addAll(pendingListeners);
+                pendingListeners.clear();
+                listeners.removeAll(unpendingListeners);
+                unpendingListeners.clear();
             }
             for (Connection c : listeners) {
                 c.put(msg, sender);
@@ -143,6 +158,12 @@ public class OlcbInterface {
      * path to sending messages.
      */
     class OutputConnectionSniffer implements Connection {
+        private final Connection realOutput;
+
+        OutputConnectionSniffer(Connection realOutput) {
+            this.realOutput = realOutput;
+        }
+
         @Override
         public void put(Message msg, Connection sender) {
             // For addressed messages we check if the target is local or remote.
@@ -159,13 +180,51 @@ public class OlcbInterface {
                 // For global messages, we always send a copy of the message locally.
                 inputConnection.put(msg, sender);
             }
-            outputConnection.put(msg, sender);
+            realOutput.put(msg, sender);
         }
 
         @Override
         public void registerStartNotification(ConnectionListener c) {
-            outputConnection.registerStartNotification(c);
+            realOutput.registerStartNotification(c);
         }
     }
 
+    /**
+     * This class keeps an output connection operating using an internal queue. It keeps
+     * messages in an internal thread-safe queue and sends them on a separate thread.
+     * <p/>
+     * The caller must donate a thread to this connection by calling the run() method.
+     */
+    private class QueuedOutputConnection implements Connection {
+        private final Connection realOutput;
+        private final BlockingQueue<Message> outputQueue = new LinkedBlockingQueue<>();
+
+        QueuedOutputConnection(Connection realOutput) {
+            this.realOutput = realOutput;
+        }
+
+        @Override
+        public void put(Message msg, Connection sender) {
+            outputQueue.add(msg);
+        }
+
+        @Override
+        public void registerStartNotification(ConnectionListener c) {
+            internalOutputConnection.registerStartNotification(c);
+        }
+
+        /**
+         * Never returns.
+         */
+        private void run() {
+            while (true) {
+                try {
+                    Message m = outputQueue.take();
+                    realOutput.put(m, null);
+                } catch (InterruptedException e) {
+                    continue;
+                }
+            }
+        }
+    }
 }

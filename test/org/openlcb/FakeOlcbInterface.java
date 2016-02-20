@@ -12,6 +12,6 @@ public class FakeOlcbInterface extends OlcbInterface {
      */
     public FakeOlcbInterface() {
         super(new NodeID(new byte[]{1,2,0,0,1,1}), new FakeConnection());
-        fakeOutputConnection = (FakeConnection) outputConnection;
+        fakeOutputConnection = (FakeConnection) internalOutputConnection;
     }
 }
