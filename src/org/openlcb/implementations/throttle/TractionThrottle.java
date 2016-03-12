@@ -59,6 +59,15 @@ public class TractionThrottle extends MessageDecoder {
         assign();
     }
 
+    public void refresh() {
+        if (!getEnabled()) return;
+        querySpeed();
+        // Refreshes functions after getting the definite promise from the node.
+        for (FunctionInfo f : functions.values()) {
+            queryFunction(f.fn);
+        }
+    }
+
     /**
      * Releases the throttle from the assigned train node.
      */
