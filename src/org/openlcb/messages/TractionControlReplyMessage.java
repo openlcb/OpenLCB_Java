@@ -13,6 +13,8 @@ import org.openlcb.implementations.throttle.Float16;
 
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
+
 /**
  * Traction Control Reply message implementation.
  * <p/>
@@ -34,6 +36,13 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
 
     public final static byte CMD_MGMT = TractionControlRequestMessage.CMD_MGMT;
     public final static byte SUBCMD_MGMT_RESERVE = TractionControlRequestMessage.SUBCMD_MGMT_RESERVE;
+
+    public final static byte CMD_CONSIST = TractionControlRequestMessage.CMD_CONSIST;
+    public final static byte SUBCMD_CONSIST_ATTACH = TractionControlRequestMessage.SUBCMD_CONSIST_ATTACH;
+    public final static byte SUBCMD_CONSIST_DETACH = TractionControlRequestMessage
+            .SUBCMD_CONSIST_DETACH;
+    public final static byte SUBCMD_CONSIST_QUERY = TractionControlRequestMessage
+            .SUBCMD_CONSIST_QUERY;
 
 
     public TractionControlReplyMessage(NodeID source, NodeID dest, byte[] payload) {
@@ -99,6 +108,39 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
         retval <<= 8;
         retval |= (payload[5] & 0xff);
         return retval;
+    }
+
+    /** Returns the length of the consist list.
+     * Valid only for consist query reply message
+      */
+    public int getConsistLength() {
+        byte uintval = payload[2];
+        int retval = uintval < 0 ? uintval + 256 : uintval;
+        return retval;
+    }
+
+    /** Returns the index of the returned node in the consist list, or -1 if there is no consist
+     * entry in the response.
+     * Valid only for consist query reply message
+     */
+    public int getConsistIndex() {
+        if (payload.length < 4) return -1;
+        byte uintval = payload[3];
+        int retval = uintval < 0 ? uintval + 256 : uintval;
+        return retval;
+    }
+
+    /**
+     * Extract the consisted train's node ID from the consist list query response.
+     * @return the consisted train's node ID from the consist query response, or null if the
+     * response did not contain a node ID.
+     */
+    @Nullable
+    public NodeID getConsistQueryNodeID() {
+        if (payload.length < 10) return null;
+        byte[] id = new byte[6];
+        System.arraycopy(payload, 4, id, 0, 6);
+        return new NodeID(id);
     }
 
     @Override
