@@ -108,6 +108,33 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
+    public static TractionControlRequestMessage createConsistAttach(NodeID source, NodeID dest,
+                                                                    NodeID consistEntry) {
+        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_ATTACH, 0, 1, 2, 3, 4, 5, 6};
+        System.arraycopy(consistEntry.getContents(), 0, payload, 3, 6);
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    public static TractionControlRequestMessage createConsistDetach(NodeID source, NodeID dest,
+                                                                    NodeID consistEntry) {
+        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_DETACH, 0, 1, 2, 3, 4, 5, 6};
+        System.arraycopy(consistEntry.getContents(), 0, payload, 3, 6);
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Queries a specific index in the consist list.
+    public static TractionControlRequestMessage createConsistIndexQuery(NodeID source, NodeID dest,
+                                                                   int index) {
+        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_QUERY, (byte)(index & 0xff)};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Queries the length of the consist list.
+    public static TractionControlRequestMessage createConsistLengthQuery(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_QUERY};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
     public byte getCmd() throws ArrayIndexOutOfBoundsException {
         return payload[0];
     }
