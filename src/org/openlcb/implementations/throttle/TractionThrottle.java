@@ -24,6 +24,13 @@ import java.util.logging.Logger;
  * Created by bracz on 12/30/15.
  */
 public class TractionThrottle extends MessageDecoder {
+    public static final int CONSIST_FLAG_REVERSE = TractionControlRequestMessage
+            .CONSIST_FLAG_REVERSE;
+    public static final int CONSIST_FLAG_FN0 = TractionControlRequestMessage
+            .CONSIST_FLAG_FN0;
+    public static final int CONSIST_FLAG_FNN = TractionControlRequestMessage
+            .CONSIST_FLAG_FNN;
+
     public static final String UPDATE_PROP_ENABLED = "updateEnabled";
     public static final String UPDATE_PROP_STATUS = "updateStatus";
     public static final String UPDATE_PROP_CONSISTLIST = "updateConsistList";
@@ -147,11 +154,12 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     /**
-     * Adds a new node to the consist handled by the current assigned node.
+     * Adds a new node to the consist handled by the current assigned node, or updates an
+     * existing node's consisting flags.
      */
-    public void addToConsist(NodeID newMember) {
+    public void addToConsist(NodeID newMember, int flags) {
         Message m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
-                trainNode.getNodeId(), newMember);
+                trainNode.getNodeId(), newMember, flags);
         iface.getOutputConnection().put(m, this);
     }
 
