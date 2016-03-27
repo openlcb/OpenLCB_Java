@@ -40,6 +40,9 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static byte SUBCMD_CONSIST_ATTACH = 1;
     public final static byte SUBCMD_CONSIST_DETACH = 2;
     public final static byte SUBCMD_CONSIST_QUERY = 3;
+    public final static int CONSIST_FLAG_REVERSE = 0x02;
+    public final static int CONSIST_FLAG_FN0 = 0x04;
+    public final static int CONSIST_FLAG_FNN = 0x08;
 
     public final static byte CMD_MGMT = 0x20;
     public final static byte SUBCMD_MGMT_RESERVE = 1;
@@ -109,8 +112,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     }
 
     public static TractionControlRequestMessage createConsistAttach(NodeID source, NodeID dest,
-                                                                    NodeID consistEntry) {
-        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_ATTACH, 0, 1, 2, 3, 4, 5, 6};
+                                                                    NodeID consistEntry, int
+                                                                            flags) {
+        byte[] payload = new byte[]{CMD_CONSIST, SUBCMD_CONSIST_ATTACH, (byte)(flags & 0xff), 1, 2,
+                3, 4, 5, 6};
         System.arraycopy(consistEntry.getContents(), 0, payload, 3, 6);
         return new TractionControlRequestMessage(source, dest, payload);
     }
