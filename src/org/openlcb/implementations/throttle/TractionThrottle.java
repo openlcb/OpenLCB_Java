@@ -34,9 +34,7 @@ public class TractionThrottle extends MessageDecoder {
     public static final String UPDATE_PROP_ENABLED = "updateEnabled";
     public static final String UPDATE_PROP_STATUS = "updateStatus";
     public static final String UPDATE_PROP_CONSISTLIST = "updateConsistList";
-    private static Logger logger = Logger.getLogger(new Object() {
-    }.getClass().getSuperclass()
-            .getName());
+    private static Logger logger = Logger.getLogger("TractionThrottle");
     private final OlcbInterface iface;
     RemoteTrainNode trainNode;
     boolean assigned = false;
@@ -57,8 +55,17 @@ public class TractionThrottle extends MessageDecoder {
     };
     private Map<Integer, FunctionInfo> functions = new HashMap<>();
     private boolean pendingAssign = false;
-    private List<NodeID> consistList = new ArrayList<>();
+    private List<ConsistEntry> consistList = new ArrayList<>();
     private boolean needFetchConsist = false;
+
+    public class ConsistEntry {
+        ConsistEntry(NodeID n, int f) {
+            node = n;
+            flags = f;
+        }
+        public NodeID node;
+        public int flags;
+    }
 
     public TractionThrottle(OlcbInterface iface) {
         this.iface = iface;
@@ -99,7 +106,7 @@ public class TractionThrottle extends MessageDecoder {
      * @return the list of nodes in the consist managed by the assgined node. Entries may be
      * null in case the node list is still being fetched.
      */
-    public List<NodeID> getConsistList() { return consistList; }
+    public List<ConsistEntry> getConsistList() { return consistList; }
 
     private void assign() {
         setStatus("Assigning node...");
@@ -253,7 +260,8 @@ public class TractionThrottle extends MessageDecoder {
                 int index = msg.getConsistIndex();
                 if (index >= 0) {
                     NodeID n = msg.getConsistQueryNodeID();
-                    consistList.set(index, n);
+                    int flags = msg.getConsistQueryFlags();
+                    consistList.set(index, new ConsistEntry(n, flags));
                     fireChange = true;
                 }
                 if (fireChange) {
