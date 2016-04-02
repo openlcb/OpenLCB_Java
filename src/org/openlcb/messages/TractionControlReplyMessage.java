@@ -137,10 +137,19 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
      */
     @Nullable
     public NodeID getConsistQueryNodeID() {
-        if (payload.length < 10) return null;
+        if (payload.length < 11) return null;
         byte[] id = new byte[6];
-        System.arraycopy(payload, 4, id, 0, 6);
+        System.arraycopy(payload, 5, id, 0, 6);
         return new NodeID(id);
+    }
+
+    /**
+     * Extract the consist entry's flag byte. Call it only if the consist index is nonnegative.
+     * @return consist flags
+     */
+    public int getConsistQueryFlags() {
+        if (payload.length < 11) return 0;
+        return payload[4];
     }
 
     @Override
