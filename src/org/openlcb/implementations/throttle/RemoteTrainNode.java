@@ -3,17 +3,13 @@ package org.openlcb.implementations.throttle;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
-import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
-import org.openlcb.cdi.jdom.JdomCdiReader;
+import org.openlcb.cdi.jdom.XmlHelper;
 import org.openlcb.implementations.MemoryConfigurationService;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.util.logging.Logger;
 
@@ -42,22 +38,6 @@ public class RemoteTrainNode {
         this.iface = iface;
     }
 
-    private static Element parseXmlFromReader(Reader r) throws Exception {
-        SAXBuilder builder = new SAXBuilder(false);
-
-        // parse namespaces, including the noNamespaceSchema
-        builder.setFeature("http://xml.org/sax/features/namespaces", true);
-
-        Document doc;
-        try {
-            doc = builder.build(r);
-            return doc.getRootElement();
-        } catch (JDOMException | IOException e) {
-            System.err.println("Could not create Document: " + e);
-            throw e;
-        }
-    }
-
     public NodeID getNodeId() {
         return node;
     }
@@ -77,7 +57,7 @@ public class RemoteTrainNode {
                     @Override
                     public void provideReader(Reader r) {
                         try {
-                            fdiRoot = parseXmlFromReader(r);//JdomCdiReader.getHeadFromReader(r);
+                            fdiRoot = XmlHelper.parseXmlFromReader(r);//JdomCdiReader.getHeadFromReader(r);
                         } catch (Exception e) {
                             logger.warning("Unable to parse returned FDI from train " + node
                                     .toString());
