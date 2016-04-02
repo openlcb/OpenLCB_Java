@@ -80,8 +80,11 @@ public class CdiMemConfigReader  {
     
     private void done() {
         // done, pass back a reader based on the current buffer contents
-        if (retval != null) 
+        if (retval != null) {
+            System.out.print("Retrieved XML: \n");
+            System.out.print(buf);
             retval.provideReader(new java.io.StringReader(new String(buf)));
+        }
     }
     
     public interface ReaderAccess {
