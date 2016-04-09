@@ -3,6 +3,7 @@ package org.openlcb.cdi.impl;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
+import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
@@ -27,15 +28,19 @@ import java.util.logging.Logger;
  *
  * Created by bracz on 3/29/16.
  */
-public class ConfigRepresentation {
+public class ConfigRepresentation extends DefaultPropertyListenerSupport {
+    // Fires when the loading state changes.
     public static final String UPDATE_STATE = "UPDATE_STATE";
+    // Fired when the CDI is loaded and the representation is ready.
     public static final String UPDATE_REP = "UPDATE_REP";
+    // Fired when all the caches have been pre-filled.
+    public static final String UPDATE_CACHE_COMPLETE = "UPDATE_CACHE_COMPLETE";
+    // Fired on the individual internal entries when they are changed.
     public static final String UPDATE_ENTRY_DATA = "UPDATE_ENTRY_DATA";
     private static final String TAG = "ConfigRepresentation";
     private static final Logger logger = Logger.getLogger(TAG);
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
-    java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
     private CdiRep cdiRep;
     private String state = "Uninitialized";
     private CdiContainer root = null;
@@ -82,6 +87,24 @@ public class ConfigRepresentation {
         firePropertyChange(UPDATE_REP, null, root);
     }
 
+    int pendingCacheFills = 0;
+    PropertyChangeListener prefillListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+            if (propertyChangeEvent.getPropertyName().equals(MemorySpaceCache
+                    .UPDATE_LOADING_COMPLETE)) {
+                synchronized (this) {
+                    if (--pendingCacheFills == 0) {
+                        firePropertyChange(UPDATE_CACHE_COMPLETE, null, null);
+                        for (MemorySpaceCache sp : spaces.values()) {
+                            sp.removePropertyChangeListener(prefillListener);
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     private void prefillCaches() {
         visit(new Visitor() {
                   @Override
@@ -98,7 +121,9 @@ public class ConfigRepresentation {
                   }
               }
         );
+        pendingCacheFills = spaces.size();
         for (MemorySpaceCache sp : spaces.values()) {
+            sp.addPropertyChangeListener(prefillListener);
             // This will send off the first read, then continue asynchronously.
             sp.fillCache();
         }
@@ -172,18 +197,6 @@ public class ConfigRepresentation {
     private void setState(String state) {
         this.state = state;
         firePropertyChange(UPDATE_STATE, null, this.state);
-    }
-
-    public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
-        pcs.addPropertyChangeListener(l);
-    }
-
-    public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
-        pcs.removePropertyChangeListener(l);
-    }
-
-    protected void firePropertyChange(String p, Object old, Object n) {
-        pcs.firePropertyChange(p, old, n);
     }
 
     public String getStatus() {
