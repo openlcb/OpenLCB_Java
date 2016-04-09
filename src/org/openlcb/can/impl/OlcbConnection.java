@@ -1,6 +1,7 @@
 package org.openlcb.can.impl;
 
 
+import org.openlcb.Connection;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.can.CanFrame;
@@ -82,7 +83,12 @@ public class OlcbConnection {
         // Creates the actual OpenLCB objects and wires up with the interface.
         canInterface = new CanInterface(nodeId, outputHub);
         inputHub.addEntry(canInterface.frameInput());
-        connectionListener.onConnect();
+        canInterface.addStartListener(new Connection.ConnectionListener() {
+            @Override
+            public void connectionActive(Connection c) {
+                connectionListener.onConnect();
+            }
+        });
         lastConnection = this;
     }
 
