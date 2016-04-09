@@ -31,6 +31,7 @@ public interface CdiRep {
         public String getName();
         public String getDescription();
         public Map getMap();
+        public int getIndexInParent();
     }
     
     public static interface Item {
@@ -38,6 +39,7 @@ public interface CdiRep {
         public String getDescription();
         public Map getMap();
         public int getOffset();
+        public int getIndexInParent();
     }
 
     public static interface Group extends Item {

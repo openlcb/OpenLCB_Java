@@ -174,7 +174,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
             origin = origin + it.getOffset();
             CdiEntry entry = null;
-            String name = baseName + "." + it.getName();
+            String entryName = it.getName();
+            if (entryName == null) {
+                entryName = "child" + it.getIndexInParent();
+            }
+            String name = baseName + "." + entryName;
             if (it instanceof CdiRep.Group) {
                 entry = new GroupEntry(name, (CdiRep.Group) it, segment, origin);
             } else if (it instanceof CdiRep.IntegerRep) {
@@ -333,6 +337,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             this.segment = segment;
             this.items = new ArrayList<>();
             this.key = getName();
+            if (key == null) {
+                key = "seg" + segment.getIndexInParent();
+            }
             this.origin = segment.getOrigin();
             this.space = segment.getSpace();
             this.size = processGroup(key, this.space, segment.getItems(), this.items, this.origin);
@@ -366,6 +373,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         @Override
         public int getOffset() {
             return segment.getOrigin();
+        }
+
+        @Override
+        public int getIndexInParent() {
+            return segment.getIndexInParent();
         }
     }
 

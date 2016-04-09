@@ -104,7 +104,11 @@ public class JdomCdiRep implements CdiRep {
             }
             return list;
         }
-        
+
+        public int getIndexInParent() {
+            return e.getParent().indexOf(e);
+        }
+
         Nested(Element e) { this.e = e; }
         Element e;
     }
@@ -214,6 +218,12 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e) { return 0; }
         }
+
+        @Override
+        public int getIndexInParent() {
+            return e.getParent().indexOf(e);
+        }
+
     }
 
     public static class Group extends Nested implements CdiRep.Group {
@@ -236,7 +246,7 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
-        
+
         @Override
         public String getRepName() {
             Element d = e.getChild("repname");
