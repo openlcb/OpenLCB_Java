@@ -7,6 +7,7 @@ import org.openlcb.NodeID;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
@@ -21,7 +22,7 @@ import java.util.Stack;
  * @version $Revision: -1 $
  */
 public class MemoryConfigurationService {
-
+    private static final Logger logger = Logger.getLogger("MemoryConfigurationService");
     private static final int DATAGRAM_TYPE = 0x20;
 
     public static final int SPACE_CDI = 0xFF;
@@ -51,7 +52,8 @@ public class MemoryConfigurationService {
             //
             // doesn't check for match of reply to memo, but eventually should.
             @Override
-            public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) {
+            public synchronized void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo
+                    service) {
                 //log System.out.println("OLCB: handleData");
                 service.acceptData(0);
                 if (readMemo != null) {
@@ -73,7 +75,7 @@ public class MemoryConfigurationService {
                         readMemo = null;
                     }
                     memo.handleReadData(dest, memo.space, memo.address, content);
-                    synchronized(this) {
+                    synchronized (this) {
                         if (readMemo == null && !pendingReads.isEmpty()) {
                             readMemo = pendingReads.pop();
                             sendRead();
@@ -106,13 +108,25 @@ public class MemoryConfigurationService {
                     configMemo = null;
                     memo.handleConfigData(dest, commands, options, highSpace, lowSpace, "");
                 }
-                if (writeMemo != null) {
-                    // needs code to handle delayed reply
-                    System.err.println("MemoryConfiguration Service: Code for delayed reply not " +
-                            "yet present"); //log
+                if (writeMemo != null && ((data[1] & 0xF0) == 0x10)) {
                     McsWriteMemo memo = writeMemo;
+                    long retAddress = (((long) data[2] & 0xFF) << 24) | (((long) data[3] & 0xFF)
+                            << 16) | (((long) data[4] & 0xFF) << 8) | ((long) data[5] & 0xFF);
+                    if (retAddress != memo.address) {
+                        logger.warning("Spurious write response datagram. Requested address=" +
+                                memo.address + " returned address=" + retAddress);
+                        return;
+                    }
                     writeMemo = null;
-                    //memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
+                    boolean spaceByte = ((data[1] & 0x03) == 0);
+                    boolean failed = (data[1] & 0x08) != 0;
+                    int codeOffset = 6;
+                    if (spaceByte) ++codeOffset;
+                    int code = failed ? 0x1000 : 0;
+                    if (data.length >= codeOffset + 2) {
+                        code = (data[codeOffset] << 8) + data[codeOffset + 1];
+                    }
+                    memo.handleWriteReply(code);
                 }
                 // dph
 
