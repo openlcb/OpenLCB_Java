@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 /**
  * Maintains the connection to a specific remote node's specific memory space, and maintains a
@@ -20,11 +21,12 @@ import java.util.TreeMap;
  * Created by bracz on 4/2/16.
  */
 public class MemorySpaceCache {
-    private static final String TAG = "MemorySpaceCache";
     // This event will be fired when the cache is completely pre-filled.
     public static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
     // This event will be fired on the registered data listeners.
     public static final String UPDATE_DATA = "UPDATE_DATA";
+    private static final String TAG = "MemorySpaceCache";
+    private static final Logger logger = Logger.getLogger(TAG);
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
     private final int space;
@@ -236,14 +238,29 @@ public class MemorySpaceCache {
         return ret;
     }
 
-    public void write(int offset, byte[] data) {
+    public void write(final int offset, byte[] data, final ConfigRepresentation.CdiEntry cdiEntry) {
         int len = data.length;
         Map.Entry<Range, byte[]> entry = getCacheForRange(offset, len);
         if (entry != null && entry.getValue() != null) {
             System.arraycopy(data, 0, entry.getValue(), offset - entry.getKey().start, data.length);
         }
+        logger.finer("Writing to space " + space + " offset 0x" + Integer.toHexString(offset) +
+                " payload length " + data.length);
         connection.getMemoryConfigurationService().request(
-                new MemoryConfigurationService.McsWriteMemo(remoteNodeID, space, offset, data));
+                new MemoryConfigurationService.McsWriteMemo(remoteNodeID, space, offset, data) {
+                    @Override
+                    public void handleWriteReply(int code) {
+                        if (code != 0) {
+                            logger.warning(String.format("Write failed (space %d address %d): " +
+                                    "%04x", space, offset, code));
+                        } else {
+                            logger.finer(String.format("Write complete (space %d address %d): " +
+                                    "%04x", space, offset, code));
+                        }
+                        cdiEntry.fireWriteComplete();
+                    }
+                }
+        );
         // @TODO: 4/2/16 Handle write errors and report to user somehow.
         notifyAfterWrite(offset, offset + data.length);
     }

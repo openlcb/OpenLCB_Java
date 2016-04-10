@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * Maintains a parsed cache of the CDI config of a remote node. Responsible for fetching the CDI,
  * parsing the XML, identifying all variables with their correct offsets and creating useful
@@ -37,6 +41,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public static final String UPDATE_CACHE_COMPLETE = "UPDATE_CACHE_COMPLETE";
     // Fired on the individual internal entries when they are changed.
     public static final String UPDATE_ENTRY_DATA = "UPDATE_ENTRY_DATA";
+    // Fired on an CDI entry when the write method completes.
+    public static final String UPDATE_WRITE_COMPLETE = "PENDING_WRITE_COMPLETE";
     private static final String TAG = "ConfigRepresentation";
     private static final Logger logger = Logger.getLogger(TAG);
     private final OlcbInterface connection;
@@ -45,6 +51,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     private String state = "Uninitialized";
     private CdiContainer root = null;
     private final Map<Integer, MemorySpaceCache> spaces = new HashMap<>();
+    private final Map<String, CdiEntry> variables = new HashMap<>();
 
     /**
      * Connects to a node, populates the cache by fetching and parsing the CDI.
@@ -106,18 +113,20 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     };
 
     private void prefillCaches() {
+        variables.clear();
         visit(new Visitor() {
                   @Override
                   public void visitLeaf(final CdiEntry e) {
+                      variables.put(e.key, e);
                       MemorySpaceCache cache = getCacheForSpace(e.space);
                       cache.addRangeToCache(e.origin, e.origin + e.size);
                       cache.addRangeListener(e.origin, e.origin + e.size, new
                               PropertyChangeListener() {
-                          @Override
-                          public void propertyChange(PropertyChangeEvent event) {
-                              e.firePropertyChange(UPDATE_ENTRY_DATA, null, null);
-                          }
-                      });
+                                  @Override
+                                  public void propertyChange(PropertyChangeEvent event) {
+                                      e.fireUpdate();
+                                  }
+                              });
                   }
               }
         );
@@ -135,6 +144,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
      */
     public CdiContainer getRoot() {
         return root;
+    }
+
+    public @Nullable CdiEntry getVariableForKey(@NonNull String key) {
+        return variables.get(key);
     }
 
     private synchronized MemorySpaceCache getCacheForSpace(int space) {
@@ -277,7 +290,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
      * Base class for all internal representations of the nodes (both variables as well as groups
      * and segments).
      */
-    public abstract class CdiEntry {
+    public abstract class CdiEntry extends DefaultPropertyListenerSupport {
         /// Memory space number.
         public int space;
         /// Address of the first byte of this item in the memory space.
@@ -287,20 +300,15 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         /// Internal key for this variable or group
         public String key;
 
-        java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
-        public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
-            pcs.addPropertyChangeListener(l);
-        }
-
-        public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {
-            pcs.removePropertyChangeListener(l);
-        }
-
-        protected void firePropertyChange(String p, Object old, Object n) {
-            pcs.firePropertyChange(p, old, n);
-        }
-
         public abstract CdiRep.Item getCdiItem();
+
+        public void fireUpdate() {
+            firePropertyChange(UPDATE_ENTRY_DATA, null, null);
+        }
+
+        public void fireWriteComplete() {
+            firePropertyChange(UPDATE_WRITE_COMPLETE, null, null);
+        }
     }
 
     public class Root implements CdiContainer {
@@ -499,7 +507,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 b[i] = (byte)(value & 0xff);
                 value >>= 8;
             }
-            cache.write(origin, b);
+            cache.write(origin, b, this);
         }
     }
 
@@ -533,7 +541,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = event.getContents();
             if (b == null) return;
-            cache.write(origin, b);
+            cache.write(origin, b, this);
         }
     }
 
@@ -577,7 +585,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 f = value.getBytes("UTF-8");
             } catch (UnsupportedEncodingException e) { return; }
             System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
-            cache.write(this.origin, b);
+            cache.write(this.origin, b, this);
         }
     }
 
