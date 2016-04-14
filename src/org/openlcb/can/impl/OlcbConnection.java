@@ -27,7 +27,7 @@ public class OlcbConnection {
     // ConnectionManager.
     public static OlcbConnection lastConnection = null;
     private final NodeID nodeId;
-    private final ConnectionListener connectionListener;
+    private final ListenerProxy listenerProxy;
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
     private String hostName;
     private int portNumber;
@@ -44,7 +44,8 @@ public class OlcbConnection {
             hostName, int portNumber, ConnectionListener connectionListener) {
         this.hostName = hostName;
         this.portNumber = portNumber;
-        this.connectionListener = connectionListener;
+        this.listenerProxy = new ListenerProxy();
+        this.listenerProxy.add(connectionListener);
         this.nodeId = nodeId;
         new Thread() {
             public void run() {
@@ -61,8 +62,8 @@ public class OlcbConnection {
     private void connect() {
         this.inputHub = new CanFrameHub();
         this.outputHub = new CanFrameHub();
-        connectionListener.onConnectionPending();
-        connectionListener.onStatusChange("Connecting...");
+        listenerProxy.onConnectionPending();
+        listenerProxy.onStatusChange("Connecting...");
         BufferedReader reader;
         OutputStream outputStream;
         try {
@@ -72,8 +73,8 @@ public class OlcbConnection {
                     new InputStreamReader(socket.getInputStream()));
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
-            connectionListener.onStatusChange("Connection failed: " + e.toString());
-            connectionListener.onDisconnect();
+            listenerProxy.onStatusChange("Connection failed: " + e.toString());
+            listenerProxy.onDisconnect();
             return;
         }
         input = new GridConnectInput(reader, inputHub);
@@ -86,7 +87,7 @@ public class OlcbConnection {
         canInterface.addStartListener(new Connection.ConnectionListener() {
             @Override
             public void connectionActive(Connection c) {
-                connectionListener.onConnect();
+                listenerProxy.onConnect();
             }
         });
         lastConnection = this;
@@ -114,6 +115,17 @@ public class OlcbConnection {
         }
 
         socket = null;
+    }
+
+    public void addConnectionListener(ConnectionListener l) {
+        listenerProxy.add(l);
+    }
+    /**
+     * Removes a listener. It is okay to call this from inside a connectionlistener callback.
+     * @param l listener to remove
+     */
+    public void removeConnectionListener(ConnectionListener l) {
+        listenerProxy.remove(l);
     }
 
     /**
@@ -164,6 +176,61 @@ public class OlcbConnection {
         void onStatusChange(String status);
 
         void onConnectionPending();
+    }
+
+    /**
+     * Simple registry for connection listeners; proxies all calls to every single entry.
+     */
+    private class ListenerProxy implements ConnectionListener {
+        private List<ConnectionListener> entries = new ArrayList<>(3);
+
+        public synchronized void add(ConnectionListener l) {
+            entries.add(l);
+        }
+
+        /**
+         * Removes a listener. It is okay to call this from inside a connectionlistener callback.
+         * @param l listener to remove
+         */
+        public synchronized void remove(ConnectionListener l) {
+            entries.remove(l);
+        }
+
+        private synchronized ConnectionListener[] getEntries() {
+            ConnectionListener[] ar = new ConnectionListener[entries.size()];
+            return entries.toArray(ar);
+        }
+        @Override
+        public void onConnect() {
+            ConnectionListener[] ar = getEntries();
+            for (ConnectionListener l : ar) {
+                l.onConnect();
+            }
+        }
+
+        @Override
+        public void onDisconnect() {
+            ConnectionListener[] ar = getEntries();
+            for (ConnectionListener l : ar) {
+                l.onDisconnect();
+            }
+        }
+
+        @Override
+        public void onStatusChange(String status) {
+            ConnectionListener[] ar = getEntries();
+            for (ConnectionListener l : ar) {
+                l.onStatusChange(status);
+            }
+        }
+
+        @Override
+        public void onConnectionPending() {
+            ConnectionListener[] ar = getEntries();
+            for (ConnectionListener l : ar) {
+                l.onConnectionPending();
+            }
+        }
     }
 
     public class CanFrameHub implements CanFrameListener {
