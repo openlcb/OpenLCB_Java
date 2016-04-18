@@ -22,10 +22,19 @@ public class GridConnectInput {
     private ArrayList<Byte> data = new ArrayList<>();
     private BufferedReader input;
     private CanFrameListener listener;
+    private final Runnable onError;
 
-    public GridConnectInput(BufferedReader input, CanFrameListener listener) {
+    /**
+     * Creates the gridconnect input parser. Starts the parsing thread.
+     *
+     * @param input the (buffered) socklet to read from
+     * @param listener the parsed CAN frames will be forwarded to this listener
+     * @param onError will be called when an IO error happens on the input thread. May be null.
+     */
+    public GridConnectInput(BufferedReader input, CanFrameListener listener, Runnable onError) {
         this.input = input;
         this.listener = listener;
+        this.onError = onError;
         new Thread() {
             public void run() {
                 threadBody();
@@ -105,6 +114,9 @@ public class GridConnectInput {
                 input.close();
             } catch (IOException e1) {
                 logger.fine("Error closing from gridconnect port " + e1.toString());
+            }
+            if (onError != null) {
+                onError.run();
             }
         }
     }
