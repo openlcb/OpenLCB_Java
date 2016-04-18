@@ -59,6 +59,15 @@ public class OlcbConnection {
         }.start();
     }
 
+    private Runnable mOnError = new Runnable() {
+        @Override
+        public void run() {
+            outputHub.removeEntry(output);
+            listenerProxy.onDisconnect();
+            shutdown();
+        }
+    };
+
     private void connect() {
         this.inputHub = new CanFrameHub();
         this.outputHub = new CanFrameHub();
@@ -77,8 +86,8 @@ public class OlcbConnection {
             listenerProxy.onDisconnect();
             return;
         }
-        input = new GridConnectInput(reader, inputHub);
-        output = new GridConnectOutput(outputStream);
+        input = new GridConnectInput(reader, inputHub, mOnError);
+        output = new GridConnectOutput(outputStream, mOnError);
         outputHub.addEntry(output);
 
         // Creates the actual OpenLCB objects and wires up with the interface.
