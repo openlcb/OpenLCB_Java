@@ -493,6 +493,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         @Override
         protected void updateVisibleValue() {
             lastVisibleValue = Long.toString(getValue());
+            CdiRep.Map map = rep.getMap();
+            if (map != null && map.getKeys().size() > 0) {
+                String value = map.getEntry(lastVisibleValue);
+                if (value != null) lastVisibleValue = value;
+            }
         }
 
         public long getValue() {
