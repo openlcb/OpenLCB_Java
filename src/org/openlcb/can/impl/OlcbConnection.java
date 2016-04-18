@@ -62,13 +62,17 @@ public class OlcbConnection {
     private Runnable mOnError = new Runnable() {
         @Override
         public void run() {
-            outputHub.removeEntry(output);
-            listenerProxy.onDisconnect();
-            shutdown();
+            synchronized(OlcbConnection.this) {
+                if (outputHub != null) {
+                    outputHub.removeEntry(output);
+                }
+                listenerProxy.onDisconnect();
+                shutdown();
+            }
         }
     };
 
-    private void connect() {
+    private synchronized void connect() {
         this.inputHub = new CanFrameHub();
         this.outputHub = new CanFrameHub();
         listenerProxy.onConnectionPending();
@@ -102,7 +106,7 @@ public class OlcbConnection {
         lastConnection = this;
     }
 
-    public void shutdown() {
+    public synchronized void shutdown() {
         if (inputHub != null) {
             inputHub.clear();
             inputHub = null;
