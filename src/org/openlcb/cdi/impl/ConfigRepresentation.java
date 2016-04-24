@@ -15,6 +15,7 @@ import java.beans.PropertyChangeListener;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     private CdiContainer root = null;
     private final Map<Integer, MemorySpaceCache> spaces = new HashMap<>();
     private final Map<String, CdiEntry> variables = new HashMap<>();
+    // Last time the progressbar was updated from the load.
+    private long lastProgress;
+
 
     /**
      * Connects to a node, populates the cache by fetching and parsing the CDI.
@@ -71,6 +75,17 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         new CdiMemConfigReader(remoteNodeID, connection,
                 MemoryConfigurationService.SPACE_CDI).startLoadReader(new CdiMemConfigReader
                 .ReaderAccess() {
+
+            @Override
+            public void progressNotify(long bytesRead, long totalBytes) {
+                lastProgress = new Date().getTime();
+                if (totalBytes > 0) {
+                    setState(String.format("Loading: %.2f%% complete", bytesRead * 100.0 /
+                            totalBytes));
+                } else {
+                    setState(String.format("Loading: %d bytes complete", bytesRead));
+                }
+            }
 
             @Override
             public void provideReader(Reader r) {
@@ -212,12 +227,23 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     }
 
     private void setState(String state) {
+        String oldState = this.state;
         this.state = state;
-        firePropertyChange(UPDATE_STATE, null, this.state);
+        firePropertyChange(UPDATE_STATE, oldState, this.state);
     }
 
     public String getStatus() {
         return state;
+    }
+
+    /**
+     * Checks that the representation is complete. If it is not, starts a new load of the
+     * representation.
+     */
+    public void restartIfNeeded() {
+        if (root == null && (lastProgress + 5000) < (new Date().getTime())) {
+            triggerFetchCdi();
+        }
     }
 
     /**
