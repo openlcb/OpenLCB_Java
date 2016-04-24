@@ -259,7 +259,8 @@ public class MessageBuilder {
                 return retlist;
          // dph: add all stream messages reply and proceed.
             case StreamInitiateRequest:
-                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
+                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4],
+                        (content.length > 5 ? content[5] : -1)));
                 return retlist;
             case StreamInitiateReply:
                 retlist.add(new StreamInitiateReplyMessage(source,dest,content[0]<<8+content[1],content[2], content[3]));
@@ -269,7 +270,8 @@ public class MessageBuilder {
                 retlist.add(new StreamDataProceedMessage(source,dest,content[2], content[3]));
                 return retlist;
             case StreamDataComplete:
-                retlist.add(new StreamDataCompleteMessage(source,dest,content[2], content[3]));
+                retlist.add(new StreamDataCompleteMessage(source,dest,content.length > 2 ?
+                        content[2] : -1, content.length > 3 ? content[3] : -1));
                 return retlist;
                 
             default:
