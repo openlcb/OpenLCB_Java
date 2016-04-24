@@ -184,6 +184,7 @@ public class MemorySpaceCache {
         if (count > 64) {
             count = 64;
         }
+        final int fcount = count;
         connection.getMemoryConfigurationService().request(
                 new MemoryConfigurationService.McsReadMemo(remoteNodeID, space,
                         currentRangeNextOffset, count) {
@@ -208,11 +209,19 @@ public class MemorySpaceCache {
                                     " address=" + currentRangeNextOffset + " expectedspace=" +
                                     MemorySpaceCache.this.space + " expectedcount=" + this.count);
                         }
-                        System.arraycopy(data, 0, currentRangeData, (int) (currentRangeNextOffset -
-                                                        nextRangeToLoad.start), data.length);
-                        notifyPartialRead(currentRangeNextOffset, currentRangeNextOffset + data
-                                .length);
-                        currentRangeNextOffset += data.length;
+                        if (data.length == 0) {
+                            logger.warning(String.format("Datagram read returned 0 bytes. " +
+                                    "Remote node %s, space %d, address 0x%x", dest.toString(),
+                                    space, address));
+                            currentRangeNextOffset += fcount;
+                        } else {
+                            System.arraycopy(data, 0, currentRangeData, (int)
+                                    (currentRangeNextOffset -
+                                    nextRangeToLoad.start), data.length);
+                            notifyPartialRead(currentRangeNextOffset, currentRangeNextOffset + data
+                                    .length);
+                            currentRangeNextOffset += data.length;
+                        }
                         loadRange();
                     }
                 }
