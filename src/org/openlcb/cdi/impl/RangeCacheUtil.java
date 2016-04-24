@@ -43,7 +43,7 @@ public class RangeCacheUtil {
         return new Range(Math.min(current.start, next.start), Math.max(current.end, next.end));
     }
 
-    public synchronized void addRange(int start, int end) {
+    public synchronized void addRange(long start, long end) {
         addedRanges.add(new Range(start, end));
         isSimplified = false;
     }
@@ -82,11 +82,11 @@ public class RangeCacheUtil {
      */
     public static class Range implements Comparable<Range> {
         /// Address of first byte included in the range.
-        public final int start;
+        public final long start;
         /// Address of first byte not included in the range.
-        public final int end;
+        public final long end;
 
-        public Range(int s, int e) {
+        public Range(long s, long e) {
             start = s;
             end = e;
         }
