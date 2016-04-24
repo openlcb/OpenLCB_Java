@@ -178,10 +178,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
      * @param origin   offset in the segment of the beginning of the group payload
      * @return the number of bytes (one repeat of) this group covers in the address space
      */
-    private int processGroup(String baseName, int segment, List<CdiRep.Item> items,
-                             List<CdiEntry> output, int origin) {
+    private long processGroup(String baseName, int segment, List<CdiRep.Item> items,
+                             List<CdiEntry> output, long origin) {
         if (items == null) return 0;
-        int base = origin;
+        long base = origin;
         for (int i = 0; i < items.size(); i++) {
             CdiRep.Item it = (CdiRep.Item) items.get(i);
 
@@ -294,7 +294,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         /// Memory space number.
         public int space;
         /// Address of the first byte of this item in the memory space.
-        public int origin;
+        public long origin;
         /// The number of bytes that this component takes in the configuration space.
         public int size;
         /// Internal key for this variable or group
@@ -354,7 +354,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             }
             this.origin = segment.getOrigin();
             this.space = segment.getSpace();
-            this.size = processGroup(key, this.space, segment.getItems(), this.items, this.origin);
+            this.size = (int)processGroup(key, this.space, segment.getItems(), this.items, this
+                    .origin);
         }
 
         @Override
@@ -400,7 +401,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         public final CdiRep.Group group;
         public final List<CdiEntry> items;
 
-        public GroupBase(String name, CdiRep.Group group, int segment, int origin) {
+        public GroupBase(String name, CdiRep.Group group, int segment, long origin) {
             this.key = name;
             this.space = segment;
             this.origin = origin;
@@ -432,9 +433,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
          *               already performed)
          * @param index is the 1-based index of this repeat of the given group
          */
-        GroupRep(String name, CdiRep.Group group, int segment, int origin, int index) {
+        GroupRep(String name, CdiRep.Group group, int segment, long origin, int index) {
             super(name, group, segment, origin);
-            size = processGroup(name, segment, group.getItems(), items, origin);
+            size = (int) processGroup(name, segment, group.getItems(), items, origin);
             this.index = index;
         }
         // The 1-based index of this replica.
@@ -454,10 +455,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
          * @param origin is the address of this repeat in that memory space (all skips are
          *               already performed)
          */
-        GroupEntry(String baseName, CdiRep.Group group, int segment, int origin) {
+        GroupEntry(String baseName, CdiRep.Group group, int segment, long origin) {
             super(baseName, group, segment, origin);
             if (group.getReplication() <= 1) {
-                size = processGroup(baseName, segment, group.getItems(), this.items, this.origin);
+                size = (int) processGroup(baseName, segment, group.getItems(), this.items, this
+                        .origin);
             } else {
                 size = 0;
                 for (int i = 0; i < group.getReplication(); ++i) {
@@ -477,7 +479,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public class IntegerEntry extends CdiEntry {
         public CdiRep.IntegerRep rep;
 
-        IntegerEntry(String name, CdiRep.IntegerRep rep, int segment, int origin) {
+        IntegerEntry(String name, CdiRep.IntegerRep rep, int segment, long origin) {
             this.key = name;
             this.space = segment;
             this.origin = origin;
@@ -531,7 +533,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public class EventEntry extends CdiEntry {
         public CdiRep.EventID rep;
 
-        EventEntry(String name, CdiRep.EventID rep, int segment, int origin) {
+        EventEntry(String name, CdiRep.EventID rep, int segment, long origin) {
             this.key = name;
             this.space = segment;
             this.origin = origin;
@@ -570,7 +572,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public class StringEntry extends CdiEntry {
         public CdiRep.StringRep rep;
 
-        StringEntry(String name, CdiRep.StringRep rep, int segment, int origin) {
+        StringEntry(String name, CdiRep.StringRep rep, int segment, long origin) {
             this.key = name;
             this.space = segment;
             this.origin = origin;
