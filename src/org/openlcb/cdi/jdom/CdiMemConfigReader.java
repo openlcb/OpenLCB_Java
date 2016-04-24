@@ -55,7 +55,10 @@ public class CdiMemConfigReader  {
     }
     
     void nextRequest() {
-        MemoryConfigurationService.McsReadMemo memo = 
+        if (retval != null) {
+            retval.progressNotify(buf.length(), -1);
+        }
+        MemoryConfigurationService.McsReadMemo memo =
             new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
                     // handle return data, checking for null in string or zero-length reply
@@ -81,6 +84,7 @@ public class CdiMemConfigReader  {
     private void done() {
         // done, pass back a reader based on the current buffer contents
         if (retval != null) {
+            retval.progressNotify(buf.length(), buf.length());
             System.out.print("Retrieved XML: \n");
             System.out.print(buf);
             retval.provideReader(new java.io.StringReader(new String(buf)));
@@ -88,6 +92,12 @@ public class CdiMemConfigReader  {
     }
     
     public interface ReaderAccess {
+        /**
+         *
+         * @param bytesRead how many bytes we have fetched so far from the server
+         * @param totalBytes the total number of bytes to read, or -1 if not known
+         */
+        public void progressNotify(long bytesRead, long totalBytes);
         public void provideReader(java.io.Reader r);
     }
 }
