@@ -50,10 +50,19 @@ public class RemoteTrainNode {
         if (fdiXml != null) { fdiXml = payload; }
     }
 
+    public synchronized void flushCache() {
+        fdiRoot = null;
+    }
+
     public synchronized Element getFdiXml() {
         if (fdiRoot != null) return fdiRoot;
         new CdiMemConfigReader(node, iface, MemoryConfigurationService.SPACE_TRACTION_FDI)
                 .startLoadReader(new CdiMemConfigReader.ReaderAccess() {
+                    @Override
+                    public void progressNotify(long bytesRead, long totalBytes) {
+
+                    }
+
                     @Override
                     public void provideReader(Reader r) {
                         try {

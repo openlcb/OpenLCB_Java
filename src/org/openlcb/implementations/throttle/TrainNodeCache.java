@@ -45,4 +45,10 @@ public class TrainNodeCache extends AbstractNodeCache<RemoteTrainNode> {
         return new RemoteTrainNode(id, iface);
     }
 
+    public void flushCache() {
+        for (RemoteTrainNode remoteNode : getList()) {
+            remoteNode.flushCache();
+        }
+    }
+
 }
