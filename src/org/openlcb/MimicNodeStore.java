@@ -97,7 +97,7 @@ public class MimicNodeStore extends AbstractConnection {
         ProtocolIdentification pIdent = null;
         public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
-            pIdent = new ProtocolIdentification(msg);
+            pIdent = new ProtocolIdentification(node, msg);
             pcs.firePropertyChange(UPDATE_PROP_PROTOCOL, null, pIdent);
         }  
         public ProtocolIdentification getProtocolIdentification() {
@@ -144,10 +144,24 @@ public class MimicNodeStore extends AbstractConnection {
                     return;
                 }
                 // have to resend the PIP request
-                connection.put(new ProtocolIdentificationRequestMessage(node, msg.getSourceNodeID()), null);
+                connection.put(new ProtocolIdentificationRequestMessage(node, msg.getSourceNodeID
+                        ()), null);
             }
         }
-        
+
+        @Override
+        public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender) {
+            if (!msg.getSourceNodeID().equals(id)) {
+                return;
+            }
+            if (pSimpleNode != null) {
+                pSimpleNode.start(connection);
+            }
+            if (pIdent != null) {
+                //pIdent.start(connection);
+            }
+        }
+
         java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
         public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
         public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
