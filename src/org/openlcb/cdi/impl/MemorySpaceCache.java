@@ -8,9 +8,11 @@ import org.openlcb.implementations.MemoryConfigurationService;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Queue;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -38,6 +40,7 @@ public class MemorySpaceCache {
     private Range nextRangeToLoad = null;
     private long currentRangeNextOffset;
     private byte[] currentRangeData;
+    private Queue<Range> rangesToLoad = new LinkedList<>();
 
     public MemorySpaceCache(OlcbInterface connection, NodeID remoteNode, int space) {
         this.connection = connection;
@@ -143,6 +146,7 @@ public class MemorySpaceCache {
         if (rlist.isEmpty()) return;
         for (Range r : rlist) {
             dataCache.put(r, null);
+            rangesToLoad.add(r);
         }
         continueLoading();
     }
@@ -151,13 +155,8 @@ public class MemorySpaceCache {
      * Finds the next unloaded cached range and invokes load on it.
      */
     private void continueLoading() {
-        if (dataCache.isEmpty()) return;
-        if (nextRangeToLoad == null) {
-            nextRangeToLoad = dataCache.firstKey();
-        }
-        while (nextRangeToLoad != null && dataCache.get(nextRangeToLoad) != null) {
-            nextRangeToLoad = dataCache.higherKey(nextRangeToLoad);
-        }
+        if (dataCache.isEmpty() && rangesToLoad.isEmpty()) return;
+        nextRangeToLoad = rangesToLoad.poll();
         if (nextRangeToLoad == null) {
             // loading complete.
             firePropertyChange(UPDATE_LOADING_COMPLETE, null, null);
@@ -211,13 +210,14 @@ public class MemorySpaceCache {
                         }
                         if (data.length == 0) {
                             logger.warning(String.format("Datagram read returned 0 bytes. " +
-                                    "Remote node %s, space %d, address 0x%x", dest.toString(),
+                                            "Remote node %s, space %d, address 0x%x", dest
+                                            .toString(),
                                     space, address));
                             currentRangeNextOffset += fcount;
                         } else {
                             System.arraycopy(data, 0, currentRangeData, (int)
                                     (currentRangeNextOffset -
-                                    nextRangeToLoad.start), data.length);
+                                            nextRangeToLoad.start), data.length);
                             notifyPartialRead(currentRangeNextOffset, currentRangeNextOffset + data
                                     .length);
                             currentRangeNextOffset += data.length;
@@ -273,6 +273,16 @@ public class MemorySpaceCache {
         );
         // @TODO: 4/2/16 Handle write errors and report to user somehow.
         notifyAfterWrite(offset, offset + data.length);
+    }
+
+    /**
+     * Performs a refresh of some data. Calls the data update listeners when done.
+     * @param origin
+     * @param size
+     */
+    public void reload(long origin, int size) {
+        rangesToLoad.add(new Range(origin, origin + size));
+        continueLoading();
     }
 
     /**
