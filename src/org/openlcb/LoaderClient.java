@@ -287,8 +287,8 @@ public class LoaderClient extends MessageDecoder {
                                     //System.out.println("Reply mcs.request McsWriteMemo handleWriteReply: "+code);
                 if(nextIndex<content.length) sendDGNext();
                 else {
-                    //sendUnfreeze();
-                    //state = State.SUCCESS;
+                    state = State.SUCCESS;
+                    sendUnfreeze();
                 }
             }
         });
