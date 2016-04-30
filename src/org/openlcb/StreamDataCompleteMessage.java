@@ -50,7 +50,7 @@ public class StreamDataCompleteMessage extends AddressedMessage {
 
     public String toString() {
         return super.toString()
-                +" StreamDataComplete";     
+                +" StreamDataComplete(" + sourceStreamID + "," + destStreamID + ")";
     }
 
     public int getMTI() { return MTI_STREAM_DATA_COMPLETE; }

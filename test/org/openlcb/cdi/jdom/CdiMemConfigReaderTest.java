@@ -78,9 +78,15 @@ public class CdiMemConfigReaderTest extends TestCase {
         CdiMemConfigReader cmcr = new CdiMemConfigReader(nidHere, store, service);   
     }
     java.io.Reader rdr;
+    long bytesRead;
     public void testCycle() throws java.io.IOException {
-        CdiMemConfigReader cmcr = new CdiMemConfigReader(nidHere, store, service); 
+        CdiMemConfigReader cmcr = new CdiMemConfigReader(nidHere, store, service);
         CdiMemConfigReader.ReaderAccess a = new CdiMemConfigReader.ReaderAccess() {
+            @Override
+            public void progressNotify(long _bytesRead, long totalBytes) {
+                bytesRead = _bytesRead;
+            }
+
             public void provideReader(java.io.Reader r) {
                 rdr = r;
             }
@@ -91,6 +97,7 @@ public class CdiMemConfigReaderTest extends TestCase {
         Assert.assertTrue(rdr != null);
         Assert.assertEquals("1", testString.getBytes()[0], rdr.read());
         Assert.assertEquals("2", testString.getBytes()[1], rdr.read());
+        assertEquals(testString.length()-1, bytesRead);
         int count = 2;
         while (rdr.read() > 0) count++;
         Assert.assertEquals("length", testString.length()-1, count); // -1 for trailing zero on input

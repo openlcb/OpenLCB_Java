@@ -62,10 +62,9 @@ public class StreamTransmitterTest extends TestCase {
         xmt.put(m, null);
 
         Assert.assertEquals("1st messages", 2, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data)));
-        Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
+        Assert.assertEquals(messagesReceived.get(0), new StreamDataSendMessage(hereID, farID, data));
+        Assert.assertEquals(messagesReceived.get(1), new StreamDataCompleteMessage(hereID, farID,
+                (byte)4, (byte)0));
     }
     
     public void testTwoMsgStream() {
@@ -88,7 +87,7 @@ public class StreamTransmitterTest extends TestCase {
                            .equals(new StreamInitiateRequestMessage(hereID, farID, 256, (byte)4, (byte)0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)0, (byte)0);
+        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)4, (byte)0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -99,7 +98,7 @@ public class StreamTransmitterTest extends TestCase {
                            .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
 
         // reply to proceed
-        m = new StreamDataProceedMessage(farID, hereID, (byte)0, (byte)0);
+        m = new StreamDataProceedMessage(farID, hereID, (byte)4, (byte)0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -109,7 +108,7 @@ public class StreamTransmitterTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0)
                            .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
+                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)4, (byte)0)));
 
     }
     
