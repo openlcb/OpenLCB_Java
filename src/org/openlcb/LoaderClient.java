@@ -10,6 +10,7 @@ import org.openlcb.ProtocolIdentificationReplyMessage;
 import org.openlcb.StreamInitiateReplyMessage;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import java.util.TimerTask;
 //#include "LoaderClient.hpp"
 
 public class LoaderClient extends MessageDecoder {
+    static Logger logger = Logger.getLogger("LoaderClient");
     enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, PIPREPLY, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
     Connection connection;
     Connection fromDownstream;
@@ -104,17 +106,21 @@ public class LoaderClient extends MessageDecoder {
         dcs.sendData(
             new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA1, space}) {
                 @Override
-                public void handleReply(int code) {
-                                                // System.out.println("lFreeze handleReply: "+code);
-                  //if((state==State.FREEZE)) {
-                  //    if(code==DG_OK)      { state = State.INITCOMPL; } // DG ok
-                  //    else if(code==DG_FAIL) { state = State.INITCOMPL; } // DG timed out, but ok timeouts
-                  //    else state = State.FAIL;    // Apparently this node doesn't handle DGs
-                  //}
-                  state = State.PIP;
-                  sendPipRequest();
-                  startTimeout(3000);
-                                                //System.out.println("lhandleFreeze Reply Exit: "+state);
+                public void handleSuccess(int flags) {
+                    if(state==State.FREEZE) {
+                        state = State.PIP;
+                        sendPipRequest();
+                        startTimeout(3000);
+                    } else {
+                        // ignore; maybe a late timeout callback.
+                    }
+                }
+
+                @Override
+                public void handleFailure(int errorCode) {
+                    // It is actually OK to have this fail because the remote node may have
+                    // rebooted.
+                    handleSuccess(0);
                 }
             });
     }
@@ -199,11 +205,17 @@ public class LoaderClient extends MessageDecoder {
         bufferSize = 64;
         state = State.STREAM;
         
-        mcs.request(new McsWriteStreamMemo(dest, space, address) {
+        mcs.request(new McsWriteStreamMemo(dest, space, address, 4) {
             @Override
-            public void handleWriteReply(int code) {
-                                      // System.out.println("Reply mcs.request McsWriteStreamMemo handleWriteReply: ");
+            public void handleSuccess() {
                 sendStream();
+            }
+
+            @Override
+            public void handleFailure(String where, int errorCode) {
+                state = State.FAIL;
+                logger.warning("Failed to setup stream at " + where + ": error 0x" + Integer
+                        .toHexString(errorCode));
             }
         });
     }
@@ -283,14 +295,19 @@ public class LoaderClient extends MessageDecoder {
                                     //System.out.println("lsendDGNext mcs.request(new McsWriteMemo: "+state);
         mcs.request(new McsWriteMemo(dest, space, nextIndex, data) {
             @Override
-            public void handleWriteReply(int code) {
-                                    //System.out.println("Reply mcs.request McsWriteMemo handleWriteReply: "+code);
+            public void handleFailure(int errorCode) {
+                sendDGNext();
+            }
+
+            @Override
+            public void handleSuccess() {
                 if(nextIndex<content.length) sendDGNext();
                 else {
                     state = State.SUCCESS;
                     sendUnfreeze();
                 }
             }
+
         });
         
         //feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
@@ -316,19 +333,22 @@ public class LoaderClient extends MessageDecoder {
     void sendUnfreeze() {
                                       // System.out.println("lsendUnfreeze");
         dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA0, space}) {
+
             @Override
-            public void handleReply(int code) {
-                System.out.println("lc-sendUnfreeze reply: "+state);
-                if(state == State.SUCCESS) {
-                //    if(state == State.SUCCESS && msg.getSourceNodeID().equals(dest)) {
-                    feedback.onProgress((float)100.0);
-                    feedback.onDone(0,"Download Completed");
-                }
-                else {
-                    //feedback.onProgress((float)0.0);
+            public void handleSuccess(int flags) {
+                if (state == State.SUCCESS) {
+                    feedback.onProgress((float) 100.0);
+                    feedback.onDone(0, "Download Completed");
+                } else {
                     feedback.onDone(0,"Download Failed - "+errorString);
                 }
             }
+
+            @Override
+            public void handleFailure(int errorCode) {
+                feedback.onDone(0,"Download Failed in UnFreeze - 0x"+Integer.toHexString(errorCode));
+            }
+
         });
     }
 }

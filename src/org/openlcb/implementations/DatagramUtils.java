@@ -23,4 +23,16 @@ public class DatagramUtils {
         payload[offset++] = (int) ((value >> 8) & 0xff);
         payload[offset++] = (int) (value & 0xff);
     }
+
+    static int parseErrorCode(int[] payload, int offset) {
+        int retval = payload[offset++];
+        retval <<= 0;
+        retval |= payload[offset] & 0xff;
+        return retval;
+    }
+
+    static void renderErrorCode(int[] payload, int offset, int errorCode) {
+        payload[offset++] = (errorCode >> 8) & 0xff;
+        payload[offset++] = errorCode & 0xff;
+    }
 }

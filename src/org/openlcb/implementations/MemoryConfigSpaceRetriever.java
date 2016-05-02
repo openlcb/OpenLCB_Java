@@ -31,6 +31,11 @@ public class MemoryConfigSpaceRetriever {
     void nextRequest() {
         MemoryConfigurationService.McsReadMemo memo =
                 new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
+                    @Override
+                    public void handleFailure(int code) {
+                        cb.onFailure(code);
+                    }
+
                     public void handleReadData(NodeID dest, int space, long address, byte[] data) {
                         // handle return data, checking for null in string or zero-length reply
                         if (data.length == 0) {

@@ -60,7 +60,14 @@ public class CdiMemConfigReader  {
         }
         MemoryConfigurationService.McsReadMemo memo =
             new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
-                public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
+                @Override
+                public void handleFailure(int code) {
+                    done();
+                    // TODO: 5/2/16 proxy error messages to the caller.
+                    // don't do next request
+                }
+
+                public void handleReadData(NodeID dest, int space, long address, byte[] data) {
                     // handle return data, checking for null in string or zero-length reply
                     if (data.length == 0) {
                         done();

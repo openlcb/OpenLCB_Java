@@ -55,7 +55,14 @@ public class MemConfigDescriptionPane extends JPanel  {
         // start by asking for basic config
         MemoryConfigurationService.McsConfigMemo memo = 
             new MemoryConfigurationService.McsConfigMemo(node) {
-                public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) { 
+                @Override
+                public void handleFailure(int code) {
+                    System.err.println("Failed to fetch MCS config information from node " + node
+                            + " error 0x" + Integer.toHexString(code));
+                    commandLabel.setText("Failed: 0x" + Integer.toHexString(code));
+                }
+
+                public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) {
                     // fill window from values
                     commandLabel.setText("0x"+Utilities.toHexPair(commands>>8)+Utilities.toHexPair(commands));
                     

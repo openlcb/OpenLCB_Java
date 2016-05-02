@@ -50,17 +50,34 @@ public class DatagramServiceTest extends TestCase {
     }
 
     public void testXmtMemoIsRealClass() {
+        class TestMemo extends DatagramService.DatagramServiceTransmitMemo {
+
+            public TestMemo(NodeID dest, int[] data) {
+                super(dest, data);
+            }
+
+            @Override
+            public void handleSuccess(int flags) {
+
+            }
+
+            @Override
+            public void handleFailure(int errorCode) {
+
+            }
+        }
+
         DatagramService.DatagramServiceTransmitMemo m20 = 
-            new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1});
+            new TestMemo(farID,new int[]{1});
 
         DatagramService.DatagramServiceTransmitMemo m21 = 
-            new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1});
+            new TestMemo(farID,new int[]{1});
         DatagramService.DatagramServiceTransmitMemo m22 = 
-            new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{2});
+            new TestMemo(farID,new int[]{2});
         DatagramService.DatagramServiceTransmitMemo m23 = 
-            new DatagramService.DatagramServiceTransmitMemo(farID,new int[]{1,2});
+            new TestMemo(farID,new int[]{1,2});
         DatagramService.DatagramServiceTransmitMemo m24 = 
-            new DatagramService.DatagramServiceTransmitMemo(hereID,new int[]{1,2});
+            new TestMemo(hereID,new int[]{1,2});
         
         Assert.assertTrue(!m20.equals(null));
         Assert.assertTrue(!m21.equals(null));
@@ -181,8 +198,14 @@ public class DatagramServiceTest extends TestCase {
         DatagramService.DatagramServiceTransmitMemo memo = 
             new DatagramService.DatagramServiceTransmitMemo(farID,data) {
                 @Override
-                public void handleReply(int code) { 
+                public void handleSuccess(int flags) {
                     flag = true;
+                }
+
+                @Override
+                public void handleFailure(int errorCode) {
+                    flag = true;
+                    assertEquals("Send failed. error code is ", 0, errorCode);
                 }
             };
             
