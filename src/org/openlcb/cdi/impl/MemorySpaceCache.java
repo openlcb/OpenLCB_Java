@@ -260,8 +260,8 @@ public class MemorySpaceCache {
         }
         logger.finer("Writing to space " + space + " offset 0x" + Long.toHexString(offset) +
                 " payload length " + data.length);
-        connection.getMemoryConfigurationService().request(
-                new MemoryConfigurationService.McsWriteMemo(remoteNodeID, space, offset, data) {
+        connection.getMemoryConfigurationService().requestWrite(remoteNodeID, space, offset,
+                data, new MemoryConfigurationService.McsWriteHandler() {
                     @Override
                     public void handleFailure(int errorCode) {
                         logger.warning(String.format("Write failed (space %d address %d): 0x" +
@@ -271,7 +271,8 @@ public class MemorySpaceCache {
 
                     @Override
                     public void handleSuccess() {
-                        logger.finer(String.format("Write complete (space %d address %d).", space, offset));
+                        logger.finer(String.format("Write complete (space %d address %d).",
+                                space, offset));
                         cdiEntry.fireWriteComplete();
                     }
                 }

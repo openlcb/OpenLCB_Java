@@ -293,7 +293,7 @@ public class LoaderClient extends MessageDecoder {
         for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
         
                                     //System.out.println("lsendDGNext mcs.request(new McsWriteMemo: "+state);
-        mcs.request(new McsWriteMemo(dest, space, nextIndex, data) {
+        mcs.requestWrite(dest, space, nextIndex, data, new McsWriteHandler() {
             @Override
             public void handleFailure(int errorCode) {
                 sendDGNext();
@@ -307,7 +307,6 @@ public class LoaderClient extends MessageDecoder {
                     sendUnfreeze();
                 }
             }
-
         });
         
         //feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
