@@ -115,6 +115,13 @@ public class OlcbInterface {
         return mcs;
     }
 
+    /**
+     * Blocks the current thread until the outgoing messages are all sent out.
+     */
+    public void flushSendQueue() {
+        queuedOutputConnection.waitForSendQueue();
+    }
+
     public void registerMessageListener(Connection c) {
         inputConnection.registerMessageListener(c);
     }
@@ -198,6 +205,7 @@ public class OlcbInterface {
     private class QueuedOutputConnection implements Connection {
         private final Connection realOutput;
         private final BlockingQueue<Message> outputQueue = new LinkedBlockingQueue<>();
+        private int pendingCount = 0;
 
         QueuedOutputConnection(Connection realOutput) {
             this.realOutput = realOutput;
@@ -205,12 +213,26 @@ public class OlcbInterface {
 
         @Override
         public void put(Message msg, Connection sender) {
+            synchronized(this) {
+                pendingCount++;
+            }
             outputQueue.add(msg);
         }
 
         @Override
         public void registerStartNotification(ConnectionListener c) {
             internalOutputConnection.registerStartNotification(c);
+        }
+
+        public void waitForSendQueue() {
+            while(true) {
+                synchronized (this) {
+                    if (pendingCount == 0) return;
+                }
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {}
+            }
         }
 
         /**
@@ -221,6 +243,9 @@ public class OlcbInterface {
                 try {
                     Message m = outputQueue.take();
                     realOutput.put(m, null);
+                    synchronized(this) {
+                        pendingCount--;
+                    }
                 } catch (InterruptedException e) {
                     continue;
                 }
