@@ -1,5 +1,7 @@
 package org.openlcb.can;
 
+import org.openlcb.implementations.DatagramUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -198,7 +200,7 @@ public class GridConnect {
 
         @Override
         public int getElement(int n) {
-            return data[n];
+            return DatagramUtils.byteToInt(data[n]);
         }
 
         @Override

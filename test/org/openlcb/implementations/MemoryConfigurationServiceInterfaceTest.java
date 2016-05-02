@@ -16,6 +16,14 @@ import org.openlcb.DatagramRejectedMessage;
 import org.openlcb.InterfaceTestBase;
 import org.openlcb.Message;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
+import org.openlcb.can.CanFrame;
+import org.openlcb.can.GridConnect;
+import org.openlcb.can.MessageBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.mockito.Mockito.*;
 
 /**
@@ -363,6 +371,109 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    public void testSimpleReadFromSpaceFB() {
+        int space = 0xFB;
+        long address = 0x12345678;
+        int length = 4;
+
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
+
+        // should have sent datagram
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x40, 0x12, 0x34, 0x56, 0x78, 0xFB, 4}));
+
+        // datagram reply comes back
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
+
+        // Response datagram comes and gets acked.
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x50, 0x12, 0x34, 0x56, 0x78, 0xFB, 0xaa}),
+                new DatagramAcknowledgedMessage(hereID, farID));
+
+        verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+        verifyNoMoreInteractions(hnd);
+    }
+
+    public void testGetSpaceId() {
+        boolean debugFrames = false;
+
+        Message msg = new DatagramMessage(farID, hereID, new int[]{
+                0x20, 0x50, 0x12, 0x34, 0x56, 0x78, 0xFB, 0xaa});
+        MessageBuilder d = new MessageBuilder(aliasMap);
+        List<? extends CanFrame> actualFrames = d.processMessage(msg);
+        StringBuilder b = new StringBuilder();
+        for (CanFrame f : actualFrames) {
+            b.append(GridConnect.format(f));
+        }
+        if (debugFrames) System.err.println("Input frames: " + b);
+
+        List<Message> parsedMessages = new ArrayList<>();
+        List<CanFrame> parsedFrames = GridConnect.parse(b.toString());
+        for (CanFrame f : parsedFrames) {
+            List<Message> l = d.processFrame(f);
+            if (l != null) {
+                parsedMessages.addAll(l);
+            }
+        }
+        assertEquals(1, parsedMessages.size());
+        assertTrue(parsedMessages.get(0) instanceof DatagramMessage);
+        DatagramMessage dg = (DatagramMessage) parsedMessages.get(0);
+        assertEquals("20 50 12 34 56 78 FB AA", Utilities.toHexSpaceString(dg.getData()));
+
+        assertEquals(0xFB, dg.getData()[6]);
+
+        assertEquals(0xFB, MemoryConfigurationService.getSpaceFromPayload(dg.getData()));
+    }
+
+    public void testTwoSimpleReadsInParallel() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        int length = 4;
+        MemoryConfigurationService.McsReadHandler hnd1 = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+        MemoryConfigurationService.McsReadHandler hnd2 = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, 4, hnd1);
+        iface.getMemoryConfigurationService().requestRead(farID, space, address & ~0xF, 2,
+                hnd2);
+
+        // should have sent datagram
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x41, 0x12, 0x34, 0x56, 0x78, 4}));
+
+        // datagram reply comes back
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd1);
+        verifyNoMoreInteractions(hnd2);
+
+        // now return data
+        // Response datagram comes and gets acked.
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
+                new DatagramAcknowledgedMessage(hereID, farID));
+
+        verify(hnd1).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+        verifyNoMoreInteractions(hnd1);
+
+        // The first ACK will trigger sending the second message.
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x41, 0x12, 0x34, 0x56, 0x70, 2}));
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x51, 0x12, 0x34, 0x56, 0x70, 0xbb}),
+                new DatagramAcknowledgedMessage(hereID, farID));
+
+        verify(hnd2).handleReadData(farID, space, address & ~0xF, new byte[]{(byte) 0xbb});
+        verifyNoMoreInteractions(hnd2);
+    }
+
+
 /*
     public void testConfigMemoIsRealClass() {
         MemoryConfigurationService.McsConfigMemo m20 =
@@ -554,6 +665,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     public MemoryConfigurationServiceInterfaceTest(String s) {
         super(s);
+        aliasMap.insert(0x987, farID);
+        testWithCanFrameRendering = true;
     }
 
     // Main entry point

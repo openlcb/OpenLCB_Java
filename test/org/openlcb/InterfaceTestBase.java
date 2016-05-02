@@ -24,6 +24,8 @@ public abstract class InterfaceTestBase extends TestCase {
     protected FakeOlcbInterface iface = new FakeOlcbInterface();
     protected AliasMap aliasMap = new AliasMap();
     private Queue<Message> pendingMessages = new LinkedList<>();
+    protected boolean testWithCanFrameRendering = false;
+    private boolean debugFrames = false;
 
     public InterfaceTestBase(String s) {
         super(s);
@@ -35,6 +37,7 @@ public abstract class InterfaceTestBase extends TestCase {
     }
 
     private void expectInit() {
+        aliasMap.insert(0x333, iface.getNodeId());
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
     }
 
@@ -50,9 +53,6 @@ public abstract class InterfaceTestBase extends TestCase {
      * @param frames is one or more CAN frames in the GridConnect protocol format.
      *  */
     protected void sendFrame(String frames) {
-        if (aliasMap.getAlias(iface.getNodeId()) < 0) {
-            aliasMap.insert(0x333, iface.getNodeId());
-        }
         List<CanFrame> parsedFrames = GridConnect.parse(frames);
         MessageBuilder d = new MessageBuilder(aliasMap);
         for (CanFrame f : parsedFrames) {
@@ -70,11 +70,22 @@ public abstract class InterfaceTestBase extends TestCase {
      * @param msg inbound message from a far node
      */
     protected void sendMessage(Message msg) {
-        iface.getInputConnection().put(msg, null);
+        if (testWithCanFrameRendering) {
+            MessageBuilder d = new MessageBuilder(aliasMap);
+            List<? extends CanFrame> actualFrames = d.processMessage(msg);
+            StringBuilder b = new StringBuilder();
+            for (CanFrame f : actualFrames) {
+                b.append(GridConnect.format(f));
+            }
+            if (debugFrames)System.err.println("Input frames: " + b);
+            sendFrame(b.toString());
+        } else {
+            iface.getInputConnection().put(msg, null);
+        }
     }
 
     /** Moves all outgoing messages to the pending messages queue. */
-    private void consumeMessages() {
+    protected void consumeMessages() {
         iface.flushSendQueue();
         iface.fakeOutputConnection.transferAll(pendingMessages);
     }
@@ -84,9 +95,6 @@ public abstract class InterfaceTestBase extends TestCase {
      * @param expectedFrame GridConnect-formatted CAN frame.
      */
     protected void expectFrame(String expectedFrame) {
-        if (aliasMap.getAlias(iface.getNodeId()) < 0) {
-            aliasMap.insert(0x333, iface.getNodeId());
-        }
         consumeMessages();
         MessageBuilder d = new MessageBuilder(aliasMap);
         List<? extends CanFrame> actualFrames = d.processMessage(pendingMessages.remove());

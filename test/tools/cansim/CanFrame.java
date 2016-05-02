@@ -1,5 +1,7 @@
 package tools.cansim;
 
+import org.openlcb.implementations.DatagramUtils;
+
 import tools.*;
 
 /**

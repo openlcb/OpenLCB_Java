@@ -1,6 +1,7 @@
 package org.openlcb.can;
 
 import org.openlcb.*;
+import org.openlcb.implementations.DatagramUtils;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 import org.openlcb.messages.TractionProxyReplyMessage;
@@ -236,6 +237,34 @@ public class MessageBuilderTest extends TestCase {
         CanFrame f1 = list.get(1);
         Assert.assertEquals("f1 header", toHexString(0x1D321123), toHexString(f1.getHeader()));
         compareContent(new byte[]{31}, f1);
+    }
+
+    public void testDatagramOKMessage() {
+        Message m = new DatagramAcknowledgedMessage(source, destination, 0x0);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19A28123] 03 21 80
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19A28123), toHexString(f0.getHeader()));
+        compareContent(new byte[]{0x03, 0x21}, f0);
+    }
+
+    public void testDatagramOKMessageWithPayload() {
+        Message m = new DatagramAcknowledgedMessage(source, destination, 0x80);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19A28123] 03 21 80
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19A28123), toHexString(f0.getHeader()));
+        compareContent(new byte[]{0x03, 0x21, (byte)0x80}, f0);
     }
 
 
@@ -532,6 +561,26 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
     }
 
+    public void testDatagramOKFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A28123);
+        frame.setData(new byte[]{0x03, 0x21, (byte) 0x80});
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof DatagramAcknowledgedMessage);
+        DatagramAcknowledgedMessage dmsg = (DatagramAcknowledgedMessage) msg;
+
+        Assert.assertEquals(source, dmsg.getSourceNodeID());
+        Assert.assertEquals(destination, dmsg.getDestNodeID());
+        Assert.assertEquals(0x80, dmsg.getFlags());
+    }
+
     public void testAddressedMessageAliasExtraction() {
     
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
@@ -700,7 +749,8 @@ public class MessageBuilderTest extends TestCase {
         else {
             Assert.assertEquals("data length", data.length, f.getNumDataElements());
             for (int i=0; i<data.length; i++) {
-                Assert.assertEquals("data byte "+i,data[i],f.getElement(i));
+                Assert.assertEquals("data byte "+i, DatagramUtils.byteToInt(data[i]),f.getElement
+                        (i));
             }
         }
     }

@@ -2,6 +2,7 @@ package org.openlcb.can.impl;
 
 import org.openlcb.can.CanFrame;
 import org.openlcb.can.CanFrameListener;
+import org.openlcb.implementations.DatagramUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -162,7 +163,7 @@ public class GridConnectInput {
 
         @Override
         public int getElement(int n) {
-            return data[n];
+            return DatagramUtils.byteToInt(data[n]);
         }
 
         @Override

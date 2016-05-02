@@ -36,7 +36,7 @@ public class DatagramUtils {
         payload[offset++] = errorCode & 0xff;
     }
 
-    static int byteToInt(byte b) {
+    public static int byteToInt(byte b) {
         return b < 0 ? ((int)b) + 256 : b;
     }
 
@@ -52,7 +52,7 @@ public class DatagramUtils {
 
     static void intToByteArray(byte[] dst, int iDst, int[] src, int iSrc, int len) {
         for (int i = 0; i < len; ++i) {
-            dst[i+iDst] = intToByte(src[i+iSrc]);
+            dst[i+iDst] = intToByte(src[i + iSrc]);
         }
     }
 }

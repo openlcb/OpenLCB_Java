@@ -8,7 +8,9 @@ import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
 import org.openlcb.Utilities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Logger;
@@ -338,6 +340,12 @@ public class MemoryConfigurationService {
         public int hashCode() { return getRequestCode()+dest.hashCode()+((int)address)+space; }
 
         @Override
+        public String toString() {
+            return this.getClass().getSimpleName() + ": dest " + dest.toString() + " space 0x" +
+                    Integer.toHexString(space) + " address 0x" + Long.toHexString(address);
+        }
+
+        @Override
         public void handleResponseDatagram(int[] data) {
             if ((data[1] & SUBCMD_ERROR) != 0) {
                 failureCallback.handleFailure(DatagramUtils.parseErrorCode(data, getPayloadOffset(data)));
@@ -375,6 +383,7 @@ public class MemoryConfigurationService {
     // Holds the memo pointers to all pending operations: datagrams that were sent out and are
     // waiting a response. Must be synchronized(this) for all accesses.
     final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
+    final Map<Integer, List<McsRequestMemo>> queuedRequests = new HashMap<>(5);
 
 
     /**
@@ -382,24 +391,32 @@ public class MemoryConfigurationService {
      * pops it.
      * @param memo the memo to test.
      */
-    private synchronized void checkAndPopMemo(McsRequestMemo memo) {
-        if (pendingRequests.get(memo.getRequestCode()) == memo) {
-            pendingRequests.remove(memo.getRequestCode());
-        } else {
-            logger.warning("Error checking the pending request memo for code " + memo
-                    .getRequestCode() + " expected " + memo.toString() + " actual " +
-                    pendingRequests.get(memo.getRequestCode()));
+    private void checkAndPopMemo(McsRequestMemo memo) {
+        int rqCode = memo.getRequestCode();
+        synchronized(this) {
+            if (pendingRequests.get(rqCode) == memo) {
+                pendingRequests.remove(memo.getRequestCode());
+                memo = null;
+                if (queuedRequests.containsKey(rqCode)) {
+                    List<McsRequestMemo> l = queuedRequests.get(rqCode);
+                    if (!l.isEmpty()) {
+                        memo = l.remove(l.size() - 1);
+                        pendingRequests.put(rqCode, memo);
+                    }
+                }
+            } else {
+                logger.warning("Error checking the pending request memo for code " + rqCode + " " +
+                        "expected " + memo.toString() + " actual " +
+                        pendingRequests.get(memo.getRequestCode()));
+                memo = null;
+            }
+        }
+        if (memo != null) {
+            sendRequest(memo);
         }
     }
 
-    public void request(final McsRequestMemo memo) {
-        synchronized(this) {
-            if (pendingRequests.containsKey(memo.getRequestCode())) {
-                throw new UnsupportedOperationException("Duplicate request of type " + memo
-                        .getRequestCode());
-            }
-            pendingRequests.put(memo.getRequestCode(), memo);
-        }
+    private void sendRequest(final McsRequestMemo memo) {
         downstream.sendData(new DatagramService.DatagramServiceTransmitMemo(memo.getDest(), memo.renderTransmitDatagram()) {
             @Override
             public void handleSuccess(int flags) {
@@ -434,6 +451,22 @@ public class MemoryConfigurationService {
         });
     }
 
+    public void request(McsRequestMemo memo) {
+        synchronized(this) {
+            int rqCode = memo.getRequestCode();
+            if (pendingRequests.containsKey(rqCode)) {
+                if (!queuedRequests.containsValue(rqCode)) {
+                    queuedRequests.put(rqCode, new ArrayList<McsRequestMemo>());
+                }
+                queuedRequests.get(rqCode).add(memo);
+                return;
+            } else {
+                pendingRequests.put(memo.getRequestCode(), memo);
+            }
+        }
+        sendRequest(memo);
+    }
+
     static class McsWriteMemo extends McsAddressedRequestMemo implements
             RequestWithNoReply {
         public McsWriteMemo(NodeID dest, int space, long address, byte[] data, NoReturnCallback
@@ -455,11 +488,6 @@ public class MemoryConfigurationService {
             for (int i = 0; i < this.data.length; i++)
                 if (this.data[i] != m.data[i]) return false;
             return true;
-        }
-
-        @Override
-        public String toString() {
-            return "McsWriteMemo: "+address;
         }
 
         @Override
@@ -523,11 +551,6 @@ public class MemoryConfigurationService {
             McsReadMemo m = (McsReadMemo) o;
             if (this.len != m.len) return false;
             return true;
-        }
-
-        @Override
-        public String toString() {
-            return "McsReadMemo: "+address;
         }
 
         @Override
