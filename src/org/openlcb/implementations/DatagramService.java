@@ -38,7 +38,8 @@ public class DatagramService extends MessageDecoder {
         this.downstream = downstream;
         
     }
-    
+
+    public static final int FLAG_REPLY_PENDING = 0x80;
     static final int DEFAULT_ERROR_CODE = 0x1000;
     NodeID here;
     Connection downstream;
@@ -56,7 +57,13 @@ public class DatagramService extends MessageDecoder {
      * Send data to layout
      */
     public void sendData(NodeID dest, int[] data){
-        DatagramServiceTransmitMemo memo = new DatagramServiceTransmitMemo(dest, data);
+        DatagramServiceTransmitMemo memo = new DatagramServiceTransmitMemo(dest, data) {
+            @Override
+            public void handleSuccess(int flags) {}
+
+            @Override
+            public void handleFailure(int errorCode) {}
+        };
         xmtMemo = memo;
         Message m = new DatagramMessage(here, memo.dest, memo.data);
         downstream.put(m, this);
@@ -97,9 +104,11 @@ public class DatagramService extends MessageDecoder {
     @Override
     public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
         if (xmtMemo != null && msg.getDestNodeID().equals(here) && xmtMemo.dest.equals(msg.getSourceNodeID()) ) {
-            xmtMemo.handleReply(msg.getCode());
+            if (msg.canResend()) return;
+            DatagramServiceTransmitMemo temp = xmtMemo;
+            xmtMemo = null;
+            temp.handleFailure(msg.getCode());
         }
-        xmtMemo = null;
     }
 
     /**
@@ -110,7 +119,7 @@ public class DatagramService extends MessageDecoder {
         if (xmtMemo != null && msg.getDestNodeID().equals(here) && xmtMemo.dest.equals(msg.getSourceNodeID()) ) {
             DatagramServiceTransmitMemo temp = xmtMemo;
             xmtMemo = null;
-            temp.handleReply(0);
+            temp.handleSuccess(msg.getFlags());
         }
     }
 
@@ -219,7 +228,7 @@ public class DatagramService extends MessageDecoder {
      // TODO are these really immutable, given that subclass will inherit and change them?
     @Immutable
     @ThreadSafe    
-    static public class DatagramServiceTransmitMemo {
+    static public abstract class DatagramServiceTransmitMemo {
         public DatagramServiceTransmitMemo(NodeID dest, int[] data) {
             this.data = data;
             this.dest = dest;
@@ -254,11 +263,18 @@ public class DatagramService extends MessageDecoder {
         public int hashCode() { return this.data.length+this.data[0]+dest.hashCode(); }
         
         /**
-         * Overload this to for notification of response
-         * @param code 0 for OK, non-zero for error reply
+         * Notifies that the datagram was accepted by the destination.
+         * @param flags are the 8-bit flags returned by the destination; bit 0x80 for reply
+         *              pending.
          */
-        public void handleReply(int code) { 
-        }
+        public abstract void handleSuccess(int flags);
+
+        /**
+         * Notifies that the datagram send has failed. Retryable errors are internally retried
+         * and not reported here.
+         * @param errorCode the 16-bit OpenLCB error code.
+         */
+        public abstract void handleFailure(int errorCode);
 
     }
     
