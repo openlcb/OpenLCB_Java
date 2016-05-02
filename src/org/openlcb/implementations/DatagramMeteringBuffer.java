@@ -52,9 +52,21 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     }
     
     BlockingQueue<MessageMemo> queue = new LinkedBlockingQueue<MessageMemo>();
+    int pendingEntries = 0;
 
     public void setTimeout(int timeoutMillis) {
         this.timeoutMillis = timeoutMillis;
+    }
+
+    public void waitForSendQueue() {
+        while(true) {
+            synchronized (this) {
+                if (pendingEntries == 0) return;
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {}
+        }
     }
 
     /**
@@ -62,10 +74,14 @@ public class DatagramMeteringBuffer extends MessageDecoder {
      */
     @Override
     public void put(Message msg, Connection toUpstream) {
-        if (msg instanceof DatagramMessage)
-            queue.add(new MessageMemo((DatagramMessage)msg, toUpstream, toDownstream));
-        else 
+        if (msg instanceof DatagramMessage) {
+            synchronized (this) {
+                ++pendingEntries;
+            }
+            queue.add(new MessageMemo((DatagramMessage) msg, toUpstream, toDownstream));
+        } else {
             toDownstream.put(msg, fromDownstream);
+        }
     }
 
     private void datagramComplete() {
@@ -167,13 +183,16 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
     }
     
-    static class Consumer implements Runnable {
+    class Consumer implements Runnable {
         private final BlockingQueue<MessageMemo> queue;
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
         @Override
         public void run() {
             try {
                 consume(queue.take());
+                synchronized (DatagramMeteringBuffer.this) {
+                    pendingEntries--;
+                }
             } catch (InterruptedException ex) {}
             // and exits. Another has to be started with this item is done.
         }
