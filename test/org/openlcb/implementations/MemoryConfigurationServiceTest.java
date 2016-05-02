@@ -72,35 +72,29 @@ public class MemoryConfigurationServiceTest extends TestCase {
     }
 
     public void testWriteMemoIsRealClass() {
-        class TestMemo extends MemoryConfigurationService.McsWriteMemo {
-
-            public TestMemo(NodeID dest, int space, long address, byte[] data) {
-                super(dest, space, address, data);
-            }
+        MemoryConfigurationService.McsWriteHandler hnd = new MemoryConfigurationService.McsWriteHandler() {
+            @Override
+            public void handleSuccess() { }
 
             @Override
             public void handleFailure(int errorCode) { }
-
-            @Override
-            public void handleSuccess() { }
-        }
-
+        };
         MemoryConfigurationService.McsWriteMemo m20 =
-            new TestMemo(farID,0xFD, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m20a = 
-            new TestMemo(farID,0xFD, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m21 = 
-            new TestMemo(hereID,0xFD, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(hereID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m22 = 
-            new TestMemo(farID,0xFE, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFE, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m23 = 
-            new TestMemo(farID,0xFD, 0x0001, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0001, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m24 = 
-            new TestMemo(farID,0xFD, 0x0000, new byte[]{1});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1}, hnd);
         MemoryConfigurationService.McsWriteMemo m25 = 
-            new TestMemo(farID,0xFD, 0x0000, new byte[]{1,2,3});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2,3}, hnd);
         MemoryConfigurationService.McsWriteMemo m26 = 
-            new TestMemo(farID,0xFD, 0x0000, new byte[]{1,5,3});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,5,3}, hnd);
         
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
@@ -120,8 +114,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
         int space = 0xFD;
         long address = 0x12345678;
         byte[] data = new byte[]{1,2};
-        MemoryConfigurationService.McsWriteMemo memo = 
-            new MemoryConfigurationService.McsWriteMemo(farID, space, address, data) {
+        MemoryConfigurationService.McsWriteHandler cb =
+            new MemoryConfigurationService.McsWriteHandler() {
                 @Override
                 public void handleFailure(int errorCode) {
                     assertEquals("Write failed. error code is ", 0, errorCode);
@@ -135,7 +129,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
 
         // test executes the callbacks instantly; real connections might not
         Assert.assertTrue(!flag);
-        service.request(memo);
+        service.requestWrite(farID, space, address, data, cb);
         Assert.assertTrue(!flag);
         
         // should have sent datagram

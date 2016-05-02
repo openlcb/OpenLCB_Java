@@ -9,6 +9,9 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import javax.swing.*;
+
+import static org.mockito.Mockito.mock;
+
 /**
  * Simulate nine nodes interacting on a single gather/scatter
  * "link", and feed them to monitor.
@@ -42,19 +45,7 @@ public class MemConfigReadWritePaneTest extends TestCase {
         store.addNode(nidThere);
         dgs = new DatagramService(null, null);
         
-        service = new MemoryConfigurationService(nidHere, dgs) {
-            public void request(MemoryConfigurationService.McsWriteMemo memo) {
-            }
-        
-            public void request(MemoryConfigurationService.McsReadMemo memo) {
-            }
-        
-            public void request(MemoryConfigurationService.McsConfigMemo memo) {
-            }
-            
-            public void request(MemoryConfigurationService.McsAddrSpaceMemo memo) {
-            }
-        };
+        service = mock(MemoryConfigurationService.class);
 
         // Test is really popping a window before doing all else
         frame = new JFrame();

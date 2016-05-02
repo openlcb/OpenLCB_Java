@@ -96,17 +96,17 @@ public class MemConfigReadWritePane extends JPanel  {
         int space = 0xFF - addrSpace.getSelectedIndex();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         byte[] content = org.openlcb.Utilities.bytesFromHexString(writeDataField.getText());
-        service.request(new MemoryConfigurationService.McsWriteMemo(node, space, addr, content) {
-            @Override
-            public void handleFailure(int errorCode) {
-                readDataField.setText("Write failed: 0x" + Integer.toHexString(errorCode));
-            }
+        service.requestWrite(node, space, addr, content, new MemoryConfigurationService.McsWriteHandler() {
+                    @Override
+                    public void handleFailure(int errorCode) {
+                        readDataField.setText("Write failed: 0x" + Integer.toHexString(errorCode));
+                    }
 
-            @Override
-            public void handleSuccess() {
-                // ignore
-            }
-        });
+                    @Override
+                    public void handleSuccess() {
+                        // ignore
+                    }
+                });
     }
     
 }

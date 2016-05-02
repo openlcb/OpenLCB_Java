@@ -33,21 +33,11 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         long address = 0x12345678;
         byte[] data = new byte[]{1,2};
 
-        MemoryConfigurationService.McsWriteMemo memo = spy(new MemoryConfigurationService
-                .McsWriteMemo(farID, space, address, data) {
-            @Override
-            public void handleFailure(int errorCode) {
+        MemoryConfigurationService.McsWriteHandler hnd = mock(MemoryConfigurationService
+                .McsWriteHandler.class);
 
-            }
-
-            @Override
-            public void handleSuccess() {
-
-            }
-        });
-
-        iface.getMemoryConfigurationService().request(memo);
-        verifyNoMoreInteractions(memo);
+        iface.getMemoryConfigurationService().requestWrite(farID, space, address, data, hnd);
+        verifyNoMoreInteractions(hnd);
 
         expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                 0x20, 0x01, 0x12, 0x34, 0x56, 0x78, 1, 2}));
@@ -55,8 +45,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         // datagram reply comes back
         sendMessage(new DatagramAcknowledgedMessage(farID, hereID));
 
-        verify(memo).handleSuccess();
-        verifyNoMoreInteractions(memo);
+        verify(hnd).handleSuccess();
+        verifyNoMoreInteractions(hnd);
     }
 
     /*public void testDelayedWrite() {

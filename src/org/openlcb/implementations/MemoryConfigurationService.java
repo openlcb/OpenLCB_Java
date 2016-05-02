@@ -2,6 +2,9 @@ package org.openlcb.implementations;
 
 import net.jcip.annotations.Immutable; 
 import net.jcip.annotations.ThreadSafe;
+
+import org.openlcb.FailureCallback;
+import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
 import org.openlcb.Utilities;
 
@@ -154,17 +157,31 @@ public class MemoryConfigurationService {
                     return;
                 }
                 int requestCode = getRequestTypeFromResponseType(data[1]);
-                McsRequestMemo memo = null;
+                RequestWithReplyDatagram memo = null;
+                McsRequestMemo rqMemo = null;
                 synchronized (this) {
                     if (pendingRequests.containsKey(requestCode)) {
-                        memo = pendingRequests.get(requestCode);
-                        if (memo.compareResponse(dest, data)) {
-                            checkAndPopMemo(memo);
-                        } else {
+                        rqMemo = pendingRequests.get(requestCode);
+                        if (!rqMemo.getDest().equals(dest)) {
+                            logger.warning("Spurious MemCfg response datagram " + Utilities
+                                    .toHexSpaceString(data)+": expected source " + rqMemo.getDest()
+                                    + " actual source " + dest);
+                            return;
+                        }
+                        if (!(rqMemo instanceof RequestWithReplyDatagram)) {
+                            logger.warning("Spurious MemCfg response datagram " + Utilities.toHexSpaceString(data)+
+                                    ": the request memo does not support response datagrams. " +
+                                    "Memo: " + rqMemo);
+                            return;
+                        }
+                        memo = (RequestWithReplyDatagram) rqMemo;
+                        if (!memo.compareResponse(data)) {
                             logger.warning("Unexpected MemCfg response datagram from " + dest
                                     .toString() + ": " + memo + " payload " + Utilities
                                     .toHexSpaceString(data));
-                            memo = null;
+                            return;
+                        } else {
+                            checkAndPopMemo(rqMemo);
                         }
                     } else {
                         logger.warning("Could not find a matching memo for MemCfg response " +
@@ -193,10 +210,12 @@ public class MemoryConfigurationService {
         // contains the subcommand (second byte) of the datagram for the request, having zeroed
         // out any bits on the space shortcut.
         protected final int requestCode;
+        protected final FailureCallback failureCallback;
 
-        McsRequestMemo(NodeID dest, int requestCode) {
+        McsRequestMemo(NodeID dest, int requestCode, FailureCallback cb) {
             this.dest = dest;
             this.requestCode = requestCode;
+            this.failureCallback = cb;
         }
 
         public int getRequestCode() {
@@ -205,21 +224,8 @@ public class MemoryConfigurationService {
 
         protected NodeID getDest() { return dest; }
 
-        /**
-         * Returns true if the received response belongs to this request.
-         * @param farNodeID where the response is originated from
-         * @param data datagram pyaload
-         */
-        protected boolean compareResponse(NodeID farNodeID, int[] data) {
-            if (!farNodeID.equals(dest)) return false;
-            if (data.length < 2) return false;
-            if (getRequestTypeFromResponseType(data[1]) != getRequestCode()) return false;
-            return true;
-        }
-
         @Override
         public boolean equals(Object o) {
-            //if (!super.equals(o)) return false;
             if (!(o instanceof McsRequestMemo)) return false;
             McsRequestMemo m = (McsRequestMemo) o;
             if (!this.dest.equals(m.dest)) return false;
@@ -233,31 +239,46 @@ public class MemoryConfigurationService {
          */
         protected abstract int[] renderTransmitDatagram();
 
+    }
+
+    /**
+     * Request memos that can receive a reply must implement this method to handle the response
+     * datagram.
+     */
+    private interface RequestWithReplyDatagram {
         /**
          * If a response datagram came back that matches this request (i.e. compareResponse
          * returns true), then this function will be called with the response datagram payload.
          * @param data response datagram payload.
          */
-        protected abstract void handleResponseDatagram(int[] data);
-
+        void handleResponseDatagram(int[] data);
 
         /**
-         * Clients must override this callback to handle a failed send or error reply from the
-         * remote node. Retryable errors are internally re-tried.
-         * @param errorCode is the 16-bit OpenLCB error code.
+         * Returns true if the received response belongs to this request.
+         * @param data datagram pyaload
          */
-        public abstract void handleFailure(int errorCode);
+        boolean compareResponse(int[] data);
+    }
+
+    /**
+     * Request memos that do not have to receive a reply datagram must implement this method in
+     * order to allow the datagram transmit OK to be forwarded back to the client.
+     */
+    private interface RequestWithNoReply {
+        NoReturnCallback getNoReturnCallback();
     }
 
     /**
      * Common base class for all request/response memos that take a space byte and an address
      * offset, such as read, write, read stream, write stream.
      */
-    private abstract static class McsAddressedRequestMemo extends McsRequestMemo {
+    private abstract static class McsAddressedRequestMemo extends McsRequestMemo implements
+            RequestWithReplyDatagram {
         protected final int space;
         protected final long address;
-        McsAddressedRequestMemo(NodeID dest, int requestCode, int space, long address) {
-            super(dest, requestCode);
+        McsAddressedRequestMemo(NodeID dest, int requestCode, int space, long address,
+                                FailureCallback cb) {
+            super(dest, requestCode, cb);
             this.space = space;
             this.address = address;
         }
@@ -318,8 +339,7 @@ public class MemoryConfigurationService {
         }
 
         @Override
-        protected boolean compareResponse(NodeID farNodeID, int[] data) {
-            if (!super.compareResponse(farNodeID, data)) return false;
+        public boolean compareResponse(int[] data) {
             if (data.length < (6 + getSpaceOffset())) return false;
             if (address != DatagramUtils.parseLong(data, 2)) return false;
             if (space != getSpaceFromPayload(data)) return false;
@@ -340,9 +360,9 @@ public class MemoryConfigurationService {
         public int hashCode() { return getRequestCode()+dest.hashCode()+((int)address)+space; }
 
         @Override
-        protected void handleResponseDatagram(int[] data) {
+        public void handleResponseDatagram(int[] data) {
             if ((data[1] & SUBCMD_ERROR) != 0) {
-                handleFailure(DatagramUtils.parseErrorCode(data, getPayloadOffset(data)));
+                failureCallback.handleFailure(DatagramUtils.parseErrorCode(data, getPayloadOffset(data)));
                 return;
             }
             handleSuccessResponse(data);
@@ -378,30 +398,17 @@ public class MemoryConfigurationService {
     // waiting a response.
     final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
 
-    public interface NoReplyOperation {
-        /**
-         * Clients must override this callback to handle a failed send or error reply from the
-         * remote node. Retryable errors are internally re-tried.
-         * @param errorCode is the 16-bit OpenLCB error code.
-         */
-        void handleFailure(int errorCode);
-
-
-        /**
-         * Clients must override this method to get notified about the successful completion of
-         * the operation.
-         */
-        void handleSuccess();
-    }
-
-    public abstract static class McsWriteMemo extends McsAddressedRequestMemo implements
-    NoReplyOperation {
-        public McsWriteMemo(NodeID dest, int space, long address, byte[] data) {
-            super(dest, SUBCMD_WRITE, space, address);
+    static class McsWriteMemo extends McsAddressedRequestMemo implements
+            RequestWithNoReply {
+        public McsWriteMemo(NodeID dest, int space, long address, byte[] data, NoReturnCallback
+                cb) {
+            super(dest, SUBCMD_WRITE, space, address, cb);
             this.data = data;
+            this.callback = cb;
         }
 
         final byte[] data;
+        final NoReturnCallback callback;
 
         @Override
         public boolean equals(Object o) {
@@ -434,7 +441,12 @@ public class MemoryConfigurationService {
 
         @Override
         protected void handleSuccessResponse(int[] data) {
-            handleSuccess();
+            callback.handleSuccess();
+        }
+
+        @Override
+        public NoReturnCallback getNoReturnCallback() {
+            return callback;
         }
     }
 
@@ -464,28 +476,42 @@ public class MemoryConfigurationService {
         downstream.sendData(new DatagramService.DatagramServiceTransmitMemo(memo.getDest(), memo.renderTransmitDatagram()) {
             @Override
             public void handleSuccess(int flags) {
-                if (memo instanceof NoReplyOperation) {
-                    if ((flags & DatagramService.FLAG_REPLY_PENDING)!= 0) {
-                        // Reply pending.
-                        return;
-                    }
+                if (memo instanceof RequestWithNoReply &&
+                        ((flags & DatagramService.FLAG_REPLY_PENDING) == 0)) {
                     checkAndPopMemo(memo);
-                    ((NoReplyOperation) memo).handleSuccess();;
-                } else {
-                    // We always need a reply.
-                    if ((flags & DatagramService.FLAG_REPLY_PENDING) == 0) {
-                        logger.info("Expected reply pending, got zero.");
-                        return;
-                    }
+                    ((RequestWithNoReply) memo).getNoReturnCallback().handleSuccess();
+                    return;
                 }
+                if (memo instanceof RequestWithReplyDatagram &&
+                        ((flags & DatagramService.FLAG_REPLY_PENDING) != 0)) {
+                    // Leave the memo in the pending, wait for reply datagram.
+                    return;
+                }
+                // Now: something is fishy.
+                if (memo instanceof RequestWithReplyDatagram) {
+                    logger.info("Expected reply pending, got zero.");
+                    // We will still wait for a reply datagram.
+                    return;
+                }
+                logger.warning("The remote node wants to send a reply but we don't know how to " +
+                        "handle it. memo: " + memo.toString());
+                checkAndPopMemo(memo);
+                ((RequestWithNoReply) memo).getNoReturnCallback().handleSuccess();
             }
 
             @Override
             public void handleFailure(int errorCode) {
                 checkAndPopMemo(memo);
-                memo.handleFailure(errorCode);
+                memo.failureCallback.handleFailure(errorCode);
             }
         });
+    }
+
+    public interface McsWriteHandler extends NoReturnCallback {}
+
+    public void requestWrite(NodeID dest, int space, long address, byte[] data, McsWriteHandler
+            cb) {
+        request(new McsWriteMemo(dest, space, address, data, cb));
     }
 
     McsReadMemo readMemo;

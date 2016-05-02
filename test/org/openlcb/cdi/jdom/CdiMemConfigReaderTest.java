@@ -39,11 +39,9 @@ public class CdiMemConfigReaderTest extends TestCase {
         spaceCount = 0; // number sent so far
         content = testString.getBytes();
         content[content.length-1] = 0;
-        
+
+        // TODO: 5/2/16 replace this with a proper mock
         service = new MemoryConfigurationService(nidHere, dgs) {
-            public void request(MemoryConfigurationService.McsWriteMemo memo) {
-            }
-        
             public void request(MemoryConfigurationService.McsReadMemo memo) {
                 if ( spaceCount*64 >= content.length) return; // done
 
