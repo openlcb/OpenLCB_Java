@@ -395,60 +395,9 @@ public class MemoryConfigurationService {
     }
 
     // Holds the memo pointers to all pending operations: datagrams that were sent out and are
-    // waiting a response.
+    // waiting a response. Must be synchronized(this) for all accesses.
     final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
 
-    static class McsWriteMemo extends McsAddressedRequestMemo implements
-            RequestWithNoReply {
-        public McsWriteMemo(NodeID dest, int space, long address, byte[] data, NoReturnCallback
-                cb) {
-            super(dest, SUBCMD_WRITE, space, address, cb);
-            this.data = data;
-            this.callback = cb;
-        }
-
-        final byte[] data;
-        final NoReturnCallback callback;
-
-        @Override
-        public boolean equals(Object o) {
-            if (!super.equals(o)) return false;
-            if (! (o instanceof McsWriteMemo)) return false;
-            McsWriteMemo m = (McsWriteMemo) o;
-            if (this.data.length != m.data.length) return false;
-            for (int i = 0; i < this.data.length; i++)
-                if (this.data[i] != m.data[i]) return false;
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "McsWriteMemo: "+address;
-        }
-
-        @Override
-        protected int getPayloadLength() {
-            return data.length;
-        }
-
-        @Override
-        protected void fillPayload(int[] data) {
-            for (int i = 0; i < this.data.length; ++i) {
-                data[getPayloadOffset() + i] = this.data[i] < 0 ? ((int)this.data[i]) + 256 :
-                        this.data[i];
-            }
-        }
-
-        @Override
-        protected void handleSuccessResponse(int[] data) {
-            callback.handleSuccess();
-        }
-
-        @Override
-        public NoReturnCallback getNoReturnCallback() {
-            return callback;
-        }
-    }
 
     /**
      * Tests if the given memo is in the top memo in pendingRequests for its request type. If so,
@@ -505,6 +454,58 @@ public class MemoryConfigurationService {
                 memo.failureCallback.handleFailure(errorCode);
             }
         });
+    }
+
+    static class McsWriteMemo extends McsAddressedRequestMemo implements
+            RequestWithNoReply {
+        public McsWriteMemo(NodeID dest, int space, long address, byte[] data, NoReturnCallback
+                cb) {
+            super(dest, SUBCMD_WRITE, space, address, cb);
+            this.data = data;
+            this.callback = cb;
+        }
+
+        final byte[] data;
+        final NoReturnCallback callback;
+
+        @Override
+        public boolean equals(Object o) {
+            if (!super.equals(o)) return false;
+            if (! (o instanceof McsWriteMemo)) return false;
+            McsWriteMemo m = (McsWriteMemo) o;
+            if (this.data.length != m.data.length) return false;
+            for (int i = 0; i < this.data.length; i++)
+                if (this.data[i] != m.data[i]) return false;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "McsWriteMemo: "+address;
+        }
+
+        @Override
+        protected int getPayloadLength() {
+            return data.length;
+        }
+
+        @Override
+        protected void fillPayload(int[] data) {
+            for (int i = 0; i < this.data.length; ++i) {
+                data[getPayloadOffset() + i] = this.data[i] < 0 ? ((int)this.data[i]) + 256 :
+                        this.data[i];
+            }
+        }
+
+        @Override
+        protected void handleSuccessResponse(int[] data) {
+            callback.handleSuccess();
+        }
+
+        @Override
+        public NoReturnCallback getNoReturnCallback() {
+            return callback;
+        }
     }
 
     public interface McsWriteHandler extends NoReturnCallback {}
