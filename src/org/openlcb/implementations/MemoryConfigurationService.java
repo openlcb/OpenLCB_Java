@@ -388,7 +388,7 @@ public class MemoryConfigurationService {
      */
     public static int getRequestTypeFromResponseType(int subCmd) {
         if (subCmd < 0x80) {
-            return subCmd & 0xF0;
+            return subCmd & 0xE0;
         } else {
             return subCmd & 0xFC;
         }
