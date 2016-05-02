@@ -38,4 +38,22 @@ public class DatagramUtilsTest extends TestCase {
         DatagramUtils.renderErrorCode(d, 2, 0x1093);
         assertArrayEquals(new int[]{5, 1, 0x10, 0x93, 99, 37}, d);
     }
+
+    public void testByteToInt() throws Exception {
+        assertEquals(0x80, DatagramUtils.byteToInt((byte)-128));
+        assertEquals(00, DatagramUtils.byteToInt((byte)0));
+        assertEquals(17, DatagramUtils.byteToInt((byte)17));
+        assertEquals(0xff, DatagramUtils.byteToInt((byte)-1));
+    }
+
+    public void testByteToIntArray() throws Exception {
+        assertEquals(-128, DatagramUtils.intToByte(0x80));
+        assertEquals(0, DatagramUtils.intToByte(0));
+        assertEquals(17, DatagramUtils.intToByte(17));
+        assertEquals((byte)-1, DatagramUtils.intToByte(0xff));
+    }
+
+    public void testIntToByte() throws Exception {
+
+    }
 }

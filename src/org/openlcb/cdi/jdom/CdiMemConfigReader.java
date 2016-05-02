@@ -58,8 +58,8 @@ public class CdiMemConfigReader  {
         if (retval != null) {
             retval.progressNotify(buf.length(), -1);
         }
-        MemoryConfigurationService.McsReadMemo memo =
-            new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
+        MemoryConfigurationService.McsReadHandler memo =
+            new MemoryConfigurationService.McsReadHandler() {
                 @Override
                 public void handleFailure(int code) {
                     done();
@@ -85,7 +85,7 @@ public class CdiMemConfigReader  {
                     nextRequest();
                 }
             };
-        service.request(memo);
+        service.requestRead(node, space, nextAddress, LENGTH, memo);
     }
     
     private void done() {

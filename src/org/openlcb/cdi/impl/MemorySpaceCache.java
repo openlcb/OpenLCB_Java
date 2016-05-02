@@ -184,9 +184,9 @@ public class MemorySpaceCache {
             count = 64;
         }
         final int fcount = count;
-        connection.getMemoryConfigurationService().request(
-                new MemoryConfigurationService.McsReadMemo(remoteNodeID, space,
-                        currentRangeNextOffset, count) {
+        connection.getMemoryConfigurationService().requestRead(remoteNodeID, space,
+                currentRangeNextOffset, count,
+                new MemoryConfigurationService.McsReadHandler() {
                     @Override
                     public void handleFailure(int code) {
                         logger.warning("Error reading memory space cache: dest " + remoteNodeID +
@@ -210,7 +210,7 @@ public class MemorySpaceCache {
                                     " address= " + address + " length=" + data.length + " " +
                                     "expected" +
                                     " address=" + currentRangeNextOffset + " expectedspace=" +
-                                    MemorySpaceCache.this.space + " expectedcount=" + this.count);
+                                    MemorySpaceCache.this.space + " expectedcount=" + fcount);
                         }
                         if (data.length == 0) {
                             logger.warning(String.format("Datagram read returned 0 bytes. " +
@@ -228,8 +228,7 @@ public class MemorySpaceCache {
                         }
                         loadRange();
                     }
-                }
-        );
+                });
     }
 
     private Map.Entry<Range, byte[]> getCacheForRange(long offset, int len) {

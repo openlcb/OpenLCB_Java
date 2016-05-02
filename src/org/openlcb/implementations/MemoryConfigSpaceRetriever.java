@@ -29,8 +29,8 @@ public class MemoryConfigSpaceRetriever {
     }
 
     void nextRequest() {
-        MemoryConfigurationService.McsReadMemo memo =
-                new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
+        MemoryConfigurationService.McsReadHandler memo =
+                new MemoryConfigurationService.McsReadHandler() {
                     @Override
                     public void handleFailure(int code) {
                         cb.onFailure(code);
@@ -54,7 +54,7 @@ public class MemoryConfigSpaceRetriever {
                         nextRequest();
                     }
                 };
-        service.request(memo);
+        service.requestRead(node, space, nextAddress, LENGTH, memo);
     }
 
     private void done() {
