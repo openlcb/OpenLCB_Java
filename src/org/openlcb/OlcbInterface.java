@@ -116,9 +116,10 @@ public class OlcbInterface {
     }
 
     /**
-     * Blocks the current thread until the outgoing messages are all sent out.
+     * Blocks the current thread until the outgoing messages are all sent out. Useful for testing.
      */
     public void flushSendQueue() {
+        dmb.waitForSendQueue();
         queuedOutputConnection.waitForSendQueue();
     }
 
