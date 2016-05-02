@@ -1,10 +1,13 @@
 package org.openlcb.implementations;
 
 import junit.framework.Assert;
+import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.openlcb.AbstractConnection;
 import org.openlcb.Connection;
 import org.openlcb.DatagramAcknowledgedMessage;
@@ -148,122 +151,161 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
                         0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
                 new DatagramAcknowledgedMessage(hereID, farID));
 
-        verify(hnd).handleReadData(farID, space, address, new byte[]{(byte)0xaa});
+        verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
         verifyNoMoreInteractions(hnd);
     }
-/*
+
     public void testTwoSimpleReadsInSequence() {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
-        MemoryConfigurationService.McsReadMemo memo =
-            new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
-                @Override
-                public void handleWriteReply(int code) {
-                    flag = true;
-                }
-                @Override
-                public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) {
-                    flag = true;
-                    Assert.assertEquals("space", space, readSpace);
-                    Assert.assertEquals("address", address, readAddress);
-                    Assert.assertEquals("data length", 1, readData.length);
-                    Assert.assertEquals("data[0]", 0xAA, readData[0]&0xFF);
-                }
-            };
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
 
         // start of 1st pass
         {
-            // test executes the callbacks instantly; real connections might not
-            Assert.assertTrue(!flag);
-            service.request(memo);
-            Assert.assertTrue(!flag);
+            iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
 
             // should have sent datagram
-             Assert.assertEquals(1,messagesReceived.size());
-             Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
-
-            // check format of datagram read
-            int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
-            Assert.assertTrue(content.length >= 6);
-            Assert.assertEquals("datagram type", 0x20, content[0]);
-            Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
-
-            Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
-
-            if (space >= 0xFD) {
-                Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
-                Assert.assertEquals("data length", length, content[6]);
-            } else {
-                Assert.assertEquals("space byte", space, content[6]);
-                Assert.assertEquals("data length", length, content[7]);
-            }
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x78, 4}));
 
             // datagram reply comes back
-            Message m = new DatagramAcknowledgedMessage(farID, hereID);
-
-            Assert.assertTrue(!flag);
-            datagramService.put(m, null);
-            Assert.assertTrue(flag);
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            verifyNoMoreInteractions(hnd);
 
             // now return data
-            flag = false;
-            content[1] = content[1]|0x04;  //change command to response
-            content[content.length-1] = 0xAA;  // 1st data byte
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                            0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
+                    new DatagramAcknowledgedMessage(hereID, farID));
 
-            m = new DatagramMessage(farID, hereID, content);
-
-            Assert.assertTrue(!flag);
-            datagramService.put(m, null);
-            Assert.assertTrue(flag);
+            verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+            verifyNoMoreInteractions(hnd);
         }
 
-        // start of 2nd pass
-        messagesReceived = new java.util.ArrayList<Message>();
-        flag = false;
         {
-            // test executes the callbacks instantly; real connections might not
-            Assert.assertTrue(!flag);
-            service.request(memo);
-            Assert.assertTrue(!flag);
+            iface.getMemoryConfigurationService().requestRead(farID, space, address+1, length, hnd);
 
             // should have sent datagram
-             Assert.assertEquals(1,messagesReceived.size());
-             Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
-
-            // check format of datagram read
-            int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
-            Assert.assertTrue(content.length >= 6);
-            Assert.assertEquals("datagram type", 0x20, content[0]);
-            Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
-
-            Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
-
-            if (space >= 0xFD) {
-                Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
-                Assert.assertEquals("data length", length, content[6]);
-            } else {
-                Assert.assertEquals("space byte", space, content[6]);
-                Assert.assertEquals("data length", length, content[7]);
-            }
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
 
             // datagram reply comes back
-            Message m = new DatagramAcknowledgedMessage(farID, hereID);
-
-            Assert.assertTrue(!flag);
-            datagramService.put(m, null);
-            Assert.assertTrue(flag);
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            verifyNoMoreInteractions(hnd);
 
             // now return data
-            flag = false;
-            content[1] = content[1]|0x04;  //change command to response
-            content[content.length-1] = 0xAA;  // 1st data byte
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                            0x20, 0x51, 0x12, 0x34, 0x56, 0x79, 0xaa}),
+                    new DatagramAcknowledgedMessage(hereID, farID));
 
-            m = new DatagramMessage(farID, hereID, content);
+            verify(hnd).handleReadData(farID, space, address+1, new byte[]{(byte) 0xaa});
+            verifyNoMoreInteractions(hnd);
+        }
+    }
 
-            Assert.assertTrue(!flag);
-            datagramService.put(m, null);
-            Assert.assertTrue(flag);
+    public void testManyReadsInlinePrint() {
+        final int space = 0xFD;
+        final long address = 0x12345678;
+        final int length = 64;
+        final int count = 10;
+        final boolean debug = false;
+        final MemoryConfigurationService.McsReadHandler hnd = new MemoryConfigurationService
+                .McsReadHandler() {
+
+            @Override
+            public void handleFailure(int errorCode) { }
+
+            @Override
+            public void handleReadData(NodeID dest, int space, long caddress, byte[] data) {
+                if(debug)System.err.println("Read data callback for offset: " + caddress);
+                if (address + count*length > caddress + 64) {
+                    if(debug)System.err.println("Sending further read request for offset: " + (caddress +
+                            64 - address));
+                    iface.getMemoryConfigurationService().requestRead(farID, space, caddress +
+                            64, length, this);
+                }
+            }
+        };
+
+        // Triggers initial fetch.
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
+
+        for (int ofs = 0; ofs < count * 64; ofs += 64) {
+            if(debug)System.err.println("Iteration: " + ofs);
+            int[] payload = new int[]{0x20, 0x41, 0, 0, 0, 0, 64};
+            DatagramUtils.renderLong(payload, 2, address + ofs);
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, payload));
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+
+            payload = new int[6+64];
+            payload[0] = 0x20;
+            payload[1] = 0x51;
+            DatagramUtils.renderLong(payload, 2, address + ofs);
+            for (int i = 6; i < payload.length; ++i) {
+                payload[i] = (ofs + i - 6) & 0xff;
+            }
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, payload),
+                    new DatagramAcknowledgedMessage(hereID, farID));
+        }
+    }
+
+    public void testManyReadsInline() {
+        final int space = 0xFD;
+        final long address = 0x12345678;
+        final int length = 64;
+        final boolean debug = false;
+        final MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class, new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                throw new AssertionFailedError("Not stubbed invocation: " + invocationOnMock.toString());
+            }
+        });
+        int count = 10;
+
+        // Triggers initial fetch.
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
+
+        for (int ofs = 0; ofs < count * 64; ofs += 64) {
+            if(debug)System.err.println("Iteration: " + ofs);
+            int[] payload = new int[]{0x20, 0x41, 0, 0, 0, 0, 64};
+            DatagramUtils.renderLong(payload, 2, address + ofs);
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, payload));
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            //verifyNoMoreInteractions(hnd);
+
+            payload = new int[6+64];
+            payload[0] = 0x20;
+            payload[1] = 0x51;
+            DatagramUtils.renderLong(payload, 2, address + ofs);
+            for (int i = 6; i < payload.length; ++i) {
+                payload[i] = (ofs + i - 6) & 0xff;
+            }
+
+            if (ofs + 64 < count*64) {
+                final int fofs = ofs;
+                doAnswer(new Answer() {
+                    @Override
+                    public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                        if(debug)System.err.println("Sending further read request for offset: " + (fofs + 64));
+
+                        iface.getMemoryConfigurationService().requestRead(farID, space, address +
+                                fofs + 64, length, hnd);
+                        return null;
+                    }
+                }).when(hnd).handleReadData(eq(farID), eq(space), eq(address + ofs), any(byte[]
+                        .class));
+            } else {
+                doNothing().when(hnd).handleReadData(eq(farID), eq(space), eq(address + ofs), any
+                        (byte[].class));
+            }
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, payload),
+                    new DatagramAcknowledgedMessage(hereID, farID));
         }
     }
 
@@ -271,133 +313,57 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
-        MemoryConfigurationService.McsReadMemo memo =
-            new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
-                @Override
-                public void handleWriteReply(int code) {
-                    flag = true;
-                }
-                @Override
-                public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) {
-                    flag = true;
-                    Assert.assertEquals("space", space, readSpace);
-                    Assert.assertEquals("address", address, readAddress);
 
-                    // data length is zero because of error
-                    Assert.assertEquals("data length", 0, readData.length);
-                }
-            };
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
 
-        // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
-        service.request(memo);
-        Assert.assertTrue(!flag);
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
 
         // should have sent datagram
-         Assert.assertEquals(1,messagesReceived.size());
-         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
-
-        // check format of datagram read
-        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
-        Assert.assertTrue(content.length >= 6);
-        Assert.assertEquals("datagram type", 0x20, content[0]);
-        Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
-
-        Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
-
-        if (space >= 0xFD) {
-            Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
-            Assert.assertEquals("data length", length, content[6]);
-        } else {
-            Assert.assertEquals("space byte", space, content[6]);
-            Assert.assertEquals("data length", length, content[7]);
-        }
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x41, 0x12, 0x34, 0x56, 0x78, 4}));
 
         // datagram reply comes back
-        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
 
-        Assert.assertTrue(!flag);
-        datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        // Response datagram comes and gets acked.
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x59, 0x12, 0x34, 0x56, 0x78, 0x10, 0x37}),
+                new DatagramAcknowledgedMessage(hereID, farID));
 
-        // now return data
-        flag = false;
-        content[1] = content[1]|0x04|0x08;  //change command to error response
-        content[content.length-1] = 0xAA;  // 1st data byte which is error
-
-        m = new DatagramMessage(farID, hereID, content);
-
-        Assert.assertTrue(!flag);
-        datagramService.put(m, null);
-        Assert.assertTrue(flag);
-
+        verify(hnd).handleFailure(0x1037);
+        verifyNoMoreInteractions(hnd);
     }
 
     public void testSimpleReadFromSpace1() {
-        int space = 0x01;
+        int space = 0x1;
         long address = 0x12345678;
         int length = 4;
-        MemoryConfigurationService.McsReadMemo memo =
-            new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
-                @Override
-                public void handleWriteReply(int code) {
-                    flag = true;
-                }
-                @Override
-                public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) {
-                    flag = true;
-                    Assert.assertEquals("space", space, readSpace);
-                    Assert.assertEquals("address", address, readAddress);
-                    Assert.assertEquals("data length", 1, readData.length);
-                    Assert.assertEquals("data[0]", 0xAA, readData[0]&0xFF);
-                }
-            };
 
-        // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
-        service.request(memo);
-        Assert.assertTrue(!flag);
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
 
         // should have sent datagram
-         Assert.assertEquals(1,messagesReceived.size());
-         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramMessage);
-
-        // check format of datagram read
-        int[] content = ((DatagramMessage)messagesReceived.get(0)).getData();
-        Assert.assertTrue(content.length >= 6);
-        Assert.assertEquals("datagram type", 0x20, content[0]);
-        Assert.assertEquals("read command", 0x40, (content[1]&0xFC));
-
-        Assert.assertEquals("address", address, ((long)content[2]<<24)+((long)content[3]<<16)+((long)content[4]<<8)+(long)content[5] );
-
-        if (space >= 0xFD) {
-            Assert.assertEquals("space bits", space&0x3, content[1]&0x3);
-            Assert.assertEquals("data length", length, content[6]);
-        } else {
-            Assert.assertEquals("space byte", space, content[6]);
-            Assert.assertEquals("data length", length, content[7]);
-        }
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x40, 0x12, 0x34, 0x56, 0x78, 1, 4}));
 
         // datagram reply comes back
-        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
 
-        Assert.assertTrue(!flag);
-        datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        // Response datagram comes and gets acked.
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x50, 0x12, 0x34, 0x56, 0x78, 1, 0xaa}),
+                new DatagramAcknowledgedMessage(hereID, farID));
 
-        // now return data
-        flag = false;
-        content[1] = content[1]|0x04;  //change command to response
-        content[content.length-1] = 0xAA;  // 1st data byte
-
-        m = new DatagramMessage(farID, hereID, content);
-
-        Assert.assertTrue(!flag);
-        datagramService.put(m, null);
-        Assert.assertTrue(flag);
-
+        verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+        verifyNoMoreInteractions(hnd);
     }
 
+/*
     public void testConfigMemoIsRealClass() {
         MemoryConfigurationService.McsConfigMemo m20 =
             new MemoryConfigurationService.McsConfigMemo(farID);
