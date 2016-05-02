@@ -9,6 +9,7 @@ import org.openlcb.AbstractConnection;
 import org.openlcb.Connection;
 import org.openlcb.DatagramAcknowledgedMessage;
 import org.openlcb.DatagramMessage;
+import org.openlcb.DatagramRejectedMessage;
 import org.openlcb.InterfaceTestBase;
 import org.openlcb.Message;
 import org.openlcb.NodeID;
@@ -49,25 +50,81 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
-    /*public void testDelayedWrite() {
+    public void testSimpleWriteError() {
         int space = 0xFD;
         long address = 0x12345678;
         byte[] data = new byte[]{1,2};
 
-        MemoryConfigurationService.McsWriteMemo memo = spy(new MemoryConfigurationService.McsWriteMemo(farID, space, address, data));
+        MemoryConfigurationService.McsWriteHandler hnd = mock(MemoryConfigurationService
+                .McsWriteHandler.class);
 
-        iface.getMemoryConfigurationService().request(memo);
-        verifyNoMoreInteractions(memo);
+        iface.getMemoryConfigurationService().requestWrite(farID, space, address, data, hnd);
+        verifyNoMoreInteractions(hnd);
+
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x01, 0x12, 0x34, 0x56, 0x78, 1, 2}));
+
+        // datagram reply comes back
+        sendMessage(new DatagramRejectedMessage(farID, hereID, 0x1999));
+
+        verify(hnd).handleFailure(0x1999);
+        verifyNoMoreInteractions(hnd);
+    }
+
+    public void testDelayedWrite() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        byte[] data = new byte[]{1,2};
+
+        MemoryConfigurationService.McsWriteHandler hnd = mock(MemoryConfigurationService
+                .McsWriteHandler.class);
+
+        iface.getMemoryConfigurationService().requestWrite(farID, space, address, data, hnd);
+        verifyNoMoreInteractions(hnd);
 
         expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                 0x20, 0x01, 0x12, 0x34, 0x56, 0x78, 1, 2}));
 
         // datagram reply comes back
         sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
 
-        verify(memo).handleWriteReply(0);
-        verifyNoMoreInteractions(memo);
-    }*/
+        // Incoming reply datagram
+        sendMessage(new DatagramMessage(farID, hereID, new int[]{0x20, 0x11, 0x12, 0x34, 0x56,
+                0x78}));
+        // which gets ack-ed.
+        expectMessageAndNoMore(new DatagramAcknowledgedMessage(hereID, farID));
+        verify(hnd).handleSuccess();
+        verifyNoMoreInteractions(hnd);
+    }
+
+    public void testDelayedWriteError() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        byte[] data = new byte[]{1,2};
+
+        MemoryConfigurationService.McsWriteHandler hnd = mock(MemoryConfigurationService
+                .McsWriteHandler.class);
+
+        iface.getMemoryConfigurationService().requestWrite(farID, space, address, data, hnd);
+        verifyNoMoreInteractions(hnd);
+
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x01, 0x12, 0x34, 0x56, 0x78, 1, 2}));
+
+        // datagram reply comes back
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
+
+        // Incoming reply datagram
+        sendMessage(new DatagramMessage(farID, hereID, new int[]{0x20, 0x19, 0x12, 0x34, 0x56,
+                0x78, 0x19, 0x99}));
+        // which gets ack-ed.
+        expectMessageAndNoMore(new DatagramAcknowledgedMessage(hereID, farID));
+        verify(hnd).handleFailure(0x1999);
+        verifyNoMoreInteractions(hnd);
+    }
+
 
     /*
     public void testSimpleRead() {
