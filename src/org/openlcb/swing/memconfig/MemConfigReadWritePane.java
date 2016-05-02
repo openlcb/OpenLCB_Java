@@ -80,13 +80,13 @@ public class MemConfigReadWritePane extends JPanel  {
         int space = 0xFF - addrSpace.getSelectedIndex();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         int length = Integer.parseInt(configNumberField.getText());
-        service.request(new MemoryConfigurationService.McsReadMemo(node,space,addr,length){
+        service.requestRead(node, space, addr, length, new MemoryConfigurationService.McsReadHandler() {
             @Override
-            public void handleFailure(int code) {
+            public void handleFailure ( int code){
                 readDataField.setText("Failed: 0x" + Integer.toHexString(code));
             }
 
-            public void handleReadData(NodeID dest, int space, long address, byte[] data) {
+            public void handleReadData (NodeID dest,int space, long address, byte[] data){
                 readDataField.setText(org.openlcb.Utilities.toHexSpaceString(data));
             }
         });

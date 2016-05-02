@@ -24,8 +24,7 @@ public class CdiMemConfigReaderTest extends TestCase {
     
     MimicNodeStore store;
     MemoryConfigurationService service;
-    int spaceCount;
-    
+
     DatagramService dgs;
     String testString = "string to be checked which involves more than 64 characters, so its three datagrams at least, because two originally worked and perhaps three did not ";
     byte[] content;
@@ -36,30 +35,16 @@ public class CdiMemConfigReaderTest extends TestCase {
         
         store.addNode(nidThere);
         
-        spaceCount = 0; // number sent so far
         content = testString.getBytes();
         content[content.length-1] = 0;
 
         // TODO: 5/2/16 replace this with a proper mock
         service = new MemoryConfigurationService(nidHere, dgs) {
-            public void request(MemoryConfigurationService.McsReadMemo memo) {
-                if ( spaceCount*64 >= content.length) return; // done
-
-                int space = 0xFD;
-                long address = 0;
-                byte[] data = new byte[Math.min(CdiMemConfigReader.LENGTH, content.length - CdiMemConfigReader.LENGTH*spaceCount)];
-                                
-                for (int i = 0; (i<CdiMemConfigReader.LENGTH) && ((i+spaceCount*CdiMemConfigReader.LENGTH)<content.length); i++) 
-                    data[i] = content[i+spaceCount*CdiMemConfigReader.LENGTH];
-                
-                spaceCount++;
-                memo.handleReadData(nidThere, space, address, data);
-            }
-        
-            public void request(MemoryConfigurationService.McsConfigMemo memo) {
-            }
-            
-            public void request(MemoryConfigurationService.McsAddrSpaceMemo memo) {
+            public void requestRead(NodeID dest, int space, long address, int len, McsReadHandler
+                    cb) {
+                byte[] data = new byte[Math.min(len, (int)(content.length - address))];
+                System.arraycopy(content, (int)address, data, 0, data.length);
+                cb.handleReadData(nidThere, space, address, data);
             }
         };
         
