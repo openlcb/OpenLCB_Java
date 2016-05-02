@@ -26,7 +26,7 @@ public class DatagramUtils {
 
     static int parseErrorCode(int[] payload, int offset) {
         int retval = payload[offset++];
-        retval <<= 0;
+        retval <<= 8;
         retval |= payload[offset] & 0xff;
         return retval;
     }
