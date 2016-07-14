@@ -4,6 +4,10 @@ import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 import org.openlcb.NodeID;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
 /**
  * Service for reading and writing via the Memory Configuration protocol
  * <p>
@@ -37,75 +41,91 @@ public class MemoryConfigurationService {
         this.downstream = downstream;   
         
         // connect to be notified of config service
-        downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo(DATAGRAM_TYPE){
+        downstream.registerForReceive(new DatagramService.DatagramServiceReceiveMemo
+                (DATAGRAM_TYPE) {
             // Process a datagram received here; previous request state part of decoding
             //
-            // does not allow for overlapping operations, either to a single node nor or multiple types
+            // does not allow for overlapping operations, either to a single node nor or multiple
+            // types
             // nor to multiple nodes
             //
             // doesn't check for match of reply to memo, but eventually should.
             @Override
-            public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) { 
+            public void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo service) {
                 //log System.out.println("OLCB: handleData");
                 service.acceptData(0);
                 if (readMemo != null) {
                     // figure out address space uses byte?
                     boolean spaceByte = ((data[1] & 0x03) == 0);
                     byte[] content;
-                    if ((data[1]&0x08) == 0) {
+                    if ((data[1] & 0x08) == 0) {
                         // normal read reply
-                        content = new byte[data.length-6+(spaceByte ? -1 : 0)];
-                        for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6+(spaceByte?1:0)];
+                        content = new byte[data.length - 6 + (spaceByte ? -1 : 0)];
+                        for (int i = 0; i < content.length; i++)
+                            content[i] = (byte) data[i + 6 + (spaceByte ? 1 : 0)];
                     } else {
                         // error read reply, return zero length
                         content = new byte[0];
                     }
-                    McsReadMemo memo = readMemo;
-                    readMemo = null;
+                    McsReadMemo memo;
+                    synchronized (this) {
+                        memo = readMemo;
+                        readMemo = null;
+                    }
                     memo.handleReadData(dest, memo.space, memo.address, content);
-                }    
+                    synchronized(this) {
+                        if (readMemo == null && !pendingReads.isEmpty()) {
+                            readMemo = pendingReads.pop();
+                            sendRead();
+                        }
+                    }
+                }
                 if (addrSpaceMemo != null) {
                     // doesn't handle decode of desc string, but should
-                    int space = data[2]&0xFF;
-                    long highAddress = (((long)data[3]&0xFF)<<24)|(((long)data[4]&0xFF)<<16)|(((long)data[5]&0xFF)<<8)|((long)data[6]&0xFF);
-                    int flags = data[7]&0xFF;
-                    long lowAddress = 0;  
-                    if (data.length >= 11) 
-                        lowAddress = (((long)data[8]&0xFF)<<24)|(((long)data[9]&0xFF)<<16)|(((long)data[10]&0xFF)<<8)|((long)data[11]&0xFF);
-                    
+                    int space = data[2] & 0xFF;
+                    long highAddress = (((long) data[3] & 0xFF) << 24) | (((long) data[4] & 0xFF)
+                            << 16) | (((long) data[5] & 0xFF) << 8) | ((long) data[6] & 0xFF);
+                    int flags = data[7] & 0xFF;
+                    long lowAddress = 0;
+                    if (data.length >= 11)
+                        lowAddress = (((long) data[8] & 0xFF) << 24) | (((long) data[9] & 0xFF)
+                                << 16) | (((long) data[10] & 0xFF) << 8) | ((long) data[11] & 0xFF);
+
                     McsAddrSpaceMemo memo = addrSpaceMemo;
                     addrSpaceMemo = null;
                     memo.handleAddrSpaceData(dest, space, highAddress, lowAddress, flags, "");
-                }    
+                }
                 // config memo may trigger address space read, so do second
                 if (configMemo != null) {
                     // doesn't handle decode of name string, but should
-                    int commands = (data[2]<<8)+data[3];
+                    int commands = (data[2] << 8) + data[3];
                     int options = data[4];
                     int highSpace = data[5];
                     int lowSpace = data[6];
                     McsConfigMemo memo = configMemo;
                     configMemo = null;
-                    memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
-                }    
+                    memo.handleConfigData(dest, commands, options, highSpace, lowSpace, "");
+                }
                 if (writeMemo != null) {
                     // needs code to handle delayed reply
-                    System.err.println("MemoryConfiguration Service: Code for delayed reply not yet present"); //log
+                    System.err.println("MemoryConfiguration Service: Code for delayed reply not " +
+                            "yet present"); //log
                     McsWriteMemo memo = writeMemo;
                     writeMemo = null;
                     //memo.handleConfigData(dest, commands, options, highSpace, lowSpace,"");
                 }
                 // dph
-                
+
                 if (writeStreamMemo != null) {
                     // receive destinationStreamID
                     // figure out address space uses byte?
                     boolean spaceByte = ((data[1] & 0x03) == 0);
                     byte[] content;
-                    if ((data[1]&0x08) == 0) {
+                    if ((data[1] & 0x08) == 0) {
                         // normal read reply
-                        content = new byte[data.length-6+(spaceByte ? -1 : 0)];
-                        for (int i = 0; i<content.length; i++) content[i] = (byte)data[i+6+(spaceByte?1:0)];
+                        content = new byte[data.length - 6 + (spaceByte ? -1 : 0)];
+                        for (int i = 0; i < content.length; i++)
+                            content[i] = (byte) data[i + 6 + (spaceByte ? 1 : 0)];
                     } else {
                         // error read reply, return zero length
                         content = new byte[0];
@@ -114,7 +134,7 @@ public class MemoryConfigurationService {
                     writeStreamMemo = null;
                     //memo.handleWriteStreamData(dest, memo.space, memo.address, content);
                 }
-                
+
             }
         });
     }
@@ -136,13 +156,22 @@ public class MemoryConfigurationService {
     }
 
     McsReadMemo readMemo;
-    public void request(McsReadMemo memo) {
+    Stack<McsReadMemo> pendingReads = new Stack<>();
+    public synchronized void request(McsReadMemo memo) {
         // forward as read Datagram
+        if (readMemo != null) {
+            pendingReads.add(memo);
+            return;
+        }
         readMemo = memo;
-        ReadDatagramMemo dg = new ReadDatagramMemo(memo.dest, memo.space, memo.address, memo.count, memo);
-        downstream.sendData(dg);
+        sendRead();
     }
 
+    private void sendRead() {
+        ReadDatagramMemo dg = new ReadDatagramMemo(readMemo.dest, readMemo.space, readMemo.address, readMemo.count, readMemo);
+        downstream.sendData(dg);
+    }
+    
     // dph
     McsWriteStreamMemo writeStreamMemo;
     public void request(McsWriteStreamMemo memo) {
@@ -268,7 +297,7 @@ public class MemoryConfigurationService {
     
     @Immutable
     @ThreadSafe    
-    static public class ReadDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+    public class ReadDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
         ReadDatagramMemo(NodeID dest, int space, long address, int count, McsReadMemo memo) {
             super(dest);
             boolean spaceByte = false;
@@ -291,8 +320,22 @@ public class MemoryConfigurationService {
         }
         McsReadMemo memo;
         @Override
-        public void handleReply(int code) { 
+        public void handleReply(int code) {
+            if (code == 0) {
+                memo.handleWriteReply(code);
+                return;
+            }
+            synchronized(MemoryConfigurationService.this) {
+                assert(readMemo == memo);
+                readMemo = null;
+            }
             memo.handleWriteReply(code);
+            synchronized(MemoryConfigurationService.this) {
+                if (readMemo == null && !pendingReads.empty()) {
+                    readMemo = pendingReads.pop();
+                    sendRead();
+                }
+            }
         }
     }
 
