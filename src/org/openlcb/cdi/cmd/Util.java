@@ -100,6 +100,9 @@ public class Util {
             if (codePoint == "=".codePointAt(0)) {
                 mustEscape = true;
             }
+            if (codePoint == "\\".codePointAt(0)) {
+                mustEscape = true;
+            }
             // Replace invisible control characters and unused code points
             switch (Character.getType(codePoint))
             {
@@ -122,5 +125,22 @@ public class Util {
             }
         }
         return newString.toString();
+    }
+
+    static public String unescapeString(String input) {
+        StringBuffer o = new StringBuffer(input.length());
+        int pos = 0;
+        while (pos < input.length()) {
+            if (input.charAt(pos) == '\\' && (pos + 5) < input.length() && input.charAt(pos+1)
+                    == 'x') {
+                int codePoint = Integer.parseInt(input.substring(pos+2, pos+6), 16);
+                o.append(Character.toChars(codePoint));
+                pos += 6;
+            } else {
+                o.append(input.charAt(pos));
+                ++pos;
+            }
+        }
+        return o.toString();
     }
 }
