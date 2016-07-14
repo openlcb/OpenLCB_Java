@@ -3,13 +3,16 @@ package org.openlcb.implementations.throttle;
 import org.openlcb.Connection;
 import org.openlcb.Message;
 import org.openlcb.MessageDecoder;
+import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.implementations.VersionedValue;
 import org.openlcb.implementations.VersionedValueListener;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -23,6 +26,7 @@ import java.util.logging.Logger;
 public class TractionThrottle extends MessageDecoder {
     public static final String UPDATE_PROP_ENABLED = "updateEnabled";
     public static final String UPDATE_PROP_STATUS = "updateStatus";
+    public static final String UPDATE_PROP_CONSISTLIST = "updateConsistList";
     private static Logger logger = Logger.getLogger(new Object() {
     }.getClass().getSuperclass()
             .getName());
@@ -46,6 +50,8 @@ public class TractionThrottle extends MessageDecoder {
     };
     private Map<Integer, FunctionInfo> functions = new HashMap<>();
     private boolean pendingAssign = false;
+    private List<NodeID> consistList = new ArrayList<>();
+    private boolean needFetchConsist = false;
 
     public TractionThrottle(OlcbInterface iface) {
         this.iface = iface;
@@ -96,6 +102,7 @@ public class TractionThrottle extends MessageDecoder {
         setStatus("Enabled.");
         setEnabled(true);
         querySpeed();
+        queryConsist();
         // Refreshes functions after getting the definite promise from the node.
         for (FunctionInfo f : functions.values()) {
             queryFunction(f.fn);
@@ -109,6 +116,44 @@ public class TractionThrottle extends MessageDecoder {
     public void querySpeed() {
         Message m = TractionControlRequestMessage.createGetSpeed(iface.getNodeId(), trainNode
                 .getNodeId());
+        iface.getOutputConnection().put(m, this);
+    }
+
+    /**
+     * Initiates fetching consist information from the assigned node. Queryies the length of
+     * consist and all consist members.
+     */
+    public void queryConsist() {
+        consistList.clear();
+        needFetchConsist = true;
+        Message m = TractionControlRequestMessage.createConsistLengthQuery(iface.getNodeId(),
+                trainNode.getNodeId());
+        iface.getOutputConnection().put(m, this);
+    }
+
+    /**
+     * Initiates fetching one consist member from the remote node.
+     */
+    public void queryConsistMember(int index) {
+        Message m = TractionControlRequestMessage.createConsistIndexQuery(iface.getNodeId(),
+                trainNode.getNodeId(), index);
+        iface.getOutputConnection().put(m, this);
+    }
+
+    /**
+     * Adds a new node to the consist handled by the current assigned node.
+     */
+    public void addToConsist(NodeID newMember) {
+        Message m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
+                trainNode.getNodeId(), newMember);
+        iface.getOutputConnection().put(m, this);
+    }
+
+    /** Removes a node from the consist handled by the current assigned node.
+     */
+    public void removeFromConsist(NodeID member) {
+        Message m = TractionControlRequestMessage.createConsistDetach(iface.getNodeId(),
+                trainNode.getNodeId(), member);
         iface.getOutputConnection().put(m, this);
     }
 
@@ -177,6 +222,29 @@ public class TractionThrottle extends MessageDecoder {
                 logger.warning("Function response: train function " + fn + " value " + val);
                 getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
                 return;
+            }
+            if (msg.getCmd() == TractionControlReplyMessage.CMD_CONSIST &&
+                    msg.getSubCmd() == TractionControlReplyMessage.SUBCMD_CONSIST_QUERY) {
+                int length = msg.getConsistLength();
+                boolean fireChange = false;
+                if (length != consistList.size() || needFetchConsist) {
+                    consistList.clear();
+                    fireChange = true;
+                    for (int i = 0; i < length; ++i) {
+                        consistList.add(null);
+                        queryConsistMember(i);
+                    }
+                    needFetchConsist = false;
+                }
+                int index = msg.getConsistIndex();
+                if (index >= 0) {
+                    NodeID n = msg.getConsistQueryNodeID();
+                    consistList.set(index, n);
+                    fireChange = true;
+                }
+                if (fireChange) {
+                    firePropertyChange(UPDATE_PROP_CONSISTLIST, null, consistList);
+                }
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             // Invalid message.
