@@ -17,6 +17,8 @@ public class StreamDataCompleteMessage extends AddressedMessage {
     public StreamDataCompleteMessage(NodeID source, NodeID dest,
                 byte sourceStreamID, byte destStreamID) {
         super(source, dest);
+        this.sourceStreamID = sourceStreamID;
+        this.destStreamID = destStreamID;
     }
         
     byte sourceStreamID;
