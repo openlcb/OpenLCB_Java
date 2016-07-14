@@ -339,6 +339,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         public void fireWriteComplete() {
             firePropertyChange(UPDATE_WRITE_COMPLETE, null, null);
         }
+
+        /// Reads the values again from the original source.
+        public void reload() {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            cache.reload(origin, size);
+        }
     }
 
     public class Root implements CdiContainer {
@@ -392,6 +398,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         @Override
         public CdiRep.Item getCdiItem() {
             return this;
+        }
+
+        @Override
+        public void reload() {
         }
 
         @Override
