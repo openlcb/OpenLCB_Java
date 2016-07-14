@@ -70,7 +70,7 @@ public class MemoryConfigurationService {
                         content = new byte[0];
                     }
                     long retAddress = DatagramUtils.parseLong(data, 2);
-                    int retSpace = spaceByte ? data[6] : (0xFD + (data[1] & 0x03));
+                    int retSpace = spaceByte ? data[6] : (0xFC + (data[1] & 0x03));
                     McsReadMemo memo;
                     synchronized (this) {
                         memo = readMemo;
