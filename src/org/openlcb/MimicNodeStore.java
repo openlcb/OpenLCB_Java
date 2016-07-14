@@ -102,6 +102,9 @@ public class MimicNodeStore extends AbstractConnection {
         }  
         public ProtocolIdentification getProtocolIdentification() {
             if (pIdent == null) {
+                if (id == null) {
+                    throw new AssertionError("MimicNodeStore id == null");
+                }
                 pIdent = new ProtocolIdentification(node, id);
                 pIdent.start(connection);
             }
