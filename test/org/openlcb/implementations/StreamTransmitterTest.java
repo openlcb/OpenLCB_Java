@@ -62,10 +62,9 @@ public class StreamTransmitterTest extends TestCase {
         xmt.put(m, null);
 
         Assert.assertEquals("1st messages", 2, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataSendMessage(hereID, farID, data)));
-        Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
+        Assert.assertEquals(messagesReceived.get(0), new StreamDataSendMessage(hereID, farID, data));
+        Assert.assertEquals(messagesReceived.get(1), new StreamDataCompleteMessage(hereID, farID,
+                (byte)4, (byte)0));
     }
     
     public void testTwoMsgStream() {
@@ -109,7 +108,7 @@ public class StreamTransmitterTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0)
                            .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
         Assert.assertTrue(messagesReceived.get(1)
-                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)0, (byte)0)));
+                           .equals(new StreamDataCompleteMessage(hereID, farID, (byte)4, (byte)0)));
 
     }
     
