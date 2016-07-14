@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Queue;
-import java.util.TreeMap;Upgrade gradle to 2.10
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 /**
