@@ -8,10 +8,11 @@ public class VersionedValue<T> {
     int version;
     int nextVersion;
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
+    public static int DEFAULT_VERSION = 1;
 
     public VersionedValue(T t) {
-        version = 1;
-        nextVersion = 2;
+        version = DEFAULT_VERSION;
+        nextVersion = DEFAULT_VERSION + 1;
         data = t;
     }
 
@@ -35,14 +36,18 @@ public class VersionedValue<T> {
         boolean updated = false;
         synchronized (this) {
             if (atVersion <= version) return false;
+            int oldVersion = version;
             version = atVersion;
             if (nextVersion <= atVersion) {
                 nextVersion = atVersion + 1;
             }
-            if (data.equals(t)) {
+            if (data.equals(t) && oldVersion != DEFAULT_VERSION) {
                 return true;
             }
             old = data;
+            if (oldVersion == DEFAULT_VERSION) {
+                old = null;
+            }
             data = t;
         }
         firePropertyChange("updated", old, t);

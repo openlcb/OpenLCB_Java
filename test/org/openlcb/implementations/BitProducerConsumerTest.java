@@ -82,9 +82,10 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void helperInputSetClear(String frameOn, String frameOff) {
-        assertNull(pc.getValue());
+        assertTrue(pc.isValueAtDefault());
+        assertFalse(pc.getValue().getLatestData());
         sendFrame(frameOn);
-        assertNotNull(pc.getValue());
+        assertFalse(pc.isValueAtDefault());
         assertTrue(pc.getValue().getLatestData());
         sendFrame(frameOff);
         assertFalse(pc.getValue().getLatestData());
@@ -161,14 +162,20 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testGenerateEvents() throws Exception {
-        VersionedValue<Boolean> v = pc.getValue(false);
+        VersionedValue<Boolean> v = pc.getValue();
         sendFrameAndExpectResult( //
                 ":X19914444N0504030201000708;",
-                ":X19545333N0504030201000708;");
+                ":X19547333N0504030201000708;");
 
         expectNoFrames();
 
         v.set(false);
+        expectFrame(":X195B4333N0504030201000709;");
+
+        expectNoFrames();
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19545333N0504030201000708;");
         expectNoFrames();
 
         v.set(true);
@@ -193,7 +200,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     public void setUp() {
         iface.fakeOutputConnection.history.clear();
         aliasMap.insert(0x444, new NodeID(new byte[]{1,2,3,1,2,3}));
-        pc = new BitProducerConsumer(iface, onEvent, offEvent);
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, false);
         expectFrame(":X19547333N0504030201000708;");
         expectFrame(":X19547333N0504030201000709;");
         expectFrame(":X194C7333N0504030201000708;");
