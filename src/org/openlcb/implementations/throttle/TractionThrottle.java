@@ -251,6 +251,17 @@ public class TractionThrottle extends MessageDecoder {
                 if (fireChange) {
                     firePropertyChange(UPDATE_PROP_CONSISTLIST, null, consistList);
                 }
+                return;
+            }
+            if (msg.getCmd() == TractionControlReplyMessage.CMD_CONSIST &&
+                    msg.getSubCmd() == TractionControlReplyMessage.SUBCMD_CONSIST_ATTACH) {
+                queryConsist();
+                return;
+            }
+            if (msg.getCmd() == TractionControlReplyMessage.CMD_CONSIST &&
+                    msg.getSubCmd() == TractionControlReplyMessage.SUBCMD_CONSIST_DETACH) {
+                queryConsist();
+                return;
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             // Invalid message.
