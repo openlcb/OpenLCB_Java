@@ -16,8 +16,18 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
     
     public DatagramAcknowledgedMessage(NodeID source, NodeID dest) {
         super(source, dest);
+        flags = 0;
     }
-        
+
+    public DatagramAcknowledgedMessage(NodeID source, NodeID dest, int flags) {
+        super(source, dest);
+        this.flags = flags;
+    }
+
+    int flags;
+
+    public int getFlags() { return flags; }
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -35,7 +45,8 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
         if (o == null) return false;
         if (! (o instanceof DatagramAcknowledgedMessage))
             return false;
-        return super.equals(o);
+        if (!super.equals(o)) return false;
+        return (flags == ((DatagramAcknowledgedMessage)o).flags);
     }
 
     @Override

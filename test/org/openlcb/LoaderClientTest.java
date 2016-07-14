@@ -221,7 +221,8 @@ public class LoaderClientTest extends TestCase {
     // Unfreeze
         Assert.assertEquals("Unfreeze", 1, messagesReceived.size());
                                 //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
-        Assert.assertTrue(messagesReceived.get(0).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 0xEF})));
+        Assert.assertEquals(messagesReceived.get(0),new DatagramMessage(hereID,farID,
+                new int []{0x20, 0xA0, 0xEF}));
     }
 
     

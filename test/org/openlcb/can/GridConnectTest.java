@@ -3,6 +3,7 @@ package org.openlcb.can;
 import junit.framework.TestCase;
 
 import org.openlcb.Utilities;
+import org.openlcb.implementations.DatagramUtils;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class GridConnectTest extends TestCase {
         assertEquals(data.length, f.getNumDataElements());
         assertEquals(Utilities.toHexSpaceString(data), Utilities.toHexSpaceString(f.getData()));
         for (int i = 0; i < data.length; ++i) {
-            assertEquals(data[i], f.getElement(i));
+            assertEquals(DatagramUtils.byteToInt(data[i]), f.getElement(i));
         }
     }
 

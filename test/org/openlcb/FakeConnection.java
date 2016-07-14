@@ -5,6 +5,7 @@ import org.openlcb.Connection;
 import org.openlcb.Message;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -14,7 +15,12 @@ public class FakeConnection extends AbstractConnection {
     public List<Message> history = new ArrayList<>();
 
     @Override
-    public void put(Message msg, Connection sender) {
+    public synchronized void put(Message msg, Connection sender) {
         history.add(msg);
+    }
+
+    public synchronized void transferAll(Collection<Message> dst) {
+        dst.addAll(history);
+        history.clear();
     }
 }

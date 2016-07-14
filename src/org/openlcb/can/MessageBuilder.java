@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.openlcb.*;
+import org.openlcb.implementations.DatagramUtils;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 import org.openlcb.messages.TractionProxyReplyMessage;
@@ -250,9 +251,13 @@ public class MessageBuilder {
             case SimpleNodeIdentInfoReply:
                 retlist.add(new SimpleNodeIdentInfoReplyMessage(source, dest, content));
                 return retlist;
-
-            case DatagramReceivedOK: 
-                retlist.add(new DatagramAcknowledgedMessage(source,dest));
+            case DatagramReceivedOK:
+                if (content != null && content.length > 0) {
+                    retlist.add(new DatagramAcknowledgedMessage(source, dest, DatagramUtils
+                            .byteToInt(content[0])));
+                } else {
+                    retlist.add(new DatagramAcknowledgedMessage(source, dest));
+                }
                 return retlist;
             case DatagramRejected: 
                 retlist.add(new DatagramRejectedMessage(source,dest,(int)f.dataAsLong()));
@@ -649,8 +654,11 @@ public class MessageBuilder {
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setOpenLcbMTI(MessageTypeIdentifier.DatagramReceivedOK.mti());
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            if (msg.getFlags() != 0) {
+                f.setData(new byte[]{0, 0, (byte)msg.getFlags()});
+            }
+            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             retlist.add(f);
         }
         /**
@@ -679,7 +687,7 @@ public class MessageBuilder {
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setOpenLcbMTI(MessageTypeIdentifier.StreamInitiateReply.mti());
             // dest(2), maxBufferSize(2), flags(2),sourceStream, destinationStream
-            f.setData(new byte[]{ (byte)0, (byte)0, 0, 64, msg.getSourceStreamID(), msg.getDestinationStreamID()  } );
+            f.setData(new byte[]{(byte) 0, (byte) 0, 0, 64, msg.getSourceStreamID(), msg.getDestinationStreamID()  } );
             f.setDestAlias(map.getAlias(msg.getDestNodeID()));
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);

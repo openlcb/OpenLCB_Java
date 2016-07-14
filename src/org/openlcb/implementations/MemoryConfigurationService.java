@@ -2,12 +2,20 @@ package org.openlcb.implementations;
 
 import net.jcip.annotations.Immutable; 
 import net.jcip.annotations.ThreadSafe;
+
+import org.openlcb.FailureCallback;
+import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Logger;
+
+import javax.xml.crypto.Data;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
@@ -33,6 +41,13 @@ public class MemoryConfigurationService {
     public static final int SPACE_TRACTION_FDI = 0xFA;
     public static final int SPACE_TRACTION_FUNCTION = 0xF9;
 
+    private static final int SUBCMD_REPLY = 0x10;
+    private static final int SUBCMD_ERROR = 0x08;
+
+    private static final int SUBCMD_WRITE = 0x00;
+    private static final int SUBCMD_WRITE_STREAM = 0x20;
+    private static final int SUBCMD_READ = 0x40;
+    private static final int SUBCMD_READ_STREAM = 0x60;
 
     /**
      * @param downstream Connection in the direction of the layout
@@ -56,34 +71,6 @@ public class MemoryConfigurationService {
                     service) {
                 //log System.out.println("OLCB: handleData");
                 service.acceptData(0);
-                if (readMemo != null) {
-                    // figure out address space uses byte?
-                    boolean spaceByte = ((data[1] & 0x03) == 0);
-                    byte[] content;
-                    if ((data[1] & 0x08) == 0) {
-                        // normal read reply
-                        content = new byte[data.length - 6 + (spaceByte ? -1 : 0)];
-                        for (int i = 0; i < content.length; i++)
-                            content[i] = (byte) data[i + 6 + (spaceByte ? 1 : 0)];
-                    } else {
-                        // error read reply, return zero length
-                        content = new byte[0];
-                    }
-                    long retAddress = DatagramUtils.parseLong(data, 2);
-                    int retSpace = spaceByte ? data[6] : (0xFC + (data[1] & 0x03));
-                    McsReadMemo memo;
-                    synchronized (this) {
-                        memo = readMemo;
-                        readMemo = null;
-                    }
-                    memo.handleReadData(dest, retSpace, retAddress, content);
-                    synchronized (this) {
-                        if (readMemo == null && !pendingReads.isEmpty()) {
-                            readMemo = pendingReads.pop();
-                            sendRead();
-                        }
-                    }
-                }
                 if (addrSpaceMemo != null) {
                     // doesn't handle decode of desc string, but should
                     int space = data[2] & 0xFF;
@@ -98,6 +85,7 @@ public class MemoryConfigurationService {
                     McsAddrSpaceMemo memo = addrSpaceMemo;
                     addrSpaceMemo = null;
                     memo.handleAddrSpaceData(dest, space, highAddress, lowAddress, flags, "");
+                    return;
                 }
                 // config memo may trigger address space read, so do second
                 if (configMemo != null) {
@@ -109,7 +97,9 @@ public class MemoryConfigurationService {
                     McsConfigMemo memo = configMemo;
                     configMemo = null;
                     memo.handleConfigData(dest, commands, options, highSpace, lowSpace, "");
+                    return;
                 }
+                /*
                 if (writeMemo != null && ((data[1] & 0xF0) == 0x10)) {
                     McsWriteMemo memo = writeMemo;
                     long retAddress = DatagramUtils.parseLong(data, 2);
@@ -128,28 +118,60 @@ public class MemoryConfigurationService {
                         code = (data[codeOffset] << 8) + data[codeOffset + 1];
                     }
                     memo.handleWriteReply(code);
-                }
-                // dph
-
+                }*/
                 if (writeStreamMemo != null) {
-                    // receive destinationStreamID
                     // figure out address space uses byte?
                     boolean spaceByte = ((data[1] & 0x03) == 0);
-                    byte[] content;
-                    if ((data[1] & 0x08) == 0) {
-                        // normal read reply
-                        content = new byte[data.length - 6 + (spaceByte ? -1 : 0)];
-                        for (int i = 0; i < content.length; i++)
-                            content[i] = (byte) data[i + 6 + (spaceByte ? 1 : 0)];
-                    } else {
-                        // error read reply, return zero length
-                        content = new byte[0];
-                    }
+                    int spaceOfs = spaceByte ? 1 : 0;
                     McsWriteStreamMemo memo = writeStreamMemo;
                     writeStreamMemo = null;
-                    //memo.handleWriteStreamData(dest, memo.space, memo.address, content);
+                    // TODO: compare the incoming parameters to the information in the memo.
+                    if ((data[1] & 0x08) == 0) {
+                        // OK
+                        memo.handleSuccess();
+                    } else {
+                        // error
+                        memo.handleFailure("WriteStreamReply", DatagramUtils.parseErrorCode(data,
+                                6 + spaceOfs));
+                    }
+                    return;
                 }
-
+                int requestCode = getRequestTypeFromResponseType(data[1]);
+                RequestWithReplyDatagram memo = null;
+                McsRequestMemo rqMemo = null;
+                synchronized (this) {
+                    if (pendingRequests.containsKey(requestCode)) {
+                        rqMemo = pendingRequests.get(requestCode);
+                        if (!rqMemo.getDest().equals(dest)) {
+                            logger.warning("Spurious MemCfg response datagram " + Utilities
+                                    .toHexSpaceString(data)+": expected source " + rqMemo.getDest()
+                                    + " actual source " + dest);
+                            return;
+                        }
+                        if (!(rqMemo instanceof RequestWithReplyDatagram)) {
+                            logger.warning("Spurious MemCfg response datagram " + Utilities.toHexSpaceString(data)+
+                                    ": the request memo does not support response datagrams. " +
+                                    "Memo: " + rqMemo);
+                            return;
+                        }
+                        memo = (RequestWithReplyDatagram) rqMemo;
+                        if (!memo.compareResponse(data)) {
+                            logger.warning("Unexpected MemCfg response datagram from " + dest
+                                    .toString() + ": " + memo + " payload " + Utilities
+                                    .toHexSpaceString(data));
+                            return;
+                        } else {
+                            checkAndPopMemo(rqMemo);
+                        }
+                    } else {
+                        logger.warning("Could not find a matching memo for MemCfg response " +
+                                "datagram from " + dest.toString() + " payload " + Utilities
+                                .toHexSpaceString(data));
+                    }
+                }
+                if (memo != null) {
+                    memo.handleResponseDatagram(data);
+                }
             }
         });
     }
@@ -162,15 +184,401 @@ public class MemoryConfigurationService {
         this(mcs.here, mcs.downstream);
     }
 
-    McsWriteMemo writeMemo; // can receive a delayed reply
-    public void request(McsWriteMemo memo) {
-        // forward as write Datagram
-        writeMemo = memo;
-        WriteDatagramMemo dg = new WriteDatagramMemo(memo.dest, memo.space, memo.address, memo.data, memo);
-        downstream.sendData(dg);
+
+    private abstract static class McsRequestMemo {
+        protected final NodeID dest;
+        // contains the subcommand (second byte) of the datagram for the request, having zeroed
+        // out any bits on the space shortcut.
+        protected final int requestCode;
+        protected final FailureCallback failureCallback;
+
+        McsRequestMemo(NodeID dest, int requestCode, FailureCallback cb) {
+            this.dest = dest;
+            this.requestCode = requestCode;
+            this.failureCallback = cb;
+        }
+
+        public int getRequestCode() {
+            return requestCode;
+        }
+
+        protected NodeID getDest() { return dest; }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof McsRequestMemo)) return false;
+            McsRequestMemo m = (McsRequestMemo) o;
+            if (!this.dest.equals(m.dest)) return false;
+            if (getRequestCode() != m.getRequestCode()) return false;
+            return true;
+        }
+
+        /**
+         * Creates the payload of the datagram to transmit.
+         * @return the transmit datagram bytes.
+         */
+        protected abstract int[] renderTransmitDatagram();
+
     }
 
-    McsReadMemo readMemo;
+    /**
+     * Request memos that can receive a reply must implement this method to handle the response
+     * datagram.
+     */
+    private interface RequestWithReplyDatagram {
+        /**
+         * If a response datagram came back that matches this request (i.e. compareResponse
+         * returns true), then this function will be called with the response datagram payload.
+         * @param data response datagram payload.
+         */
+        void handleResponseDatagram(int[] data);
+
+        /**
+         * Returns true if the received response belongs to this request.
+         * @param data datagram pyaload
+         */
+        boolean compareResponse(int[] data);
+    }
+
+    /**
+     * Request memos that do not have to receive a reply datagram must implement this method in
+     * order to allow the datagram transmit OK to be forwarded back to the client.
+     */
+    private interface RequestWithNoReply {
+        NoReturnCallback getNoReturnCallback();
+    }
+
+    /**
+     * Common base class for all request/response memos that take a space byte and an address
+     * offset, such as read, write, read stream, write stream.
+     */
+    private abstract static class McsAddressedRequestMemo extends McsRequestMemo implements
+            RequestWithReplyDatagram {
+        protected final int space;
+        protected final long address;
+        McsAddressedRequestMemo(NodeID dest, int requestCode, int space, long address,
+                                FailureCallback cb) {
+            super(dest, requestCode, cb);
+            this.space = space;
+            this.address = address;
+        }
+
+        /**
+         * Checks whether there is a desired
+         * @return 1 if there should be a separate space byte, 0 otherwise.
+         */
+        protected int getSpaceOffset() {
+            return space >= 0xFD ? 0 : 1;
+        }
+
+        /**
+         * Computes the offset where the payload is in the datagram.
+         * @return 7 if there is a separate space byte, 6 if the space is encoded in the low bits.
+         */
+        protected int getPayloadOffset() {
+            return 6 + getSpaceOffset();
+        }
+
+        /**
+         * Computes the offset where the payload is in the datagram.
+         * @return 7 if there is a separate space byte, 6 if the space is encoded in the low bits.
+         */
+        protected int getPayloadOffset(int[] data) {
+            return 6 + ((data[1] & 0x3) != 0 ? 0 : 1);
+        }
+
+        protected void fillRequest(int[] data) {
+            data[0] = DATAGRAM_TYPE;
+            data[1] = getRequestCode();
+            if (space >= 0xFD) {
+                data[1] |= space & 3;
+            } else {
+                data[6] = space & 0xff;
+            }
+            DatagramUtils.renderLong(data, 2, address);
+        }
+
+        /**
+         * @return how many bytes to allocate after the (optional) space byte.
+         */
+        protected abstract int getPayloadLength();
+
+        /**
+         * Fills in the payload bytes of the transmit datagram.
+         * @param data already allocated array with everything until the payload (space,
+         *             address, request code, datagram code) being filled in.
+         */
+        protected abstract void fillPayload(int[] data);
+
+        @Override
+        protected int[] renderTransmitDatagram() {
+            int[] data = new int[getPayloadOffset() + getPayloadLength()];
+            fillRequest(data);
+            fillPayload(data);
+            return data;
+        }
+
+        @Override
+        public boolean compareResponse(int[] data) {
+            if (data.length < (6 + getSpaceOffset())) return false;
+            if (address != DatagramUtils.parseLong(data, 2)) return false;
+            if (space != getSpaceFromPayload(data)) return false;
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!super.equals(o)) return false;
+            if (!(o instanceof McsAddressedRequestMemo)) return false;
+            McsAddressedRequestMemo m = (McsAddressedRequestMemo) o;
+            if (this.space != m.space) return false;
+            if (this.address != m.address) return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode() { return getRequestCode()+dest.hashCode()+((int)address)+space; }
+
+        @Override
+        public String toString() {
+            return this.getClass().getSimpleName() + ": dest " + dest.toString() + " space 0x" +
+                    Integer.toHexString(space) + " address 0x" + Long.toHexString(address);
+        }
+
+        @Override
+        public void handleResponseDatagram(int[] data) {
+            if ((data[1] & SUBCMD_ERROR) != 0) {
+                failureCallback.handleFailure(DatagramUtils.parseErrorCode(data, getPayloadOffset(data)));
+                return;
+            }
+            handleSuccessResponse(data);
+        }
+
+        /**
+         * Called only if the response does not have the failure bit and all parameters are
+         * matching.
+         * @param data payload of response datagram.
+         */
+        protected abstract void handleSuccessResponse(int[] data);
+    }
+
+    public static int getSpaceFromPayload(int[] data) {
+        if ((data[1] & 0x3) != 0) { return 0xFC + (data[1] & 0x3); }
+        return data[6];
+    }
+
+    /**
+     * Computes what the request type would be that caused this response command to arrive.
+     * @param subCmd data[1] of an incoming response.
+     * @return data[1] (minus the space)
+     */
+    public static int getRequestTypeFromResponseType(int subCmd) {
+        if (subCmd < 0x80) {
+            return subCmd & 0xE0;
+        } else {
+            return subCmd & 0xFC;
+        }
+    }
+
+    // Holds the memo pointers to all pending operations: datagrams that were sent out and are
+    // waiting a response. Must be synchronized(this) for all accesses.
+    final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
+    final Map<Integer, List<McsRequestMemo>> queuedRequests = new HashMap<>(5);
+
+
+    /**
+     * Tests if the given memo is in the top memo in pendingRequests for its request type. If so,
+     * pops it.
+     * @param memo the memo to test.
+     */
+    private void checkAndPopMemo(McsRequestMemo memo) {
+        int rqCode = memo.getRequestCode();
+        synchronized(this) {
+            if (pendingRequests.get(rqCode) == memo) {
+                pendingRequests.remove(memo.getRequestCode());
+                memo = null;
+                if (queuedRequests.containsKey(rqCode)) {
+                    List<McsRequestMemo> l = queuedRequests.get(rqCode);
+                    if (!l.isEmpty()) {
+                        memo = l.remove(l.size() - 1);
+                        pendingRequests.put(rqCode, memo);
+                    }
+                }
+            } else {
+                logger.warning("Error checking the pending request memo for code " + rqCode + " " +
+                        "expected " + memo.toString() + " actual " +
+                        pendingRequests.get(memo.getRequestCode()));
+                memo = null;
+            }
+        }
+        if (memo != null) {
+            sendRequest(memo);
+        }
+    }
+
+    private void sendRequest(final McsRequestMemo memo) {
+        downstream.sendData(new DatagramService.DatagramServiceTransmitMemo(memo.getDest(), memo.renderTransmitDatagram()) {
+            @Override
+            public void handleSuccess(int flags) {
+                if (memo instanceof RequestWithNoReply &&
+                        ((flags & DatagramService.FLAG_REPLY_PENDING) == 0)) {
+                    checkAndPopMemo(memo);
+                    ((RequestWithNoReply) memo).getNoReturnCallback().handleSuccess();
+                    return;
+                }
+                if (memo instanceof RequestWithReplyDatagram &&
+                        ((flags & DatagramService.FLAG_REPLY_PENDING) != 0)) {
+                    // Leave the memo in the pending, wait for reply datagram.
+                    return;
+                }
+                // Now: something is fishy.
+                if (memo instanceof RequestWithReplyDatagram) {
+                    logger.info("Expected reply pending, got zero.");
+                    // We will still wait for a reply datagram.
+                    return;
+                }
+                logger.warning("The remote node wants to send a reply but we don't know how to " +
+                        "handle it. memo: " + memo.toString());
+                checkAndPopMemo(memo);
+                ((RequestWithNoReply) memo).getNoReturnCallback().handleSuccess();
+            }
+
+            @Override
+            public void handleFailure(int errorCode) {
+                checkAndPopMemo(memo);
+                memo.failureCallback.handleFailure(errorCode);
+            }
+        });
+    }
+
+    public void request(McsRequestMemo memo) {
+        synchronized(this) {
+            int rqCode = memo.getRequestCode();
+            if (pendingRequests.containsKey(rqCode)) {
+                if (!queuedRequests.containsValue(rqCode)) {
+                    queuedRequests.put(rqCode, new ArrayList<McsRequestMemo>());
+                }
+                queuedRequests.get(rqCode).add(memo);
+                return;
+            } else {
+                pendingRequests.put(memo.getRequestCode(), memo);
+            }
+        }
+        sendRequest(memo);
+    }
+
+    static class McsWriteMemo extends McsAddressedRequestMemo implements
+            RequestWithNoReply {
+        public McsWriteMemo(NodeID dest, int space, long address, byte[] data, NoReturnCallback
+                cb) {
+            super(dest, SUBCMD_WRITE, space, address, cb);
+            this.data = data;
+            this.callback = cb;
+        }
+
+        final byte[] data;
+        final NoReturnCallback callback;
+
+        @Override
+        public boolean equals(Object o) {
+            if (!super.equals(o)) return false;
+            if (! (o instanceof McsWriteMemo)) return false;
+            McsWriteMemo m = (McsWriteMemo) o;
+            if (this.data.length != m.data.length) return false;
+            for (int i = 0; i < this.data.length; i++)
+                if (this.data[i] != m.data[i]) return false;
+            return true;
+        }
+
+        @Override
+        protected int getPayloadLength() {
+            return data.length;
+        }
+
+        @Override
+        protected void fillPayload(int[] data) {
+            for (int i = 0; i < this.data.length; ++i) {
+                data[getPayloadOffset() + i] = DatagramUtils.byteToInt(this.data[i]);
+            }
+        }
+
+        @Override
+        protected void handleSuccessResponse(int[] data) {
+            callback.handleSuccess();
+        }
+
+        @Override
+        public NoReturnCallback getNoReturnCallback() {
+            return callback;
+        }
+    }
+
+    public interface McsWriteHandler extends NoReturnCallback {}
+
+    public void requestWrite(NodeID dest, int space, long address, byte[] data, McsWriteHandler
+            cb) {
+        request(new McsWriteMemo(dest, space, address, data, cb));
+    }
+
+    public interface McsReadHandler extends FailureCallback {
+        /**
+         * This function will be called upon successful read.
+         * @param dest the node ID from which the read happened
+         * @param space the space number from which the read happened
+         * @param address address within the space at where the read happened
+         * @param data the returned payload. not null, should be at least one byte long (or else
+         *             a handleFailure call will be invoked).
+         */
+        void handleReadData(NodeID dest, int space, long address, byte[] data);
+    }
+
+    static class McsReadMemo extends McsAddressedRequestMemo implements
+            RequestWithReplyDatagram {
+        public McsReadMemo(NodeID dest, int space, long address, int len, McsReadHandler
+                cb) {
+            super(dest, SUBCMD_READ, space, address, cb);
+            this.len = len;
+            this.callback = cb;
+        }
+
+        final int len;
+        final McsReadHandler callback;
+
+        @Override
+        public boolean equals(Object o) {
+            if (!super.equals(o)) return false;
+            if (! (o instanceof McsReadMemo)) return false;
+            McsReadMemo m = (McsReadMemo) o;
+            if (this.len != m.len) return false;
+            return true;
+        }
+
+        @Override
+        protected int getPayloadLength() {
+            return 1;
+        }
+
+        @Override
+        protected void fillPayload(int[] data) {
+            data[getPayloadOffset()] = len;
+        }
+
+        @Override
+        protected void handleSuccessResponse(int[] data) {
+            int payofs = getPayloadOffset(data);
+            byte[] response  = new byte[data.length - payofs];
+            DatagramUtils.intToByteArray(response, 0, data, payofs, response.length);
+            callback.handleReadData(dest, space, address, response);
+        }
+    }
+
+    public void requestRead(NodeID dest, int space, long address, int len, McsReadHandler
+            cb) {
+        request(new McsReadMemo(dest, space, address, len, cb));
+    }
+
+
+/*    McsReadMemo readMemo;
     Stack<McsReadMemo> pendingReads = new Stack<>();
     public synchronized void request(McsReadMemo memo) {
         // forward as read Datagram
@@ -185,7 +593,7 @@ public class MemoryConfigurationService {
     private void sendRead() {
         ReadDatagramMemo dg = new ReadDatagramMemo(readMemo.dest, readMemo.space, readMemo.address, readMemo.count, readMemo);
         downstream.sendData(dg);
-    }
+    }*/
     
     // dph
     McsWriteStreamMemo writeStreamMemo;
@@ -194,7 +602,8 @@ public class MemoryConfigurationService {
                                       //System.out.println("writeStreamMemo: "+memo.dest+","+memo.space+","+memo.address);
                                       // System.out.println("writeStreamMemo: "+memo.dest);
         writeStreamMemo = memo;
-        WriteStreamMemo dg = new WriteStreamMemo(memo.dest, memo.space, memo.address, memo);
+        WriteStreamMemo dg = new WriteStreamMemo(memo.dest, memo.space, memo.address, memo.srcStreamId,
+                memo);
         downstream.sendData(dg);
     }
 
@@ -215,80 +624,30 @@ public class MemoryConfigurationService {
     }
     
     @Immutable
-    @ThreadSafe    
-    static public class McsReadMemo {
-        public McsReadMemo(NodeID dest, int space, long address, int count) {
-            this.count = count;
-            this.address = address;
-            this.space = space;
-            this.dest = dest;
-        }
-
-        protected final int count;
-        final long address;
-        final int space;
-        final NodeID dest;
-        
-        @Override
-        public boolean equals(Object o) {
-            if (o == null) return false;
-            if (! (o instanceof McsReadMemo)) return false;
-            McsReadMemo m = (McsReadMemo) o;
-            if (this.dest != m.dest) return false;
-            if (this.space != m.space) return false;
-            if (this.address != m.address) return false;
-            return this.count == m.count;
-        } 
-    
-        @Override
-        public String toString() {
-            return "McsReadMemo: "+address;
-        }
-        
-        @Override
-        public int hashCode() { return dest.hashCode()+space+((int)address)+count; }
-        
-        /**
-         * Overload this for notification of failure reply
-         * @param code non-zero for error reply
-         */
-        public void handleWriteReply(int code) { 
-        }
-        
-        /**
-         * Overload this for notification of data.
-         */
-        public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
-        }
-
-    }
-
-    @Immutable
     @ThreadSafe
-    static public class McsWriteStreamMemo {
-        public McsWriteStreamMemo(NodeID dest, int space, long address) {
-            //super(dest, space, address);
+    static public abstract class McsWriteStreamMemo {
+        public McsWriteStreamMemo(NodeID dest, int space, long address, int srcStreamId) {
             this.address = address;
             this.space = space;
             this.dest = dest;
-            this.data = null;
+            this.srcStreamId = srcStreamId;
         }
         
         //final int count;
         final long address;
         final int space;
         final NodeID dest;
-        final byte[] data;
-        
+        final int srcStreamId;
+
         @Override
         public boolean equals(Object o) {
             if (o == null) return false;
-            if (! (o instanceof McsWriteMemo)) return false;
-            McsWriteMemo m = (McsWriteMemo) o;
+            if (! (o instanceof McsWriteStreamMemo)) return false;
+            McsWriteStreamMemo m = (McsWriteStreamMemo) o;
             if (this.dest != m.dest) return false;
             if (this.space != m.space) return false;
             if (this.address != m.address) return false;
-            return this.data.length == m.data.length;
+            return this.srcStreamId == m.srcStreamId;
         }
         
         @Override
@@ -297,155 +656,27 @@ public class MemoryConfigurationService {
         }
         
         @Override
-        public int hashCode() { return dest.hashCode()+space+((int)address)+data.length; }
-        
+        public int hashCode() { return dest.hashCode()+space+((int)address); }
+
         /**
-         * Overload this for notification of failure reply
-         * @param code non-zero for error reply
+         * Called if the write stream command is accepted by the destination node.
          */
-
-        public void handleReply(int code){}
-        public void handleWriteReply(int code){}
-        public void handleWriteStreamReply(int code) {}
-    }
-    
-    
-    @Immutable
-    @ThreadSafe    
-    public class ReadDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
-        ReadDatagramMemo(NodeID dest, int space, long address, int count, McsReadMemo memo) {
-            super(dest);
-            boolean spaceByte = false;
-            if (space<0xFD) spaceByte = true;
-            this.data = new int[6+(spaceByte ? 1 : 0)+1];
-            this.data[0] = DATAGRAM_TYPE;
-            this.data[1] = 0x40;
-            if (space >= 0xFD) this.data[1] |= space&0x3;
-            
-            this.data[2] = (int)(address>>24)&0xFF;
-            this.data[3] = (int)(address>>16)&0xFF;
-            this.data[4] = (int)(address>>8 )&0xFF;
-            this.data[5] = (int)(address    )&0xFF;
-
-            if (spaceByte) this.data[6] = space;
-            
-            this.data[6+(spaceByte ? 1 : 0)] = count;
-                
-            this.memo = memo;
-        }
-        McsReadMemo memo;
-        @Override
-        public void handleReply(int code) {
-            if (code == 0) {
-                // Read is successful, we're expecting an answer (read reply datagram) to come.
-                // We are not popping the next message to send yet.
-                memo.handleWriteReply(code);
-                return;
-            }
-            synchronized(MemoryConfigurationService.this) {
-                assert(readMemo == memo);
-                readMemo = null;
-            }
-            memo.handleWriteReply(code);
-            synchronized(MemoryConfigurationService.this) {
-                if (readMemo == null && !pendingReads.empty()) {
-                    readMemo = pendingReads.pop();
-                    sendRead();
-                }
-            }
-        }
-    }
-
-    @Immutable
-    @ThreadSafe    
-    static public class McsWriteMemo {
-        public McsWriteMemo(NodeID dest, int space, long address, byte[] data) {
-            this.data = data;
-            this.address = address;
-            this.space = space;
-            this.dest = dest;
-        }
-
-        byte[] data;
-        final long address;
-        final int space;
-        final NodeID dest;
-        
-        @Override
-        public boolean equals(Object o) {
-            if (o == null) return false;
-            if (! (o instanceof McsWriteMemo)) return false;
-            McsWriteMemo m = (McsWriteMemo) o;
-            if (this.dest != m.dest) return false;
-            if (this.space != m.space) return false;
-            if (this.address != m.address) return false;
-            if (this.data.length != m.data.length) return false;
-            for (int i = 0; i < this.data.length; i++)
-                if (this.data[i] != m.data[i]) return false;
-            return true;
-        } 
-    
-        @Override
-        public String toString() {
-            return "McsWriteMemo: "+address;
-        }
-        
-        @Override
-        public int hashCode() { return this.data.length+this.data[0]+dest.hashCode()+((int)address)+space; }
-        
+        public abstract void handleSuccess();
         /**
-         * @param code 0 for OK, non-zero for error reply
+         * Called when the write stream command is rejected by the destination node. Temporary
+         * errors are internally retried.
+         * @param where describes which part of the protocol caused the failure
+         * @param errorCode non-zero for error reply
          */
-        public void handleWriteReply(int code) { 
-        }
-
-    }
-    
-    @Immutable
-    @ThreadSafe    
-    static public class WriteDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
-        WriteDatagramMemo(NodeID dest, int space, long address, byte[] content, McsWriteMemo memo) {
-            super(dest);
-            boolean spaceByte = false;
-            if (space<0xFD) spaceByte = true;
-            this.data = new int[6+(spaceByte ? 1 : 0)+content.length];
-            this.data[0] = DATAGRAM_TYPE;
-            this.data[1] = 0x00;
-            if (space >= 0xFD) this.data[1] |= space&0x3;
-            
-            this.data[2] = (int)(address>>24)&0xFF;
-            this.data[3] = (int)(address>>16)&0xFF;
-            this.data[4] = (int)(address>>8 )&0xFF;
-            this.data[5] = (int)(address    )&0xFF;
-
-            if (spaceByte) this.data[6] = space;
-            
-            for (int i = 0; i < content.length; i++) 
-                this.data[6+(spaceByte ? 1 : 0)+i] = content[i];
-                
-            this.memo = memo;
-        }
-        McsWriteMemo memo;
-        /** 
-         * Handle immediate write reply from datagram.
-         * Should refer back to the memo request
-         */
-        public void handleReply(int code) { 
-            memo.handleWriteReply(code);
-        }
+        public abstract void handleFailure(String where, int errorCode);
     }
 
-    
-    // dph
-    // need sourceStreamID
     @Immutable
     @ThreadSafe
-    static public class WriteStreamMemo extends DatagramService.DatagramServiceTransmitMemo  {
-//        public WriteStreamMemo(NodeID dest, int space, long address, byte[] content, McsWriteMemo memo) {
-      public WriteStreamMemo(NodeID dest, int space, long address, McsWriteStreamMemo memo) {
+    public class WriteStreamMemo extends DatagramService.DatagramServiceTransmitMemo  {
+      public WriteStreamMemo(NodeID dest, int space, long address, int
+              srcStreamId, McsWriteStreamMemo memo) {
           super(dest);
-          this.space=space;
-          this.address = address;
           boolean spaceByte = false;
           if (space<0xFD) spaceByte = true;
           this.data = new int[6+(spaceByte ? 1 : 0)+1];
@@ -457,34 +688,39 @@ public class MemoryConfigurationService {
           this.data[3] = (int)(address>>16)&0xFF;
           this.data[4] = (int)(address>>8 )&0xFF;
           this.data[5] = (int)(address    )&0xFF;
-          
+
+          int ofs = 6;
           if (spaceByte) {
-              this.data[6] = space;
-              this.data[7] = 0x04;
-          } else this.data[6] = 0x04;   // srcStreamID???? why do we need this?
-          
-          
-          //for (int i = 0; i < content.length; i++)
-          //    this.data[6+(spaceByte ? 1 : 0)+i] = content[i];
-          
+              this.data[ofs++] = space;
+          }
+          if (srcStreamId < 1 || srcStreamId > 254) {
+              throw new IllegalArgumentException("Invalid source stream ID: " + srcStreamId);
+          }
+          this.data[ofs++] = srcStreamId;
           this.memo = memo;
         }
-        int space;
-        long address;
         McsWriteStreamMemo memo;
-        /**
-         * Handle immediate write reply from datagram.
-         * Should refer back to the memo request
-         */
-        public void handleReply(int code) {
-            memo.handleWriteReply(code);
+
+        @Override
+        public void handleSuccess(int flags) {
+            if (0 != (flags & DatagramService.FLAG_REPLY_PENDING)) {
+                return;
+            }
+            writeStreamMemo = null;
+            memo.handleSuccess();
+        }
+
+        @Override
+        public void handleFailure(int errorCode) {
+            writeStreamMemo = null;
+            memo.handleFailure("TxDatagram", errorCode);
         }
     }
     
     
     @Immutable
     @ThreadSafe    
-    static public class McsConfigMemo {
+    static public abstract class McsConfigMemo {
         public McsConfigMemo(NodeID dest) {
             this.dest = dest;
         }
@@ -511,8 +747,7 @@ public class MemoryConfigurationService {
          * Overload this for notification of failure reply
          * @param code non-zero for error reply
          */
-        public void handleWriteReply(int code) { 
-        }
+        public abstract void handleFailure(int code);
         
         /**
          * Overload this for notification of data.
@@ -524,7 +759,7 @@ public class MemoryConfigurationService {
 
     @Immutable
     @ThreadSafe    
-    static public class ConfigDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
+    public class ConfigDatagramMemo extends DatagramService.DatagramServiceTransmitMemo {
         ConfigDatagramMemo(NodeID dest, McsConfigMemo memo) {
             super(dest);
             this.data = new int[2];
@@ -533,11 +768,38 @@ public class MemoryConfigurationService {
             this.memo = memo;
         }
         McsConfigMemo memo;
-        public void handleReply(int code) { 
-            memo.handleWriteReply(code);
-        }
-        
 
+        @Override
+        public void handleSuccess(int flags) {
+            if ((flags & DatagramService.FLAG_REPLY_PENDING) == 0) {
+                logger.warning("MemConfig GetConfig datagram returned with no reply_pending bit " +
+                        "set.");
+            }
+            // Wait for answer.
+        }
+
+        @Override
+        public void handleFailure(int errorCode) {
+            checkAndPopConfigMemo(memo);
+            memo.handleFailure(errorCode);
+        }
+    }
+
+    private synchronized void checkAndPopConfigMemo(McsConfigMemo memo) {
+        if (memo != this.configMemo) {
+            logger.warning("Error checking the configMemo. Expected=" + memo + " actual="+configMemo);
+            return;
+        }
+        configMemo = null;
+    }
+
+    private synchronized void checkAndPopAddrspaceMemo(McsAddrSpaceMemo memo) {
+        if (memo != this.addrSpaceMemo) {
+            logger.warning("Error checking the addrspaceMemo. Expected=" + memo + " " +
+                    "actual="+addrSpaceMemo);
+            return;
+        }
+        addrSpaceMemo = null;
     }
 
     @Immutable
@@ -592,7 +854,18 @@ public class MemoryConfigurationService {
             this.memo = memo;
         }
         McsAddrSpaceMemo memo;
-        public void handleReply(int code) { 
+
+        @Override
+        public void handleSuccess(int flags) {
+
+        }
+
+        @Override
+        public void handleFailure(int errorCode) {
+
+        }
+
+        public void handleReply(int code) {
             memo.handleWriteReply(code);
         }
         

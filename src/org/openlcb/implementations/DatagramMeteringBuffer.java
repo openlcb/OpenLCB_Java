@@ -1,6 +1,5 @@
 package org.openlcb.implementations;
 
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Timer;
@@ -34,7 +33,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     
     public DatagramMeteringBuffer(Connection toDownstream) {
         this.toDownstream = toDownstream;
-        new Thread(new Consumer(queue)).start();
+        datagramComplete();
         
         fromDownstream = new ReplyHandler();
     }
@@ -42,7 +41,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
-    
+    int timeoutMillis = TIMEOUT;
+
     /**
      * This is where e.g. replies from the OpenLCB
      * network should be returned to.
@@ -52,18 +52,43 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     }
     
     BlockingQueue<MessageMemo> queue = new LinkedBlockingQueue<MessageMemo>();
-    
+    int pendingEntries = 0;
+
+    public void setTimeout(int timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
+    }
+
+    public void waitForSendQueue() {
+        while(true) {
+            synchronized (this) {
+                if (pendingEntries == 0) return;
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {}
+        }
+    }
+
     /**
      * Accept a datagram message to be sent
      */
     @Override
     public void put(Message msg, Connection toUpstream) {
-        if (msg instanceof DatagramMessage)
-            queue.add(new MessageMemo((DatagramMessage)msg, toUpstream, toDownstream));
-        else 
+        if (msg instanceof DatagramMessage) {
+            synchronized (this) {
+                ++pendingEntries;
+            }
+            queue.add(new MessageMemo((DatagramMessage) msg, toUpstream, toDownstream));
+        } else {
             toDownstream.put(msg, fromDownstream);
+        }
     }
-    
+
+    private void datagramComplete() {
+        currentMemo = null;
+        new Thread(new Consumer(queue)).start();
+    }
+
     class ReplyHandler extends AbstractConnection {
         /*
          * Find the current handler and have it handle it
@@ -106,8 +131,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                     timerExpired();
                 }
             };
-            timer.schedule(task, TIMEOUT);
-            
+            timer.schedule(task, timeoutMillis);
         }
         void endTimeout() {
             if (timer != null) timer.cancel();
@@ -130,16 +154,12 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
             // check if this is from right source & to us
             if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
-                // not for us, just forward
-                //toUpstream.put(msg, toUpstream);
+                // not for us
                 return;
             }
             endTimeout();
-            // forward message upstream
-            //toUpstream.put(msg, toUpstream);
-
-            // and allow sending another
-            new Thread(new Consumer(queue)).start();
+            // allow sending another
+            datagramComplete();
         }
         
         /**
@@ -149,8 +169,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender) {
             // check if this is from right source & to us
             if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
-                // not for us, just forward
-                //toUpstream.put(msg, toUpstream);
+                // not for us
                 return;
             }
             endTimeout();
@@ -158,21 +177,22 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             if (msg.canResend()) {
                 forwardDownstream();
             } else {
-                // forward upstream to originator and let them sort it out
-                //toUpstream.put(msg, toUpstream);
-                // and allow sending another
-                new Thread(new Consumer(queue)).start();
+                // allow sending another
+                datagramComplete();
             }
         }
     }
     
-    static class Consumer implements Runnable {
+    class Consumer implements Runnable {
         private final BlockingQueue<MessageMemo> queue;
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
         @Override
         public void run() {
             try {
                 consume(queue.take());
+                synchronized (DatagramMeteringBuffer.this) {
+                    pendingEntries--;
+                }
             } catch (InterruptedException ex) {}
             // and exits. Another has to be started with this item is done.
         }

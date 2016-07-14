@@ -87,7 +87,7 @@ public class StreamTransmitterTest extends TestCase {
                            .equals(new StreamInitiateRequestMessage(hereID, farID, 256, (byte)4, (byte)0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)0, (byte)0);
+        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)4, (byte)0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -98,7 +98,7 @@ public class StreamTransmitterTest extends TestCase {
                            .equals(new StreamDataSendMessage(hereID, farID, new int[256])));
 
         // reply to proceed
-        m = new StreamDataProceedMessage(farID, hereID, (byte)0, (byte)0);
+        m = new StreamDataProceedMessage(farID, hereID, (byte)4, (byte)0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
