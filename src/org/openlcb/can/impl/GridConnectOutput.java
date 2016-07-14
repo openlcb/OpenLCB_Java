@@ -19,9 +19,16 @@ public class GridConnectOutput implements CanFrameListener {
     private final static Logger logger = Logger.getLogger(TAG);
 
     private BufferedOutputStream output;
+    private final Runnable onError;
 
-    public GridConnectOutput(OutputStream output) {
+    /**
+     * Creates the object ussed for rendering CAN frames to GridConnect format.
+     * @param output the (raw) output socket to send the gridconnect data to.
+     * @param onError will be called when the output experiences an IO error. May be null.
+     */
+    public GridConnectOutput(OutputStream output, Runnable onError) {
         this.output = new BufferedOutputStream(output);
+        this.onError = onError;
     }
 
     public static String format(CanFrame frame) {
@@ -59,6 +66,9 @@ public class GridConnectOutput implements CanFrameListener {
                 output.close();
             } catch (IOException e1) {
                 logger.fine("Error closing gridconnect output: " + e1.toString());
+            }
+            if (onError != null) {
+                onError.run();
             }
         }
     }
