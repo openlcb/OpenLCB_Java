@@ -47,13 +47,11 @@ public class OlcbConnection {
         this.listenerProxy = new ListenerProxy();
         this.listenerProxy.add(connectionListener);
         this.nodeId = nodeId;
+    }
+
+    public void startConnect() {
         new Thread() {
             public void run() {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
                 connect();
             }
         }.start();
