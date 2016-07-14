@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
+
 /**
  * Traction protocol based implementation of the throttle. This differs from {@ref
  * ThrottleImplementation} in that it uses the {@ref TractionControlRequest} messages for talking
@@ -72,11 +74,17 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     public void start(RemoteTrainNode trainNode) {
-        if (assigned && !trainNode.getNodeId().equals(trainNode.getNodeId())) {
+        if (assigned && !this.trainNode.getNodeId().equals(trainNode.getNodeId())) {
             release();
         }
         this.trainNode = trainNode;
         assign();
+    }
+
+    public @Nullable
+    NodeID getNodeId() {
+        if (trainNode == null) return null;
+        return trainNode.getNodeId();
     }
 
     public void refresh() {
