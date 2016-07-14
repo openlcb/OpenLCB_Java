@@ -15,11 +15,11 @@ import junit.framework.TestSuite;
 public class RemoteTrainNodeTest extends TestCase {
     
     public void testCtor() {
-        new RemoteTrainNode(new NodeID(new byte[]{1,2,3,4,5,6}));
+        new RemoteTrainNode(new NodeID(new byte[]{1,2,3,4,5,6}), null);
     }
     
     public void testNodeMemory() {
-        RemoteTrainNode node = new RemoteTrainNode(new NodeID(new byte[]{1,2,3,4,5,6}));
+        RemoteTrainNode node = new RemoteTrainNode(new NodeID(new byte[]{1,2,3,4,5,6}), null);
         Assert.assertTrue(new NodeID(new byte[]{1,2,3,4,5,6}).equals(node.getNodeId()));
     }
         
