@@ -22,9 +22,9 @@ import java.util.TreeMap;
 public class MemorySpaceCache {
     private static final String TAG = "MemorySpaceCache";
     // This event will be fired when the cache is completely pre-filled.
-    private static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
+    public static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
     // This event will be fired on the registered data listeners.
-    private static final String UPDATE_DATA = "UPDATE_DATA";
+    public static final String UPDATE_DATA = "UPDATE_DATA";
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
     private final int space;
