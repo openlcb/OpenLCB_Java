@@ -88,6 +88,9 @@ public class CanInterface {
         OpenLcbCanFrame ameFrame = new OpenLcbCanFrame(0);
         ameFrame.setAME(aliasWatcher.getNIDa(), null);
         frameOutput.send(ameFrame);
+        OpenLcbCanFrame gReqFrame = new OpenLcbCanFrame(aliasWatcher.getNIDa());
+        gReqFrame.setVerifyNID(null);
+        frameOutput.send(gReqFrame);
         try {
             Thread.sleep(200);
         } catch(InterruptedException e) {}
