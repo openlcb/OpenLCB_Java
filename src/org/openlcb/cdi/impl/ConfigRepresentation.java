@@ -545,8 +545,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             long ret = 0;
             for (int i = 0; i < b.length; ++i) {
                 ret <<= 8;
-                int p = b[i];
-                if (p < 0) p += 128;
+                int p = b[i] & 0xff;
+                //if (p < 0) p += 128;
                 ret |= p;
             }
             return ret;
