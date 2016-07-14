@@ -80,6 +80,12 @@ public class ProtocolIdentification {
     }
 
     void start(Connection connection) {
+        if (dest == null) {
+            throw new AssertionError("PIP dest==null");
+        }
+        if (source == null) {
+            throw new AssertionError("PIP src = null");
+        }
         connection.put(new ProtocolIdentificationRequestMessage(source, dest), null);
     }
     
