@@ -54,7 +54,7 @@ public class Hub {
         t.start();
     }
     
-    ArrayBlockingQueue<Memo> queue = new ArrayBlockingQueue<Memo>(CAPACITY, true);  //fairness
+    BlockingQueue<Memo> queue = new LinkedBlockingQueue<Memo>();
     ArrayList<Forwarding> threads = new ArrayList<Forwarding>();
     int port;
     
