@@ -10,6 +10,8 @@ import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
 import org.openlcb.implementations.throttle.Float16;
 
+import java.util.logging.Logger;
+
 /**
  * Traction Control Request message implementation.
  * <p/>
@@ -18,6 +20,10 @@ import org.openlcb.implementations.throttle.Float16;
 @Immutable
 @ThreadSafe
 public class TractionControlRequestMessage extends AddressedPayloadMessage {
+    private static Logger logger = Logger.getLogger(new Object() {
+    }.getClass().getSuperclass()
+            .getName());
+
     public final static byte CMD_SET_SPEED = 0x00;
     public final static byte CMD_SET_FN = 0x01;
     public final static byte CMD_ESTOP = 0x02;
@@ -52,7 +58,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         } else {
             if (speed >= 0) speed = -speed;
         }
-        Float16 sp = new Float16(speed);
+        Float16 sp = new Float16(speed, isForward);
+        logger.finest("Traction set speed: isFwd=" + isForward + " speed " + speed + " set speed" +
+                " " + sp.getByte1() + "." + sp.getByte2());
+
         byte[] payload = new byte[]{CMD_SET_SPEED, sp.getByte1(), sp.getByte2()};
         return new TractionControlRequestMessage(source, dest, payload);
     }
