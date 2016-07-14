@@ -52,7 +52,7 @@ public class DccProxyCacheTest extends TestCase {
         Assert.assertTrue(cache.getList() != null);
         Assert.assertEquals(1, cache.getList().size());
         
-        RemoteTrainNode tn = cache.getList().get(0);
+        RemoteDccProxy tn = cache.getList().get(0);
         
         Assert.assertTrue(tn.getNodeId().equals(new NodeID(new byte[]{1,1,0,0,4,4})));
         
