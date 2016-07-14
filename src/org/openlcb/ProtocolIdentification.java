@@ -65,7 +65,9 @@ public class ProtocolIdentification {
     NodeID source;
     NodeID dest;
 
-    public ProtocolIdentification( ProtocolIdentificationReplyMessage msg) {
+    public ProtocolIdentification(NodeID me, ProtocolIdentificationReplyMessage msg) {
+        this.source = me;
+        this.dest = msg.getSourceNodeID();
         value = msg.getValue();
     }
     public ProtocolIdentification() {
