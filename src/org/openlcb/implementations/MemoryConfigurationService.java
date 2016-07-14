@@ -180,7 +180,7 @@ public class MemoryConfigurationService {
             this.dest = dest;
         }
 
-        final int count;
+        protected final int count;
         final long address;
         final int space;
         final NodeID dest;
