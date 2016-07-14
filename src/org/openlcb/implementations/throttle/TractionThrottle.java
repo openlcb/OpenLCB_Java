@@ -88,6 +88,12 @@ public class TractionThrottle extends MessageDecoder {
         setStatus("Released node.");
     }
 
+    /**
+     * @return the list of nodes in the consist managed by the assgined node. Entries may be
+     * null in case the node list is still being fetched.
+     */
+    public List<NodeID> getConsistList() { return consistList; }
+
     private void assign() {
         setStatus("Assigning node...");
         iface.registerMessageListener(this);
