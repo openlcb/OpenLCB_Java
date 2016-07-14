@@ -70,7 +70,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
          */
         @Override
         public void put(Message msg, Connection sender) {
-            if (currentMemo == null) return;
+            if (currentMemo == null) {
+                return;
+            }
             currentMemo.put(msg, sender);
         }
     }
@@ -117,6 +119,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
             System.out.println("Never received reply for datagram "+(message != null ? message.toString() : " == null"));
             handleDatagramRejected(msg, null);
+            // Inject message to upstream listener
+            toUpstream.put(msg, toUpstream);
         }
 
         /**
@@ -127,12 +131,12 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             // check if this is from right source & to us
             if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
                 // not for us, just forward
-                toUpstream.put(msg, toUpstream);
+                //toUpstream.put(msg, toUpstream);
                 return;
             }
             endTimeout();
             // forward message upstream
-            toUpstream.put(msg, toUpstream);
+            //toUpstream.put(msg, toUpstream);
 
             // and allow sending another
             new Thread(new Consumer(queue)).start();
@@ -146,7 +150,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             // check if this is from right source & to us
             if ( ! (msg.getDestNodeID()!=null && msg.getSourceNodeID()!=null && msg.getDestNodeID().equals(message.getSourceNodeID()) && message.getDestNodeID().equals(msg.getSourceNodeID()) ) ) {
                 // not for us, just forward
-                toUpstream.put(msg, toUpstream);
+                //toUpstream.put(msg, toUpstream);
                 return;
             }
             endTimeout();
@@ -155,7 +159,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 forwardDownstream();
             } else {
                 // forward upstream to originator and let them sort it out
-                toUpstream.put(msg, toUpstream);
+                //toUpstream.put(msg, toUpstream);
                 // and allow sending another
                 new Thread(new Consumer(queue)).start();
             }
