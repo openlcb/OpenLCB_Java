@@ -69,12 +69,14 @@ public class MemoryConfigurationService {
                         // error read reply, return zero length
                         content = new byte[0];
                     }
+                    long retAddress = DatagramUtils.parseLong(data, 2);
+                    int retSpace = spaceByte ? data[6] : (0xFD + (data[1] & 0x03));
                     McsReadMemo memo;
                     synchronized (this) {
                         memo = readMemo;
                         readMemo = null;
                     }
-                    memo.handleReadData(dest, memo.space, memo.address, content);
+                    memo.handleReadData(dest, retSpace, retAddress, content);
                     synchronized (this) {
                         if (readMemo == null && !pendingReads.isEmpty()) {
                             readMemo = pendingReads.pop();
@@ -110,8 +112,7 @@ public class MemoryConfigurationService {
                 }
                 if (writeMemo != null && ((data[1] & 0xF0) == 0x10)) {
                     McsWriteMemo memo = writeMemo;
-                    long retAddress = (((long) data[2] & 0xFF) << 24) | (((long) data[3] & 0xFF)
-                            << 16) | (((long) data[4] & 0xFF) << 8) | ((long) data[5] & 0xFF);
+                    long retAddress = DatagramUtils.parseLong(data, 2);
                     if (retAddress != memo.address) {
                         logger.warning("Spurious write response datagram. Requested address=" +
                                 memo.address + " returned address=" + retAddress);
@@ -336,6 +337,8 @@ public class MemoryConfigurationService {
         @Override
         public void handleReply(int code) {
             if (code == 0) {
+                // Read is successful, we're expecting an answer (read reply datagram) to come.
+                // We are not popping the next message to send yet.
                 memo.handleWriteReply(code);
                 return;
             }
