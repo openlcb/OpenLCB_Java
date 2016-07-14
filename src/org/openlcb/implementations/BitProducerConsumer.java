@@ -22,13 +22,26 @@ public class BitProducerConsumer extends MessageDecoder {
     private final EventID eventOn;
     private final EventID eventOff;
     private final OlcbInterface iface;
-    private VersionedValue<Boolean> value = null;
-    private VersionedValueListener<Boolean> valueListener = null;
+    private final VersionedValue<Boolean> value;
+    private final VersionedValueListener<Boolean> valueListener;
 
-    public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff) {
+    public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff, boolean
+            defaultValue) {
         this.iface = iface;
         this.eventOn = eventOn;
         this.eventOff = eventOff;
+        value = new VersionedValue<>(defaultValue);
+        valueListener = new VersionedValueListener<Boolean>(value) {
+            @Override
+            public void update(Boolean newValue) {
+                Message msg = new ProducerConsumerEventReportMessage(BitProducerConsumer.this.iface
+                        .getNodeId(),
+                        newValue ? BitProducerConsumer.this.eventOn :
+                                BitProducerConsumer.this.eventOff);
+                BitProducerConsumer.this.iface.getOutputConnection().put(msg, BitProducerConsumer
+                        .this);
+            }
+        };
         iface.registerMessageListener(this);
         iface.getOutputConnection().registerStartNotification(new ConnectionListener() {
             @Override
@@ -38,19 +51,22 @@ public class BitProducerConsumer extends MessageDecoder {
         });
     }
 
-    public synchronized VersionedValue<Boolean> getValue(boolean defaultValue) {
-        if(value == null) {
-            setValueFromNetwork(defaultValue);
-        }
-        return value;
-    }
-
     public VersionedValue<Boolean> getValue() {
         return value;
     }
 
+    /**
+     * @return true if we have not received any network state yet, thus the value is still at the
+     * default value passed in.
+     */
+    public boolean isValueAtDefault() {
+        return (value.getVersion() == value.DEFAULT_VERSION);
+    }
+
     private EventState getOnEventState() {
-        if (value == null) return EventState.Unknown;
+        if (isValueAtDefault()) {
+            return EventState.Unknown;
+        }
         if (value.getLatestData()) return EventState.Valid;
         return EventState.Invalid;
     }
@@ -161,20 +177,6 @@ public class BitProducerConsumer extends MessageDecoder {
     }
 
     private void setValueFromNetwork(boolean isOn) {
-        synchronized (this) {
-            if (value == null) {
-                value = new VersionedValue<>(isOn);
-                valueListener = new VersionedValueListener<Boolean>(value) {
-                    @Override
-                    public void update(Boolean newValue) {
-                        Message msg = new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                                newValue ? eventOn : eventOff);
-                        iface.getOutputConnection().put(msg, BitProducerConsumer.this);
-                    }
-                };
-                return;
-            }
-        }
         valueListener.setFromOwner(isOn);
     }
 }
