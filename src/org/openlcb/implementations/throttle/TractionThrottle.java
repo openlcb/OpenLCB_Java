@@ -39,7 +39,7 @@ public class TractionThrottle extends MessageDecoder {
             if (!enabled) return;
 
             Message m = TractionControlRequestMessage.createSetSpeed(iface.getNodeId(),
-                    trainNode.getNodeId(), t >= 0, t);
+                    trainNode.getNodeId(), Math.copySign(1.0, t) >= 0, t);
             iface.getOutputConnection().put(m, TractionThrottle.this);
 
         }
