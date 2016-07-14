@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Queue;
-import java.util.TreeMap;
+import java.util.TreeMap;Upgrade gradle to 2.10
 import java.util.logging.Logger;
 
 /**
@@ -171,9 +171,20 @@ public class MemorySpaceCache {
      */
     private void loadRange() {
         if (currentRangeNextOffset < 0) {
-            currentRangeNextOffset = nextRangeToLoad.start;
-            currentRangeData = new byte[(int) (nextRangeToLoad.end - nextRangeToLoad.start)];
-            dataCache.put(nextRangeToLoad, currentRangeData);
+            int len = (int)(nextRangeToLoad.end - nextRangeToLoad.start);
+            // Try to check if there is an existing range covering the stuff to load.
+            Map.Entry<Range, byte[]> cachedRange = getCacheForRange(nextRangeToLoad.start, len);
+            if (cachedRange == null) {
+                currentRangeData = new byte[len];
+                dataCache.put(nextRangeToLoad, currentRangeData);
+                currentRangeNextOffset = nextRangeToLoad.start;
+            } else {
+                currentRangeData = cachedRange.getValue();
+                currentRangeNextOffset = nextRangeToLoad.start;
+                // We must make sure that the start offset is the same as the cached range,
+                // otherwise the bytes will be copied to the wrong place inside the data array.
+                nextRangeToLoad = new Range(cachedRange.getKey().start, nextRangeToLoad.end);
+            }
         }
         int count = (int)(nextRangeToLoad.end - currentRangeNextOffset);
         if (count <= 0) {
