@@ -172,6 +172,9 @@ public class TractionThrottle extends MessageDecoder {
         Message m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
                 trainNode.getNodeId(), newMember, flags);
         iface.getOutputConnection().put(m, this);
+        m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
+                newMember, trainNode.getNodeId(), flags);
+        iface.getOutputConnection().put(m, this);
     }
 
     /** Removes a node from the consist handled by the current assigned node.
@@ -179,6 +182,9 @@ public class TractionThrottle extends MessageDecoder {
     public void removeFromConsist(NodeID member) {
         Message m = TractionControlRequestMessage.createConsistDetach(iface.getNodeId(),
                 trainNode.getNodeId(), member);
+        iface.getOutputConnection().put(m, this);
+        m = TractionControlRequestMessage.createConsistDetach(iface.getNodeId(),
+                member, trainNode.getNodeId());
         iface.getOutputConnection().put(m, this);
     }
 
