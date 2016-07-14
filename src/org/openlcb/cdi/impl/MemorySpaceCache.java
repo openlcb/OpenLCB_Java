@@ -195,13 +195,17 @@ public class MemorySpaceCache {
             count = 64;
         }
         final int fcount = count;
-        connection.getMemoryConfigurationService().request(
-                new MemoryConfigurationService.McsReadMemo(remoteNodeID, space,
-                        currentRangeNextOffset, count) {
+        connection.getMemoryConfigurationService().requestRead(remoteNodeID, space,
+                currentRangeNextOffset, count,
+                new MemoryConfigurationService.McsReadHandler() {
                     @Override
-                    public void
-                    handleWriteReply(int code) {
-                        super.handleWriteReply(code);
+                    public void handleFailure(int code) {
+                        logger.warning("Error reading memory space cache: dest " + remoteNodeID +
+                                "space" + space + " offset " + currentRangeNextOffset + " error " +
+                                "0x" + Integer.toHexString(code));
+                        // ignore and continue reading other stuff.
+                        currentRangeNextOffset += fcount;
+                        loadRange();
                     }
 
                     @Override
@@ -217,7 +221,7 @@ public class MemorySpaceCache {
                                     " address= " + address + " length=" + data.length + " " +
                                     "expected" +
                                     " address=" + currentRangeNextOffset + " expectedspace=" +
-                                    MemorySpaceCache.this.space + " expectedcount=" + this.count);
+                                    MemorySpaceCache.this.space + " expectedcount=" + fcount);
                         }
                         if (data.length == 0) {
                             logger.warning(String.format("Datagram read returned 0 bytes. " +
@@ -235,8 +239,7 @@ public class MemorySpaceCache {
                         }
                         loadRange();
                     }
-                }
-        );
+                });
     }
 
     private Map.Entry<Range, byte[]> getCacheForRange(long offset, int len) {
@@ -267,17 +270,19 @@ public class MemorySpaceCache {
         }
         logger.finer("Writing to space " + space + " offset 0x" + Long.toHexString(offset) +
                 " payload length " + data.length);
-        connection.getMemoryConfigurationService().request(
-                new MemoryConfigurationService.McsWriteMemo(remoteNodeID, space, offset, data) {
+        connection.getMemoryConfigurationService().requestWrite(remoteNodeID, space, offset,
+                data, new MemoryConfigurationService.McsWriteHandler() {
                     @Override
-                    public void handleWriteReply(int code) {
-                        if (code != 0) {
-                            logger.warning(String.format("Write failed (space %d address %d): " +
-                                    "%04x", space, offset, code));
-                        } else {
-                            logger.finer(String.format("Write complete (space %d address %d): " +
-                                    "%04x", space, offset, code));
-                        }
+                    public void handleFailure(int errorCode) {
+                        logger.warning(String.format("Write failed (space %d address %d): 0x" +
+                                "%04x", space, offset, errorCode));
+                        cdiEntry.fireWriteComplete();
+                    }
+
+                    @Override
+                    public void handleSuccess() {
+                        logger.finer(String.format("Write complete (space %d address %d).",
+                                space, offset));
                         cdiEntry.fireWriteComplete();
                     }
                 }

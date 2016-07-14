@@ -58,9 +58,16 @@ public class CdiMemConfigReader  {
         if (retval != null) {
             retval.progressNotify(buf.length(), -1);
         }
-        MemoryConfigurationService.McsReadMemo memo =
-            new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
-                public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
+        MemoryConfigurationService.McsReadHandler memo =
+            new MemoryConfigurationService.McsReadHandler() {
+                @Override
+                public void handleFailure(int code) {
+                    done();
+                    // TODO: 5/2/16 proxy error messages to the caller.
+                    // don't do next request
+                }
+
+                public void handleReadData(NodeID dest, int space, long address, byte[] data) {
                     // handle return data, checking for null in string or zero-length reply
                     if (data.length == 0) {
                         done();
@@ -78,7 +85,7 @@ public class CdiMemConfigReader  {
                     nextRequest();
                 }
             };
-        service.request(memo);
+        service.requestRead(node, space, nextAddress, LENGTH, memo);
     }
     
     private void done() {

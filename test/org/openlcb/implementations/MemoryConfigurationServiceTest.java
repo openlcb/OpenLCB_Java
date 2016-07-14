@@ -41,18 +41,20 @@ public class MemoryConfigurationServiceTest extends TestCase {
     }
     
     public void testReadMemoIsRealClass() {
-        MemoryConfigurationService.McsReadMemo m20 = 
-            new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0000, 2);
-        MemoryConfigurationService.McsReadMemo m20a = 
-            new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0000, 2);
-        MemoryConfigurationService.McsReadMemo m21 = 
-            new MemoryConfigurationService.McsReadMemo(hereID,0xFD, 0x0000, 2);
-        MemoryConfigurationService.McsReadMemo m22 = 
-            new MemoryConfigurationService.McsReadMemo(farID,0xFE, 0x0000, 2);
-        MemoryConfigurationService.McsReadMemo m23 = 
-            new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0001, 2);
-        MemoryConfigurationService.McsReadMemo m24 = 
-            new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0000, 3);
+        MemoryConfigurationService.McsReadHandler hnd = new MemoryConfigurationService
+                .McsReadHandler() {
+            @Override
+            public void handleFailure(int code) {}
+
+            @Override
+            public void handleReadData(NodeID dest, int space, long address, byte[] data) {}
+        };
+        MemoryConfigurationService.McsReadMemo m20 = new MemoryConfigurationService.McsReadMemo(farID, 0xFD, 0x0000, 2, hnd);
+        MemoryConfigurationService.McsReadMemo m20a = new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0000, 2, hnd);
+        MemoryConfigurationService.McsReadMemo m21 = new MemoryConfigurationService.McsReadMemo(hereID,0xFD, 0x0000, 2, hnd);
+        MemoryConfigurationService.McsReadMemo m22 = new MemoryConfigurationService.McsReadMemo(farID,0xFE, 0x0000, 2, hnd);
+        MemoryConfigurationService.McsReadMemo m23 = new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0001, 2, hnd);
+        MemoryConfigurationService.McsReadMemo m24 = new MemoryConfigurationService.McsReadMemo(farID,0xFD, 0x0000, 3, hnd);
         
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
@@ -67,22 +69,29 @@ public class MemoryConfigurationServiceTest extends TestCase {
     }
 
     public void testWriteMemoIsRealClass() {
-        MemoryConfigurationService.McsWriteMemo m20 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2});
+        MemoryConfigurationService.McsWriteHandler hnd = new MemoryConfigurationService.McsWriteHandler() {
+            @Override
+            public void handleSuccess() { }
+
+            @Override
+            public void handleFailure(int errorCode) { }
+        };
+        MemoryConfigurationService.McsWriteMemo m20 =
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m20a = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m21 = 
-            new MemoryConfigurationService.McsWriteMemo(hereID,0xFD, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(hereID,0xFD, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m22 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFE, 0x0000, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFE, 0x0000, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m23 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0001, new byte[]{1,2});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0001, new byte[]{1,2}, hnd);
         MemoryConfigurationService.McsWriteMemo m24 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1}, hnd);
         MemoryConfigurationService.McsWriteMemo m25 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2,3});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,2,3}, hnd);
         MemoryConfigurationService.McsWriteMemo m26 = 
-            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,5,3});
+            new MemoryConfigurationService.McsWriteMemo(farID,0xFD, 0x0000, new byte[]{1,5,3}, hnd);
         
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
@@ -102,16 +111,22 @@ public class MemoryConfigurationServiceTest extends TestCase {
         int space = 0xFD;
         long address = 0x12345678;
         byte[] data = new byte[]{1,2};
-        MemoryConfigurationService.McsWriteMemo memo = 
-            new MemoryConfigurationService.McsWriteMemo(farID, space, address, data) {
-                public void handleWriteReply(int code) { 
+        MemoryConfigurationService.McsWriteHandler cb =
+            new MemoryConfigurationService.McsWriteHandler() {
+                @Override
+                public void handleFailure(int errorCode) {
+                    assertEquals("Write failed. error code is ", 0, errorCode);
+                }
+
+                @Override
+                public void handleSuccess() {
                     flag = true;
                 }
             };
 
         // test executes the callbacks instantly; real connections might not
         Assert.assertTrue(!flag);
-        service.request(memo);
+        service.requestWrite(farID, space, address, data, cb);
         Assert.assertTrue(!flag);
         
         // should have sent datagram
@@ -147,6 +162,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+        /*
     public void testSimpleRead() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -154,9 +170,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
                 @Override
-                public void handleWriteReply(int code) { 
+                public void handleFailure(int code) {
                     flag = true;
+                    assertEquals("Read failed. error code is ", 0, code);
                 }
+
                 @Override
                 public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) { 
                     flag = true;
@@ -168,9 +186,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -193,11 +211,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         }
         
         // datagram reply comes back 
-        Message m = new DatagramAcknowledgedMessage(farID, hereID);
+        Message m = new DatagramAcknowledgedMessage(farID, hereID, 0x80);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
@@ -206,7 +224,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
         
@@ -219,9 +237,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
                 @Override
-                public void handleWriteReply(int code) { 
+                public void handleFailure(int code) {
                     flag = true;
+                    assertEquals("Read failed. error code is ", 0, code);
                 }
+
                 @Override
                 public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) { 
                     flag = true;
@@ -235,9 +255,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // start of 1st pass
         {
             // test executes the callbacks instantly; real connections might not
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             service.request(memo);
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
         
             // should have sent datagram
              Assert.assertEquals(1,messagesReceived.size());
@@ -262,9 +282,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             // datagram reply comes back 
             Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             datagramService.put(m, null);
-            Assert.assertTrue(flag);
+            Assert.assertFalse(flag);
         
             // now return data
             flag = false;
@@ -273,7 +293,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
             m = new DatagramMessage(farID, hereID, content);
 
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             datagramService.put(m, null);
             Assert.assertTrue(flag);
         }  
@@ -283,9 +303,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
         flag = false;
         {
             // test executes the callbacks instantly; real connections might not
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             service.request(memo);
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
         
             // should have sent datagram
              Assert.assertEquals(1,messagesReceived.size());
@@ -308,11 +328,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
             }
         
             // datagram reply comes back 
-            Message m = new DatagramAcknowledgedMessage(farID, hereID);
+            Message m = new DatagramAcknowledgedMessage(farID, hereID, 0x80);
 
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             datagramService.put(m, null);
-            Assert.assertTrue(flag);
+            Assert.assertFalse(flag);
         
             // now return data
             flag = false;
@@ -321,7 +341,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
             m = new DatagramMessage(farID, hereID, content);
 
-            Assert.assertTrue(!flag);
+            Assert.assertFalse(flag);
             datagramService.put(m, null);
             Assert.assertTrue(flag);
         }
@@ -334,9 +354,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
                 @Override
-                public void handleWriteReply(int code) { 
+                public void handleFailure(int code) {
                     flag = true;
+                    assertEquals("Read failed. error code is ", 0, code);
                 }
+
                 @Override
                 public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) { 
                     flag = true;
@@ -349,9 +371,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -376,9 +398,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // datagram reply comes back 
         Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
@@ -387,7 +409,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
         
@@ -400,9 +422,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         MemoryConfigurationService.McsReadMemo memo = 
             new MemoryConfigurationService.McsReadMemo(farID, space, address, length) {
                 @Override
-                public void handleWriteReply(int code) { 
+                public void handleFailure(int code) {
                     flag = true;
+                    assertEquals("Write failed. error code is ", 0, code);
                 }
+
                 @Override
                 public void handleReadData(NodeID dest, int readSpace, long readAddress, byte[] readData) { 
                     flag = true;
@@ -414,9 +438,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -441,9 +465,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // datagram reply comes back 
         Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
@@ -452,19 +476,27 @@ public class MemoryConfigurationServiceTest extends TestCase {
 
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
         
     }
-    
+    */
     public void testConfigMemoIsRealClass() {
-        MemoryConfigurationService.McsConfigMemo m20 = 
-            new MemoryConfigurationService.McsConfigMemo(farID);
+        class TestMemo extends MemoryConfigurationService.McsConfigMemo {
+            public TestMemo(NodeID dest) {
+                super(dest);
+            }
+
+            @Override
+            public void handleFailure(int code) { }
+        }
+        MemoryConfigurationService.McsConfigMemo m20 =
+            new TestMemo(farID);
         MemoryConfigurationService.McsConfigMemo m20a = 
-            new MemoryConfigurationService.McsConfigMemo(farID);
+            new TestMemo(farID);
         MemoryConfigurationService.McsConfigMemo m21 = 
-            new MemoryConfigurationService.McsConfigMemo(hereID);
+            new TestMemo(hereID);
         
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(m20.equals(m20a));
@@ -479,9 +511,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         MemoryConfigurationService.McsConfigMemo memo = 
             new MemoryConfigurationService.McsConfigMemo(farID) {
                 @Override
-                public void handleWriteReply(int code) { 
+                public void handleFailure(int code) {
                     flag = true;
+                    assertEquals("Config get failed. error code is ", 0, code);
                 }
+
                 @Override
                 public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) { 
                     flag = true;
@@ -489,9 +523,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -506,16 +540,16 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // datagram reply comes back 
         Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
         content = new int[]{0x20, 0x81, 0x55, 0x55, 0xEE, 0xFF, 0x80, 'a', 'b', 'c'};
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
         
@@ -560,9 +594,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -578,16 +612,16 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // datagram reply comes back 
         Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
         content = new int[]{0x20, 0x85, space, 0x12, 0x34, 0x56, 0x78, 0x55};
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
                 
@@ -611,9 +645,9 @@ public class MemoryConfigurationServiceTest extends TestCase {
             };
 
         // test executes the callbacks instantly; real connections might not
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         service.request(memo);
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         
         // should have sent datagram
          Assert.assertEquals(1,messagesReceived.size());
@@ -629,16 +663,16 @@ public class MemoryConfigurationServiceTest extends TestCase {
         // datagram reply comes back 
         Message m = new DatagramAcknowledgedMessage(farID, hereID);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
-        Assert.assertTrue(flag);
+        Assert.assertFalse(flag);
         
         // now return data
         flag = false;
         content = new int[]{0x20, 0x85, space, 0xFF, 0xFF, 0xFF, 0xFF, 0x55, 0x12, 0x34, 0x56, 0x78};
         m = new DatagramMessage(farID, hereID, content);
 
-        Assert.assertTrue(!flag);
+        Assert.assertFalse(flag);
         datagramService.put(m, null);
         Assert.assertTrue(flag);
                 

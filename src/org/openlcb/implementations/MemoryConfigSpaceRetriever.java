@@ -29,8 +29,13 @@ public class MemoryConfigSpaceRetriever {
     }
 
     void nextRequest() {
-        MemoryConfigurationService.McsReadMemo memo =
-                new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
+        MemoryConfigurationService.McsReadHandler memo =
+                new MemoryConfigurationService.McsReadHandler() {
+                    @Override
+                    public void handleFailure(int code) {
+                        cb.onFailure(code);
+                    }
+
                     public void handleReadData(NodeID dest, int space, long address, byte[] data) {
                         // handle return data, checking for null in string or zero-length reply
                         if (data.length == 0) {
@@ -49,7 +54,7 @@ public class MemoryConfigSpaceRetriever {
                         nextRequest();
                     }
                 };
-        service.request(memo);
+        service.requestRead(node, space, nextAddress, LENGTH, memo);
     }
 
     private void done() {

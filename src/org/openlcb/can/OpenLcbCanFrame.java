@@ -1,6 +1,7 @@
 package org.openlcb.can;
 
 import org.openlcb.*;
+import org.openlcb.implementations.DatagramUtils;
 
 import javax.annotation.Nullable;
 
@@ -68,7 +69,7 @@ public class OpenLcbCanFrame implements CanFrame {
     public boolean isRtr() { return false; }
     
     public int getNumDataElements() { return length; }
-    public int getElement(int n) { return data[n]; }
+    public int getElement(int n) { return DatagramUtils.byteToInt(data[n]); }
 
     // bit 1
     static final int MASK_FRAME_TYPE = 0x08000000;

@@ -45,13 +45,8 @@ public class MemConfigDescriptionPaneTest extends TestCase {
         dgs = new DatagramService(null, null);
         
         spaceCount = 3;
+        // TODO: 5/2/16 replace this with a proper mock.
         service = new MemoryConfigurationService(nidHere, dgs) {
-            public void request(MemoryConfigurationService.McsWriteMemo memo) {
-            }
-        
-            public void request(MemoryConfigurationService.McsReadMemo memo) {
-            }
-        
             public void request(MemoryConfigurationService.McsConfigMemo memo) {
                 // for test, call back immediately
                 memo.handleConfigData(nidThere, 0xFFFF, 0xFF, 0xFF, 0, "");
