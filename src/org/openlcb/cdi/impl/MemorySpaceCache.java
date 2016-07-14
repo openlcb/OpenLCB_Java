@@ -36,7 +36,7 @@ public class MemorySpaceCache {
             TreeMap<>();
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
     private Range nextRangeToLoad = null;
-    private int currentRangeNextOffset;
+    private long currentRangeNextOffset;
     private byte[] currentRangeData;
 
     public MemorySpaceCache(OlcbInterface connection, NodeID remoteNode, int space) {
@@ -63,7 +63,7 @@ public class MemorySpaceCache {
      * @param start address of first byte to be cached (inclusive)
      * @param end   address of first byte after the cached region
      */
-    public void addRangeToCache(int start, int end) {
+    public void addRangeToCache(long start, long end) {
         ranges.addRange(start, end);
     }
 
@@ -76,7 +76,7 @@ public class MemorySpaceCache {
      *                 exclusive)
      * @param listener callback to invoke
      */
-    public void addRangeListener(int start, int end, PropertyChangeListener listener) {
+    public void addRangeListener(long start, long end, PropertyChangeListener listener) {
         synchronized (this) {
             Range r = new Range(start, end);
             ChangeEntry lt = dataChangeListeners.get(r);
@@ -96,7 +96,7 @@ public class MemorySpaceCache {
      * @param start offset (inclusive)
      * @param end   offset (exclusive)
      */
-    private void notifyPartialRead(int start, int end) {
+    private void notifyPartialRead(long start, long end) {
         PropertyChangeEvent ev = null;
         for (Map.Entry<Range, ChangeEntry> e : dataChangeListeners.entrySet()) {
             if (e.getKey().start < end && e.getKey().end > start) {
@@ -119,7 +119,7 @@ public class MemorySpaceCache {
      * @param start offset (inclusive)
      * @param end   offset (exclusive)
      */
-    private void notifyAfterWrite(int start, int end) {
+    private void notifyAfterWrite(long start, long end) {
         PropertyChangeEvent ev = null;
         for (Map.Entry<Range, ChangeEntry> e : dataChangeListeners.entrySet()) {
             if (e.getKey().start < end && e.getKey().end > start) {
@@ -173,10 +173,10 @@ public class MemorySpaceCache {
     private void loadRange() {
         if (currentRangeNextOffset < 0) {
             currentRangeNextOffset = nextRangeToLoad.start;
-            currentRangeData = new byte[nextRangeToLoad.end - nextRangeToLoad.start];
+            currentRangeData = new byte[(int) (nextRangeToLoad.end - nextRangeToLoad.start)];
             dataCache.put(nextRangeToLoad, currentRangeData);
         }
-        int count = nextRangeToLoad.end - currentRangeNextOffset;
+        int count = (int)(nextRangeToLoad.end - currentRangeNextOffset);
         if (count <= 0) {
             continueLoading();
             return;
@@ -208,8 +208,8 @@ public class MemorySpaceCache {
                                     " address=" + currentRangeNextOffset + " expectedspace=" +
                                     MemorySpaceCache.this.space + " expectedcount=" + this.count);
                         }
-                        System.arraycopy(data, 0, currentRangeData, currentRangeNextOffset -
-                                nextRangeToLoad.start, data.length);
+                        System.arraycopy(data, 0, currentRangeData, (int) (currentRangeNextOffset -
+                                                        nextRangeToLoad.start), data.length);
                         notifyPartialRead(currentRangeNextOffset, currentRangeNextOffset + data
                                 .length);
                         currentRangeNextOffset += data.length;
@@ -219,7 +219,7 @@ public class MemorySpaceCache {
         );
     }
 
-    private Map.Entry<Range, byte[]> getCacheForRange(int offset, int len) {
+    private Map.Entry<Range, byte[]> getCacheForRange(long offset, int len) {
         Range r = new Range(offset, Integer.MAX_VALUE);
         Map.Entry<Range, byte[]> entry = dataCache.floorEntry(r);
         if (entry == null) return null;
@@ -230,21 +230,22 @@ public class MemorySpaceCache {
         return entry;
     }
 
-    public byte[] read(int offset, int len) {
+    public byte[] read(long offset, int len) {
         Map.Entry<Range, byte[]> entry = getCacheForRange(offset, len);
         if (entry == null) return null;
         byte[] ret = new byte[len];
-        System.arraycopy(entry.getValue(), offset - entry.getKey().start, ret, 0, len);
+        System.arraycopy(entry.getValue(), (int) (offset - entry.getKey().start), ret, 0, len);
         return ret;
     }
 
-    public void write(final int offset, byte[] data, final ConfigRepresentation.CdiEntry cdiEntry) {
+    public void write(final long offset, byte[] data, final ConfigRepresentation.CdiEntry
+            cdiEntry) {
         int len = data.length;
         Map.Entry<Range, byte[]> entry = getCacheForRange(offset, len);
         if (entry != null && entry.getValue() != null) {
-            System.arraycopy(data, 0, entry.getValue(), offset - entry.getKey().start, data.length);
+            System.arraycopy(data, 0, entry.getValue(), (int) (offset - entry.getKey().start), data.length);
         }
-        logger.finer("Writing to space " + space + " offset 0x" + Integer.toHexString(offset) +
+        logger.finer("Writing to space " + space + " offset 0x" + Long.toHexString(offset) +
                 " payload length " + data.length);
         connection.getMemoryConfigurationService().request(
                 new MemoryConfigurationService.McsWriteMemo(remoteNodeID, space, offset, data) {
