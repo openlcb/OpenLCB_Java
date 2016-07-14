@@ -22,18 +22,27 @@ import org.openlcb.implementations.*;
 public class CdiMemConfigReader  {
     
     final static int LENGTH = 64;
-    final static int SPACE = 0xFF;
-    
+
     NodeID node;
     MimicNodeStore store;
     MemoryConfigurationService service;
+    final int space;
         
     public CdiMemConfigReader(NodeID node, MimicNodeStore store, MemoryConfigurationService service) {
         this.node = node;
         this.store = store;
         this.service = service;
+        this.space = MemoryConfigurationService.SPACE_CDI;
     }
-    
+
+    public CdiMemConfigReader(NodeID node, OlcbInterface iface, int space) {
+        this.node = node;
+        this.store = iface.getNodeStore();
+        this.service = iface.getMemoryConfigurationService();
+        this.space = space;
+    }
+
+
     long nextAddress = 0;
     StringBuffer buf;
     
@@ -47,7 +56,7 @@ public class CdiMemConfigReader  {
     
     void nextRequest() {
         MemoryConfigurationService.McsReadMemo memo = 
-            new MemoryConfigurationService.McsReadMemo(node, SPACE, nextAddress, LENGTH) {
+            new MemoryConfigurationService.McsReadMemo(node, space, nextAddress, LENGTH) {
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) { 
                     // handle return data, checking for null in string or zero-length reply
                     if (data.length == 0) {
