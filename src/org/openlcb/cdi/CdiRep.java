@@ -49,9 +49,32 @@ public interface CdiRep {
     }
 
     public static interface Map {
+        /**
+         * Converts stored values to visible values.
+         * @param key a network-stored value, usually a decimal rendered number.
+         * @return the user-visible string explanation that should be displayed.
+         */
         public String getEntry(String key);
+
+        /**
+         * Converts visible values to stored values.
+         * @param entry the visible value that was selected by the user
+         * @return the (string representation) of the value to store to the node's memory space
+         * (usually a decimal formatted number).
+         */
         public String getKey(String entry);
+
+        /**
+         * Gets valid values (returned array is parallel to @ref getValues() )
+         * @return a list of all valid stored values (usually a list of decimal formatted
+         * integers).
+         */
         public java.util.List<String> getKeys();
+
+        /**
+         * Gets all user-visible string explanations (returned array is parallel to @ref getKeys() )
+         * @return a list of all user-visible values.
+         */
         public java.util.List<String> getValues();
     }
 
