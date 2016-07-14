@@ -27,7 +27,7 @@ public class Float16 {
      * This allows the use of the -0.0 value if needed. That's not handled
      * by the other constructors
      */
-    Float16(double d, boolean positive) {
+    public Float16(double d, boolean positive) {
         if (d == 0.0) {
             byte1 = 0;
             if (!positive) byte1 = (byte)0x80;
@@ -81,10 +81,11 @@ public class Float16 {
 
     public float getFloat() { 
         if (byte1 == 0 && byte2 == 0) return 0.0f;
+        if (byte1 == (byte)0x80 && byte2 == 0) return -0.0f;
         int ch = (byte2&0xFF) | ((byte1&0x3)<<8) | 0x400;
         int exp = (( ((int)byte1)&0x7C)>>2)-15;
         int sign = ( (byte1 & 0x80) !=0 ) ? -1 : +1;
-        return (float)(((double)ch)/1024.0*((double)(1<<exp)))*sign;
+        return (float)(((double)ch)/1024.0*(Math.pow(2, exp)))*sign;
     }
     
 }
