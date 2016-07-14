@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 /**
  * Created by bracz on 4/9/16.
  */
-public class SaveConfig {
+public class BackupConfig {
 
 
     static public void writeEntry(BufferedWriter outFile, String key, String value) {
