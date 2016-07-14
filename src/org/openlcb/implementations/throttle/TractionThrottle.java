@@ -90,7 +90,7 @@ public class TractionThrottle extends MessageDecoder {
     public void refresh() {
         if (!getEnabled()) return;
         querySpeed();
-        // Refreshes functions after getting the definite promise from the node.
+        queryConsist();
         for (FunctionInfo f : functions.values()) {
             queryFunction(f.fn);
         }
@@ -129,12 +129,8 @@ public class TractionThrottle extends MessageDecoder {
         assigned = true;
         setStatus("Enabled.");
         setEnabled(true);
-        querySpeed();
-        queryConsist();
-        // Refreshes functions after getting the definite promise from the node.
-        for (FunctionInfo f : functions.values()) {
-            queryFunction(f.fn);
-        }
+        // Refreshes functions and other settings after getting the definite promise from the node.
+        refresh();
     }
 
     /**
@@ -336,7 +332,7 @@ public class TractionThrottle extends MessageDecoder {
             public void update(Boolean aBoolean) {
                 if (!enabled) return;
                 Message m = TractionControlRequestMessage.createSetFn(iface.getNodeId(),
-                        trainNode.getNodeId(), fn, aBoolean.booleanValue() ? 1 : 0);
+                        trainNode.getNodeId(), fn, aBoolean ? 1 : 0);
                 iface.getOutputConnection().put(m, TractionThrottle.this);
             }
         };
