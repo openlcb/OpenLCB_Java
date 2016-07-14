@@ -82,6 +82,7 @@ public class Util {
         };
 
         OlcbConnection connection = new OlcbConnection(localNode, host, port, l);
+        connection.startConnect();
         if (s.get()) {
             return connection;
         } else {
