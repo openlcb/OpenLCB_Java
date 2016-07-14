@@ -42,7 +42,7 @@ public class TrainNodeCache extends AbstractNodeCache<RemoteTrainNode> {
             memo.getSimpleNodeIdent();
             memo.getProtocolIdentification();
         }
-        return new RemoteTrainNode(id);
+        return new RemoteTrainNode(id, iface);
     }
 
 }
