@@ -287,8 +287,8 @@ public class LoaderClient extends MessageDecoder {
                                     //System.out.println("Reply mcs.request McsWriteMemo handleWriteReply: "+code);
                 if(nextIndex<content.length) sendDGNext();
                 else {
-                    //sendUnfreeze();
-                    //state = State.SUCCESS;
+                    sendUnfreeze();
+                    state = State.SUCCESS;
                 }
             }
         });
@@ -305,11 +305,6 @@ public class LoaderClient extends MessageDecoder {
             replyCount++;
             float p = 100.0F * replyCount / expectedTransactions;
             feedback.onProgress(p);
-            if( p > 100.0F*(expectedTransactions-1)/expectedTransactions ) state=state.UNFREEEZE;
-        }
-        if(state == State.UNFREEEZE && msg.getSourceNodeID().equals(dest)) {
-            sendUnfreeze();
-            state = State.SUCCESS;
         }
     }
     
