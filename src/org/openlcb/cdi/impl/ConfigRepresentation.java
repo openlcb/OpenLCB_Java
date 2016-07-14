@@ -299,10 +299,14 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         public int size;
         /// Internal key for this variable or group
         public String key;
+        /// String-rendered value of this entry. Populated for leaf entries.
+        public String lastVisibleValue = null;
 
         public abstract CdiRep.Item getCdiItem();
+        protected void updateVisibleValue() {}
 
         public void fireUpdate() {
+            updateVisibleValue();
             firePropertyChange(UPDATE_ENTRY_DATA, null, null);
         }
 
@@ -486,6 +490,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             return rep;
         }
 
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = Long.toString(getValue());
+        }
+
         public long getValue() {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = cache.read(origin, size);
@@ -530,6 +539,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             return rep;
         }
 
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = getValue().toString();
+        }
+
         public EventID getValue() {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = cache.read(origin, size);
@@ -562,6 +576,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         @Override
         public CdiRep.Item getCdiItem() {
             return rep;
+        }
+
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = getValue();
         }
 
         public String getValue() {
