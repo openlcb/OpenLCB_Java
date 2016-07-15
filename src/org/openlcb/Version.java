@@ -26,7 +26,7 @@ public class Version {
      * Minor number changes with change that
      * effects interoperability
      */
-    static final public int minor = 6;
+    static final public int minor = 7;
      
     /* Specification modifier - updated periodically
      */
