@@ -103,7 +103,7 @@
 
   <target name="clean" description="remove compilation results to force rebuild">
     <mkdir dir="${target}"/>
-    <delete includeEmptyDirs="true">
+    <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${target}"/>
       <fileset dir="${coveragetarget}"/>
       <file file="jacoco.exec"/>
