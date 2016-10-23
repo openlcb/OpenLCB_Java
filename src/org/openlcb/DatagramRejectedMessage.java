@@ -65,7 +65,8 @@ public class DatagramRejectedMessage extends AddressedMessage {
     static final int DATAGRAM_REJECTED_NO_RESEND_MASK            = 0x100;
     static final int DATAGRAM_REJECTED_RESEND_MASK               = 0x200;
     static final int DATAGRAM_REJECTED_TRANSPORT_ERROR_MASK      = 0x400;
-    
+
+    public static final int DATAGRAM_REJECTED_DST_REBOOT                = 0x10100;
     
     public boolean canResend() { 
         return (code & DATAGRAM_REJECTED_RESEND_MASK) == DATAGRAM_REJECTED_RESEND_MASK;
