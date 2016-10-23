@@ -159,8 +159,14 @@ public class CdiPanel extends JPanel {
                      pane = createStringPane((CdiRep.StringRep) it, origin, space);
                  }
                  if (pane != null) {
-                     origin = pane.getOrigin() + pane.getVarSize();
-                     p.add(pane);
+                    origin = pane.getOrigin() + pane.getVarSize();
+                    if(it instanceof CdiRep.Group) {
+                        // groups should collapse.  
+                        JPanel colPane = new util.CollapsiblePanel(it.getName(), pane);
+                        p.add(colPane);
+                    } else {
+                       p.add(pane);
+                    }
                  } else {
                      System.out.println("could not process type of " + it);
                  }
@@ -244,9 +250,8 @@ public class CdiPanel extends JPanel {
                     currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
                     name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
                     currentPane.setBorder(BorderFactory.createTitledBorder(name));
-                    
                     factory.handleGroupPaneStart(currentPane);
-                    
+                     
                     add(currentPane);
                     
                 }

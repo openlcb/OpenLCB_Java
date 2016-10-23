@@ -2,7 +2,7 @@
 <!-- Bob Jacobsen, Copyright 2009 -->
 <!-- Revision $Revision: 370 $ -->
 
-<project name="OpenLCB" default="run" basedir=".">
+<project name="OpenLCB" default="run" basedir="." xmlns:jacoco="antlib:org.jacoco.ant">
 <!-- basedir="." means all paths are relative to the "java" subdir. -->
 
   <description>
@@ -27,6 +27,7 @@
   <!-- set global properties for this build -->
   <property name="source" value="src"/>
   <property name="test" value="test"/>
+  <property name="coveragetarget" value="./coveragereport"/>
   <property name="target" value="classes"/>
   <property name="jartarget" value="."/>
   <property name="doctarget" value="doc"/>
@@ -46,6 +47,52 @@
     <pathelement location="${target}/" />  <!-- last to check for name collisions -->
   </path>
 
+    <!-- Java Code Coverage -->
+    <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+        <classpath path="lib/jacocoant.jar" />
+    </taskdef>
+
+    <!-- fileset for the jacoco targets. -->
+    <fileset id="jacocofileset" dir="${target}">
+        <include name="**/*.class" />
+        <!-- Exclude classes necessary for testing only from the code coverage report-->
+        <exclude name="**/*Test*.class" />
+        <!-- Exclude testing infrastructure classes -->
+        <exclude name="**/*Scaffold.class" />
+        <exclude name="**/*JUnit*.class" />
+        <exclude name="**/*Demo.class" />
+        <exclude name="**/*Mock*.class" />
+        <exclude name="**/package-info.class" />
+        <exclude name="org/openlcb/FakeConnection.class" />
+        <exclude name="org/openlcb/cdi/jdom/SampleFactory.class" />
+        <exclude name="org/openlcb/cdi/swing/CdiPanelDemo.class" />
+        <exclude name="org/openlcb/implementations/MockVersionedValueListener.class" />
+        <exclude name="org/openlcb/FakeOlcbInterface.class" />
+        <exclude name="tools/jmri/DecoderDefnToCdi.class" />
+        <exclude name="tools/cansim/CanFrame.class" />
+        <exclude name="tools/cansim/CanSegment.class" />
+        <exclude name="tools/cansim/CanInterface.class" />
+        <exclude name="tools/Timed.class" />
+        <exclude name="tools/Timer.class" />
+        <exclude name="tools/QueueSim*.class" />
+        <exclude name="simulations/NodeIDCollisions.class" />
+        <exclude name="scenarios/ScenarioRunner*.class" />
+<exclude name="scenarios/TwoBusesFiltered.class" />
+<exclude name="scenarios/ThreeBuses.class" />
+<exclude name="scenarios/NineOnALink.class" />
+<exclude name="scenarios/ConfigDemoApplet*.class" />
+<exclude name="scenarios/BlueGoldCheck*.class" />
+<exclude name="scenarios/TwoBuses.class" />
+<exclude name="scenarios/can/TwoOnASegment.class" />
+<exclude name="scenarios/can/CanScenarios.class" />
+<exclude name="scenarios/can/NineOnASegment.class" />
+<exclude name="scenarios/BlueGoldApplet*.class" />
+    </fileset>
+
+    <!-- end of definitions -->
+
+    <!-- target definitions start here -->
+
   <target name="init" description="create needed directories">
     <!-- Create the time stamp -->
     <tstamp/>
@@ -56,8 +103,11 @@
 
   <target name="clean" description="remove compilation results to force rebuild">
     <mkdir dir="${target}"/>
-    <delete includeEmptyDirs="true">
+    <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${target}"/>
+      <fileset dir="${coveragetarget}"/>
+      <file file="jacoco.exec"/>
+      <file file="junit-results.xml"/>
     </delete>
   </target>
 
@@ -103,7 +153,7 @@
        <classpath refid="project.class.path"    />
     </javac>
   </target>
-
+  
   <target name="run" depends="compile, tests" description="build and run test suite">
     <java classname="AllTest"
 	  fork="yes" >
@@ -111,6 +161,33 @@
        <sysproperty key="java.security.policy" value="lib/security.policy"/> 
        <sysproperty key="java.library.path" path=".:lib/"/>       
     </java>
+  </target>
+
+  <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
+    <jacoco:coverage destfile="jacoco.exec" excludes="org.slf4j.*">
+    <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="withOutAndErr" fork="yes" dir="." timeout="3600000">
+       <classpath refid="project.class.path"    />
+       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+       <sysproperty key="java.library.path" path=".:lib/"/>       
+            <test name="AllTest" outfile="junit-results">
+                <formatter type="xml"/>
+            </test>
+    </junit>
+    </jacoco:coverage>
+       <jacoco:report>
+          <executiondata>
+              <file file="jacoco.exec" />
+          </executiondata>
+
+          <structure name="AntTestReporting">
+              <classfiles>
+                 <fileset refid="jacocofileset"/>
+              </classfiles>
+          </structure>
+
+          <html destdir="${coveragetarget}" />
+       </jacoco:report>
+
   </target>
 
   <target name="bg" depends="compile, tests" description="build and run Blue/Gold test">
