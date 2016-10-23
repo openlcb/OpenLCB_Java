@@ -148,6 +148,26 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
 
         /**
+         * Handle "Node Init Complete" message and kill timeout if our destination node has reset.
+         */
+        @Override
+        public void handleInitializationComplete(InitializationCompleteMessage msg, Connection
+                sender) {
+            if (msg.getSourceNodeID() != null && msg.getSourceNodeID().equals(message
+                    .getDestNodeID())) {
+                // destination node has reset. Let's stop waiting for replies.
+                DatagramRejectedMessage rejectedMessage = new DatagramRejectedMessage(message
+                        .getDestNodeID(), message.getSourceNodeID(),
+                        DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT);
+                System.out.println("Destination node has rebooted while waiting for datagram " +
+                        "reply "+ (message != null ? message.toString() : " == null"));
+                handleDatagramRejected(rejectedMessage, null);
+                // Inject message to upstream listener
+                toUpstream.put(rejectedMessage, toUpstream);
+            }
+        }
+
+        /**
          * Handle "Datagram Acknowledged" message
          */
         @Override
