@@ -325,22 +325,26 @@ public class LoaderClient extends MessageDecoder {
     }
     
     void sendUnfreeze() {
-                                      // System.out.println("lsendUnfreeze");
         dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA0, space}) {
 
             @Override
             public void handleSuccess(int flags) {
                 if (state == State.SUCCESS) {
                     feedback.onProgress((float) 100.0);
-                    feedback.onDone(0, "Download Completed");
+                    feedback.onDone(0, "");
                 } else {
-                    feedback.onDone(0,"Download Failed - "+errorString);
+                    feedback.onDone(1,"Download Failed - "+errorString);
                 }
             }
 
             @Override
             public void handleFailure(int errorCode) {
-                feedback.onDone(0,"Download Failed in UnFreeze - 0x"+Integer.toHexString(errorCode));
+                if (errorCode == DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT) {
+                    // that's ok
+                    handleSuccess(0);
+                } else {
+                    feedback.onDone(errorCode, "Download Failed in UnFreeze");
+                }
             }
 
         });
