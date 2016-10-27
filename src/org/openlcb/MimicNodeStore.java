@@ -161,7 +161,7 @@ public class MimicNodeStore extends AbstractConnection {
                 pSimpleNode.start(connection);
             }
             if (pIdent != null) {
-                //pIdent.start(connection);
+                pIdent.start(connection);
             }
         }
 
