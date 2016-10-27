@@ -89,8 +89,14 @@ public class TreePane extends JPanel  {
 
     }
     
-    public void addTreeSelectionListener(TreeSelectionListener listener) {
-        tree.addTreeSelectionListener(listener);
+    public void addTreeSelectionListener(final TreeSelectionListener listener) {
+        tree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
+                listener.valueChanged(treeSelectionEvent);
+                tree.getSelectionModel().clearSelection();
+            }
+        });
     }
 	
 }
