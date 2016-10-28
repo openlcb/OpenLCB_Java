@@ -10,10 +10,6 @@ import junit.framework.TestSuite;
  * @version $Revision$
  */
 public class ProtocolIdentificationTest extends TestCase {
-    public void testCtor() {
-        new ProtocolIdentification();
-    }
-    
     public void testDecode0() {
         java.util.List result = ProtocolIdentification.Protocol.decode(0x000000000000L);
         
@@ -52,9 +48,9 @@ public class ProtocolIdentificationTest extends TestCase {
         
         Assert.assertEquals("length", 4, result.size());
         Assert.assertEquals("result 1", "CDI", result.get(0));
-        Assert.assertEquals("result 2", "Train", result.get(1));
+        Assert.assertEquals("result 2", "TractionControl", result.get(1));
         Assert.assertEquals("result 3", "FDI", result.get(2));
-        Assert.assertEquals("result 4", "DccCS", result.get(3));
+        Assert.assertEquals("result 4", "DccCommandStation", result.get(3));
     }
 
     public void testSupports1() {

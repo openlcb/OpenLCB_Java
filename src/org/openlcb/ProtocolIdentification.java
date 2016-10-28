@@ -29,10 +29,14 @@ public class ProtocolIdentification {
         Display(                 0x002000000000L,"Display"),
         SimpleNodeID(            0x001000000000L,"SNII"),
         ConfigurationDescription(0x000800000000L,"CDI"),
-        TractionControl(         0x000400000000L,"Train"),
+        TractionControl(         0x000400000000L,"TractionControl"),
         FunctionDescription(     0x000200000000L,"FDI"),
-        DccCommandStation(       0x000100000000L,"DccCS");
-       
+        DccCommandStation(       0x000100000000L,"DccCommandStation"),
+        SimpleTrainNodeInfo(     0x000080000000L,"SimpleTrainNodeInfo"),
+        FunctionConfiguration(   0x000040000000L,"FunctionConfiguration"),
+        FirmwareUpgrade(         0x000020000000L,"FirmwareUpgrade"),
+        FirmwareUpgradeActive(   0x000010000000L,"FirmwareUpgradeActive");
+
         Protocol(long value, String name) {
             this.value = value;
             this.name = name;
@@ -69,9 +73,6 @@ public class ProtocolIdentification {
         this.source = me;
         this.dest = msg.getSourceNodeID();
         value = msg.getValue();
-    }
-    public ProtocolIdentification() {
-        value = 0;
     }
     public ProtocolIdentification(NodeID source, NodeID dest) {
         this.source = source;
