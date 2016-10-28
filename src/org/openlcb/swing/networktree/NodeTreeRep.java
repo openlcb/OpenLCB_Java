@@ -155,7 +155,9 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 getTreeModel().insertNodeInto(pipNode, getThis(),
                          getThis().getChildCount());
             }
-                
+
+            pipNode.removeAllChildren();
+
             List<ProtocolIdentification.Protocol> protocols = pi.getProtocols();
     
             for (ProtocolIdentification.Protocol p : protocols) {
@@ -186,6 +188,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 getTreeModel().insertNodeInto(node, pipNode,
                              pipNode.getChildCount());
             }
+
+            getTreeModel().nodeStructureChanged(pipNode);
         }
     }
     
