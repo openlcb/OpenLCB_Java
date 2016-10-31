@@ -64,8 +64,20 @@ public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
     
     @Override
     public String toString() {
-        return super.toString()
-                +" Simple Node Ident Info with content "+getData();   
+        StringBuilder b = new StringBuilder(super.toString());
+        b.append(" Simple Node Ident Info with content '");
+        for (byte d : getData()) {
+            if (d == 0) {
+                b.append(',');
+            } else if (d < 32) {
+                b.append(Integer.toString(d));
+                b.append(',');
+            } else {
+                b.append((char)d);
+            }
+        }
+        b.append('\'');
+        return b.toString();
     }
 
     public int getMTI() { return MTI_SIMPLE_NODE_IDENT_REPLY; }
