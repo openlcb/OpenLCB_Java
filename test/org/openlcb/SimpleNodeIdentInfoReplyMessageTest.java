@@ -75,7 +75,15 @@ public class SimpleNodeIdentInfoReplyMessageTest extends TestCase {
         
         Assert.assertTrue(result);
     }
-    
+
+    public void testPrint() {
+        Message m = new SimpleNodeIdentInfoReplyMessage(nodeID1, nodeID2, new byte[]{4,'a','b',
+                'c',0,'d','e','f','g',0,0,2,'u',0,'v',0});
+        String s = m.toString();
+        Assert.assertEquals("01.02.03.04.05.06 - 00.00.00.00.00.00 Simple Node Ident Info with" +
+                " content '4,abc,defg,,2,u,v,'", s);
+    }
+
     // from here down is testing infrastructure
     
     public SimpleNodeIdentInfoReplyMessageTest(String s) {
