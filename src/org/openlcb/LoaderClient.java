@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 public class LoaderClient extends MessageDecoder {
     static Logger logger = Logger.getLogger("LoaderClient");
+
     enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, PIPREPLY, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
     Connection connection;
     Connection fromDownstream;
@@ -42,7 +43,11 @@ public class LoaderClient extends MessageDecoder {
     long address;
     byte[] content;
     LoaderStatusReporter feedback;
-    
+
+    private static final int ERR_CHECKSUM_FAILED = 0x2088;
+    private static final int ERR_FILE_CORRUPTED = 0x1089;
+    private static final int ERR_FILE_INAPPROPRIATE = 0x1088;
+
     public static abstract class LoaderStatusReporter {
         public abstract void onProgress(float percent);
         public abstract void onDone(int errorCode, String errorString);
@@ -142,9 +147,7 @@ public class LoaderClient extends MessageDecoder {
         }
     }
     void timerExpired() {
-        state = State.FAIL;
-        errorString = "Timed out";
-        sendUnfreeze();
+        failWith(1, "Timed out");
     }
 
     //@Override
@@ -193,6 +196,7 @@ public class LoaderClient extends MessageDecoder {
     int sentmsgs;
     int location;
     int nextIndex;
+    private int errorCounter;
     float progress;
     float replyCount;
     float expectedTransactions;
@@ -278,11 +282,12 @@ public class LoaderClient extends MessageDecoder {
         nextIndex = 0;
         bufferSize = 64;
         replyCount = 0;
+        errorCounter = 0;
         expectedTransactions = content.length / bufferSize;
         sendDGNext();
     }
     void sendDGNext() {
-        int size = Math.min(bufferSize, content.length-nextIndex);
+        final int size = Math.min(bufferSize, content.length-nextIndex);
                                     //System.out.println("lsendDGNext Enter: "+state);
                                     //System.out.println("content.length: "+content.length);
                                     //System.out.println("nextIndex: "+nextIndex);
@@ -292,15 +297,22 @@ public class LoaderClient extends MessageDecoder {
         // copy the needed data
         for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
         
-                                    //System.out.println("lsendDGNext mcs.request(new McsWriteMemo: "+state);
         mcs.requestWrite(dest, space, nextIndex, data, new McsWriteHandler() {
             @Override
             public void handleFailure(int errorCode) {
-                sendDGNext();
+                if (++errorCounter > 3) {
+                    failWith(errorCode, "Repeated errors writing to firmware space.");
+                } else {
+                    sendDGNext();
+                }
             }
 
             @Override
             public void handleSuccess() {
+                nextIndex += size;
+                errorCounter = 0;
+                float p = 100.0F * nextIndex / content.length;
+                feedback.onProgress(p);
                 if(nextIndex<content.length) sendDGNext();
                 else {
                     state = State.SUCCESS;
@@ -308,41 +320,49 @@ public class LoaderClient extends MessageDecoder {
                 }
             }
         });
-        
-        //feedback.onProgress(100.0F * (float)nextIndex / (float)content.length);
-        
-        // are we done?
-        nextIndex = nextIndex+size;
-        return;
     }
-    public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender) {
-        //System.out.println("Reply mcs.requesthandleDatagramAcknowledged ");
-        if(state == State.DG && msg.getSourceNodeID().equals(dest)) {
-            replyCount++;
-            float p = 100.0F * replyCount / expectedTransactions;
-            feedback.onProgress(p);
-        }
-    }
-    
+
     void sendUnfreeze() {
-                                      // System.out.println("lsendUnfreeze");
         dcs.sendData(new DatagramService.DatagramServiceTransmitMemo(dest, new int[]{0x20, 0xA0, space}) {
 
             @Override
             public void handleSuccess(int flags) {
                 if (state == State.SUCCESS) {
                     feedback.onProgress((float) 100.0);
-                    feedback.onDone(0, "Download Completed");
-                } else {
-                    feedback.onDone(0,"Download Failed - "+errorString);
+                    feedback.onDone(0, "");
                 }
             }
 
             @Override
             public void handleFailure(int errorCode) {
-                feedback.onDone(0,"Download Failed in UnFreeze - 0x"+Integer.toHexString(errorCode));
+                if (errorCode == DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT) {
+                    // that's ok
+                    handleSuccess(0);
+                } else if (state == State.SUCCESS){
+                    failWith(errorCode, "Download Failed in UnFreeze");
+                } // else we already reported a failure
             }
 
         });
+    }
+
+    private void failWith(int errorCode, String errorString) {
+        boolean b = (state != State.FAIL && state != State.UNFREEEZE);
+        state = State.FAIL;
+        String tmpString = null;
+        if (errorCode == ERR_CHECKSUM_FAILED) {
+            tmpString = "Failed download checksum; try again";
+        } else if (errorCode == ERR_FILE_CORRUPTED) {
+            tmpString = "File corrupted";
+        } else if (errorCode == ERR_FILE_INAPPROPRIATE) {
+            tmpString = "The firmware data is incompatible with this hardware node";
+        }
+        if (tmpString != null) {
+            errorString = tmpString + " - " + errorString;
+        }
+        feedback.onDone(errorCode, errorString);
+        if (b) {
+            sendUnfreeze();
+        }
     }
 }
