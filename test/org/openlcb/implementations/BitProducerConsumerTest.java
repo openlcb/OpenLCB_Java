@@ -206,10 +206,10 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectFrame(":X194C7333N0504030201000708;");
         expectFrame(":X194C7333N0504030201000709;");
 
-        expectFrame(":X19547333N0504030201000708;");
         expectFrame(":X19914333N0504030201000708;");
-        expectFrame(":X194C7333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
+        expectFrame(":X19547333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000708;");
         expectNoFrames();
     }
 }

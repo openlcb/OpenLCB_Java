@@ -96,7 +96,7 @@ public class OlcbInterface {
      * Accessor for client libraries to send messages out.
      */
     public Connection getOutputConnection() {
-        return wrappedOutputConnection;
+        return outputConnection;
     }
 
     public NodeID getNodeId() {
