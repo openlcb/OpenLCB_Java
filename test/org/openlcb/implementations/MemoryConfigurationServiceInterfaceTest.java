@@ -202,6 +202,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             // datagram reply comes back
             sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
             verifyNoMoreInteractions(hnd);
+            clearInvocations(outputConnectionMock);
 
             // now return data
             // Response datagram comes and gets acked.
@@ -255,6 +256,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             for (int i = 6; i < payload.length; ++i) {
                 payload[i] = (ofs + i - 6) & 0xff;
             }
+            clearInvocations(outputConnectionMock);
             // Response datagram comes and gets acked.
             sendMessageAndExpectResult(new DatagramMessage(farID, hereID, payload),
                     new DatagramAcknowledgedMessage(hereID, farID));
@@ -460,10 +462,13 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verify(hnd1).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
         verifyNoMoreInteractions(hnd1);
 
+
         // The first ACK will trigger sending the second message.
         expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                 0x20, 0x41, 0x12, 0x34, 0x56, 0x70, 2}));
         sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+
+        //clearInvocations(outputConnectionMock);
 
         sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
                         0x20, 0x51, 0x12, 0x34, 0x56, 0x70, 0xbb}),

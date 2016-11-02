@@ -198,7 +198,6 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
 
     @Override
     public void setUp() {
-        iface.fakeOutputConnection.history.clear();
         aliasMap.insert(0x444, new NodeID(new byte[]{1,2,3,1,2,3}));
         pc = new BitProducerConsumer(iface, onEvent, offEvent, false);
         expectFrame(":X19547333N0504030201000708;");
