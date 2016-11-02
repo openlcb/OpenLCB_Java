@@ -13,6 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import static org.mockito.Mockito.*;
+
 /**
  * Test helper class that instantiates an OlcbInterface and allows making expectations on what is
  * sent to the bus, as well as allows injecting response messages from the bus.
@@ -20,8 +22,8 @@ import java.util.Queue;
  * Created by bracz on 1/9/16.
  */
 public abstract class InterfaceTestBase extends TestCase {
-
-    protected FakeOlcbInterface iface = new FakeOlcbInterface();
+    protected Connection outputConnectionMock = mock(Connection.class);
+    protected OlcbInterface iface = new OlcbInterface(new NodeID(new byte[]{1,2,0,0,1,1}), outputConnectionMock);
     protected AliasMap aliasMap = new AliasMap();
     private Queue<Message> pendingMessages = new LinkedList<>();
     protected boolean testWithCanFrameRendering = false;
@@ -87,7 +89,6 @@ public abstract class InterfaceTestBase extends TestCase {
     /** Moves all outgoing messages to the pending messages queue. */
     protected void consumeMessages() {
         iface.flushSendQueue();
-        iface.fakeOutputConnection.transferAll(pendingMessages);
     }
 
     /** Expects that the next outgoing message (not yet matched with an expectation) is the given
