@@ -3,6 +3,7 @@ package org.openlcb;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
+import org.mockito.ArgumentMatcher;
 import org.openlcb.can.AliasMap;
 import org.openlcb.can.CanFrame;
 import org.openlcb.can.GridConnect;
@@ -22,10 +23,9 @@ import static org.mockito.Mockito.*;
  * Created by bracz on 1/9/16.
  */
 public abstract class InterfaceTestBase extends TestCase {
-    protected Connection outputConnectionMock = mock(Connection.class);
-    protected OlcbInterface iface = new OlcbInterface(new NodeID(new byte[]{1,2,0,0,1,1}), outputConnectionMock);
+    protected Connection outputConnectionMock = mock(AbstractConnection.class);
+    protected OlcbInterface iface = null;
     protected AliasMap aliasMap = new AliasMap();
-    private Queue<Message> pendingMessages = new LinkedList<>();
     protected boolean testWithCanFrameRendering = false;
     private boolean debugFrames = false;
 
@@ -39,7 +39,11 @@ public abstract class InterfaceTestBase extends TestCase {
     }
 
     private void expectInit() {
-        aliasMap.insert(0x333, iface.getNodeId());
+        NodeID id = new NodeID(new byte[]{1,2,0,0,1,1});
+        aliasMap.insert(0x333, id);
+        doCallRealMethod().when(outputConnectionMock).registerStartNotification(any());
+        iface = new OlcbInterface(id, outputConnectionMock);
+        verify(outputConnectionMock, atLeastOnce()).registerStartNotification(any());
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
     }
 
@@ -95,15 +99,25 @@ public abstract class InterfaceTestBase extends TestCase {
      * CAN frame.
      * @param expectedFrame GridConnect-formatted CAN frame.
      */
-    protected void expectFrame(String expectedFrame) {
-        consumeMessages();
-        MessageBuilder d = new MessageBuilder(aliasMap);
-        List<? extends CanFrame> actualFrames = d.processMessage(pendingMessages.remove());
-        StringBuilder b = new StringBuilder();
-        for (CanFrame f : actualFrames) {
-            b.append(GridConnect.format(f));
+    protected void expectFrame(final String expectedFrame) {
+        class MessageMatchesFrame implements ArgumentMatcher<Message> {
+            public boolean matches(Message message) {
+                MessageBuilder d = new MessageBuilder(aliasMap);
+                List<? extends CanFrame> actualFrames = d.processMessage(message);
+                StringBuilder b = new StringBuilder();
+                for (CanFrame f : actualFrames) {
+                    b.append(GridConnect.format(f));
+                }
+                return expectedFrame == b.toString();
+            }
+            public String toString() {
+                //printed in verification errors
+                return "[OpenLCB message with CAN rendering of " + expectedFrame + "]";
+            }
         }
-        assertEquals(expectedFrame, b.toString());
+
+        consumeMessages();
+        verify(outputConnectionMock).put(argThat(new MessageMatchesFrame()),any());
     }
 
     /** Expects that the next outgoing message (not yet matched with an expectation) is the given
@@ -112,8 +126,7 @@ public abstract class InterfaceTestBase extends TestCase {
      */
     protected void expectMessage(Message expectedMessage) {
         consumeMessages();
-        Message m = pendingMessages.remove();
-        assertEquals(expectedMessage, m);
+        verify(outputConnectionMock).put(eq(expectedMessage), any());
     }
 
     protected void expectMessageAndNoMore(Message expectedMessage) {
@@ -124,14 +137,12 @@ public abstract class InterfaceTestBase extends TestCase {
     /** Expects that there are no unconsumed outgoing messages. */
     protected void expectNoFrames() {
         consumeMessages();
-        assertEquals(0, pendingMessages.size());
+        verifyNoMoreInteractions(outputConnectionMock);
     }
 
     /** Expects that there are no unconsumed outgoing messages. */
     protected void expectNoMessages() {
-        consumeMessages();
-        assertEquals("no more outgoing messages", new ArrayList<Message>(), pendingMessages);
-        //expectNoFrames();
+        expectNoFrames();
     }
 
     protected void sendFrameAndExpectResult(String send, String expect) {
@@ -143,5 +154,6 @@ public abstract class InterfaceTestBase extends TestCase {
     protected void sendMessageAndExpectResult(Message send, Message expect) {
         sendMessage(send);
         expectMessage(expect);
+        clearInvocations(outputConnectionMock);
     }
 }
