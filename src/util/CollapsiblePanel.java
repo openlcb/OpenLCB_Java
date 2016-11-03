@@ -110,7 +110,13 @@ public class CollapsiblePanel extends JPanel {
 
 		headerPanel_.repaint();
 	}
-	
+
+	@Override
+	public Dimension getMaximumSize() {
+		Dimension d = super.getPreferredSize();
+		d.width = Integer.MAX_VALUE;
+		return d;
+	}
 }
 
 
