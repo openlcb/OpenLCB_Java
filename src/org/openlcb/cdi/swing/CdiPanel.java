@@ -222,7 +222,7 @@ public class CdiPanel extends JPanel {
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? (item.getName()) : "Group");
             setBorder(BorderFactory.createTitledBorder(name));
-
+            setName(name);
             String d = item.getDescription();
             if (d != null) {
                 add(createDescriptionPane(d));
@@ -242,6 +242,8 @@ public class CdiPanel extends JPanel {
                 rep = 1;  // default
             }
             JPanel currentPane = this;
+            JTabbedPane tabbedPane = new JTabbedPane();
+            currentPane.add(tabbedPane);
             for (int i = 0; i < rep; i++) {
                 if (rep != 1) {
                     // nesting a pane
@@ -270,6 +272,7 @@ public class CdiPanel extends JPanel {
                         
                         if (it instanceof CdiRep.Group) {
                             pane = createGroupPane((CdiRep.Group) it, origin, space);
+                            pane.setName(name);
                         } else if (it instanceof CdiRep.BitRep) {
                             pane = createBitPane((CdiRep.BitRep) it, origin, space);
                         } else if (it instanceof CdiRep.IntegerRep) {
@@ -280,9 +283,13 @@ public class CdiPanel extends JPanel {
                             pane = createStringPane((CdiRep.StringRep) it, origin,space);
                         }
                         if (pane != null) {
-                            size = size + pane.getVarSize();
-                            origin = pane.getOrigin() + pane.getVarSize();
-                            currentPane.add(pane);
+                            if(it instanceof CdiRep.Group ) {
+                               tabbedPane.add(pane);
+                            } else {
+                               //size = size + pane.getVarSize();
+                               //origin = pane.getOrigin() + pane.getVarSize();
+                               currentPane.add(pane);
+                            }
                         } else { // pane == null, either didn't select a type or something went wrong in creation.
                             System.out.println("could not process type of " + it);
                         }
