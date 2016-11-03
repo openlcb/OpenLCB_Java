@@ -10,17 +10,19 @@ import java.util.List;
 
 /**
  * Created by bracz on 12/29/15.
+ *
+ * A Connection class that implements registerStartNotification and forwards all messages to a
+ * mock connection passed in at construction time.
  */
 public class FakeConnection extends AbstractConnection {
-    public List<Message> history = new ArrayList<>();
+    private final Connection mock;
+
+    public FakeConnection(Connection mock) {
+        this.mock = mock;
+    }
 
     @Override
     public synchronized void put(Message msg, Connection sender) {
-        history.add(msg);
-    }
-
-    public synchronized void transferAll(Collection<Message> dst) {
-        dst.addAll(history);
-        history.clear();
+        mock.put(msg, sender);
     }
 }
