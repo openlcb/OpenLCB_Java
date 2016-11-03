@@ -41,7 +41,6 @@
     <pathelement location="lib/hamcrest-core-1.3.jar" /> <!-- only needed for tests compile and run -->
     <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
     <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
-<!--    <pathelement location="lib/junit-4.12.jar" />  only needed for tests compile and run -->
     <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
     <pathelement location="lib/jdom-2.0.5.jar" />
     <pathelement location="lib/jdom.jar" />
