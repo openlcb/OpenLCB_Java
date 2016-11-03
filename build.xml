@@ -164,7 +164,7 @@
   </target>
 
   <target name="run-travis" depends="compile, tests" description="build and run test suite">
-    <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="withOutAndErr" fork="yes" dir="." timeout="3600000">
+    <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
        <classpath refid="project.class.path"    />
        <sysproperty key="java.security.policy" value="lib/security.policy"/> 
        <sysproperty key="java.library.path" path=".:lib/"/>       
@@ -172,6 +172,11 @@
                 <formatter type="xml"/>
             </test>
     </junit>
+    <fail>
+       <condition>
+           <istrue value="${test.failed}" />
+       </condition>
+    </fail>
   </target>
 
   <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
