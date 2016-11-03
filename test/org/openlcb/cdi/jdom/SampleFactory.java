@@ -126,11 +126,40 @@ public class SampleFactory {
 
         return root;
     }
-    
+
+    /**
+     *
+     * @return An example configuration with complicated offset computation cases.
+     */
+    public static Element getOffsetSample() {
+        Element root = new Element("cdi");
+
+        root.addContent(new Element("segment").setAttribute("space", "13").setAttribute("origin", "132")
+                .addContent(new Element("int").setAttribute("size", "2").setAttribute("offset","21"))
+                .addContent(new Element("eventid").setAttribute("offset","3"))
+                .addContent(new Element("group").setAttribute("offset", "1"))
+                .addContent(new Element("int").setAttribute("size", "1"))
+                .addContent(new Element("group").setAttribute("replication", "2").setAttribute("offset", "11")
+                        .addContent(new Element("int").setAttribute("size", "2").setAttribute("offset","3"))
+                        .addContent(new Element("group").setAttribute("offset", "-5"))
+                        .addContent(new Element("group").setAttribute("replication", "3")
+                            .addContent(new Element("string").setAttribute("size", "9"))
+                        )
+                )
+                .addContent(new Element("int").setAttribute("size", "2").setAttribute("offset","21"))
+        );
+
+        root.addContent(new Element("segment").setAttribute("space", "14").setAttribute("origin", "0").addContent(new Element("int").setAttribute("size", "2")));
+
+        return root;
+    }
+
+
+
     // Main entry point for standalone run
     static public void main(String[] args) {
         // dump a document to stdout
-        Element root = getBasicSample();
+        Element root = getOffsetSample();
         Document doc = new Document(root);
         
         try {
