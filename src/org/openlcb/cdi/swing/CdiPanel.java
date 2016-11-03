@@ -44,7 +44,9 @@ public class CdiPanel extends JPanel {
     GuiItemFactory factory;
     
     public void loadCDI(CdiRep c) {
-        add(createIdentificationPane(c));
+        if (c.getIdentification() != null) {
+            add(createIdentificationPane(c));
+        }
         
         java.util.List<CdiRep.Segment> segments = c.getSegments();
         for (int i=0; i<segments.size(); i++) {
