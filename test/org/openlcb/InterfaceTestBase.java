@@ -4,6 +4,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import org.mockito.ArgumentMatcher;
+import org.mockito.verification.VerificationMode;
 import org.openlcb.can.AliasMap;
 import org.openlcb.can.CanFrame;
 import org.openlcb.can.GridConnect;
@@ -41,9 +42,7 @@ public abstract class InterfaceTestBase extends TestCase {
     private void expectInit() {
         NodeID id = new NodeID(new byte[]{1,2,0,0,1,1});
         aliasMap.insert(0x333, id);
-        doCallRealMethod().when(outputConnectionMock).registerStartNotification(any());
-        iface = new OlcbInterface(id, outputConnectionMock);
-        verify(outputConnectionMock, atLeastOnce()).registerStartNotification(any());
+        iface = new OlcbInterface(id, new FakeConnection(outputConnectionMock));
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
     }
 
@@ -99,8 +98,13 @@ public abstract class InterfaceTestBase extends TestCase {
      * CAN frame.
      * @param expectedFrame GridConnect-formatted CAN frame.
      */
-    protected void expectFrame(final String expectedFrame) {
+    protected void expectFrame(String expectedFrame, VerificationMode cardinality) {
         class MessageMatchesFrame implements ArgumentMatcher<Message> {
+            private final String frame;
+
+            public MessageMatchesFrame(String frame) {
+                this.frame = frame;
+            }
             public boolean matches(Message message) {
                 MessageBuilder d = new MessageBuilder(aliasMap);
                 List<? extends CanFrame> actualFrames = d.processMessage(message);
@@ -108,17 +112,23 @@ public abstract class InterfaceTestBase extends TestCase {
                 for (CanFrame f : actualFrames) {
                     b.append(GridConnect.format(f));
                 }
-                return expectedFrame == b.toString();
+                return frame.equals(b.toString());
             }
             public String toString() {
                 //printed in verification errors
-                return "[OpenLCB message with CAN rendering of " + expectedFrame + "]";
+                return "[OpenLCB message with CAN rendering of " + frame + "]";
             }
         }
 
         consumeMessages();
-        verify(outputConnectionMock).put(argThat(new MessageMatchesFrame()),any());
+        verify(outputConnectionMock, cardinality).put(
+                argThat(new MessageMatchesFrame(expectedFrame)),any());
     }
+
+    protected void expectFrame(String expectedFrame) {
+        expectFrame(expectedFrame, times(1));
+    }
+
 
     /** Expects that the next outgoing message (not yet matched with an expectation) is the given
      * message.
@@ -138,6 +148,7 @@ public abstract class InterfaceTestBase extends TestCase {
     protected void expectNoFrames() {
         consumeMessages();
         verifyNoMoreInteractions(outputConnectionMock);
+        clearInvocations(outputConnectionMock);
     }
 
     /** Expects that there are no unconsumed outgoing messages. */
@@ -154,6 +165,5 @@ public abstract class InterfaceTestBase extends TestCase {
     protected void sendMessageAndExpectResult(Message send, Message expect) {
         sendMessage(send);
         expectMessage(expect);
-        clearInvocations(outputConnectionMock);
     }
 }
