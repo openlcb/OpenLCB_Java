@@ -44,7 +44,9 @@ public class CdiPanel extends JPanel {
     GuiItemFactory factory;
     
     public void loadCDI(CdiRep c) {
-        add(createIdentificationPane(c));
+        if (c.getIdentification() != null) {
+            add(createIdentificationPane(c));
+        }
         
         java.util.List<CdiRep.Segment> segments = c.getSegments();
         for (int i=0; i<segments.size(); i++) {
@@ -263,7 +265,9 @@ public class CdiPanel extends JPanel {
                         
                         origin = origin +it.getOffset();
                         size = size + it.getOffset();
-                        
+                        //System.err.println("Origin " + origin + " csize " + size + " type " + it
+                        //        .getClass().getSimpleName());
+
                         // Following code smells bad.  CdiRep is a representational
                         // class, shouldn't contain a "makeRepresentation" method,
                         // but some sort of dispatch would be better than this.
