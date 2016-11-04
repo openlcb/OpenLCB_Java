@@ -14,7 +14,7 @@ import org.openlcb.swing.EventIdTextField;
  * Works with a CDI reader.
  *
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision: -1 $
+ * @author  Paul Bender Copyright 2016
  */
 public class CdiPanel extends JPanel {
 
@@ -44,7 +44,9 @@ public class CdiPanel extends JPanel {
     GuiItemFactory factory;
     
     public void loadCDI(CdiRep c) {
-        add(createIdentificationPane(c));
+        if (c.getIdentification() != null) {
+            add(createIdentificationPane(c));
+        }
         
         java.util.List<CdiRep.Segment> segments = c.getSegments();
         for (int i=0; i<segments.size(); i++) {
@@ -227,6 +229,7 @@ public class CdiPanel extends JPanel {
             String name = (item.getName() != null ? (item.getName()) : "Group");
             setBorder(BorderFactory.createTitledBorder(name));
             setName(name);
+
             String d = item.getDescription();
             if (d != null) {
                 add(createDescriptionPane(d));
@@ -269,7 +272,9 @@ public class CdiPanel extends JPanel {
                         
                         origin = origin +it.getOffset();
                         size = size + it.getOffset();
-                        
+                        //System.err.println("Origin " + origin + " csize " + size + " type " + it
+                        //        .getClass().getSimpleName());
+
                         // Following code smells bad.  CdiRep is a representational
                         // class, shouldn't contain a "makeRepresentation" method,
                         // but some sort of dispatch would be better than this.
@@ -288,10 +293,12 @@ public class CdiPanel extends JPanel {
                         }
                         if (pane != null) {
                             if(it instanceof CdiRep.Group ) {
-                               tabbedPane.add(pane);
+                               tabbedPane.add(pane); 
+                               size = size + pane.getVarSize();
+                               origin = pane.getOrigin() + pane.getVarSize();
                             } else {
-                               //size = size + pane.getVarSize();
-                               //origin = pane.getOrigin() + pane.getVarSize();
+                               size = size + pane.getVarSize();
+                               origin = pane.getOrigin() + pane.getVarSize();
                                currentPane.add(pane);
                             }
                         } else { // pane == null, either didn't select a type or something went wrong in creation.
