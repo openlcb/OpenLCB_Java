@@ -85,7 +85,6 @@ public class CollapsiblePanel extends JPanel {
 		gbc.weightx = 1.0;
 		gbc.fill = gbc.HORIZONTAL;
 		gbc.gridwidth = gbc.REMAINDER;
-		gbc.anchor = gbc.FIRST_LINE_START;
 
 		selected = true;
 		headerPanel_ = new HeaderPanel(text);
@@ -96,6 +95,11 @@ public class CollapsiblePanel extends JPanel {
 		add(headerPanel_, gbc);
 		add(contentPanel_, gbc);
 		contentPanel_.setVisible(selected);
+
+		JLabel padding = new JLabel();
+		gbc.weighty = 1.0;
+		add(padding, gbc);
+
 	}
 
 	public void toggleSelection() {
@@ -110,13 +114,7 @@ public class CollapsiblePanel extends JPanel {
 
 		headerPanel_.repaint();
 	}
-
-	@Override
-	public Dimension getMaximumSize() {
-		Dimension d = super.getPreferredSize();
-		d.width = Integer.MAX_VALUE;
-		return d;
-	}
+	
 }
 
 
