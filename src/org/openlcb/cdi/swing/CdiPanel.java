@@ -92,6 +92,7 @@ public class CdiPanel extends JPanel {
         
         JPanel ret = new util.CollapsiblePanel("Identification", p);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
     }
     
@@ -163,9 +164,11 @@ public class CdiPanel extends JPanel {
                     if(it instanceof CdiRep.Group) {
                         // groups should collapse.  
                         JPanel colPane = new util.CollapsiblePanel(it.getName(), pane);
+                        colPane.setAlignmentX(Component.LEFT_ALIGNMENT);
                         p.add(colPane);
                     } else {
-                       p.add(pane);
+                        pane.setAlignmentX(Component.LEFT_ALIGNMENT);
+                        p.add(pane);
                     }
                  } else {
                      System.out.println("could not process type of " + it);
@@ -176,6 +179,7 @@ public class CdiPanel extends JPanel {
         JPanel ret = new util.CollapsiblePanel(name, p);
         // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
     }
 
