@@ -292,8 +292,8 @@ public class MemorySpaceCache {
 
     /**
      * Performs a refresh of some data. Calls the data update listeners when done.
-     * @param origin address of first device to reload
-     * @param size number of addresses to reload
+     * @param origin address of first byte in memory space to reload
+     * @param size number of bytes to reload
      */
     public void reload(long origin, int size) {
         rangesToLoad.add(new Range(origin, origin + size));
