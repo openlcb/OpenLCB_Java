@@ -36,6 +36,7 @@ public class CdiPanel extends JPanel {
      */
     public void initComponents(ReadWriteAccess accessor) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setAlignmentX(Component.LEFT_ALIGNMENT);
         this.accessor = accessor;
         this.factory = new GuiItemFactory(); // default with no behavior
     }
@@ -250,7 +251,7 @@ public class CdiPanel extends JPanel {
             }
             JPanel currentPane = this;
             JTabbedPane tabbedPane = new JTabbedPane();
-            currentPane.add(tabbedPane);
+            tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
             for (int i = 0; i < rep; i++) {
                 if (rep != 1) {
                     // nesting a pane
@@ -260,8 +261,10 @@ public class CdiPanel extends JPanel {
                     name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
                     currentPane.setBorder(BorderFactory.createTitledBorder(name));
                     factory.handleGroupPaneStart(currentPane);
+                            
+                    currentPane.setName(name);
                      
-                    add(currentPane);
+                    tabbedPane.add(currentPane);
                     
                 }
                 java.util.List<CdiRep.Item> items = item.getItems();
@@ -292,15 +295,9 @@ public class CdiPanel extends JPanel {
                             pane = createStringPane((CdiRep.StringRep) it, origin,space);
                         }
                         if (pane != null) {
-                            if(it instanceof CdiRep.Group ) {
-                               tabbedPane.add(pane); 
-                               size = size + pane.getVarSize();
-                               origin = pane.getOrigin() + pane.getVarSize();
-                            } else {
-                               size = size + pane.getVarSize();
-                               origin = pane.getOrigin() + pane.getVarSize();
-                               currentPane.add(pane);
-                            }
+                            size = size + pane.getVarSize();
+                            origin = pane.getOrigin() + pane.getVarSize();
+                            currentPane.add(pane);
                         } else { // pane == null, either didn't select a type or something went wrong in creation.
                             System.out.println("could not process type of " + it);
                         }
@@ -309,6 +306,7 @@ public class CdiPanel extends JPanel {
                 factory.handleGroupPaneEnd(currentPane);
 
             }
+            add(tabbedPane);
             if (rep != 1) factory.handleGroupPaneEnd(this);  // if 1, currentpane is this
         }
         
