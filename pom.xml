@@ -43,6 +43,7 @@
         <url>http://openlcb.org</url>
     </organization>
     <properties>
+        <specification.version>0.7.4</specification.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -228,6 +229,19 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <name>${project.groupId}</name>
+                            <Specification-Title>${project.name}</Specification-Title>
+                            <Specification-Version>${specification.version}</Specification-Version>
+                            <Specification-Vendor>${organization.name}</Specification-Vendor>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
