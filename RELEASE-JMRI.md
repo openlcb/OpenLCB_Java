@@ -101,7 +101,7 @@ check out if the process changed form what's described below.
 4. Commit your code, binaries and push to github (to your own fork of the
    project)
 
-    Example commits: https://github.com/balazsracz/JMRI/commit/f70edb1f21f8f2844dce2871274fea159faafaf6
+    Example commits: https://github.com/JMRI/JMRI/pull/2463/commits/a361846a13e6dc84cb43d9b81430b2a9a00418c0
 
 5. Create a pull request for JMRI
 
