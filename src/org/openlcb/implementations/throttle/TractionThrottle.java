@@ -1,5 +1,11 @@
 package org.openlcb.implementations.throttle;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.openlcb.Connection;
 import org.openlcb.Message;
 import org.openlcb.MessageDecoder;
@@ -10,19 +16,13 @@ import org.openlcb.implementations.VersionedValueListener;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
-
 /**
- * Traction protocol based implementation of the throttle. This differs from {@ref
- * ThrottleImplementation} in that it uses the {@ref TractionControlRequest} messages for talking
- * to the train nodes, including proper allocation and deallocation of throttles.
- * <p/>
+ * Traction protocol based implementation of the throttle. This differs from
+ * {@link org.openlcb.implementations.throttle.ThrottleImplementation} in that
+ * it uses the {@link org.openlcb.messages.TractionControlRequestMessage} for
+ * talking to the train nodes, including proper allocation and deallocation of
+ * throttles.
+ * <p>
  * Created by bracz on 12/30/15.
  */
 public class TractionThrottle extends MessageDecoder {

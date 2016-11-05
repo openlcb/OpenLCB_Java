@@ -6,7 +6,6 @@ import org.openlcb.*;
  * Example of a OpenLCB algorithm for doing configuration with
  * small number of buttons. This an extended form that allows 
  * multiple selection and deselection.
- *<p>
  *<ul>
  *<li>On learners, push blue to choose a C/P, then gold to put that C/P in learn mode 
  * (complete cycle turns off blue light and starts over)

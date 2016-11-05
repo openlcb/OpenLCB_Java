@@ -10,7 +10,7 @@ import org.openlcb.VerifyNodeIDNumberMessage;
 
 /**
  * Handler for verify node ID requests to the local node.
- * <p/>
+ * <p>
  * Created by bracz on 12/28/15.
  */
 public class VerifyNodeIdHandler extends MessageDecoder {
@@ -33,7 +33,7 @@ public class VerifyNodeIdHandler extends MessageDecoder {
     public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender) {
         /* This is the Verify Node ID number "global" message.
         *
-        * @TODO: we need to add VerifyNode ID number "addressed" message to the list of
+        * TODO: we need to add VerifyNode ID number "addressed" message to the list of
         * supported MTIs et al.
         */
 

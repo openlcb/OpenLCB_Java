@@ -251,7 +251,7 @@ public class CdiPanel extends JPanel {
             }
             JPanel currentPane = this;
             JTabbedPane tabbedPane = new JTabbedPane();
-            tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+            tabbedPane.setAlignmentX(Component.LEFT_ALIGNMENT);
             for (int i = 0; i < rep; i++) {
                 if (rep != 1) {
                     // nesting a pane
