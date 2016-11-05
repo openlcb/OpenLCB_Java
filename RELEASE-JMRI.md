@@ -88,27 +88,25 @@ check out if the process changed form what's described below.
 
     (Replace 0.7.7 with the new version number.)
 
-```
-mvn deploy:deploy-file -DgroupId=org.openlcb -DartifactId=openlcb -Dversion=0.7.7 -Durl=file:./lib/ -DrepositoryId=lib -DupdateReleaseInfo=true -Dfile=./lib/openlcb.jar
-```
+    ```
+    mvn deploy:deploy-file -DgroupId=org.openlcb -DartifactId=openlcb -Dversion=0.7.7 -Durl=file:./lib/ -DrepositoryId=lib -DupdateReleaseInfo=true -Dfile=./lib/openlcb.jar
+    ```
 
 5. It's a good idea to test JMRI with the new library version.
 
-```
-ant panelpro
-```
+    ```ant panelpro```
 
     Click around to check a few things related to OpenLCB.
 
 4. Commit your code, binaries and push to github (to your own fork of the
    project)
 
-  Example commits: https://github.com/balazsracz/JMRI/commit/f70edb1f21f8f2844dce2871274fea159faafaf6
+    Example commits: https://github.com/balazsracz/JMRI/commit/f70edb1f21f8f2844dce2871274fea159faafaf6
 
 5. Create a pull request for JMRI
 
-  Go to github, open your own fork of the JMRI project, select the branch you
-  created (github will give you a quick link in yellow) and click "create pull
-  request".
+    Go to github, open your own fork of the JMRI project, select the branch you
+    created (github will give you a quick link in yellow) and click "create
+    pull request".
 
 6. Wait for a JMRI project member to approve your pull request.
