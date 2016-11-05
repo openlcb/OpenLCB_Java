@@ -12,16 +12,12 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class SimpleNodeIdentInfoRequestMessage extends AddressedMessage {
+public class SimpleNodeIdentInfoRequestMessage extends AddressedPayloadMessage {
     
     public SimpleNodeIdentInfoRequestMessage(NodeID source, NodeID dest) {
-        super(source, dest);
+        super(source, dest, null);
     }
         
-    long value;
-    
-    public long getValue() { return value; }
-    
      /**
       * To be equal, messages have to have the
       * same type and content
@@ -44,11 +40,7 @@ public class SimpleNodeIdentInfoRequestMessage extends AddressedMessage {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleSimpleNodeIdentInfoRequest(this, sender);
      }
-    
-    public String toString() {
-        return super.toString()
-                +" Simple Node Ident Info Request";   
-    }
 
-    public int getMTI() { return MTI_SIMPLE_NODE_IDENT_REQUEST; }
+    @Override
+    public MessageTypeIdentifier getEMTI() { return MessageTypeIdentifier.SimpleNodeIdentInfoRequest; }
 }
