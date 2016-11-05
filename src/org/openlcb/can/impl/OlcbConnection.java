@@ -1,14 +1,6 @@
 package org.openlcb.can.impl;
 
 
-import org.openlcb.Connection;
-import org.openlcb.NodeID;
-import org.openlcb.OlcbInterface;
-import org.openlcb.can.CanFrame;
-import org.openlcb.can.CanFrameListener;
-import org.openlcb.can.CanInterface;
-import org.openlcb.cdi.impl.ConfigRepresentation;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,12 +10,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.openlcb.Connection;
+import org.openlcb.NodeID;
+import org.openlcb.OlcbInterface;
+import org.openlcb.can.CanFrame;
+import org.openlcb.can.CanFrameListener;
+import org.openlcb.can.CanInterface;
+import org.openlcb.cdi.impl.ConfigRepresentation;
 
 /**
  * Created by bracz on 12/23/15.
  */
 public class OlcbConnection {
-    // @TODO: 3/31/16 balazs.racz: THis should be migrated into a singleton class like
+    // TODO: 3/31/16 balazs.racz: THis should be migrated into a singleton class like
     // ConnectionManager.
     public static OlcbConnection lastConnection = null;
     private final NodeID nodeId;
@@ -154,7 +153,7 @@ public class OlcbConnection {
     /**
      * @return the CAN frame hub processing the incoming messages (from the network; sent by
      * other nodes).
-     * <p/>
+     * <p>
      * This can be used for two purposes:
      * - get a copy of all frames arriving from the network;
      * - inject fake messages as if they were coming from the network (not super useful).
@@ -166,7 +165,7 @@ public class OlcbConnection {
     /**
      * @return the CAN frame hub processing outgoing messages (to the network; originating from
      * this node).
-     * <p/>
+     * <p>
      * This can be used for two purposes:
      * - send packets to the network
      * - get a copy of (aka sniff) all outgoing packets before they are sent.

@@ -12,7 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Collects all objects necessary to run an OpenLCB standards-compatible interface.
- * <p/>
+ * <p>
  * Created by bracz on 12/27/15.
  */
 public class OlcbInterface {
@@ -200,7 +200,7 @@ public class OlcbInterface {
     /**
      * This class keeps an output connection operating using an internal queue. It keeps
      * messages in an internal thread-safe queue and sends them on a separate thread.
-     * <p/>
+     * <p>
      * The caller must donate a thread to this connection by calling the run() method.
      */
     private class QueuedOutputConnection implements Connection {

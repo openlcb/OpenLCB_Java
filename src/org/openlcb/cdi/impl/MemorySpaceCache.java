@@ -1,10 +1,5 @@
 package org.openlcb.cdi.impl;
 
-import org.openlcb.NodeID;
-import org.openlcb.OlcbInterface;
-import org.openlcb.cdi.impl.RangeCacheUtil.Range;
-import org.openlcb.implementations.MemoryConfigurationService;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -15,11 +10,15 @@ import java.util.NavigableMap;
 import java.util.Queue;
 import java.util.TreeMap;
 import java.util.logging.Logger;
+import org.openlcb.NodeID;
+import org.openlcb.OlcbInterface;
+import org.openlcb.cdi.impl.RangeCacheUtil.Range;
+import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
  * Maintains the connection to a specific remote node's specific memory space, and maintains a
  * cache of the information retrieved from there.
- * <p/>
+ * <p>
  * Created by bracz on 4/2/16.
  */
 public class MemorySpaceCache {
@@ -287,14 +286,14 @@ public class MemorySpaceCache {
                     }
                 }
         );
-        // @TODO: 4/2/16 Handle write errors and report to user somehow.
+        // TODO: 4/2/16 Handle write errors and report to user somehow.
         notifyAfterWrite(offset, offset + data.length);
     }
 
     /**
      * Performs a refresh of some data. Calls the data update listeners when done.
-     * @param origin
-     * @param size
+     * @param origin address of first device to reload
+     * @param size number of addresses to reload
      */
     public void reload(long origin, int size) {
         rangesToLoad.add(new Range(origin, origin + size));

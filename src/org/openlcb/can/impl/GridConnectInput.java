@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 /**
  * Parses an input stream according to the GridConnect protocol and forwards a set of CAN frames.
- * <p/>
+ * <p>
  * Created by bracz on 12/23/15.
  */
 public class GridConnectInput {
