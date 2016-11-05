@@ -1,7 +1,7 @@
 package org.openlcb.hub;
 
-import java.net.*;
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * main() directly invokes an object of the class.
  * <p>
  * Current threading model does all the sending from a
- * a single thread.  If this is observed to back up &
+ * a single thread.  If this is observed to back up &amp;
  * halt all flow, individual transmit queues and threads
  * may be needed.
  *

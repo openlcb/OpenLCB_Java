@@ -1,15 +1,6 @@
 package org.openlcb.cdi.impl;
 
-import org.openlcb.EventID;
-import org.openlcb.NodeID;
-import org.openlcb.OlcbInterface;
-import org.openlcb.DefaultPropertyListenerSupport;
-import org.openlcb.cdi.CdiRep;
-import org.openlcb.cdi.jdom.CdiMemConfigReader;
-import org.openlcb.cdi.jdom.JdomCdiReader;
-import org.openlcb.cdi.jdom.XmlHelper;
-import org.openlcb.implementations.MemoryConfigurationService;
-
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
@@ -20,10 +11,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-
 import javax.annotation.Nullable;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.openlcb.DefaultPropertyListenerSupport;
+import org.openlcb.EventID;
+import org.openlcb.NodeID;
+import org.openlcb.OlcbInterface;
+import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.jdom.CdiMemConfigReader;
+import org.openlcb.cdi.jdom.JdomCdiReader;
+import org.openlcb.cdi.jdom.XmlHelper;
+import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
  * Maintains a parsed cache of the CDI config of a remote node. Responsible for fetching the CDI,
@@ -353,7 +350,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         /**
          * Parses the root of the CdiRep into an internal representation that is a container.
-         * @param rep
+         * @param rep the CDI representation
          */
         public Root(CdiRep rep) {
             items = new ArrayList<>();
