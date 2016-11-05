@@ -306,6 +306,7 @@ public class CdiPanel extends JPanel {
                 factory.handleGroupPaneEnd(currentPane);
 
             }
+            tabbedPane.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(tabbedPane);
             if (rep != 1) factory.handleGroupPaneEnd(this);  // if 1, currentpane is this
         }
