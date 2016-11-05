@@ -12,15 +12,15 @@ import net.jcip.annotations.ThreadSafe;
  */
 @Immutable
 @ThreadSafe
-public class DatagramAcknowledgedMessage extends AddressedMessage {
+public class DatagramAcknowledgedMessage extends AddressedPayloadMessage {
     
     public DatagramAcknowledgedMessage(NodeID source, NodeID dest) {
-        super(source, dest);
+        super(source, dest, null);
         flags = 0;
     }
 
     public DatagramAcknowledgedMessage(NodeID source, NodeID dest, int flags) {
-        super(source, dest);
+        super(source, dest, flags == 0 ? null : new byte[]{(byte)flags});
         this.flags = flags;
     }
 
@@ -55,10 +55,12 @@ public class DatagramAcknowledgedMessage extends AddressedMessage {
     }
 
     @Override
-    public int getMTI() { return MTI_DATAGRAM_RCV_OK; }
-
-    @Override
     public String toString() {
         return super.toString()+" Datagram Acknowledged";
+    }
+
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.DatagramReceivedOK;
     }
 }
