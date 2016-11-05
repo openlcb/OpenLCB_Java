@@ -50,16 +50,6 @@ public class DatagramAcknowledgedMessage extends AddressedPayloadMessage {
     }
 
     @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return super.toString()+" Datagram Acknowledged";
-    }
-
-    @Override
     public MessageTypeIdentifier getEMTI() {
         return MessageTypeIdentifier.DatagramReceivedOK;
     }

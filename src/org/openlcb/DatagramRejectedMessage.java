@@ -15,7 +15,7 @@ import net.jcip.annotations.ThreadSafe;
 public class DatagramRejectedMessage extends AddressedPayloadMessage {
     
     public DatagramRejectedMessage(NodeID source, NodeID dest, int code) {
-        super(source, dest, codeToPayload(code));
+        super(source, dest, toPayload(code));
         this.code = code;
     }
         
@@ -24,8 +24,10 @@ public class DatagramRejectedMessage extends AddressedPayloadMessage {
 
     public int getCode() { return code; }
 
-    private static byte[] codeToPayload(int code) {
-        return new byte[]{(byte)((code>>8)&0xFF), (byte)(code&0xFF)};
+    private static byte[] toPayload(int code) {
+        byte[] b = new byte[2];
+        Utilities.HostToNetworkUint16(b, 0, code);
+        return b;
     }
 
     /**
@@ -48,11 +50,6 @@ public class DatagramRejectedMessage extends AddressedPayloadMessage {
         if (this.code != ((DatagramRejectedMessage)o).getCode())
             return false;
         return super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
     }
 
     static final int DATAGRAM_REJECTED                           = 0x000;
