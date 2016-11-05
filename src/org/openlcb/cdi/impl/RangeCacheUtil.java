@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 /**
  * Helper class to get a sequence of ranges and merges them into larger chunks to read from the
  * config space so that fewer reads suffice.
- * <p/>
+ * <p>
  * Created by bracz on 4/2/16.
  */
 public class RangeCacheUtil {

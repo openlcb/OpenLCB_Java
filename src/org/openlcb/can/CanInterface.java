@@ -1,14 +1,13 @@
 package org.openlcb.can;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 import org.openlcb.Connection;
 import org.openlcb.Connection.ConnectionListener;
 import org.openlcb.Message;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Semaphore;
 
 /**
  * CanInterface collects all objects necessary to operate a standards-compliant node that connects
@@ -96,7 +95,7 @@ public class CanInterface {
         } catch(InterruptedException e) {}
         // Stores local node alias.
         aliasMap.insert(aliasWatcher.getNIDa(), nodeId);
-        /// @TODO(balazs.racz): If the alias changes, we need to update the local alias map.
+        /// TODO(balazs.racz): If the alias changes, we need to update the local alias map.
 
         // Notify all listeners waiting for init. Call them outside of the lock.
         List<ConnectionListener> listeners_copy = new ArrayList<>();

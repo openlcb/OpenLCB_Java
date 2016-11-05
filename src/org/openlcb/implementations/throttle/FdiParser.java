@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 /**
  * Helper class to parse the FDI XML representation into a useful set of functions.
- * <p/>
+ * <p>
  * Created by bracz on 1/17/16.
  */
 public class FdiParser {

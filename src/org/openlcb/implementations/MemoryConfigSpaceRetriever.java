@@ -5,7 +5,7 @@ import org.openlcb.OlcbInterface;
 
 /**
  * Downloads the entire contents of a Memory Config space. Useful for CDI-style situations.
- * <p/>
+ * <p>
  * Created by bracz on 1/17/16.
  */
 public class MemoryConfigSpaceRetriever {

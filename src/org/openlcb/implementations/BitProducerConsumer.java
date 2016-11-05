@@ -15,7 +15,7 @@ import org.openlcb.ProducerIdentifiedMessage;
 
 /**
  * Maintains a bit represented by two event IDs: one off, one on.
- * <p/>
+ * <p>
  * Created by bracz on 1/6/16.
  */
 public class BitProducerConsumer extends MessageDecoder {
