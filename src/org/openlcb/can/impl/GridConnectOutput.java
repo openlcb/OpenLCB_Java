@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * Converts the sent CAN framesto gridconnect protocol and writes them ot an output stream.
  * Performs internal buffering.
- * <p/>
+ * <p>
  * Created by bracz on 12/23/15.
  */
 public class GridConnectOutput implements CanFrameListener {
