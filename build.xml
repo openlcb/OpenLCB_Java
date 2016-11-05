@@ -3,14 +3,14 @@
 <!-- Revision $Revision: 370 $ -->
 
 <project name="OpenLCB" default="run" basedir="." xmlns:jacoco="antlib:org.jacoco.ant">
-<!-- basedir="." means all paths are relative to the "java" subdir. -->
+    <!-- basedir="." means all paths are relative to the "java" subdir. -->
 
-  <description>
-  Provides build services for OpenLCB development
-  </description>
+    <description>
+        Provides build services for OpenLCB development
+    </description>
 
-  <!-- options you might want to change during development,   -->
-  <!-- but please change them back before commiting this file -->
+    <!-- options you might want to change during development,   -->
+    <!-- but please change them back before commiting this file -->
   
     <!-- should compiler warn of use of deprecated APIs? (yes/no) -->
     <property name="deprecation" value="no" />
@@ -24,32 +24,32 @@
     <!-- JRE version -->
     <property name="jre_version" value="1.8" />
     
-  <!-- set global properties for this build -->
-  <property name="source" value="src"/>
-  <property name="test" value="test"/>
-  <property name="coveragetarget" value="./coveragereport"/>
-  <property name="target" value="classes"/>
-  <property name="jartarget" value="."/>
-  <property name="doctarget" value="doc"/>
+    <!-- set global properties for this build -->
+    <property name="source" value="src"/>
+    <property name="test" value="test"/>
+    <property name="coveragetarget" value="./coveragereport"/>
+    <property name="target" value="classes"/>
+    <property name="jartarget" value="."/>
+    <property name="doctarget" value="doc"/>
   
-  <path id="project.class.path">
-    <pathelement location="." />
-    <pathelement location="lib/junit.jar" />
-    <pathelement location="lib/xercesImpl.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/mockito-core-2.2.9-javadoc.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/mockito-core-2.2.9.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/hamcrest-core-1.3.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
-    <pathelement location="lib/jdom-2.0.5.jar" />
-    <pathelement location="lib/jdom.jar" />
-    <pathelement location="lib/jlfgr-1_0.jar" />
-    <pathelement location="lib/annotations.jar" /> <!-- only needed for compile -->
-    <pathelement location="lib/jsr305.jar" /> <!-- only needed for compile -->
-    <pathelement location="/System/Library/Java" /> <!-- MacOS X -->
-    <pathelement location="${target}/" />  <!-- last to check for name collisions -->
-  </path>
+    <path id="project.class.path">
+        <pathelement location="." />
+        <pathelement location="lib/junit.jar" />
+        <pathelement location="lib/xercesImpl.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/mockito-core-2.2.9-javadoc.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/mockito-core-2.2.9.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/hamcrest-core-1.3.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/jdom-2.0.5.jar" />
+        <pathelement location="lib/jdom.jar" />
+        <pathelement location="lib/jlfgr-1_0.jar" />
+        <pathelement location="lib/annotations.jar" /> <!-- only needed for compile -->
+        <pathelement location="lib/jsr305.jar" /> <!-- only needed for compile -->
+        <pathelement location="/System/Library/Java" /> <!-- MacOS X -->
+        <pathelement location="${target}/" />  <!-- last to check for name collisions -->
+    </path>
 
     <!-- Java Code Coverage -->
     <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
@@ -81,193 +81,193 @@
         <exclude name="tools/QueueSim*.class" />
         <exclude name="simulations/NodeIDCollisions.class" />
         <exclude name="scenarios/ScenarioRunner*.class" />
-<exclude name="scenarios/TwoBusesFiltered.class" />
-<exclude name="scenarios/ThreeBuses.class" />
-<exclude name="scenarios/NineOnALink.class" />
-<exclude name="scenarios/ConfigDemoApplet*.class" />
-<exclude name="scenarios/BlueGoldCheck*.class" />
-<exclude name="scenarios/TwoBuses.class" />
-<exclude name="scenarios/can/TwoOnASegment.class" />
-<exclude name="scenarios/can/CanScenarios.class" />
-<exclude name="scenarios/can/NineOnASegment.class" />
-<exclude name="scenarios/BlueGoldApplet*.class" />
+        <exclude name="scenarios/TwoBusesFiltered.class" />
+        <exclude name="scenarios/ThreeBuses.class" />
+        <exclude name="scenarios/NineOnALink.class" />
+        <exclude name="scenarios/ConfigDemoApplet*.class" />
+        <exclude name="scenarios/BlueGoldCheck*.class" />
+        <exclude name="scenarios/TwoBuses.class" />
+        <exclude name="scenarios/can/TwoOnASegment.class" />
+        <exclude name="scenarios/can/CanScenarios.class" />
+        <exclude name="scenarios/can/NineOnASegment.class" />
+        <exclude name="scenarios/BlueGoldApplet*.class" />
     </fileset>
 
     <!-- end of definitions -->
 
     <!-- target definitions start here -->
 
-  <target name="init" description="create needed directories">
-    <!-- Create the time stamp -->
-    <tstamp/>
-    <!-- Create the build directory structure used by compile -->
-    <mkdir dir="${target}"/>
-    <mkdir dir="${target}/resources" />
-  </target>
+    <target name="init" description="create needed directories">
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${target}"/>
+        <mkdir dir="${target}/resources" />
+    </target>
 
-  <target name="clean" description="remove compilation results to force rebuild">
-    <mkdir dir="${target}"/>
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${target}"/>
-      <fileset dir="${coveragetarget}"/>
-      <file file="jacoco.exec"/>
-      <file file="junit-results.xml"/>
-    </delete>
-  </target>
+    <target name="clean" description="remove compilation results to force rebuild">
+        <mkdir dir="${target}"/>
+        <delete includeEmptyDirs="true" quiet="true">
+            <fileset dir="${target}"/>
+            <fileset dir="${coveragetarget}"/>
+            <file file="jacoco.exec"/>
+            <file file="junit-results.xml"/>
+        </delete>
+    </target>
 
-  <target name="copyfiles" depends="init" description="copy resource files">
-    <copy todir="${target}">
-      <fileset dir="src/" includes="**/*.properties"  /> 
-    </copy>
-  </target>
+    <target name="copyfiles" depends="init" description="copy resource files">
+        <copy todir="${target}">
+            <fileset dir="src/" includes="**/*.properties"  /> 
+        </copy>
+    </target>
 
-  <target name="compile" depends="init, copyfiles" description="compile source, omitting tests">
-    <!-- Compile the java code from ${source} into ${target} -->
-    <javac srcdir="${source}" 
-           destdir="${target}" 
-           source="${source_version}" 
-           target="${jre_version}" 
-           fork="true"
-           includeantruntime="false"
-           memoryinitialsize="256m"
-           memorymaximumsize="256m"
-           deprecation="${deprecation}"
-           debug="yes" >
-       <!-- <compilerarg value="-Xlint:{fallthrough,path,finally,-unchecked,-serial} "/> -->
-       <!-- <compilerarg value="-Xlint:unchecked" /> -->
-       <classpath refid="project.class.path"    />
-    </javac>
-  </target>
+    <target name="compile" depends="init, copyfiles" description="compile source, omitting tests">
+        <!-- Compile the java code from ${source} into ${target} -->
+        <javac srcdir="${source}" 
+               destdir="${target}" 
+               source="${source_version}" 
+               target="${jre_version}" 
+               fork="true"
+               includeantruntime="false"
+               memoryinitialsize="256m"
+               memorymaximumsize="256m"
+               deprecation="${deprecation}"
+               debug="yes" >
+            <!-- <compilerarg value="-Xlint:{fallthrough,path,finally,-unchecked,-serial} "/> -->
+            <!-- <compilerarg value="-Xlint:unchecked" /> -->
+            <classpath refid="project.class.path"    />
+        </javac>
+    </target>
 
-  <target name="tests" depends="compile" description="compile test classes">
-    <!-- Compile the test java code from ${source} into ${target} -->
-    <copy todir="${target}">
-        <fileset dir="test/" includes="**/*.properties"  /> 
-    </copy>
-    <javac srcdir="${test}" 
-           destdir="${target}"
-           source="${source_version}" 
-           target="${jre_version}" 
-           fork="true"
-           includeantruntime="false"
-           memoryinitialsize="256m"
-           memorymaximumsize="256m"
-           deprecation="${deprecation}"
-           debug="yes" >
-       <classpath refid="project.class.path"    />
-    </javac>
-  </target>
+    <target name="tests" depends="compile" description="compile test classes">
+        <!-- Compile the test java code from ${source} into ${target} -->
+        <copy todir="${target}">
+            <fileset dir="test/" includes="**/*.properties"  /> 
+        </copy>
+        <javac srcdir="${test}" 
+               destdir="${target}"
+               source="${source_version}" 
+               target="${jre_version}" 
+               fork="true"
+               includeantruntime="false"
+               memoryinitialsize="256m"
+               memorymaximumsize="256m"
+               deprecation="${deprecation}"
+               debug="yes" >
+            <classpath refid="project.class.path"    />
+        </javac>
+    </target>
   
-  <target name="run" depends="compile, tests" description="build and run test suite">
-    <java classname="AllTest"
-	  fork="yes" >
-       <classpath refid="project.class.path"    />
-       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-       <sysproperty key="java.library.path" path=".:lib/"/>       
-    </java>
-  </target>
+    <target name="run" depends="compile, tests" description="build and run test suite">
+        <java classname="AllTest"
+              fork="yes" >
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
+        </java>
+    </target>
 
-  <target name="run-travis" depends="compile, tests" description="build and run test suite">
-    <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
-       <classpath refid="project.class.path"    />
-       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-       <sysproperty key="java.library.path" path=".:lib/"/>       
+    <target name="run-travis" depends="compile, tests" description="build and run test suite">
+        <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
             <test name="AllTest" outfile="junit-results">
                 <formatter type="xml"/>
             </test>
-    </junit>
-    <fail>
-       <condition>
-           <istrue value="${test.failed}" />
-       </condition>
-    </fail>
-  </target>
+        </junit>
+        <fail>
+            <condition>
+                <istrue value="${test.failed}" />
+            </condition>
+        </fail>
+    </target>
 
-  <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
-    <jacoco:coverage destfile="jacoco.exec" excludes="org.slf4j.*">
-    <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="withOutAndErr" fork="yes" dir="." timeout="3600000">
-       <classpath refid="project.class.path"    />
-       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-       <sysproperty key="java.library.path" path=".:lib/"/>       
-            <test name="AllTest" outfile="junit-results">
-                <formatter type="xml"/>
-            </test>
-    </junit>
-    </jacoco:coverage>
-       <jacoco:report>
-          <executiondata>
-              <file file="jacoco.exec" />
-          </executiondata>
+    <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
+        <jacoco:coverage destfile="jacoco.exec" excludes="org.slf4j.*">
+            <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="withOutAndErr" fork="yes" dir="." timeout="3600000">
+                <classpath refid="project.class.path"    />
+                <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+                <sysproperty key="java.library.path" path=".:lib/"/>       
+                <test name="AllTest" outfile="junit-results">
+                    <formatter type="xml"/>
+                </test>
+            </junit>
+        </jacoco:coverage>
+        <jacoco:report>
+            <executiondata>
+                <file file="jacoco.exec" />
+            </executiondata>
 
-          <structure name="AntTestReporting">
-              <classfiles>
-                 <fileset refid="jacocofileset"/>
-              </classfiles>
-          </structure>
+            <structure name="AntTestReporting">
+                <classfiles>
+                    <fileset refid="jacocofileset"/>
+                </classfiles>
+            </structure>
 
-          <html destdir="${coveragetarget}" />
-       </jacoco:report>
+            <html destdir="${coveragetarget}" />
+        </jacoco:report>
 
-  </target>
+    </target>
 
-  <target name="bg" depends="compile, tests" description="build and run Blue/Gold test">
-    <java classname="scenarios.BlueGoldCheck"
-          dir=".." 
-	  fork="yes" >
-       <classpath refid="project.class.path"    />
-       <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-       <sysproperty key="java.library.path" path=".:lib/"/>       
-    </java>
-  </target>
+    <target name="bg" depends="compile, tests" description="build and run Blue/Gold test">
+        <java classname="scenarios.BlueGoldCheck"
+              dir=".." 
+              fork="yes" >
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
+        </java>
+    </target>
 
 
-  <target name="javadoc" depends="init" description="create JavaDoc for prototype code, omitting tests">
-    <javadoc packagenames="org.*"
-           maxmemory="512m"
-           sourcepath="${source}"
-           overview="src/overview.html"
-           defaultexcludes="yes"
-           destdir="${doctarget}"
-           additionalparam="-breakiterator"
-           author="true"
-           version="false"
-           use="true"
-           windowtitle="OpenLCB">
-      <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
-      <group title="Core" packages="org.openlcb"/>
+    <target name="javadoc" depends="init" description="create JavaDoc for prototype code, omitting tests">
+        <javadoc packagenames="org.*"
+                 maxmemory="512m"
+                 sourcepath="${source}"
+                 overview="src/overview.html"
+                 defaultexcludes="yes"
+                 destdir="${doctarget}"
+                 additionalparam="-breakiterator"
+                 author="true"
+                 version="false"
+                 use="true"
+                 windowtitle="OpenLCB">
+            <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
+            <group title="Core" packages="org.openlcb"/>
 	  
-      <classpath refid="project.class.path"    />
-      <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
-      <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
-    </javadoc>
-  </target>
+            <classpath refid="project.class.path"    />
+            <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
+            <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
+        </javadoc>
+    </target>
 
-  <!-- The structure of the following should closely follow the  -->
-  <!-- main 'javadoc' target directly above. The only difference -->
-  <!-- is the doclet clause referencing the UML generator, the   -->
-  <!-- use of the public option in the main task definition, and -->
-  <!-- the execution of "dot" at the bottom.                     -->
-  <!-- Requires Graphviz from http://www.graphviz.org            -->
+    <!-- The structure of the following should closely follow the  -->
+    <!-- main 'javadoc' target directly above. The only difference -->
+    <!-- is the doclet clause referencing the UML generator, the   -->
+    <!-- use of the public option in the main task definition, and -->
+    <!-- the execution of "dot" at the bottom.                     -->
+    <!-- Requires Graphviz from http://www.graphviz.org            -->
     <target name="javadoc-uml" depends="init" description="create JavaDocs with UML">
         <javadoc packagenames="org.*"
-           maxmemory="512m"
-           sourcepath="${source}"
-           overview="${source}/overview.html"
-           destdir="${doctarget}"
-           additionalparam="-breakiterator"
-           author="true"
-           version="false"
-           package="yes"
-           use="true"
-           windowtitle="OpenLCB API">
+                 maxmemory="512m"
+                 sourcepath="${source}"
+                 overview="${source}/overview.html"
+                 destdir="${doctarget}"
+                 additionalparam="-breakiterator"
+                 author="true"
+                 version="false"
+                 package="yes"
+                 use="true"
+                 windowtitle="OpenLCB API">
             <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
             <doclet name="org.umlgraph.doclet.UmlGraphDoc"
-                                  path="lib/UmlGraph-5.7.jar">
+                    path="lib/UmlGraph-5.7.jar">
                 <param name="-attributes"/>
                 <param name="-operations"/>
                 <param name="-qualify"/>
                 <param name="-types"/>
-                                <!-- <param name="-visibility"/> not used, as only showing public visibility -->
+                <!-- <param name="-visibility"/> not used, as only showing public visibility -->
                 <param name="-collapsible"/>  <!-- hide images at first on web pages -->
                 <param name="-inferdepvis" value="public"/> <!-- only show public -->
             </doclet>
@@ -287,7 +287,7 @@
             <link href="http://javacsv.sourceforge.net/"/> <!-- A -->
             <link href="http://fasterxml.github.io/jackson-databind/javadoc/2.0.6"/>
             <link href="http://logging.apache.org/log4j/1.2/apidocs/"/>  
-<!--            <link href="http://java.sun.com/javase/technologies/desktop/java3d/forDevelopers/j3dapi/"/>   failes, so bypassed -->
+            <!--            <link href="http://java.sun.com/javase/technologies/desktop/java3d/forDevelopers/j3dapi/"/>   failes, so bypassed -->
             <link href="https://jogamp.org/deployment/jogamp-next/javadoc/joal/javadoc/"/>
             <link href="https://commons.apache.org/proper/commons-lang/javadocs/api-release"/>
 
@@ -302,39 +302,39 @@
         </apply>
     </target>
 
-  <target name="javadocall" depends="init" description="create JavaDoc for all code including tests">
-    <javadoc packagenames="org.*, tools.*, simulations.*, scenarios.*"
-           maxmemory="512m"
-           sourcepath="${source}:${test}"
-           overview="src/overview.html"
-           defaultexcludes="yes"
-           destdir="${doctarget}"
-           additionalparam="-breakiterator"
-           author="true"
-           version="false"
-           use="true"
-           windowtitle="OpenLCB">
-      <group title="Core" packages="org.openlcb"/>
+    <target name="javadocall" depends="init" description="create JavaDoc for all code including tests">
+        <javadoc packagenames="org.*, tools.*, simulations.*, scenarios.*"
+                 maxmemory="512m"
+                 sourcepath="${source}:${test}"
+                 overview="src/overview.html"
+                 defaultexcludes="yes"
+                 destdir="${doctarget}"
+                 additionalparam="-breakiterator"
+                 author="true"
+                 version="false"
+                 use="true"
+                 windowtitle="OpenLCB">
+            <group title="Core" packages="org.openlcb"/>
 	  
-      <classpath refid="project.class.path"    />
-      <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
-      <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
-    </javadoc>
-  </target>
+            <classpath refid="project.class.path"    />
+            <doctitle><![CDATA[<h1>OpenLCB API</h1>]]></doctitle>
+            <link href="http://java.sun.com/j2se/1.4.1/docs/api/" />
+        </javadoc>
+    </target>
 
-  <target name="jars" description="create working jar files with current contents">
-    <antcall target="clean" />
-    <antcall target="compile" />
-    <jar jarfile="${jartarget}/openlcb.jar" 
-         basedir="${target}"
-         manifest="manifest" 
-         compress="true" />   <!-- compress="true" is default -->
-    <antcall target="tests" />
-    <jar jarfile="${jartarget}/openlcb-demo.jar" 
-         basedir="${target}"
-         manifest="manifest" 
-         compress="true" />   <!-- compress="true" is default -->
-  </target>
+    <target name="jars" description="create working jar files with current contents">
+        <antcall target="clean" />
+        <antcall target="compile" />
+        <jar jarfile="${jartarget}/openlcb.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+        <antcall target="tests" />
+        <jar jarfile="${jartarget}/openlcb-demo.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+    </target>
 
 </project>
 
