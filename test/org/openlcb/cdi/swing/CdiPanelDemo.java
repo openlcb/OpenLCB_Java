@@ -1,23 +1,15 @@
 package org.openlcb.cdi.swing;
 
 import javax.swing.JFrame;
-import org.openlcb.*;
-
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import javax.swing.*;
 
 import org.jdom2.*;
 import org.jdom2.input.SAXBuilder;
 
 /**
- * Provide some demo & development tools for CDI
+ * Provide some demo &amp; development tools for CDI
  *
  * @author  Bob Jacobsen   Copyright 2012, 2015
  * @version $Revision: 2175 $

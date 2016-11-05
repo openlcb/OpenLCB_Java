@@ -314,6 +314,7 @@
                  version="false"
                  use="true"
                  windowtitle="OpenLCB">
+            <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
             <group title="Core" packages="org.openlcb"/>
 	  
             <classpath refid="project.class.path"    />
