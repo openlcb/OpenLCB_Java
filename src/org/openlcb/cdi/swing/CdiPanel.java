@@ -14,7 +14,7 @@ import org.openlcb.swing.EventIdTextField;
  * Works with a CDI reader.
  *
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision: -1 $
+ * @author  Paul Bender Copyright 2016
  */
 public class CdiPanel extends JPanel {
 
@@ -36,6 +36,7 @@ public class CdiPanel extends JPanel {
      */
     public void initComponents(ReadWriteAccess accessor) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setAlignmentX(Component.LEFT_ALIGNMENT);
         this.accessor = accessor;
         this.factory = new GuiItemFactory(); // default with no behavior
     }
@@ -44,7 +45,9 @@ public class CdiPanel extends JPanel {
     GuiItemFactory factory;
     
     public void loadCDI(CdiRep c) {
-        add(createIdentificationPane(c));
+        if (c.getIdentification() != null) {
+            add(createIdentificationPane(c));
+        }
         
         java.util.List<CdiRep.Segment> segments = c.getSegments();
         for (int i=0; i<segments.size(); i++) {
@@ -92,6 +95,7 @@ public class CdiPanel extends JPanel {
         
         JPanel ret = new util.CollapsiblePanel("Identification", p);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
     }
     
@@ -163,9 +167,11 @@ public class CdiPanel extends JPanel {
                     if(it instanceof CdiRep.Group) {
                         // groups should collapse.  
                         JPanel colPane = new util.CollapsiblePanel(it.getName(), pane);
+                        colPane.setAlignmentX(Component.LEFT_ALIGNMENT);
                         p.add(colPane);
                     } else {
-                       p.add(pane);
+                        pane.setAlignmentX(Component.LEFT_ALIGNMENT);
+                        p.add(pane);
                     }
                  } else {
                      System.out.println("could not process type of " + it);
@@ -176,6 +182,7 @@ public class CdiPanel extends JPanel {
         JPanel ret = new util.CollapsiblePanel(name, p);
         // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
+        ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
     }
 
@@ -222,6 +229,7 @@ public class CdiPanel extends JPanel {
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? (item.getName()) : "Group");
             setBorder(BorderFactory.createTitledBorder(name));
+            setName(name);
 
             String d = item.getDescription();
             if (d != null) {
@@ -242,6 +250,8 @@ public class CdiPanel extends JPanel {
                 rep = 1;  // default
             }
             JPanel currentPane = this;
+            JTabbedPane tabbedPane = new JTabbedPane();
+            tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
             for (int i = 0; i < rep; i++) {
                 if (rep != 1) {
                     // nesting a pane
@@ -251,8 +261,10 @@ public class CdiPanel extends JPanel {
                     name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
                     currentPane.setBorder(BorderFactory.createTitledBorder(name));
                     factory.handleGroupPaneStart(currentPane);
+                            
+                    currentPane.setName(name);
                      
-                    add(currentPane);
+                    tabbedPane.add(currentPane);
                     
                 }
                 java.util.List<CdiRep.Item> items = item.getItems();
@@ -263,13 +275,16 @@ public class CdiPanel extends JPanel {
                         
                         origin = origin +it.getOffset();
                         size = size + it.getOffset();
-                        
+                        //System.err.println("Origin " + origin + " csize " + size + " type " + it
+                        //        .getClass().getSimpleName());
+
                         // Following code smells bad.  CdiRep is a representational
                         // class, shouldn't contain a "makeRepresentation" method,
                         // but some sort of dispatch would be better than this.
                         
                         if (it instanceof CdiRep.Group) {
                             pane = createGroupPane((CdiRep.Group) it, origin, space);
+                            pane.setName(name);
                         } else if (it instanceof CdiRep.BitRep) {
                             pane = createBitPane((CdiRep.BitRep) it, origin, space);
                         } else if (it instanceof CdiRep.IntegerRep) {
@@ -291,6 +306,7 @@ public class CdiPanel extends JPanel {
                 factory.handleGroupPaneEnd(currentPane);
 
             }
+            add(tabbedPane);
             if (rep != 1) factory.handleGroupPaneEnd(this);  // if 1, currentpane is this
         }
         
