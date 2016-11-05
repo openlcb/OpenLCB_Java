@@ -65,14 +65,18 @@ public interface CdiRep {
         public String getKey(String entry);
 
         /**
-         * Gets valid values (returned array is parallel to @ref getValues() )
-         * @return a list of all valid stored values (usually a list of decimal formatted
-         * integers).
+         * Gets valid values (returned array is parallel to {@link #getValues()}
+         * )
+         *
+         * @return a list of all valid stored values (usually a list of decimal
+         * formatted integers).
          */
         public java.util.List<String> getKeys();
 
         /**
-         * Gets all user-visible string explanations (returned array is parallel to @ref getKeys() )
+         * Gets all user-visible string explanations (returned array is parallel
+         * to {@link #getKeys()} )
+         *
          * @return a list of all user-visible values.
          */
         public java.util.List<String> getValues();

@@ -233,6 +233,7 @@
            version="false"
            use="true"
            windowtitle="OpenLCB">
+      <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
       <group title="Core" packages="org.openlcb"/>
 	  
       <classpath refid="project.class.path"    />
@@ -259,7 +260,7 @@
            package="yes"
            use="true"
            windowtitle="OpenLCB API">
-            <arg value="-Xdoclint:all,-missing,-accessibility,-html,-syntax"/> <!-- dropping some 1.8 warnings -->
+            <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
             <doclet name="org.umlgraph.doclet.UmlGraphDoc"
                                   path="lib/UmlGraph-5.7.jar">
                 <param name="-attributes"/>

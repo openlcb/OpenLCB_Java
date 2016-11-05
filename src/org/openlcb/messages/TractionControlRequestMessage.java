@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  * Traction Control Request message implementation.
- * <p/>
+ * <p>
  * Created by bracz on 12/29/15.
  */
 @Immutable

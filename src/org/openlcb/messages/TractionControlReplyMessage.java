@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 /**
  * Traction Control Reply message implementation.
- * <p/>
+ * <p>
  * Created by bracz on 12/29/15.
  */
 @Immutable
