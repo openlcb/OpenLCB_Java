@@ -6,6 +6,8 @@
   fork or you need to have write access to the repository.
 * You need to be able to compile java using the ant build toolchain.
 * You need to have a git checkout of JMRI, presumably from a fork.
+* For the JMRI update you need to have the maven tool installed. (For me maven2
+  did not work, had to use maven: ```apt-get install maven```)
 
 ## Release OpenLCB
 
@@ -48,6 +50,9 @@
 
 ## Update JMRI for new OpenLCB
 
+This process is generally defined by
+https://github.com/JMRI/JMRI/blob/master/lib/README.md#updates so it's worth to
+check out if the process changed form what's described below.
 
 1. Update the master branch of your fork by pulling from upstream
 
@@ -65,35 +70,45 @@
 
 3. Copy the new JAR file into libs
 
-  This is stored in two places: once just the jar, and once in a versioned
-  subdirectory.
-
   Copy the new JAR file into the `lib/` subdirectory:
   
   ```cp somewhere/openlcb.jar lib/```
-  
-  Remove the old versioned subdirectory:
-  
-  ```rm -rf lib/org/openlcb/openlcb/0.7.6```
-  
-  Create a new cersioned subdirectory:
-  
-  ```mkdir lib/org/openlcb/openlcb/0.7.7```
-  
-  Put the new JAR into the new versioned subdirectory:
-  
-  ```cp lib/openlcb.jar lib/org/openlcb/openlcb/0.7.7/openlcb-0.7.7.jar```
 
-4. Edit lib/README.md and update the version number for the openlcb.jar
-   library.
+4. Update the library dependency version number:
 
-4. Commit your code and push to github (to your own fork of the project)
+  Edit lib/README.md and update the version number for the openlcb.jar library.
+   
+  Edit pom.xml and update the version number for the openlcb.jar library.
+  
+  You don't need to edit build.xml, .classpath, nbproject/ide-file-targets.xml
+  and nbproject/project.xml because these do not refer to the file by version
+  number.
+  
+5. Push the new JAR to the local maven repository:
+
+    (Replace 0.7.7 with the new version number.)
+
+```
+mvn deploy:deploy-file -DgroupId=org.openlcb -DartifactId=openlcb -Dversion=0.7.7 -Durl=file:./lib/ -DrepositoryId=lib -DupdateReleaseInfo=true -Dfile=./lib/openlcb.jar
+```
+
+5. It's a good idea to test JMRI with the new library version.
+
+```
+ant panelpro
+```
+
+    Click around to check a few things related to OpenLCB.
+
+4. Commit your code, binaries and push to github (to your own fork of the
+   project)
 
   Example commits: https://github.com/balazsracz/JMRI/commit/f70edb1f21f8f2844dce2871274fea159faafaf6
 
 5. Create a pull request for JMRI
 
   Go to github, open your own fork of the JMRI project, select the branch you
-  created (github will give you a quick link) and click "create pull request".
+  created (github will give you a quick link in yellow) and click "create pull
+  request".
 
 6. Wait for a JMRI project member to approve your pull request.
