@@ -1,16 +1,25 @@
 package org.openlcb.swing.networktree;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
-
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.event.*;
-
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.openlcb.AbstractConnection;
+import org.openlcb.Connection;
+import org.openlcb.EventID;
+import org.openlcb.EventState;
+import org.openlcb.Message;
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.ProducerIdentifiedMessage;
+import org.openlcb.ProtocolIdentificationReplyMessage;
+import org.openlcb.SimpleNodeIdentInfoReplyMessage;
+
+import javax.swing.JFrame;
+import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Simulate nine nodes interacting on a single gather/scatter
@@ -106,10 +115,29 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
         store.put(pipmsg, null);
 
-        msg = new SimpleNodeIdentInfoReplyMessage(nid2, nid2, 
-                    new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte)0xC2, (byte)0xA2, 0x44, 0x00}
+        msg = new SimpleNodeIdentInfoReplyMessage(nid2, nid2,
+                new byte[]{0x01, 0x31, 0x32, 0x33, 0x41, 0x42, (byte) 0xC2, (byte) 0xA2, 0x44,
+                        0x00, 0, 0, 0, 1, 'h', 'e', 'l', 'l', 'o', 0, 'd', 'e', 's', 'c', 0}
                 );
         store.put(msg, null);
+        assertEquals("00.00.00.00.00.02 - hello - desc", pane.nodes.getChildAt(1).toString());
+    }
+
+    public void testNodeOrder() {
+        frame.setTitle("test node order");
+        store.put(new ProtocolIdentificationReplyMessage(nid2, nid1, 0xF01800000000L), null);
+        assertEquals(2, pane.nodes.getChildCount());
+        store.put(new ProtocolIdentificationReplyMessage(nid6, nid1, 0xF01800000000L), null);
+        assertEquals(3, pane.nodes.getChildCount());
+        store.put(new ProtocolIdentificationReplyMessage(nid3, nid1, 0xF01800000000L), null);
+        assertEquals(4, pane.nodes.getChildCount());
+        store.put(new ProtocolIdentificationReplyMessage(nid4, nid1, 0xF01800000000L), null);
+        assertEquals(5, pane.nodes.getChildCount());
+        assertEquals("00.00.00.00.00.01", pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals("00.00.00.00.00.02", pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals("00.00.00.00.00.03", pane.nodes.getChildAt(2).toString().substring(0, 17));
+        assertEquals("00.00.00.00.00.04", pane.nodes.getChildAt(3).toString().substring(0, 17));
+        assertEquals("00.00.00.00.00.06", pane.nodes.getChildAt(4).toString().substring(0, 17));
     }
         
     public void testWithSelect() {
