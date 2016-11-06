@@ -77,7 +77,7 @@ public class Hub {
         }
     }
     
-    public int getPort() { return port; }
+    public int getPort() { return service.getLocalPort(); }
     public void addForwarder(Forwarding f) {
         threads.add(f);
     }
@@ -116,18 +116,41 @@ public class Hub {
         }
         
         Socket clientSocket;
-        DataInputStream input;
+        BufferedInputStream input;
         PrintStream output;
         
         public void run() {
             try {
-                input = new DataInputStream(clientSocket.getInputStream());
+                input = new BufferedInputStream(clientSocket.getInputStream());
                 output = new PrintStream(clientSocket.getOutputStream());
-        
+                StringBuilder b = new StringBuilder();
                 while (true) {
-                    String line = input.readLine();
-                    if (line == null) break;  // socket ended
-                    queue.put(new Memo(line, this));
+                    int ch = input.read();
+                    if (ch == -1) break; // EOF
+                    switch(ch) {
+                        case ':': {
+                            b.setLength(0);
+                            b.append((char) ch);
+                            break;
+                        }
+                        case ';': {
+                            if (b.length() > 0) {
+                                b.append((char) ch);
+                                queue.put(new Memo(b.toString(), this));
+                                b.setLength(0);
+                            }
+                            break;
+                        }
+                        case '\n': {
+                            b.setLength(0);
+                            break;
+                        }
+                        default: {
+                            if (b.length() > 0) {
+                                b.append((char) ch);
+                            }
+                        }
+                    }
                 }
      
             } catch (IOException e) {
