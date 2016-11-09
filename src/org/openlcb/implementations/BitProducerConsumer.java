@@ -61,6 +61,7 @@ public class BitProducerConsumer extends MessageDecoder {
         valueListener = new VersionedValueListener<Boolean>(value) {
             @Override
             public void update(Boolean newValue) {
+                if ((flags & IS_PRODUCER) == 0) return;
                 EventID id = newValue ? BitProducerConsumer.this.eventOn :
                         BitProducerConsumer.this.eventOff;
                 sendMessage(new ProducerConsumerEventReportMessage(BitProducerConsumer.this.iface
@@ -71,7 +72,7 @@ public class BitProducerConsumer extends MessageDecoder {
         iface.getOutputConnection().registerStartNotification(new ConnectionListener() {
             @Override
             public void connectionActive(Connection c) {
-                sendIdentifiedMessages(true);
+                sendIdentifiedMessages((flags & QUERY_AT_STARTUP) != 0);
             }
         });
     }
@@ -206,6 +207,7 @@ public class BitProducerConsumer extends MessageDecoder {
     @Override
     public void handleProducerConsumerEventReport(ProducerConsumerEventReportMessage msg,
                                                   Connection sender) {
+        if ((flags & IS_CONSUMER) == 0) return;
         boolean isOn;
         if (msg.getEventID().equals(eventOn)) {
             isOn = true;
