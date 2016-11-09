@@ -12,16 +12,12 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class IdentifyConsumersMessage extends Message {
+public class IdentifyConsumersMessage extends EventMessage {
     
     public IdentifyConsumersMessage(NodeID source, EventID event) {
-        super(source);
-        this.eventID = event;
+        super(source, event);
     }
-    
-    EventID eventID = null;
-    public EventID getEventID() { return eventID; }
-    
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -32,19 +28,6 @@ public class IdentifyConsumersMessage extends Message {
      @Override
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleIdentifyConsumers(this, sender);
-     }
-
-     /**
-      * To be equal, messages have to have the
-      * same type and content
-      */
-     @Override
-     public boolean equals(Object o) {
-        if (!super.equals(o)) return false; // also checks type
-        IdentifyConsumersMessage msg = (IdentifyConsumersMessage) o;
-        if (! this.eventID.equals(msg.eventID))
-            return false;
-        return true;
      }
 
     public String toString() {

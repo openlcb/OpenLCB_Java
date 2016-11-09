@@ -12,23 +12,13 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProducerIdentifiedMessage extends Message {
-
+public class ProducerIdentifiedMessage extends EventMessage {
     public ProducerIdentifiedMessage(NodeID source, EventID eventID, EventState eventState) {
-        super(source);
-        if (eventID == null)
-            throw new IllegalArgumentException("EventID cannot be null");
-        this.eventID = eventID;
+        super(source, eventID);
         this.eventState = eventState;
     }
-        
-    private final EventID eventID;
-    private final EventState eventState;
 
-    // because EventID is immutable, can directly return object
-    public EventID getEventID() {
-        return eventID;
-    }
+    private final EventState eventState;
 
     public EventState getEventState() { return eventState; }
 
@@ -44,10 +34,10 @@ public class ProducerIdentifiedMessage extends Message {
         decoder.handleProducerIdentified(this, sender);
      }
 
+    @Override
     public boolean equals(Object o) {
         if (!super.equals(o)) return false;
         ProducerIdentifiedMessage p = (ProducerIdentifiedMessage) o;
-        if (!eventID.equals(p.eventID)) return false;
         return eventState == p.eventState;
     } 
 
