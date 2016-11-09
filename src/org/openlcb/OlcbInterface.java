@@ -116,6 +116,11 @@ public class OlcbInterface {
         return mcs;
     }
 
+    /// Useful for testing.
+    public void injectMemoryConfigurationService(MemoryConfigurationService s) {
+        mcs = s;
+    }
+
     /**
      * Blocks the current thread until the outgoing messages are all sent out. Useful for testing.
      */
