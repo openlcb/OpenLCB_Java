@@ -384,9 +384,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectFrame(":X194C7333N0504030201000709;");
 
         expectNoFrames();
-        // If we set the internal state first, then
         helperNotProducing();
-        // we will not be listening for initial state anymore
         helperInputSetClear(":X194C5333N0504030201000709;",
                 ":X194C5333N0504030201000708;");
         helperInputSetClear(":X195B4333N0504030201000708;",
@@ -395,7 +393,47 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
                 ":X19544333N0504030201000709;");
     }
 
-    @Override
+    public void testOneEventNull() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, pc.nullEvent, BitProducerConsumer.IS_PRODUCER | BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+
+        expectFrame(":X19547333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000708;");
+
+        expectNoFrames();
+
+        VersionedValue<Boolean> v = pc.getValue();
+        v.set(false);
+        expectNoFrames();
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+        v.set(false);
+        expectNoFrames();
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        // on one event we can flipflop
+        helperInputSetClear(":X194C4333N0504030201000708;",
+                ":X194C5333N0504030201000708;");
+        helperInputSetClear(":X19544333N0504030201000708;",
+                ":X19545333N0504030201000708;");
+        // but the other is ignored
+        helperInputNoChange(":X194C4333N0504030201000709;",
+                ":X194C5333N0504030201000709;");
+
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        // send query and get back the same
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X19544333N0504030201000708;");
+        expectFrame(":X194C4333N0504030201000708;");
+
+    }
+
+        @Override
     protected void tearDown() throws Exception {
         expectNoFrames();
         super.tearDown();
