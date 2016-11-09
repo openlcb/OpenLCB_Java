@@ -12,11 +12,11 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamDataCompleteMessage extends AddressedMessage {
+public class StreamDataCompleteMessage extends AddressedPayloadMessage {
     
     public StreamDataCompleteMessage(NodeID source, NodeID dest,
                 byte sourceStreamID, byte destStreamID) {
-        super(source, dest);
+        super(source, dest, new byte[] {sourceStreamID, destStreamID});
         this.sourceStreamID = sourceStreamID;
         this.destStreamID = destStreamID;
     }
@@ -50,8 +50,11 @@ public class StreamDataCompleteMessage extends AddressedMessage {
 
     public String toString() {
         return super.toString()
-                +" StreamDataComplete srcId=" + sourceStreamID + " dstId=" + destStreamID;
+                +" srcId=" + sourceStreamID + " dstId=" + destStreamID;
     }
 
-    public int getMTI() { return MTI_STREAM_DATA_COMPLETE; }
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.StreamDataComplete;
+    }
 }

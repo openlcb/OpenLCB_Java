@@ -12,11 +12,11 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamInitiateReplyMessage extends AddressedMessage {
+public class StreamInitiateReplyMessage extends AddressedPayloadMessage {
     
     public StreamInitiateReplyMessage(NodeID source, NodeID dest,
             int bufferSize, byte sourceStreamID, byte destStreamID) {
-        super(source, dest);
+        super(source, dest, toPayload(bufferSize, sourceStreamID, destStreamID));
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
         this.destStreamID = destStreamID;
@@ -25,11 +25,17 @@ public class StreamInitiateReplyMessage extends AddressedMessage {
     int bufferSize;
     byte sourceStreamID;
     byte destStreamID;
-    
+
     public int getBufferSize() { return bufferSize; }
     public byte getDestinationStreamID() { return destStreamID; }
     public byte getSourceStreamID() { return sourceStreamID; } //dph 20151229
-    
+
+    static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
+        byte[] b = new byte[]{0, 0, sourceStreamID, destStreamID};
+        Utilities.HostToNetworkUint16(b, 0, bufferSize);
+        return b;
+    }
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -53,11 +59,13 @@ public class StreamInitiateReplyMessage extends AddressedMessage {
 
     public String toString() {
         return super.toString()
-                +" StreamInitiateReply"
                 +" SSID "+sourceStreamID
                 +" DSID "+destStreamID
                 +" bsize "+bufferSize;     
     }
 
-    public int getMTI() { return MTI_STREAM_INIT_REPLY; }
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.StreamInitiateReply;
+    }
 }

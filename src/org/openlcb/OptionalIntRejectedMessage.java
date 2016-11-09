@@ -12,10 +12,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class OptionalIntRejectedMessage extends AddressedMessage {
+public class OptionalIntRejectedMessage extends AddressedPayloadMessage {
     
     public OptionalIntRejectedMessage(NodeID source, NodeID dest, int mti, int code) {
-        super(source, dest);
+        super(source, dest, toPayload(mti, code));
         this.mti = mti;
         this.code = code;
     }
@@ -26,7 +26,13 @@ public class OptionalIntRejectedMessage extends AddressedMessage {
     public int getMti() { return mti; }
     
     public int getCode() { return code; }
-    
+
+    private static byte[] toPayload(int mti, int code) {
+        byte[] b = new byte[4];
+        Utilities.HostToNetworkUint16(b, 0, mti);
+        Utilities.HostToNetworkUint16(b, 2, code);
+        return b;
+    }
      /**
       * To be equal, messages have to have the
       * same type and content
@@ -51,8 +57,6 @@ public class OptionalIntRejectedMessage extends AddressedMessage {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleOptionalIntRejected(this, sender);
      }
-    
-    public int getMTI() { return MTI_OPT_INT_REJECTED; }
 
     @Override
     public String toString() {
@@ -62,5 +66,10 @@ public class OptionalIntRejectedMessage extends AddressedMessage {
         value.append(" code 0x");  
         value.append(Integer.toHexString((int)(getCode()&0xFFFF)).toUpperCase());  
         return new String(value);   
+    }
+
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.OptionalInteractionRejected;
     }
 }

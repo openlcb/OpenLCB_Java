@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Logger;
 
 /**
  * Collects all objects necessary to run an OpenLCB standards-compatible interface.
@@ -16,7 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Created by bracz on 12/27/15.
  */
 public class OlcbInterface {
-
+    private final static Logger log = Logger.getLogger(OlcbInterface.class.getName());
     /// Object for sending messages to the network.
     protected final Connection internalOutputConnection;
     /// Object we return to the customer when they ask for the output connection
@@ -244,7 +245,12 @@ public class OlcbInterface {
             while (true) {
                 try {
                     QEntry m = outputQueue.take();
-                    realOutput.put(m.message, m.connection);
+                    try {
+                        realOutput.put(m.message, m.connection);
+                    } catch (Throwable e) {
+                        log.warning("Exception while sending message: " + e.toString());
+                        e.printStackTrace();
+                    }
                     synchronized(this) {
                         pendingCount--;
                     }

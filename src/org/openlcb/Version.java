@@ -36,6 +36,27 @@ public class Version {
      */
     static final public int libMod = 7;
 
+    /**
+     * Checks if the current specification version is above a specific threshold.
+     * @param maj threshold major version
+     * @param min threshold minor version
+     * @param mod threshold specification modifier
+     * @return true if current specification version >= maj.min.mod
+     */
+    static public boolean specVersionAtLeast(int maj, int min, int mod) {
+        return major > maj || minor > min || specMod >= mod;
+    }
+
+    /**
+     * Checks if the current library version is above a specific threshold.
+     * @param maj threshold major version
+     * @param min threshold minor version
+     * @param mod threshold library modifier
+     * @return true if current library version >= maj.min.mod
+     */
+    static public boolean libVersionAtLeast(int maj, int min, int mod) {
+        return major > maj || minor > min || libMod >= mod;
+    }
 
     /**
      * Provide the current specification version string.  

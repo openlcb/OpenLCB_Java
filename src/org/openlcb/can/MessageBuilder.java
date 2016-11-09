@@ -418,7 +418,11 @@ public class MessageBuilder {
          */
         @Override
         protected void defaultHandler(Message msg, Connection sender) {
-            throw new java.lang.NoSuchMethodError("no handler for Message: "+msg.toString());
+            if (msg instanceof AddressedPayloadMessage) {
+                handleAddressedPayloadMessage((AddressedPayloadMessage)msg, sender);
+            } else {
+                throw new java.lang.NoSuchMethodError("no handler for Message: " + msg.toString());
+            }
         }
         
         List<OpenLcbCanFrame> retlist;
@@ -481,17 +485,6 @@ public class MessageBuilder {
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             if (msg.getContent() != null) 
                 f.setData(msg.getContent().getContents());
-            retlist.add(f);
-        }
-
-        /**
-         * Handle "Protocol Identification Inquiry (Request)" message
-         */
-        public void handleProtocolIdentificationRequest(ProtocolIdentificationRequestMessage msg, Connection sender){
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.ProtocolSupportInquiry.mti());
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
 
@@ -568,46 +561,6 @@ public class MessageBuilder {
             defaultHandler(msg, sender);
         }
 
-        @Override
-        /**
-         * Handle "Traction Control Request" message
-         */
-        public void handleTractionControlRequest(TractionControlRequestMessage msg, Connection sender) {
-            handleAddressedPayloadMessage(msg, sender);
-        }
-
-        /**
-         * Handle "Traction Control Reply" message
-         */
-        public void handleTractionControlReply(TractionControlReplyMessage msg, Connection sender) {
-            handleAddressedPayloadMessage(msg, sender);
-        }
-
-        /**
-         * Handle "Traction Proxy Request" message
-         */
-        public void handleTractionProxyRequest(TractionProxyRequestMessage msg, Connection sender) {
-            handleAddressedPayloadMessage(msg, sender);
-        }
-
-        /**
-         * Handle "Traction Proxy Reply" message
-         */
-        public void handleTractionProxyReply(TractionProxyReplyMessage msg, Connection sender) {
-            handleAddressedPayloadMessage(msg, sender);
-        }
-
-        /**
-         * Handle "Simple Node Ident Info Request" message
-         */
-        @Override
-        public void handleSimpleNodeIdentInfoRequest(SimpleNodeIdentInfoRequestMessage msg, Connection sender){
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti());
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
-        }
         /**
          * Handle "Datagram" message
          */
@@ -636,63 +589,6 @@ public class MessageBuilder {
         }
 
         /**
-         * Handle "Datagram Rejected" message
-         */
-        @Override
-        public void handleDatagramRejected(DatagramRejectedMessage msg, Connection sender){
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.DatagramRejected.mti());
-            f.setData(new byte[]{(byte)0, (byte)0, (byte)((msg.getCode()>>8)&0xFF), (byte)(msg.getCode()&0xFF)});
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
-        }
-        /**
-         * Handle "Datagram Acknowledged" message
-         */
-        @Override
-        public void handleDatagramAcknowledged(DatagramAcknowledgedMessage msg, Connection sender){
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.DatagramReceivedOK.mti());
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            if (msg.getFlags() != 0) {
-                f.setData(new byte[]{0, 0, (byte)msg.getFlags()});
-            }
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            retlist.add(f);
-        }
-        /**
-         * Handle "Stream Init Request" message
-         */
-        //final int STREAMBUFFERSIZE 10;
-        @Override
-        public void handleStreamInitiateRequest(StreamInitiateRequestMessage msg, Connection sender){
-            //defaultHandler(msg, sender);
-            // dph
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.StreamInitiateRequest.mti());
-            // dest(2), maxBuffer(2),flags(2),sourceStream, reserved
-            f.setData(new byte[]{ (byte)0, (byte)0, 0, 64, 0, 0, msg.getSourceStreamID(), (byte)0 });
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
-        }
-        /**
-         * Handle "Stream Init Reply" message
-         */
-        @Override
-        public void handleStreamInitiateReply(StreamInitiateReplyMessage msg, Connection sender){
-            //defaultHandler(msg, sender);
-            // dph
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.StreamInitiateReply.mti());
-            // dest(2), maxBufferSize(2), flags(2),sourceStream, destinationStream
-            f.setData(new byte[]{(byte) 0, (byte) 0, 0, 64, msg.getSourceStreamID(), msg.getDestinationStreamID()  } );
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
-        }
-        /**
          * Handle "Stream Data Send" message
          */
         @Override
@@ -719,34 +615,6 @@ public class MessageBuilder {
                 
                 remains = remains - size;
             } while (remains > 0);
-        }
-        /**
-         * Handle "Stream Data Proceed" message
-         */
-        @Override
-        public void handleStreamDataProceed(StreamDataProceedMessage msg, Connection sender){
-            // dph
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataProceed.mti());
-            // sourceStream, destinationStream, flags(2)
-            f.setData(new byte[]{(byte)0, (byte)0, msg.getSourceStreamID(), msg.getDestinationStreamID(), 0, 0 });
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
-        }
-        /**
-         * Handle "Stream Data Complete" message
-         */
-        @Override
-        public void handleStreamDataComplete(StreamDataCompleteMessage msg, Connection sender){
-            // dph
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataComplete.mti());
-            // sourceStream, destinationStream, flags(2)
-            f.setData(new byte[]{(byte)0, (byte)0, msg.getSourceStreamID(), msg.getDestinationStreamID(), 0, 0 });
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
         }
     }
  }

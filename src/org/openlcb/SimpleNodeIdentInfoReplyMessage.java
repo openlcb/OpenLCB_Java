@@ -12,19 +12,15 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
+public class SimpleNodeIdentInfoReplyMessage extends AddressedPayloadMessage {
     
     /**
      * @param dataIn the data content without extra wire-protocol bytes
      */
     public SimpleNodeIdentInfoReplyMessage(NodeID source, NodeID dest, byte[] dataIn) {
-        super(source, dest);
-        this.data = new byte[dataIn.length];
-        System.arraycopy(dataIn, 0, this.data, 0, dataIn.length);
+        super(source, dest, dataIn);
     }
-        
-    byte[] data;
-    
+
     /**
      * To be equal, messages have to have the
      * same type and content
@@ -47,7 +43,7 @@ public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
     }
     
     public byte[] getData() {
-        return data;
+        return payload;
     }
 
     /**
@@ -64,7 +60,10 @@ public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
     
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder(super.toString());
+        StringBuilder b = new StringBuilder();
+        b.append(getSourceNodeID().toString());
+        b.append(" - ");
+        b.append(getDestNodeID().toString());
         b.append(" Simple Node Ident Info with content '");
         for (byte d : getData()) {
             if (d == 0) {
@@ -80,5 +79,8 @@ public class SimpleNodeIdentInfoReplyMessage extends AddressedMessage {
         return b.toString();
     }
 
-    public int getMTI() { return MTI_SIMPLE_NODE_IDENT_REPLY; }
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.SimpleNodeIdentInfoReply;
+    }
 }
