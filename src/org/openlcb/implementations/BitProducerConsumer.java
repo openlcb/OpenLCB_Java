@@ -141,6 +141,7 @@ public class BitProducerConsumer extends MessageDecoder {
 
     @Override
     public void handleIdentifyConsumers(IdentifyConsumersMessage msg, Connection sender) {
+        if (sender == this) return;
         EventState st = getEventState(msg.getEventID());
         if (st != null && ((flags & IS_CONSUMER) != 0)) {
             sendMessage(new ConsumerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st));
@@ -149,6 +150,7 @@ public class BitProducerConsumer extends MessageDecoder {
 
     @Override
     public void handleIdentifyProducers(IdentifyProducersMessage msg, Connection sender) {
+        if (sender == this) return;
         EventState st = getEventState(msg.getEventID());
         if (st != null && ((flags & IS_PRODUCER) != 0)) {
             sendMessage(new ProducerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st));
