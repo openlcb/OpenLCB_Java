@@ -49,7 +49,28 @@ public class UtilitiesTest extends TestCase {
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A 0B 12")));
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A.0B.12")));
     }
-    
+
+    public void testPackByteArray() {
+        byte[] b = new byte[5];
+        Utilities.HostToNetworkUint8(b, 2, 168);
+        Assert.assertEquals("00 00 A8 00 00", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(168, Utilities.NetworkToHostUint8(b, 2));
+        Utilities.HostToNetworkUint16(b, 1, 43766);
+        Assert.assertEquals("00 AA F6 00 00", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(43766, Utilities.NetworkToHostUint16(b, 1));
+        Utilities.HostToNetworkUint32(b, 1, 17);
+        Assert.assertEquals("00 00 00 00 11", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(17, Utilities.NetworkToHostUint32(b, 1));
+        Utilities.HostToNetworkUint32(b, 1, 3000000017L);
+        Assert.assertEquals("00 B2 D0 5E 11", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(3000000017L, Utilities.NetworkToHostUint32(b, 1));
+
+        b = new byte[6];
+        Utilities.HostToNetworkUint48(b, 0, 0x0501010118DAL);
+        Assert.assertEquals("05 01 01 01 18 DA", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(0x0501010118DAL, Utilities.NetworkToHostUint48(b, 0));
+    }
+
     boolean compareArrays(byte[] a, byte[]b) {
         if (a == null && b == null) return true;
         if (a.length != b.length) return false;

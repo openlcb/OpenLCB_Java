@@ -12,18 +12,24 @@ import net.jcip.annotations.ThreadSafe;
  */
 @Immutable
 @ThreadSafe
-public class DatagramRejectedMessage extends AddressedMessage {
+public class DatagramRejectedMessage extends AddressedPayloadMessage {
     
     public DatagramRejectedMessage(NodeID source, NodeID dest, int code) {
-        super(source, dest);
+        super(source, dest, toPayload(code));
         this.code = code;
     }
         
     @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     int code;
-    
+
     public int getCode() { return code; }
-    
+
+    private static byte[] toPayload(int code) {
+        byte[] b = new byte[2];
+        Utilities.HostToNetworkUint16(b, 0, code);
+        return b;
+    }
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -46,14 +52,6 @@ public class DatagramRejectedMessage extends AddressedMessage {
         return super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public int getMTI() { return MTI_DATAGRAM_REJECTED; }
-    
     static final int DATAGRAM_REJECTED                           = 0x000;
     static final int DATAGRAM_REJECTED_PERMANENT_ERROR           = 0x100;
     static final int DATAGRAM_REJECTED_INFORMATION_LOGGED        = 0x101;
@@ -73,8 +71,8 @@ public class DatagramRejectedMessage extends AddressedMessage {
     }
 
     @Override
-    public String toString() {
-        return super.toString()+" Datagram Rejected";
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.DatagramRejected;
     }
 
 }
