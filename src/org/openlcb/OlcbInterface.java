@@ -39,7 +39,7 @@ public class OlcbInterface {
     // Client (and server) for datagrams.
     private final DatagramService dcs;
     // Client for memory configuration requests.
-    private final MemoryConfigurationService mcs;
+    private MemoryConfigurationService mcs;
 
     /**
      * Creates the message-level interface.
