@@ -3,11 +3,11 @@ package org.openlcb.implementations;
 import org.openlcb.Connection;
 import org.openlcb.ConsumerIdentifiedMessage;
 import org.openlcb.EventID;
+import org.openlcb.EventMessage;
 import org.openlcb.EventState;
 import org.openlcb.IdentifyConsumersMessage;
 import org.openlcb.IdentifyEventsMessage;
 import org.openlcb.IdentifyProducersMessage;
-import org.openlcb.Message;
 import org.openlcb.MessageDecoder;
 import org.openlcb.OlcbInterface;
 import org.openlcb.ProducerConsumerEventReportMessage;
@@ -24,22 +24,47 @@ public class BitProducerConsumer extends MessageDecoder {
     private final OlcbInterface iface;
     private final VersionedValue<Boolean> value;
     private final VersionedValueListener<Boolean> valueListener;
+    private final int flags;
+
+    private final static EventID nullEvent = new EventID(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
+
+    /// Flag bit to set default value. (set: true; clear: false).
+    public final static int DEFAULT_TRUE = 1;
+    /// Flag bit to declare on the network as a producer.
+    public final static int IS_PRODUCER = 2;
+    /// Flag bit to declare on the network as a consumer.
+    public final static int IS_CONSUMER = 4;
+    /// Flag bit to send out a query upon startup. This will also cause listening to event
+    // identified messages whenever the current state is unknown.
+    public final static int QUERY_AT_STARTUP = 8;
+    /// Flag bit to always listen to event identified messages.
+    public final static int LISTEN_EVENT_IDENTIFIED = 16;
+
+    public final static int DEFAULT_FLAGS = IS_PRODUCER | IS_CONSUMER | QUERY_AT_STARTUP |
+            LISTEN_EVENT_IDENTIFIED;
+
+    public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff) {
+        this(iface, eventOn, eventOff, DEFAULT_FLAGS);
+    }
 
     public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff, boolean
             defaultValue) {
+        this(iface, eventOn, eventOff, DEFAULT_FLAGS | (defaultValue ? DEFAULT_TRUE : 0));
+    }
+
+    public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff, int flags) {
         this.iface = iface;
         this.eventOn = eventOn;
         this.eventOff = eventOff;
-        value = new VersionedValue<>(defaultValue);
+        this.flags = flags;
+        value = new VersionedValue<>((flags & DEFAULT_TRUE) != 0);
         valueListener = new VersionedValueListener<Boolean>(value) {
             @Override
             public void update(Boolean newValue) {
-                Message msg = new ProducerConsumerEventReportMessage(BitProducerConsumer.this.iface
-                        .getNodeId(),
-                        newValue ? BitProducerConsumer.this.eventOn :
-                                BitProducerConsumer.this.eventOff);
-                BitProducerConsumer.this.iface.getOutputConnection().put(msg, BitProducerConsumer
-                        .this);
+                EventID id = newValue ? BitProducerConsumer.this.eventOn :
+                        BitProducerConsumer.this.eventOff;
+                sendMessage(new ProducerConsumerEventReportMessage(BitProducerConsumer.this.iface
+                        .getNodeId(), id));
             }
         };
         iface.registerMessageListener(this);
@@ -53,6 +78,14 @@ public class BitProducerConsumer extends MessageDecoder {
 
     public VersionedValue<Boolean> getValue() {
         return value;
+    }
+
+    /**
+     * Sends out an event message
+     */
+    <T extends EventMessage> void sendMessage(T msg) {
+        if (msg.getEventID().equals(nullEvent)) return;
+        iface.getOutputConnection().put(msg, BitProducerConsumer.this);
     }
 
     /**
@@ -82,20 +115,23 @@ public class BitProducerConsumer extends MessageDecoder {
     }
 
     private void sendIdentifiedMessages(boolean queryState) {
-        Message msg;
-        msg = new ProducerIdentifiedMessage(iface.getNodeId(), eventOn, getOnEventState());
-        iface.getOutputConnection().put(msg, this);
-        msg = new ProducerIdentifiedMessage(iface.getNodeId(), eventOff, getOffEventState());
-        iface.getOutputConnection().put(msg, this);
-        msg = new ConsumerIdentifiedMessage(iface.getNodeId(), eventOn, getOnEventState());
-        iface.getOutputConnection().put(msg, this);
-        msg = new ConsumerIdentifiedMessage(iface.getNodeId(), eventOff, getOffEventState());
-        iface.getOutputConnection().put(msg, this);
+        if ((flags & IS_PRODUCER) != 0) {
+            sendMessage(new ProducerIdentifiedMessage(iface.getNodeId(), eventOn, getOnEventState
+                    ()));
+
+            sendMessage(new ProducerIdentifiedMessage(iface.getNodeId(), eventOff,
+                    getOffEventState()));
+        }
+        if ((flags & IS_CONSUMER) != 0) {
+            sendMessage(new ConsumerIdentifiedMessage(iface.getNodeId(), eventOn, getOnEventState
+                    ()));
+
+            sendMessage(new ConsumerIdentifiedMessage(iface.getNodeId(), eventOff,
+                    getOffEventState()));
+        }
         if (queryState) {
-            msg = new IdentifyProducersMessage(iface.getNodeId(), eventOn);
-            iface.getOutputConnection().put(msg, this);
-            msg = new IdentifyConsumersMessage(iface.getNodeId(), eventOn);
-            iface.getOutputConnection().put(msg, this);
+            sendMessage(new IdentifyProducersMessage(iface.getNodeId(), eventOn));
+            sendMessage(new IdentifyConsumersMessage(iface.getNodeId(), eventOn));
         }
     }
 
@@ -106,23 +142,32 @@ public class BitProducerConsumer extends MessageDecoder {
     @Override
     public void handleIdentifyConsumers(IdentifyConsumersMessage msg, Connection sender) {
         EventState st = getEventState(msg.getEventID());
-        if (st != null) {
-            Message m = new ConsumerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st);
-            iface.getOutputConnection().put(m, this);
+        if (st != null && ((flags & IS_CONSUMER) != 0)) {
+            sendMessage(new ConsumerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st));
         }
     }
 
     @Override
     public void handleIdentifyProducers(IdentifyProducersMessage msg, Connection sender) {
         EventState st = getEventState(msg.getEventID());
-        if (st != null) {
-            Message m = new ProducerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st);
-            iface.getOutputConnection().put(m, this);
+        if (st != null && ((flags & IS_PRODUCER) != 0)) {
+            sendMessage(new ProducerIdentifiedMessage(iface.getNodeId(), msg.getEventID(), st));
         }
+    }
+
+    /**
+     * @return true if we are interested in a P/C identified message reporting layout state right
+     * now.
+     */
+    private boolean shouldListenToIdentifiedMessages() {
+        if ((flags & LISTEN_EVENT_IDENTIFIED) != 0) return true;
+        if (((flags & QUERY_AT_STARTUP) != 0) && isValueAtDefault()) return true;
+        return false;
     }
 
     @Override
     public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender) {
+        if (!shouldListenToIdentifiedMessages()) return;
         boolean isOn;
         if (msg.getEventID().equals(eventOn)) {
             isOn = true;
@@ -140,6 +185,7 @@ public class BitProducerConsumer extends MessageDecoder {
 
     @Override
     public void handleConsumerIdentified(ConsumerIdentifiedMessage msg, Connection sender) {
+        if (!shouldListenToIdentifiedMessages()) return;
         boolean isOn;
         if (msg.getEventID().equals(eventOn)) {
             isOn = true;
