@@ -1,9 +1,13 @@
 package org.openlcb.cdi.impl;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import java.util.List;
 import org.openlcb.cdi.impl.RangeCacheUtil.Range;
+import org.openlcb.cdi.jdom.JdomCdiRepTest;
+
 /**
  * Created by bracz on 4/9/16.
  */
@@ -40,5 +44,12 @@ public class RangeCacheUtilTest extends TestCase {
         rng = util.getRanges();
         assertEquals(1, rng.size());
         assertEquals(new Range(0, 28), rng.get(0));
+    }
+
+    // test suite from all defined tests
+    public static Test suite() {
+        TestSuite suite = new TestSuite(RangeCacheUtilTest.class);
+
+        return suite;
     }
 }
