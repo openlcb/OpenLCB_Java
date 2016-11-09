@@ -26,7 +26,7 @@ public class BitProducerConsumer extends MessageDecoder {
     private final VersionedValueListener<Boolean> valueListener;
     private final int flags;
 
-    private final static EventID nullEvent = new EventID(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
+    public final static EventID nullEvent = new EventID(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
 
     /// Flag bit to set default value. (set: true; clear: false).
     public final static int DEFAULT_TRUE = 1;
