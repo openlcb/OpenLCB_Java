@@ -12,12 +12,12 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProtocolIdentificationRequestMessage extends AddressedMessage {
+public class ProtocolIdentificationRequestMessage extends AddressedPayloadMessage {
     
     public ProtocolIdentificationRequestMessage(NodeID source, NodeID dest) {
-        super(source, dest);
+        super(source, dest, null);
     }
-        
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -29,10 +29,9 @@ public class ProtocolIdentificationRequestMessage extends AddressedMessage {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleProtocolIdentificationRequest(this, sender);
      }
-    public String toString() {
-        return super.toString()
-                +" Protocol Identification Request ";   
-    }
 
-    public int getMTI() { return MTI_PROTOCOL_IDENT_REQUEST; }
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.ProtocolSupportInquiry;
+    }
 }
