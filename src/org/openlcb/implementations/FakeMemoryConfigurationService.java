@@ -94,12 +94,12 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
             cb.handleFailure(0x1000);
             return;
         }
-        if (d.payload.length < address) {
+        if (address >= d.payload.length) {
             cb.handleFailure(0x1001); // TODO: use proper error code
             return;
         }
         int count = len;
-        if (address+count < d.payload.length) {
+        if (address+count > d.payload.length) {
             count = d.payload.length - (int)address;
         }
         byte[] ret = new byte[count];
