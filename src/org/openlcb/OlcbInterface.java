@@ -206,7 +206,8 @@ public class OlcbInterface {
      */
     private class QueuedOutputConnection implements Connection {
         private final Connection realOutput;
-        private final BlockingQueue<Message> outputQueue = new LinkedBlockingQueue<>();
+        private final BlockingQueue<QEntry> outputQueue = new
+                LinkedBlockingQueue<>();
         private int pendingCount = 0;
 
         QueuedOutputConnection(Connection realOutput) {
@@ -218,7 +219,7 @@ public class OlcbInterface {
             synchronized(this) {
                 pendingCount++;
             }
-            outputQueue.add(msg);
+            outputQueue.add(new QEntry(msg, sender));
         }
 
         @Override
@@ -243,9 +244,9 @@ public class OlcbInterface {
         private void run() {
             while (true) {
                 try {
-                    Message m = outputQueue.take();
+                    QEntry m = outputQueue.take();
                     try {
-                        realOutput.put(m, null);
+                        realOutput.put(m.message, m.connection);
                     } catch (Throwable e) {
                         log.warning("Exception while sending message: " + e.toString());
                         e.printStackTrace();
@@ -256,6 +257,15 @@ public class OlcbInterface {
                 } catch (InterruptedException e) {
                     continue;
                 }
+            }
+        }
+
+        private class QEntry {
+            Message message;
+            Connection connection;
+            QEntry(Message m, Connection c) {
+                message = m;
+                connection = c;
             }
         }
     }

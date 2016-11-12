@@ -12,18 +12,13 @@ import net.jcip.annotations.ThreadSafe;
  */
 @Immutable
 @ThreadSafe
-public class ConsumerIdentifiedMessage extends Message {
+public class ConsumerIdentifiedMessage extends EventMessage {
     
     public ConsumerIdentifiedMessage(NodeID source, EventID eventID, EventState eventState) {
-        super(source);
-        if (eventID == null)
-            throw new IllegalArgumentException("EventID cannot be null");
-        this.eventID = eventID;
+        super(source, eventID);
         this.eventState = eventState;
     }
-        
-    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
-    EventID eventID;
+
     private final EventState eventState;
 
     // because EventID is immutable, can directly return object
@@ -47,19 +42,11 @@ public class ConsumerIdentifiedMessage extends Message {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) return false;
-        if (! (o instanceof ConsumerIdentifiedMessage))
-            return false;
         if (!super.equals(o)) return false;
         ConsumerIdentifiedMessage p = (ConsumerIdentifiedMessage) o;
-        return eventID.equals(p.eventID);
+        return eventState == p.eventState;
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode()+eventID.hashCode();
-    }
-    
     @Override
     public String toString() {
         return super.toString() + " Consumer Identified " + eventState.toString() + " for "+eventID.toString();
