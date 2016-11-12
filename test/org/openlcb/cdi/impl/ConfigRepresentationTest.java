@@ -1,6 +1,8 @@
 package org.openlcb.cdi.impl;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -39,8 +41,39 @@ public class ConfigRepresentationTest extends TestCase {
         byte[] config = new byte[1000];
         mcs.addSpace(remoteNode, mcs.SPACE_CONFIG, config, true);
         ConfigRepresentation rep = new ConfigRepresentation(iface, remoteNode);
+        // Since all of our memory configuration commands execute inline, the representation will
+        // be ready by the time it returns.
         assertEquals("Representation complete.", rep.getStatus());
         assertNotNull(rep.getRoot());
+
+        ConfigRepresentation.CdiContainer cont = rep.getRoot();
+        assertEquals(2, cont.getEntries().size());
+
+        class Offset {
+            int i;
+        }
+        final Offset o = new Offset();
+        final int[][] readOffsets = {
+                {153, 2, 13},
+                {158, 8, 13},
+                {167, 1, 13},
+                {182, 2, 13},
+                {179, 9, 13},
+                {188, 9, 13},
+                {197, 9, 13},
+                {209, 2, 13},
+                {206, 9, 13},
+                {215, 9, 13},
+                {224, 9, 13},
+                {254, 2, 13},
+                {0, 2, 14}
+        };
+        rep.visit(new ConfigRepresentation.Visitor() {
+            @Override
+            public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+                super.visitLeaf(e);
+            }
+        });
     }
 
     @Override
@@ -48,5 +81,12 @@ public class ConfigRepresentationTest extends TestCase {
         super.setUp();
         iface = new FakeOlcbInterface();
         mcs = new FakeMemoryConfigurationService(iface);
+    }
+
+    // test suite from all defined tests
+    public static Test suite() {
+        TestSuite suite = new TestSuite(ConfigRepresentationTest.class);
+
+        return suite;
     }
 }

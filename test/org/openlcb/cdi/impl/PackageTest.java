@@ -33,7 +33,7 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
         
         suite.addTest(RangeCacheUtilTest.suite());
-        //suite.addTest(ConfigRepresentationTest.suite());
+        suite.addTest(ConfigRepresentationTest.suite());
 
         return suite;
     }
