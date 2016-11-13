@@ -27,15 +27,15 @@
      * manifest and edit the `Package-Version` to bump last number
      * src/org/openlcb/Version.java and bump `libMod`.
   
-4. run tests to check that you updated everything
+4. recompile JARs
+
+  ```ant jars```
+
+5. run tests to check that you updated everything
 
   ```ant run```
 
   and observe that no errors are reported (at least in the VerionTest).
-
-5. recompile JARs
-
-  ```ant jars```
 
 6. Commit everything and push to github
 
