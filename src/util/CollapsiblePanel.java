@@ -88,7 +88,7 @@ public class CollapsiblePanel extends JPanel {
 		gbc.anchor = gbc.FIRST_LINE_START;
 
 		selected = true;
-		headerPanel_ = new HeaderPanel(text);
+		headerPanel_ = new HeaderPanel(text == null ? "" : text);
 
 		setBackground(new Color(200, 200, 220));
 		contentPanel_ = panel;
