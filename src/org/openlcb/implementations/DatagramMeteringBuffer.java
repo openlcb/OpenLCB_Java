@@ -117,8 +117,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
 
         void forwardDownstream() {
-            toDownstream.put(message, fromDownstream);
             startTimeout();
+            toDownstream.put(message, fromDownstream);
         }
         
         Timer timer;
