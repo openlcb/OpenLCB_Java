@@ -35,7 +35,7 @@ public class BitProducerConsumer extends MessageDecoder {
     /// Flag bit to declare on the network as a consumer.
     public final static int IS_CONSUMER = 4;
     /// Flag bit to send out a query upon startup. This will also cause listening to event
-    // identified messages whenever the current state is unknown.
+    /// identified messages whenever the current state is unknown.
     public final static int QUERY_AT_STARTUP = 8;
     /// Flag bit to always listen to event identified messages.
     public final static int LISTEN_EVENT_IDENTIFIED = 16;
