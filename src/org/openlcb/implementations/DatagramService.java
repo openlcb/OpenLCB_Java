@@ -48,6 +48,9 @@ public class DatagramService extends MessageDecoder {
      * Send data to layout
      */
     public void sendData(DatagramServiceTransmitMemo memo){
+        if (xmtMemo != null) {
+            System.err.println("Overriding datagram transmit memo. old " + xmtMemo.toString() + " new " + memo.toString()); //log
+        }
         xmtMemo = memo;
         Message m = new DatagramMessage(here, memo.dest, memo.data);
         downstream.put(m, this);
@@ -256,7 +259,7 @@ public class DatagramService extends MessageDecoder {
     
         @Override
         public String toString() {
-            return "DatagramServiceTransmitMemo: "+Utilities.toHexDotsString(data);
+            return "DatagramServiceTransmitMemo to " + dest.toString() + ": "+Utilities.toHexDotsString(data);
         }
         
         @Override
