@@ -5,6 +5,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,8 +45,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public static final String UPDATE_WRITE_COMPLETE = "PENDING_WRITE_COMPLETE";
     private static final String TAG = "ConfigRepresentation";
     private static final Logger logger = Logger.getLogger(TAG);
+    static final Charset UTF8 = Charset.forName("UTF8");
+
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
+    private final CdiPanel.ReadWriteAccess mockAccess;
     private CdiRep cdiRep;
     private String state = "Uninitialized";
     private CdiContainer root = null;
@@ -63,13 +67,16 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public ConfigRepresentation(OlcbInterface connection, NodeID remoteNodeID) {
         this.connection = connection;
         this.remoteNodeID = remoteNodeID;
+        this.mockAccess = null;
         triggerFetchCdi();
     }
 
     public ConfigRepresentation(CdiPanel.ReadWriteAccess memoryAccess, CdiRep xmlRep) {
         this.connection = null;
         this.remoteNodeID = null;
-
+        this.mockAccess = memoryAccess;
+        cdiRep = xmlRep;
+        parseRep();
     }
 
     /**
@@ -111,6 +118,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         setState("Representation complete.");
         prefillCaches();
         firePropertyChange(UPDATE_REP, null, root);
+    }
+
+    public CdiRep getCdiRep() {
+        return cdiRep;
     }
 
     int pendingCacheFills = 0;
@@ -173,7 +184,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         if (spaces.containsKey(space)) {
             return spaces.get(space);
         } else {
-            MemorySpaceCache s = new MemorySpaceCache(connection, remoteNodeID, space);
+            MemorySpaceCache s;
+            if (connection != null) {
+                s = new MemorySpaceCache(connection, remoteNodeID, space);
+            } else {
+                s = new MemorySpaceCache(mockAccess, space);
+            }
             spaces.put(space, s);
             return s;
         }
@@ -639,7 +655,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             while (len < b.length && b[len] != 0) ++len;
             byte[] rep = new byte[len];
             System.arraycopy(b, 0, rep, 0, len);
-            String ret = new String(rep);
+            String ret = new String(rep, UTF8);
             return ret;
         }
 
@@ -647,9 +663,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = new byte[size];
             byte[] f;
-            try {
-                f = value.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) { return; }
+            f = value.getBytes(UTF8);
             System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
             cache.write(this.origin, b, this);
         }
