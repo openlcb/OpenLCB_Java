@@ -36,20 +36,19 @@ public class CdiPanel extends JPanel {
      * @param factory Implements hooks for optional interface elements
      */
     public void initComponents(ConfigRepresentation rep, GuiItemFactory factory) {
-        initComponents(rep);
-        // ensure not null
-        if (factory != null)
-            this.factory = factory;
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setAlignmentX(Component.LEFT_ALIGNMENT);
+        this.rep = rep;
+        this.factory = factory;
+        if (rep.getRoot() != null) displayCdi();
+        // TODO: add update listener to display when load is complete.
     }
 
     /**
      * @param rep Representation of the config to be loaded
      */
     public void initComponents(ConfigRepresentation rep) {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.rep = rep;
-        this.factory = new GuiItemFactory(); // default with no behavior
+        initComponents(rep, new GuiItemFactory()); // default with no behavior
     }
     
     GuiItemFactory factory;
