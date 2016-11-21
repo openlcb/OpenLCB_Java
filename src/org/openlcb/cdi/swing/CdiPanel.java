@@ -8,6 +8,8 @@ import java.awt.Window;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.nio.charset.Charset;
+import java.util.logging.Logger;
+
 import javax.swing.*;
 
 import org.openlcb.EventID;
@@ -30,6 +32,8 @@ import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
  * @author  Balazs Racz Copyright 2016
  */
 public class CdiPanel extends JPanel {
+    private static final String TAG = "CdiPanel";
+    private static final Logger log = Logger.getLogger(TAG);
 
     private ConfigRepresentation rep;
 
@@ -51,7 +55,6 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
-        // TODO: add update listener to display when load is complete.
     }
 
     /**
@@ -347,7 +350,7 @@ public class CdiPanel extends JPanel {
         private final ConfigRepresentation.EventEntry entry;
         private final CdiRep.Item item;
         JFormattedTextField textField;
-        
+
         EventIdPane(ConfigRepresentation.EventEntry e) {
             entry = e;
             item = entry.getCdiItem();
@@ -373,11 +376,12 @@ public class CdiPanel extends JPanel {
             entry.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                    if (propertyChangeEvent.getPropertyName() == UPDATE_ENTRY_DATA) {
-                        if (e.lastVisibleValue == null) {
-                            textField.setText("");
+                    if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
+                        String v = e.lastVisibleValue;
+                        if (v != null) {
+                            textField.setText(v);
                         } else {
-                            textField.setText(e.lastVisibleValue);
+                            textField.setText("");
                         }
                     }
                 }
@@ -458,7 +462,7 @@ public class CdiPanel extends JPanel {
             entry.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                    if (propertyChangeEvent.getPropertyName() == UPDATE_ENTRY_DATA) {
+                    if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
                         if (e.lastVisibleValue == null) return;
                         if (textField != null) {
                             textField.setText(entry.lastVisibleValue);
@@ -534,7 +538,7 @@ public class CdiPanel extends JPanel {
             entry.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                    if (propertyChangeEvent.getPropertyName() == UPDATE_ENTRY_DATA) {
+                    if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
                         if (e.lastVisibleValue == null) {
                             textField.setText("");
                         } else {

@@ -18,6 +18,7 @@ import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
+import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
@@ -605,7 +606,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         @Override
         protected void updateVisibleValue() {
-            lastVisibleValue = getValue().toString();
+            EventID v = getValue();
+            if (v != null) {
+                lastVisibleValue = Utilities.toHexDotsString(v.getContents());
+            } else {
+                lastVisibleValue = "";
+            }
         }
 
         public EventID getValue() {
