@@ -20,6 +20,7 @@ import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
+import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
@@ -63,6 +64,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         this.connection = connection;
         this.remoteNodeID = remoteNodeID;
         triggerFetchCdi();
+    }
+
+    public ConfigRepresentation(CdiPanel.ReadWriteAccess memoryAccess, CdiRep xmlRep) {
+        this.connection = null;
+        this.remoteNodeID = null;
+
     }
 
     /**
