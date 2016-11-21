@@ -1,31 +1,25 @@
 package org.openlcb.cdi.swing;
 
-import javax.swing.JFrame;
-
-import org.mockito.Mockito;
-import org.openlcb.*;
-
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-
-import javax.swing.*;
-
-import org.jdom2.*;
-import org.jdom2.input.SAXBuilder;
+import org.mockito.Mockito;
 import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.cdi.impl.DemoReadWriteAccess;
 import org.openlcb.cdi.jdom.JdomCdiRep;
 import org.openlcb.cdi.jdom.SampleFactory;
 
+import java.io.File;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromFile;
@@ -114,7 +108,7 @@ public class CdiPanelTest extends TestCase {
 
         final ArrayList<JButton> readButtons = new ArrayList<>();
 
-        CdiPanel.ReadWriteAccess access = mock(CdiPanel.ReadWriteAccess.class);
+        DemoReadWriteAccess access = spy(new DemoReadWriteAccess());
         ConfigRepresentation rep = new ConfigRepresentation(access, new JdomCdiRep(
                 SampleFactory.getOffsetSample()));
         m.initComponents(rep, new CdiPanel.GuiItemFactory() {
@@ -122,6 +116,18 @@ public class CdiPanelTest extends TestCase {
                         readButtons.add(button);
                         return button;
                     }});
+
+        final int[][] preloadOffsets = {
+                {0, 2, 14},
+                {153, 167 + 1 - 153, 13},
+                {179, 224 + 9 - 179, 13},
+                {254, 2, 13},
+        };
+        for (int i = 0; i < preloadOffsets.length; ++i) {
+            verify(access).doRead(eq((long) preloadOffsets[i][0]), eq(preloadOffsets[i][2]), eq
+                    (preloadOffsets[i][1]), any());
+        }
+        verifyNoMoreInteractions(access);
 
         Mockito.reset(access);
 
