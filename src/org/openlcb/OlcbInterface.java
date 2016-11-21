@@ -1,12 +1,15 @@
 package org.openlcb;
 
+import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
@@ -40,6 +43,8 @@ public class OlcbInterface {
     private final DatagramService dcs;
     // Client for memory configuration requests.
     private MemoryConfigurationService mcs;
+    // CDIs for the nodes
+    private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
 
     /**
      * Creates the message-level interface.
@@ -119,6 +124,18 @@ public class OlcbInterface {
     /// Useful for testing.
     public void injectMemoryConfigurationService(MemoryConfigurationService s) {
         mcs = s;
+    }
+
+    /**
+     * Creates a new or returns a cached CDI representation for the given node.
+     */
+    public synchronized ConfigRepresentation getConfigForNode(NodeID remoteNode) {
+        if (nodeConfigs.containsKey(remoteNode)) {
+            return nodeConfigs.get(remoteNode);
+        }
+        ConfigRepresentation rep = new ConfigRepresentation(this, remoteNode);
+        nodeConfigs.put(remoteNode, rep);
+        return rep;
     }
 
     /**
@@ -211,7 +228,8 @@ public class OlcbInterface {
      */
     private class QueuedOutputConnection implements Connection {
         private final Connection realOutput;
-        private final BlockingQueue<Message> outputQueue = new LinkedBlockingQueue<>();
+        private final BlockingQueue<QEntry> outputQueue = new
+                LinkedBlockingQueue<>();
         private int pendingCount = 0;
 
         QueuedOutputConnection(Connection realOutput) {
@@ -223,7 +241,7 @@ public class OlcbInterface {
             synchronized(this) {
                 pendingCount++;
             }
-            outputQueue.add(msg);
+            outputQueue.add(new QEntry(msg, sender));
         }
 
         @Override
@@ -248,9 +266,9 @@ public class OlcbInterface {
         private void run() {
             while (true) {
                 try {
-                    Message m = outputQueue.take();
+                    QEntry m = outputQueue.take();
                     try {
-                        realOutput.put(m, null);
+                        realOutput.put(m.message, m.connection);
                     } catch (Throwable e) {
                         log.warning("Exception while sending message: " + e.toString());
                         e.printStackTrace();
@@ -261,6 +279,15 @@ public class OlcbInterface {
                 } catch (InterruptedException e) {
                     continue;
                 }
+            }
+        }
+
+        private class QEntry {
+            Message message;
+            Connection connection;
+            QEntry(Message m, Connection c) {
+                message = m;
+                connection = c;
             }
         }
     }
