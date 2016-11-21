@@ -56,15 +56,9 @@ public class CdiPanel extends JPanel {
 
     private void displayCdi() {
         if (rep.getCdiRep().getIdentification() != null) {
-            add(createIdentificationPane(c));
+            add(createIdentificationPane(rep.getCdiRep()));
         }
         rep.visit(new RendererVisitor());
-        rep.visit(new ConfigRepresentation.Visitor() {
-            @Override
-            public void visitSegment(ConfigRepresentation.SegmentEntry e) {
-                add(createSegmentPane(e));
-            }
-        });
         // add glue at bottom
         add(Box.createVerticalGlue());
     }
@@ -72,6 +66,7 @@ public class CdiPanel extends JPanel {
     private class RendererVisitor extends ConfigRepresentation.Visitor {
         private JPanel currentPane;
         private JPanel currentLeaf;
+        private JTabbedPane currentTabbedPane;
         @Override
         public void visitSegment(ConfigRepresentation.SegmentEntry e) {
             currentPane = createSegmentPane(e);
@@ -83,6 +78,46 @@ public class CdiPanel extends JPanel {
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(ret);
+        }
+
+        @Override
+        public void visitGroup(ConfigRepresentation.GroupEntry e) {
+            // stack these variables
+            JPanel oldPane = currentPane;
+            JTabbedPane oldTabbed = currentTabbedPane;
+
+            currentPane = new GroupPane(e);
+            if (e.group.getReplication() > 1) {
+                currentTabbedPane = new JTabbedPane();
+                currentTabbedPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+            }
+
+            factory.handleGroupPaneStart(currentPane);
+            super.visitGroup(e);
+            factory.handleGroupPaneEnd(currentPane);
+
+            oldPane.add(currentPane);
+
+            // restore stack
+            currentPane = oldPane;
+            currentTabbedPane = oldTabbed;
+        }
+
+        @Override
+        public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+            currentPane = new JPanel();
+            currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
+            currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+            CdiRep.Group item = e.group;
+            String name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(e.index+1);
+            currentPane.setBorder(BorderFactory.createTitledBorder(name));
+            currentPane.setName(name);
+
+            factory.handleGroupPaneStart(currentPane);
+            super.visitGroupRep(e);
+            factory.handleGroupPaneEnd(currentPane);
+
+            currentTabbedPane.add(currentPane);
         }
 
         @Override
@@ -109,6 +144,8 @@ public class CdiPanel extends JPanel {
             currentPane.add(currentLeaf);
             currentLeaf = null;
         }
+
+
     }
 
     JPanel createIdentificationPane(CdiRep c) {
@@ -197,68 +234,6 @@ public class CdiPanel extends JPanel {
         return p;
     }
 
-
-    JPanel createSegmentPaneOld(ConfigRepresentation.SegmentEntry item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setAlignmentY(Component.TOP_ALIGNMENT);
-        String name = "Segment"+(item.getName()!=null?(": "+item.getName()):"");
-        //p.setBorder(BorderFactory.createTitledBorder(name));
-
-        String d = item.getDescription();
-        if (d!=null) p.add(createDescriptionPane(d));
-        
-        // include map if present
-        JPanel p2 = createPropertyPane(item.getMap());
-        if (p2!=null) p.add(p2);
-
-
-        // find and process items
-        java.util.List<CdiRep.Item> items = item.getItems();
-        if (items != null) {
-             DisplayPane pane = null; 
-              
-             for (int i=0; i<items.size(); i++) {
-                CdiRep.Item it = (CdiRep.Item) items.get(i);
-                
-                origin = origin +it.getOffset();
- 
-                 if (it instanceof CdiRep.Group) {
-                     pane = createGroupPane((CdiRep.Group) it, origin, space);
-                 } else if (it instanceof CdiRep.BitRep) {
-                     pane = createBitPane((CdiRep.BitRep) it, origin, space);
-                 } else if (it instanceof CdiRep.IntegerRep) {
-                     pane = createIntPane((CdiRep.IntegerRep) it, origin, space);
-                 } else if (it instanceof CdiRep.EventID) {
-                     pane = createEventIdPane((CdiRep.EventID) it, origin, space);
-                 } else if (it instanceof CdiRep.StringRep) {
-                     pane = createStringPane((CdiRep.StringRep) it, origin, space);
-                 }
-                 if (pane != null) {
-                    origin = pane.getOrigin() + pane.getVarSize();
-                    if(it instanceof CdiRep.Group) {
-                        // groups should collapse.  
-                        JPanel colPane = new util.CollapsiblePanel(it.getName(), pane);
-                        colPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-                        p.add(colPane);
-                    } else {
-                        pane.setAlignmentX(Component.LEFT_ALIGNMENT);
-                        p.add(pane);
-                    }
-                 } else {
-                     System.out.println("could not process type of " + it);
-                 }
-            }
-        }
-        
-        JPanel ret = new util.CollapsiblePanel(name, p);
-        // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
-        ret.setAlignmentY(Component.TOP_ALIGNMENT);
-        ret.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return ret;
-    }
-
     JPanel createDescriptionPane(String d) {
         if (d == null) return null;
         JPanel p = new JPanel();
@@ -278,14 +253,12 @@ public class CdiPanel extends JPanel {
     abstract class DisplayPane extends JPanel {
     }
 
-    DisplayPane createGroupPane(CdiRep.Group item, long origin, int space) {
-        DisplayPane ret = new GroupPane(item, origin, space);
-        return ret;        
-    }
-    
-    public class GroupPane extends DisplayPane {
-        GroupPane(CdiRep.Group item, long origin, int space){
-            super(origin, space);
+    public class GroupPane extends JPanel {
+        private final ConfigRepresentation.GroupEntry entry;
+        private final CdiRep.Item item;
+        GroupPane(ConfigRepresentation.GroupEntry e) {
+            entry = e;
+            item = e.getCdiItem();
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? (item.getName()) : "Group");
@@ -297,82 +270,14 @@ public class CdiPanel extends JPanel {
                 add(createDescriptionPane(d));
             }
 
-            factory.handleGroupPaneStart(this);
-            
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
             if (p2 != null) {
                 add(p2);
             }
-
-            // find and process items as replicated
-            int rep = item.getReplication();
-            if (rep == 0) {
-                rep = 1;  // default
-            }
-            JPanel currentPane = this;
-            JTabbedPane tabbedPane = new JTabbedPane();
-            tabbedPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-            for (int i = 0; i < rep; i++) {
-                if (rep != 1) {
-                    // nesting a pane
-                    currentPane = new JPanel();
-                    currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
-                    currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-                    name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(i+1);
-                    currentPane.setBorder(BorderFactory.createTitledBorder(name));
-                    factory.handleGroupPaneStart(currentPane);
-                            
-                    currentPane.setName(name);
-                     
-                    tabbedPane.add(currentPane);
-                    
-                }
-                java.util.List<CdiRep.Item> items = item.getItems();
-                if (items != null) {
-                    for (int j = 0; j < items.size(); j++) {
-                        CdiRep.Item it = (CdiRep.Item) items.get(j);
-                        DisplayPane pane = null;
-                        
-                        origin = origin +it.getOffset();
-                        size = size + it.getOffset();
-                        //System.err.println("Origin " + origin + " csize " + size + " type " + it
-                        //        .getClass().getSimpleName());
-
-                        // Following code smells bad.  CdiRep is a representational
-                        // class, shouldn't contain a "makeRepresentation" method,
-                        // but some sort of dispatch would be better than this.
-                        
-                        if (it instanceof CdiRep.Group) {
-                            pane = createGroupPane((CdiRep.Group) it, origin, space);
-                            pane.setName(name);
-                        } else if (it instanceof CdiRep.BitRep) {
-                            pane = createBitPane((CdiRep.BitRep) it, origin, space);
-                        } else if (it instanceof CdiRep.IntegerRep) {
-                            pane = createIntPane((CdiRep.IntegerRep) it, origin, space);
-                        } else if (it instanceof CdiRep.EventID) {
-                            pane = createEventIdPane((CdiRep.EventID) it, origin, space);
-                        } else if (it instanceof CdiRep.StringRep) {
-                            pane = createStringPane((CdiRep.StringRep) it, origin,space);
-                        }
-                        if (pane != null) {
-                            size = size + pane.getVarSize();
-                            origin = pane.getOrigin() + pane.getVarSize();
-                            currentPane.add(pane);
-                        } else { // pane == null, either didn't select a type or something went wrong in creation.
-                            System.out.println("could not process type of " + it);
-                        }
-                    }
-                }
-                factory.handleGroupPaneEnd(currentPane);
-
-            }
-            add(tabbedPane);
-            if (rep != 1) factory.handleGroupPaneEnd(this);  // if 1, currentpane is this
         }
-        
     }
-    
+
     public class EventIdPane extends JPanel {
         private final ConfigRepresentation.EventEntry entry;
         private final CdiRep.Item item;
