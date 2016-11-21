@@ -1,6 +1,8 @@
 package org.openlcb.cdi.swing;
 
 import javax.swing.JFrame;
+
+import org.mockito.Mockito;
 import org.openlcb.*;
 
 import junit.framework.Assert;
@@ -17,12 +19,17 @@ import javax.swing.*;
 
 import org.jdom2.*;
 import org.jdom2.input.SAXBuilder;
+import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.cdi.jdom.JdomCdiRep;
+import org.openlcb.cdi.jdom.SampleFactory;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromFile;
+import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromSample;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
@@ -40,19 +47,8 @@ public class CdiPanelTest extends TestCase {
         JFrame f = new JFrame();
         f.setTitle("Configuration Demonstration");
         CdiPanel m = new CdiPanel();
-                
-        m.initComponents(new CdiPanel.ReadWriteAccess(){
-                @Override
-                public void doWrite(long address, int space, byte[] data) {
-                        System.out.println(data.length);
-                        System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
-                    }
-                @Override
-                public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
-                        handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
-                        System.out.println("read "+address+" "+space);
-                    }            
-            },
+
+        m.initComponents(demoRepFromSample(org.openlcb.cdi.jdom.SampleFactory.getBasicSample()),
                 new CdiPanel.GuiItemFactory() {
                     public JButton handleReadButton(JButton button) {
                         //System.out.println("process button");
@@ -61,12 +57,7 @@ public class CdiPanelTest extends TestCase {
                 }
             }
         );
-        m.loadCDI(
-            new org.openlcb.cdi.jdom.JdomCdiRep(
-                org.openlcb.cdi.jdom.SampleFactory.getBasicSample()
-            )
-        );
-        
+
         f.add( m );
 
         // show
@@ -78,19 +69,8 @@ public class CdiPanelTest extends TestCase {
         JFrame f = new JFrame();
         f.setTitle("Locomotive CDI Demonstration");
         CdiPanel m = new CdiPanel();
-                
-        m.initComponents(new CdiPanel.ReadWriteAccess(){
-                @Override
-                public void doWrite(long address, int space, byte[] data) {
-                        System.out.println(data.length);
-                        System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
-                    }
-                @Override
-                public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
-                        handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
-                        System.out.println("read "+address+" "+space);
-                    }            
-            },
+
+        m.initComponents(demoRepFromFile(new File("NMRAnetDatabaseTrainNode.xml")),
                 new CdiPanel.GuiItemFactory() {
                     public JButton handleReadButton(JButton button) {
                         //System.out.println("process button");
@@ -99,19 +79,7 @@ public class CdiPanelTest extends TestCase {
                 }
             }
         );
-        
-        // find file & load file
-        Element root = null;
-        try {
-            SAXBuilder builder = new SAXBuilder("org.apache.xerces.parsers.SAXParser", false);  // argument controls validation
-            Document doc = builder.build(new BufferedInputStream(new FileInputStream(new File("NMRAnetDatabaseTrainNode.xml"))));
-            root = doc.getRootElement();
-        } catch (Exception e) { System.out.println("While reading file: "+e);}
-        
-        m.loadCDI(
-            new org.openlcb.cdi.jdom.JdomCdiRep(root)
-        );
-        
+
         f.add( m );
 
         // show
@@ -147,16 +115,15 @@ public class CdiPanelTest extends TestCase {
         final ArrayList<JButton> readButtons = new ArrayList<>();
 
         CdiPanel.ReadWriteAccess access = mock(CdiPanel.ReadWriteAccess.class);
-        m.initComponents(access, new CdiPanel.GuiItemFactory() {
+        ConfigRepresentation rep = new ConfigRepresentation(access, new JdomCdiRep(
+                SampleFactory.getOffsetSample()));
+        m.initComponents(rep, new CdiPanel.GuiItemFactory() {
                     public JButton handleReadButton(JButton button) {
                         readButtons.add(button);
                         return button;
                     }});
 
-        m.loadCDI(
-                new org.openlcb.cdi.jdom.JdomCdiRep(
-                        org.openlcb.cdi.jdom.SampleFactory.getOffsetSample())
-        );
+        Mockito.reset(access);
 
         final int[][] readOffsets = {
                 {153, 2, 13},
