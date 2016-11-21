@@ -2,7 +2,9 @@ package org.openlcb.cdi.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Window;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.nio.charset.Charset;
@@ -15,6 +17,8 @@ import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
+import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
+import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 
 /**
  * Simple example CDI display.
@@ -40,7 +44,13 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
-        if (rep.getRoot() != null) displayCdi();
+        synchronized(rep) {
+            if (rep.getRoot() != null) {
+                displayCdi();
+            } else {
+                displayLoadingProgress();
+            }
+        }
         // TODO: add update listener to display when load is complete.
     }
 
@@ -52,14 +62,57 @@ public class CdiPanel extends JPanel {
     }
     
     GuiItemFactory factory;
+    JPanel loadingPanel;
+    JLabel loadingText;
+    PropertyChangeListener loadingListener;
+
+    private void removeLoadingListener() {
+        synchronized (rep) {
+            if (loadingListener != null) rep.removePropertyChangeListener(loadingListener);
+            loadingListener = null;
+        }
+    }
+
+    private void addLoadingListener() {
+        synchronized(rep) {
+            loadingListener = new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent event) {
+                    if (event.getPropertyName().equals(UPDATE_REP)) {
+                        displayCdi();
+                    } else if (event.getPropertyName().equals(UPDATE_STATE)) {
+                        loadingText.setText(rep.getStatus());
+                        Window win = SwingUtilities.getWindowAncestor(CdiPanel.this);
+                        if (win != null) win.pack();
+                    }
+                }
+            };
+            rep.addPropertyChangeListener(loadingListener);
+        }
+    }
+
+    private void hideLoadingProgress() {
+        if (loadingPanel == null) return;
+        removeLoadingListener();
+        loadingPanel.setVisible(false);
+    }
+
+    private void displayLoadingProgress() {
+        if (loadingPanel == null) createLoadingPane();
+        add(loadingPanel);
+        addLoadingListener();
+    }
 
     private void displayCdi() {
+        hideLoadingProgress();
         if (rep.getCdiRep().getIdentification() != null) {
             add(createIdentificationPane(rep.getCdiRep()));
         }
         rep.visit(new RendererVisitor());
         // add glue at bottom
         add(Box.createVerticalGlue());
+        Window win = SwingUtilities.getWindowAncestor(this);
+        if (win != null) win.pack();
     }
 
     private class RendererVisitor extends ConfigRepresentation.Visitor {
@@ -85,17 +138,19 @@ public class CdiPanel extends JPanel {
             JPanel oldPane = currentPane;
             JTabbedPane oldTabbed = currentTabbedPane;
 
-            currentPane = new GroupPane(e);
+            GroupPane groupPane = new GroupPane(e);
+            currentPane = groupPane;
             if (e.group.getReplication() > 1) {
                 currentTabbedPane = new JTabbedPane();
                 currentTabbedPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+                currentPane.add(currentTabbedPane);
             }
 
-            factory.handleGroupPaneStart(currentPane);
+            factory.handleGroupPaneStart(groupPane);
             super.visitGroup(e);
-            factory.handleGroupPaneEnd(currentPane);
+            factory.handleGroupPaneEnd(groupPane);
 
-            oldPane.add(currentPane);
+            oldPane.add(groupPane);
 
             // restore stack
             currentPane = oldPane;
@@ -108,8 +163,8 @@ public class CdiPanel extends JPanel {
             currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
             currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
             CdiRep.Group item = e.group;
-            String name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(e.index+1);
-            currentPane.setBorder(BorderFactory.createTitledBorder(name));
+            String name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(e.index);
+            //currentPane.setBorder(BorderFactory.createTitledBorder(name));
             currentPane.setName(name);
 
             factory.handleGroupPaneStart(currentPane);
@@ -145,6 +200,20 @@ public class CdiPanel extends JPanel {
         }
 
 
+    }
+
+
+    void createLoadingPane() {
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.setAlignmentY(Component.TOP_ALIGNMENT);
+        p.setBorder(BorderFactory.createTitledBorder("Loading"));
+        loadingText = new JLabel(rep.getStatus());
+        loadingText.setPreferredSize(new Dimension(200, 20));
+        loadingText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        p.add(loadingText);
+        loadingPanel = p;
     }
 
     JPanel createIdentificationPane(CdiRep c) {
@@ -247,9 +316,6 @@ public class CdiPanel extends JPanel {
         area.setLineWrap(true);
         p.add(area);
         return p;
-    }
-
-    abstract class DisplayPane extends JPanel {
     }
 
     public class GroupPane extends JPanel {
