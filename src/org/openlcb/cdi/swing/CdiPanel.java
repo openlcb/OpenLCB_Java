@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.nio.charset.Charset;
 import javax.swing.*;
 import org.openlcb.cdi.CdiRep;
+import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
 /**
@@ -634,10 +635,12 @@ public class CdiPanel extends JPanel {
       * Default just writes output for debug
       */
     public static class ReadWriteAccess {
-        public void doWrite(long address, int space, byte[] data) {
+        public void doWrite(long address, int space, byte[] data, final
+                            MemoryConfigurationService.McsWriteHandler handler) {
             System.out.println("Write to "+address+" in space "+space);
         }
-        public void doRead(long address, int space, int length, final ReadReturn handler) {
+        public void doRead(long address, int space, int length, final MemoryConfigurationService
+                .McsReadHandler handler) {
             System.out.println("Read from "+address+" in space "+space);
         }
     }
@@ -667,12 +670,5 @@ public class CdiPanel extends JPanel {
             return value;
         }
 
-    }
-     
-    /**
-     * Memo class for handling read-return data
-     */
-    abstract public class ReadReturn {
-        abstract public void returnData(byte[] data);
     }
 }
