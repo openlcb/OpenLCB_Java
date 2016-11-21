@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.openlcb.DefaultPropertyListenerSupport;
@@ -53,7 +54,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     private CdiRep cdiRep;
     private String state = "Uninitialized";
     private CdiContainer root = null;
-    private final Map<Integer, MemorySpaceCache> spaces = new HashMap<>();
+    private final Map<Integer, MemorySpaceCache> spaces = new TreeMap<>();
     private final Map<String, CdiEntry> variables = new HashMap<>();
     // Last time the progressbar was updated from the load.
     private long lastProgress;
