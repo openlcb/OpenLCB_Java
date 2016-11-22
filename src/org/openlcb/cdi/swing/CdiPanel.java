@@ -68,6 +68,7 @@ public class CdiPanel extends JPanel {
     JPanel loadingPanel;
     JLabel loadingText;
     PropertyChangeListener loadingListener;
+    boolean loadingIsPacked = false;
 
     private void removeLoadingListener() {
         synchronized (rep) {
@@ -86,7 +87,10 @@ public class CdiPanel extends JPanel {
                     } else if (event.getPropertyName().equals(UPDATE_STATE)) {
                         loadingText.setText(rep.getStatus());
                         Window win = SwingUtilities.getWindowAncestor(CdiPanel.this);
-                        if (win != null) win.pack();
+                        if (!loadingIsPacked && win != null) {
+                            win.pack();
+                            loadingIsPacked = true;
+                        }
                     }
                 }
             };
@@ -213,7 +217,7 @@ public class CdiPanel extends JPanel {
         p.setAlignmentY(Component.TOP_ALIGNMENT);
         p.setBorder(BorderFactory.createTitledBorder("Loading"));
         loadingText = new JLabel(rep.getStatus());
-        loadingText.setPreferredSize(new Dimension(200, 20));
+        loadingText.setPreferredSize(new Dimension(400, 20));
         loadingText.setAlignmentX(Component.LEFT_ALIGNMENT);
         p.add(loadingText);
         loadingPanel = p;
