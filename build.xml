@@ -337,6 +337,14 @@
              compress="true" />   <!-- compress="true" is default -->
     </target>
 
+    <target name="rejar" description="re-create working jar files without clean">
+        <antcall target="compile" />
+        <jar jarfile="${jartarget}/openlcb.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+    </target>
+    
 </project>
 
 
