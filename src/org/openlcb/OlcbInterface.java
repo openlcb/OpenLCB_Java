@@ -117,6 +117,10 @@ public class OlcbInterface {
         return dcs;
     }
 
+    public DatagramMeteringBuffer getDatagramMeteringBuffer() {
+        return dmb;
+    }
+
     public MemoryConfigurationService getMemoryConfigurationService() {
         return mcs;
     }
