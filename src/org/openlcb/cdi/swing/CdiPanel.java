@@ -477,7 +477,7 @@ public class CdiPanel extends JPanel {
                     if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
                         String v = entry.lastVisibleValue;
                         if (v == null) v = "";
-                        updateValue(v);
+                        updateDisplayText(v);
                         updateColor();
                     } else if (propertyChangeEvent.getPropertyName().equals
                             (UPDATE_WRITE_COMPLETE)) {
@@ -502,7 +502,7 @@ public class CdiPanel extends JPanel {
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    executeWrite();
+                    writeDisplayTextToNode();
                 }
             });
             p3.add(b);
@@ -514,7 +514,7 @@ public class CdiPanel extends JPanel {
                 textComponent.setBackground(COLOR_UNFILLED);
                 return;
             }
-            String v = getDisplayedValue();
+            String v = getDisplayText();
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
             } else {
@@ -525,15 +525,15 @@ public class CdiPanel extends JPanel {
         }
 
         // Take the value from the text box and write it to the Cdi entry.
-        protected abstract void executeWrite();
+        protected abstract void writeDisplayTextToNode();
 
         // Take the latest entry (or "") from the Cdi entry and write it to the text box.
-        protected abstract void updateValue(@Nonnull String value);
+        protected abstract void updateDisplayText(@Nonnull String value);
 
         // returns the currently displayed value ("" if none).
         protected abstract
         @Nonnull
-        String getDisplayedValue();
+        String getDisplayText();
     }
 
     public class EventIdPane extends EntryPane {
@@ -552,20 +552,20 @@ public class CdiPanel extends JPanel {
 
 
         @Override
-        protected void executeWrite() {
+        protected void writeDisplayTextToNode() {
             byte[] contents = org.openlcb.Utilities.bytesFromHexString((String) textField
                     .getText());
             entry.setValue(new EventID(contents));
         }
 
         @Override
-        protected void updateValue(@Nonnull String value) {
+        protected void updateDisplayText(@Nonnull String value) {
             textField.setText(value);
         }
 
         @Nonnull
         @Override
-        protected String getDisplayedValue() {
+        protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
         }
@@ -609,7 +609,7 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        protected void executeWrite() {
+        protected void writeDisplayTextToNode() {
             long value;
             if (textField != null) {
                 value = Long.parseLong(textField.getText());
@@ -623,40 +623,27 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        protected void updateValue(@Nonnull String value) {
+        protected void updateDisplayText(@Nonnull String value) {
             if (textField != null) textField.setText(value);
             if (box != null) box.setSelectedItem(value);
         }
 
         @Nonnull
         @Override
-        protected String getDisplayedValue() {
+        protected String getDisplayText() {
             String s = (box == null) ? (String) textField.getText()
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
         }
     }
 
-    public class StringPane extends JPanel {
+    public class StringPane extends EntryPane {
         JTextField textField;
         private final ConfigRepresentation.StringEntry entry;
-        private final CdiRep.Item item;
 
         StringPane(ConfigRepresentation.StringEntry e) {
+            super(e, "String");
             this.entry = e;
-            this.item = entry.getCdiItem();
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = (item.getName()!=null? item.getName() : "String");
-            setBorder(BorderFactory.createTitledBorder(name));
-        
-            String d = item.getDescription();
-            if (d!=null) add(createDescriptionPane(d));
-
-            JPanel p3 = new JPanel();
-            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
-            add(p3);
 
             textField = new JTextField(entry.size) {
                 public java.awt.Dimension getMaximumSize() {
@@ -664,56 +651,29 @@ public class CdiPanel extends JPanel {
                 }
             };
             textField = factory.handleStringValue(textField);
-            textField.setBackground(COLOR_UNFILLED);
-
-            p3.add(textField);
+            textComponent = textField;
             textField.setToolTipText("String of up to "+entry.size+" characters");
-            textField.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    textField.setBackground(COLOR_EDITED);
-                }
-            });
 
-            entry.addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                    if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
-                        if (e.lastVisibleValue == null) {
-                            textField.setText("");
-                            textField.setBackground(COLOR_ERROR);
-                        } else {
-                            textField.setText(e.lastVisibleValue);
-                            textField.setBackground(COLOR_WRITTEN);
-                        }
-                    } else if (propertyChangeEvent.getPropertyName().equals
-                            (UPDATE_WRITE_COMPLETE)) {
-                        textField.setBackground(COLOR_WRITTEN);
-                    }
-                }
-            });
-            entry.fireUpdate();
-
-            JButton b;
-            b = factory.handleReadButton(new JButton("Refresh")); // was: read
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    entry.reload();
-                }
-            });
-            p3.add(b);
-            b = factory.handleWriteButton(new JButton("Write"));
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    entry.setValue(textField.getText());
-                }
-            });
-            p3.add(b);
-            p3.add(Box.createHorizontalGlue());
+            init();
         }
-     }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+            entry.setValue(textField.getText());
+        }
+
+        @Override
+        protected void updateDisplayText(@Nonnull String value) {
+            textField.setText(value);
+        }
+
+        @Nonnull
+        @Override
+        protected String getDisplayText() {
+            String s = textField.getText();
+            return s == null ? "" : s;
+        }
+    }
 
      /** 
       * Provide access to e.g. a MemoryConfig service.
