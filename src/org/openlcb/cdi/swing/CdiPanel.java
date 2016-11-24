@@ -3,6 +3,7 @@ package org.openlcb.cdi.swing;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Window;
 import java.beans.PropertyChangeEvent;
@@ -36,7 +37,6 @@ public class CdiPanel extends JPanel {
     private static final Logger log = Logger.getLogger(TAG);
 
     private ConfigRepresentation rep;
-
     public CdiPanel () { super(); }
     
     /**
@@ -68,6 +68,8 @@ public class CdiPanel extends JPanel {
     JPanel loadingPanel;
     JLabel loadingText;
     PropertyChangeListener loadingListener;
+    private JButton reloadButton;
+
     boolean loadingIsPacked = false;
 
     private void removeLoadingListener() {
@@ -111,13 +113,29 @@ public class CdiPanel extends JPanel {
     }
 
     private void displayCdi() {
-        hideLoadingProgress();
+        displayLoadingProgress();
+        loadingText.setText("Creating display...");
         if (rep.getCdiRep().getIdentification() != null) {
             add(createIdentificationPane(rep.getCdiRep()));
         }
-        rep.visit(new RendererVisitor());
+        repack();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                rep.visit(new RendererVisitor());
+                EventQueue.invokeLater(() -> displayComplete());
+            }
+        }).start();
+    }
+
+    private void displayComplete() {
+        hideLoadingProgress();
         // add glue at bottom
         add(Box.createVerticalGlue());
+        repack();
+    }
+
+    private void repack() {
         Window win = SwingUtilities.getWindowAncestor(this);
         if (win != null) win.pack();
     }
@@ -128,7 +146,7 @@ public class CdiPanel extends JPanel {
         private JTabbedPane currentTabbedPane;
         @Override
         public void visitSegment(ConfigRepresentation.SegmentEntry e) {
-            currentPane = createSegmentPane(e);
+            currentPane = new SegmentPane(e);
             super.visitSegment(e);
 
             String name = "Segment" + (e.getName() != null ? (": " + e.getName()) : "");
@@ -137,6 +155,7 @@ public class CdiPanel extends JPanel {
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
             add(ret);
+            EventQueue.invokeLater(() -> repack());
         }
 
         @Override
@@ -157,7 +176,17 @@ public class CdiPanel extends JPanel {
             super.visitGroup(e);
             factory.handleGroupPaneEnd(groupPane);
 
-            oldPane.add(groupPane);
+            if (oldPane instanceof SegmentPane) {
+                // we make toplevel groups collapsible.
+                groupPane.setBorder(null);
+                JPanel ret = new util.CollapsiblePanel(groupPane.getName(), groupPane);
+                // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
+                ret.setAlignmentY(Component.TOP_ALIGNMENT);
+                ret.setAlignmentX(Component.LEFT_ALIGNMENT);
+                oldPane.add(ret);
+            } else {
+                oldPane.add(groupPane);
+            }
 
             // restore stack
             currentPane = oldPane;
@@ -205,8 +234,6 @@ public class CdiPanel extends JPanel {
             currentPane.add(currentLeaf);
             currentLeaf = null;
         }
-
-
     }
 
 
@@ -220,6 +247,14 @@ public class CdiPanel extends JPanel {
         loadingText.setPreferredSize(new Dimension(400, 20));
         loadingText.setAlignmentX(Component.LEFT_ALIGNMENT);
         p.add(loadingText);
+        reloadButton = new JButton("Re-try");
+        reloadButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                rep.restartIfNeeded();
+            }
+        });
+        p.add(reloadButton);
         loadingPanel = p;
     }
 
@@ -293,20 +328,21 @@ public class CdiPanel extends JPanel {
             return null;
     }
 
-    JPanel createSegmentPane(ConfigRepresentation.SegmentEntry item) {
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        p.setAlignmentY(Component.TOP_ALIGNMENT);
-        //p.setBorder(BorderFactory.createTitledBorder(name));
+    public class SegmentPane extends JPanel {
+        SegmentPane(ConfigRepresentation.SegmentEntry item) {
+            JPanel p = this;
+            p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+            p.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p.setAlignmentY(Component.TOP_ALIGNMENT);
+            //p.setBorder(BorderFactory.createTitledBorder(name));
 
-        String d = item.getDescription();
-        if (d != null) p.add(createDescriptionPane(d));
+            String d = item.getDescription();
+            if (d != null) p.add(createDescriptionPane(d));
 
-        // include map if present
-        JPanel p2 = createPropertyPane(item.getMap());
-        if (p2 != null) p.add(p2);
-        return p;
+            // include map if present
+            JPanel p2 = createPropertyPane(item.getMap());
+            if (p2 != null) p.add(p2);
+        }
     }
 
     JPanel createDescriptionPane(String d) {
