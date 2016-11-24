@@ -518,8 +518,6 @@ public class CdiPanel extends JPanel {
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
             } else {
-                log.warning("Box is edited. visible='" + v + "' last='" + entry.lastVisibleValue
-                        + "'");
                 textComponent.setBackground(COLOR_EDITED);
             }
         }
