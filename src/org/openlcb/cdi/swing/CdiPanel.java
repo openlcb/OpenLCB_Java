@@ -1,27 +1,46 @@
 package org.openlcb.cdi.swing;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Window;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.nio.charset.Charset;
-import java.util.logging.Logger;
-
-import javax.swing.*;
-
 import org.openlcb.EventID;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.logging.Logger;
+
+import javax.annotation.Nonnull;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
+
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
+import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
 
 /**
  * Simple example CDI display.
@@ -35,6 +54,12 @@ import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 public class CdiPanel extends JPanel {
     private static final String TAG = "CdiPanel";
     private static final Logger log = Logger.getLogger(TAG);
+
+    private static final Color COLOR_EDITED = new Color(0xffa500); // orange
+    private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
+    private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
+    private static final Color COLOR_ERROR = new Color(0xff0000); // red
+
 
     private ConfigRepresentation rep;
     public CdiPanel () { super(); }
@@ -386,17 +411,19 @@ public class CdiPanel extends JPanel {
         }
     }
 
-    public class EventIdPane extends JPanel {
-        private final ConfigRepresentation.EventEntry entry;
-        private final CdiRep.Item item;
-        JFormattedTextField textField;
+    public abstract class EntryPane extends JPanel {
+        protected final CdiRep.Item item;
+        protected JComponent textComponent;
+        private ConfigRepresentation.CdiEntry entry;
+        JPanel p3;
 
-        EventIdPane(ConfigRepresentation.EventEntry e) {
+        EntryPane(ConfigRepresentation.CdiEntry e, String defaultName) {
+            item = e.getCdiItem();
             entry = e;
-            item = entry.getCdiItem();
+
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = (item.getName() != null ? item.getName() : "EventID");
+            String name = (item.getName() != null ? item.getName() : defaultName);
             setBorder(BorderFactory.createTitledBorder(name));
 
             String d = item.getDescription();
@@ -404,25 +431,58 @@ public class CdiPanel extends JPanel {
                 add(createDescriptionPane(d));
             }
 
-            JPanel p3 = new JPanel();
+            p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
             p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
+        }
 
-            textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
-            textField.setMaximumSize(textField.getPreferredSize());
-            p3.add(textField);
+        protected void init() {
+            p3.add(textComponent);
+            textComponent.setMaximumSize(textComponent.getPreferredSize());
+            if (textComponent instanceof JTextComponent) {
+                ((JTextComponent) textComponent).getDocument().addDocumentListener(
+                        new DocumentListener() {
+                            @Override
+                            public void insertUpdate(DocumentEvent documentEvent) {
+                                drawRed();
+                            }
 
+                            @Override
+                            public void removeUpdate(DocumentEvent documentEvent) {
+                                drawRed();
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent documentEvent) {
+                                drawRed();
+                            }
+
+                            private void drawRed() {
+                                updateColor();
+                            }
+                        }
+                );
+            } else if (textComponent instanceof JComboBox) {
+                ((JComboBox) textComponent).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        updateColor();
+                    }
+                });
+            }
             entry.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                     if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
-                        String v = e.lastVisibleValue;
-                        if (v != null) {
-                            textField.setText(v);
-                        } else {
-                            textField.setText("");
-                        }
+                        String v = entry.lastVisibleValue;
+                        if (v == null) v = "";
+                        updateValue(v);
+                        updateColor();
+                    } else if (propertyChangeEvent.getPropertyName().equals
+                            (UPDATE_WRITE_COMPLETE)) {
+                        updateColor();
+                        //textComponent.setBackground(COLOR_WRITTEN);
                     }
                 }
             });
@@ -437,45 +497,91 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+
             b = factory.handleWriteButton(new JButton("Write"));
             b.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
-                    byte[] contents = org.openlcb.Utilities.bytesFromHexString((String)textField.getValue());
-                    entry.setValue(new EventID(contents));
-                 }
+                    executeWrite();
+                }
             });
             p3.add(b);
             p3.add(Box.createHorizontalGlue());
         }
-    }
-    
 
-    public class IntPane extends JPanel {
+        void updateColor() {
+            if (entry.lastVisibleValue == null) {
+                textComponent.setBackground(COLOR_UNFILLED);
+                return;
+            }
+            String v = getDisplayedValue();
+            if (v.equals(entry.lastVisibleValue)) {
+                textComponent.setBackground(COLOR_WRITTEN);
+            } else {
+                log.warning("Box is edited. visible='" + v + "' last='" + entry.lastVisibleValue
+                        + "'");
+                textComponent.setBackground(COLOR_EDITED);
+            }
+        }
+
+        // Take the value from the text box and write it to the Cdi entry.
+        protected abstract void executeWrite();
+
+        // Take the latest entry (or "") from the Cdi entry and write it to the text box.
+        protected abstract void updateValue(@Nonnull String value);
+
+        // returns the currently displayed value ("" if none).
+        protected abstract
+        @Nonnull
+        String getDisplayedValue();
+    }
+
+    public class EventIdPane extends EntryPane {
+        private final ConfigRepresentation.EventEntry entry;
+        JFormattedTextField textField;
+
+        EventIdPane(ConfigRepresentation.EventEntry e) {
+            super(e, "EventID");
+            entry = e;
+
+            textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
+            textComponent = textField;
+
+            init();
+        }
+
+
+        @Override
+        protected void executeWrite() {
+            byte[] contents = org.openlcb.Utilities.bytesFromHexString((String) textField
+                    .getText());
+            entry.setValue(new EventID(contents));
+        }
+
+        @Override
+        protected void updateValue(@Nonnull String value) {
+            textField.setText(value);
+        }
+
+        @Nonnull
+        @Override
+        protected String getDisplayedValue() {
+            String s = textField.getText();
+            return s == null ? "" : s;
+        }
+    }
+
+
+    public class IntPane extends EntryPane {
         JTextField textField = null;
         JComboBox box = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
-        private final CdiRep.Item item;
 
 
         IntPane(ConfigRepresentation.IntegerEntry e) {
+            super(e, "Integer");
             this.entry = e;
-            this.item = entry.getCdiItem();
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setAlignmentX(Component.LEFT_ALIGNMENT);
-            String name = (item.getName() != null ? item.getName() : "Integer");
-            setBorder(BorderFactory.createTitledBorder(name));
-
-            String d = item.getDescription();
-            if (d != null) {
-                add(createDescriptionPane(d));
-            }
-
-            JPanel p3 = new JPanel();
-            p3.setAlignmentX(Component.LEFT_ALIGNMENT);
-            p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
-            add(p3);
 
             // see if map is present
             String[] labels;
@@ -487,7 +593,7 @@ public class CdiPanel extends JPanel {
                         return getPreferredSize();
                     }
                 };
-                p3.add(box);
+                textComponent = box;
             } else {
                 // map not present, just an entry box
                 textField = new JTextField(24) {
@@ -495,52 +601,39 @@ public class CdiPanel extends JPanel {
                         return getPreferredSize();
                     }
                 };
-                p3.add(textField);
+                textComponent = textField;
                 textField.setToolTipText("Signed integer value of up to "+entry.size+" bytes");
             }
 
-            entry.addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                    if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
-                        if (e.lastVisibleValue == null) return;
-                        if (textField != null) {
-                            textField.setText(entry.lastVisibleValue);
-                        } else {
-                            box.setSelectedItem(entry.lastVisibleValue);
-                        }
-                    }
-                }
-            });
-            entry.fireUpdate();
+            init();
+        }
 
-            JButton b;
-            b = factory.handleReadButton(new JButton("Refresh")); // was: read
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    entry.reload();
-                }
-            });
-            p3.add(b);
-            b = factory.handleWriteButton(new JButton("Write"));
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    long value;
-                    if (textField != null) {
-                        value = Long.parseLong(textField.getText());
-                    } else {
-                        // have to get key from stored value
-                        String entry = (String) box.getSelectedItem();
-                        String key = map.getKey(entry);
-                        value = Long.parseLong(key);
-                    }
-                    entry.setValue(value);
-                }
-            });
-            p3.add(b);
-            p3.add(Box.createHorizontalGlue());
+        @Override
+        protected void executeWrite() {
+            long value;
+            if (textField != null) {
+                value = Long.parseLong(textField.getText());
+            } else {
+                // have to get key from stored value
+                String entry = (String) box.getSelectedItem();
+                String key = map.getKey(entry);
+                value = Long.parseLong(key);
+            }
+            entry.setValue(value);
+        }
+
+        @Override
+        protected void updateValue(@Nonnull String value) {
+            if (textField != null) textField.setText(value);
+            if (box != null) box.setSelectedItem(value);
+        }
+
+        @Nonnull
+        @Override
+        protected String getDisplayedValue() {
+            String s = (box == null) ? (String) textField.getText()
+                    : (String) box.getSelectedItem();
+            return s == null ? "" : s;
         }
     }
 
@@ -571,9 +664,16 @@ public class CdiPanel extends JPanel {
                 }
             };
             textField = factory.handleStringValue(textField);
-            
+            textField.setBackground(COLOR_UNFILLED);
+
             p3.add(textField);
             textField.setToolTipText("String of up to "+entry.size+" characters");
+            textField.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    textField.setBackground(COLOR_EDITED);
+                }
+            });
 
             entry.addPropertyChangeListener(new PropertyChangeListener() {
                 @Override
@@ -581,9 +681,14 @@ public class CdiPanel extends JPanel {
                     if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
                         if (e.lastVisibleValue == null) {
                             textField.setText("");
+                            textField.setBackground(COLOR_ERROR);
                         } else {
                             textField.setText(e.lastVisibleValue);
+                            textField.setBackground(COLOR_WRITTEN);
                         }
+                    } else if (propertyChangeEvent.getPropertyName().equals
+                            (UPDATE_WRITE_COMPLETE)) {
+                        textField.setBackground(COLOR_WRITTEN);
                     }
                 }
             });
