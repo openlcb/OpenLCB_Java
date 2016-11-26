@@ -1,19 +1,5 @@
 package org.openlcb.cdi.impl;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
@@ -25,6 +11,22 @@ import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
 import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Maintains a parsed cache of the CDI config of a remote node. Responsible for fetching the CDI,
