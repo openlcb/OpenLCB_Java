@@ -1,12 +1,15 @@
 package org.openlcb;
 
+import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
@@ -39,7 +42,9 @@ public class OlcbInterface {
     // Client (and server) for datagrams.
     private final DatagramService dcs;
     // Client for memory configuration requests.
-    private final MemoryConfigurationService mcs;
+    private MemoryConfigurationService mcs;
+    // CDIs for the nodes
+    private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
 
     /**
      * Creates the message-level interface.
@@ -112,8 +117,29 @@ public class OlcbInterface {
         return dcs;
     }
 
+    public DatagramMeteringBuffer getDatagramMeteringBuffer() {
+        return dmb;
+    }
+
     public MemoryConfigurationService getMemoryConfigurationService() {
         return mcs;
+    }
+
+    /// Useful for testing.
+    public void injectMemoryConfigurationService(MemoryConfigurationService s) {
+        mcs = s;
+    }
+
+    /**
+     * Creates a new or returns a cached CDI representation for the given node.
+     */
+    public synchronized ConfigRepresentation getConfigForNode(NodeID remoteNode) {
+        if (nodeConfigs.containsKey(remoteNode)) {
+            return nodeConfigs.get(remoteNode);
+        }
+        ConfigRepresentation rep = new ConfigRepresentation(this, remoteNode);
+        nodeConfigs.put(remoteNode, rep);
+        return rep;
     }
 
     /**

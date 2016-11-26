@@ -1,9 +1,11 @@
-package org.openlcb.cdi;
+package org.openlcb.cdi.impl;
 
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.openlcb.cdi.jdom.CdiMemConfigReaderTest;
+import org.openlcb.cdi.jdom.JdomCdiRepTest;
 
 /**
  * @author  Bob Jacobsen   Copyright 2011
@@ -30,9 +32,8 @@ public class PackageTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(PackageTest.class);
         
-        suite.addTest(org.openlcb.cdi.jdom.PackageTest.suite());
-        suite.addTest(org.openlcb.cdi.swing.CdiPanelTest.suite());
-        suite.addTest(org.openlcb.cdi.impl.PackageTest.suite());
+        suite.addTest(RangeCacheUtilTest.suite());
+        suite.addTest(ConfigRepresentationTest.suite());
 
         return suite;
     }
