@@ -34,7 +34,7 @@ public class Version {
 
     /* Library modifier - updated periodically
      */
-    static final public int libMod = 9;
+    static final public int libMod = 10;
 
     /**
      * Checks if the current specification version is above a specific threshold.
