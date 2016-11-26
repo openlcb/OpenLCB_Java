@@ -165,6 +165,39 @@ public class CdiPanel extends JPanel {
         if (win != null) win.pack();
     }
 
+    /**
+     * This class descends into a CDI group (usually a group repeat) and tries to find a string
+     * field. If a string field is found, and only one such, then foundUnique will be set to true
+     * and foundEntry will be the field's representation.
+     * <p/>
+     * The iteration does not look inside repeated groups (since anything there would never be
+     * unique).
+     */
+    private class FindDescriptorVisitor extends ConfigRepresentation.Visitor {
+        public boolean foundUnique = false;
+        public ConfigRepresentation.StringEntry foundEntry = null;
+
+        @Override
+        public void visitString(ConfigRepresentation.StringEntry e) {
+            if (foundUnique) {
+                foundUnique = false;
+            } else {
+                foundUnique = true;
+                foundEntry = e;
+            }
+        }
+
+        @Override
+        public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+            // Stops descending into repeated subgroups.
+            return;
+        }
+    }
+
+    /**
+     * This class renders the user interface for a config. All configuration components are
+     * handled here.
+     */
     private class RendererVisitor extends ConfigRepresentation.Visitor {
         private JPanel currentPane;
         private JPanel currentLeaf;
@@ -219,14 +252,45 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+        public void visitGroupRep(final ConfigRepresentation.GroupRep e) {
             currentPane = new JPanel();
             currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
             currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
             CdiRep.Group item = e.group;
-            String name = (item.getRepName() != null ? (item.getRepName()) : "Group")+" "+(e.index);
+            final String name = (item.getRepName() != null ? (item.getRepName()) : "Group") + " "
+                    + (e.index);
             //currentPane.setBorder(BorderFactory.createTitledBorder(name));
             currentPane.setName(name);
+
+            // Finds a string field that could be used as a caption.
+            FindDescriptorVisitor vv = new FindDescriptorVisitor();
+            vv.visitContainer(e);
+
+            if (vv.foundUnique) {
+                final JPanel tabPanel = currentPane;
+                final ConfigRepresentation.StringEntry source = vv.foundEntry;
+                final JTabbedPane parentTabs = currentTabbedPane;
+                // Creates a binder for listening to the name field changes.
+                source.addPropertyChangeListener(new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent event) {
+                        if (event.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
+                            if (source.lastVisibleValue != null && !source.lastVisibleValue
+                                    .isEmpty()) {
+                                String newName = (name + " (" + source.lastVisibleValue + ")");
+                                tabPanel.setName(newName);
+                                if (parentTabs.getTabCount() >= e.index) {
+                                    parentTabs.setTitleAt(e.index - 1, newName);
+                                }
+                            } else {
+                                if (parentTabs.getTabCount() >= e.index) {
+                                    parentTabs.setTitleAt(e.index - 1, name);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
             factory.handleGroupPaneStart(currentPane);
             super.visitGroupRep(e);
