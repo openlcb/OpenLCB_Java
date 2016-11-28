@@ -47,7 +47,8 @@ public class MimicNodeStore extends AbstractConnection {
     
     /**
      * If node not present, initiate process to find it.
-     * @return NodeMemo already known, but note you have to 
+     * @param id    remote node ID to find
+     * @return NodeMemo already known, but note you have to
      * register listeners before calling in any case
      */
     public NodeMemo findNode(NodeID id) {

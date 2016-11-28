@@ -55,6 +55,7 @@ public class MemoryConfigurationService {
     private final static long MAX_TRIES = 3;
 
     /**
+     * @param here       our node ID
      * @param downstream Connection in the direction of the layout
      */
     public MemoryConfigurationService(NodeID here, DatagramService downstream) {
@@ -251,6 +252,7 @@ public class MemoryConfigurationService {
         /**
          * Returns true if the received response belongs to this request.
          * @param data datagram pyaload
+         * @return true if the response is for this request
          */
         boolean compareResponse(int[] data);
     }
@@ -296,6 +298,7 @@ public class MemoryConfigurationService {
 
         /**
          * Computes the offset where the payload is in the datagram.
+         * @param data    the datagram contents
          * @return 7 if there is a separate space byte, 6 if the space is encoded in the low bits.
          */
         protected int getPayloadOffset(int[] data) {
@@ -800,6 +803,12 @@ public class MemoryConfigurationService {
         
         /**
          * Overload this for notification of data.
+         * @param dest         remote node ID that sent us this reply
+         * @param commands     supported commands (see standard)
+         * @param options      supported options  (see stadnard)
+         * @param highSpace    largest supported address space number (not counting 0xFD..0xFF)
+         * @param lowSpace     smallest supported address space number (not counting 0xFD..0xFF)
+         * @param name         ?? any additional response bytes the node wanted to send to us
          */
         public void handleConfigData(NodeID dest, int commands, int options, int highSpace, int lowSpace, String name) { 
         }
@@ -851,6 +860,9 @@ public class MemoryConfigurationService {
         addrSpaceMemo = null;
     }
 
+    /**
+     *
+     */
     @Immutable
     @ThreadSafe    
     static public class McsAddrSpaceMemo {
@@ -885,6 +897,12 @@ public class MemoryConfigurationService {
         
         /**
          * Overload this for notification of data.
+         * @param dest          node that sent this reply
+         * @param space         address space we queried
+         * @param hiAddress     largest valid address in this address space
+         * @param lowAddress    smallest valid address in this address space
+         * @param flags         address space flags (e.g. R/O, see standard)
+         * @param desc          string description for this address space
          */
         public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
         }

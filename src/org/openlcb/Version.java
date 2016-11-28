@@ -81,6 +81,7 @@ public class Version {
      * 
      * This is used in the build.xml to generate parts of the installer release file name, so
      * take care in altering this code to make sure the ant recipes are also suitably modified.
+     * @param args    commandline
      */
     static public void main(String[] args) {
         System.out.println(specVersion()+" "+libVersion());

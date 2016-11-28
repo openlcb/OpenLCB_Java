@@ -25,6 +25,8 @@ public class NodeIDCollisions {
   /** 
    * Seed generator from a 48-bit value, and
    * return the 1st alias using some algorithm
+   * @param nid    node ID for seeding the generator
+   * @return first generated alias.
    */
   static long seed(long nid) {
     byte[] id = new byte[6];
