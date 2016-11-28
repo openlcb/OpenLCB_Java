@@ -15,6 +15,7 @@ public class Gateway extends MessageDecoder {
     /**
      * Provide a connection object for use by
      * the East node.
+     * @return a connection stub to be used by nodes towards the east from us.
      */
     public Connection getEastConnection() {
         eastInputConnection = new AbstractConnection() {
@@ -44,6 +45,7 @@ public class Gateway extends MessageDecoder {
     /**
      * Provide a connection object for use by
      * the West node.
+     * @return a connection stub to be used by the nodes to the west from us.
      */
     public Connection getWestConnection() {
         westInputConnection = new AbstractConnection() {

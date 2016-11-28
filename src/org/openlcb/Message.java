@@ -37,6 +37,8 @@ abstract public class Message implements OpenLcb {
      * is received by a node.
      *<p>
      * Default is to do nothing.
+     * @param decoder    the node (or processing component) to apply to this message
+     * @param sender     the source of the message
      */
      public void applyTo(MessageDecoder decoder, Connection sender) {
      }

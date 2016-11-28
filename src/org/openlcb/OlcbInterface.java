@@ -100,6 +100,7 @@ public class OlcbInterface {
 
     /**
      * Accessor for client libraries to send messages out.
+     * @return the connection through which to send messages to the bus.
      */
     public Connection getOutputConnection() {
         return outputConnection;
@@ -132,6 +133,8 @@ public class OlcbInterface {
 
     /**
      * Creates a new or returns a cached CDI representation for the given node.
+     * @param remoteNode    target node (on the network)
+     * @return the cached CDI representation for that node (may be newly created and thus empty)
      */
     public synchronized ConfigRepresentation getConfigForNode(NodeID remoteNode) {
         if (nodeConfigs.containsKey(remoteNode)) {
