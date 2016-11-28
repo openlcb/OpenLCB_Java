@@ -26,6 +26,7 @@ public class MessageBuilder {
     /**
      * The provided AliasMap will be updated
      * as inbound frames are processed.
+     * @param map    the alias map in use by the interface
      */
     public MessageBuilder(AliasMap map) {
         this.map = map;
@@ -42,6 +43,8 @@ public class MessageBuilder {
      * be dropped.
      *
      * The List is always returned, even if empty.
+     * @param f    frame that came
+     * @return messages decoded from the arriving frame and internal state
      */
     public List<Message> processFrame(CanFrame f) {
         // check for special cases first
@@ -404,6 +407,8 @@ public class MessageBuilder {
      * be dropped.
      *
      * The List is always returned, and should never be empty.
+     * @param msg    OpenLCB Message object to send
+     * @return CAN frames (one or more) representing that message
      */
     public List<OpenLcbCanFrame> processMessage(Message msg) {
 

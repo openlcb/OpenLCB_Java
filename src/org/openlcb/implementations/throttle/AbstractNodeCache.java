@@ -76,6 +76,8 @@ public abstract class AbstractNodeCache<T> extends MessageDecoder {
 
     /**
      * Implement this for specific type to be created in this cache - inelegant!
+     * @param id the node for which a new cache entry is being created
+     * @return new object to add to the cache.
      */
     protected abstract T newObject(NodeID id);
 

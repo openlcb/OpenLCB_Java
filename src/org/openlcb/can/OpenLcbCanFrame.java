@@ -107,7 +107,10 @@ public class OpenLcbCanFrame implements CanFrame {
     length = (length<2) ? 2 : length;
   }
 
-    /** Sets the continuation bits for an addressed frame. */
+    /** Sets the continuation bits for an addressed frame.
+     * @param first    true if this is the first frame of a sequence
+     * @param last     true if this is the last frame of a sequence
+     * */
   void setContinuation(boolean first, boolean last) {
       data[0] &= CONTINUATION_BITS_MASK;
       if (!first) data[0] |= CONTINUATION_BITS_NOT_FIRST_FRAME;
@@ -387,6 +390,10 @@ public class OpenLcbCanFrame implements CanFrame {
 
     /**
      * create a single datagram frame
+     * @param content      datagram payload (up to 8 bytes, one byte per entry)
+     * @param destAlias    alias of the destination node
+     * @param first        true if this is the first of the payload
+     * @param last         true if this is the last of the payload
      */
   void setDatagram(int[] content, int destAlias, boolean first, boolean last) {
     init(nodeAlias);

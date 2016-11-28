@@ -31,6 +31,7 @@ import org.openlcb.*;
 public class DatagramService extends MessageDecoder {
 
     /**
+     * @param here       our node ID
      * @param downstream Connection in the direction of the layout
      */
     public DatagramService(NodeID here, Connection downstream) {
@@ -46,6 +47,7 @@ public class DatagramService extends MessageDecoder {
 
     /**
      * Send data to layout
+     * @param memo    datagram to send
      */
     public void sendData(DatagramServiceTransmitMemo memo){
         if (xmtMemo != null) {
@@ -58,6 +60,8 @@ public class DatagramService extends MessageDecoder {
 
     /**
      * Send data to layout
+     * @param dest    target node ID
+     * @param data    datagram payload
      */
     public void sendData(NodeID dest, int[] data){
         DatagramServiceTransmitMemo memo = new DatagramServiceTransmitMemo(dest, data) {
@@ -132,6 +136,7 @@ public class DatagramService extends MessageDecoder {
     /**
      * Accept request to notify for a particular
      * type of datagram
+     * @param memo    datgram listener
      */
     public void registerForReceive(DatagramServiceReceiveMemo memo) {
         this.rcvMemo = memo;
@@ -173,6 +178,8 @@ public class DatagramService extends MessageDecoder {
         /**
          * Overload this for notification of data.
          * 
+         * @param n       sender node ID (somewhere on the bus)
+         * @param data    payload that came
          * @param service Implementations must reply to the datagram by invoking
          *                  reply.acceptData(int replycode)
          *              before returning.  (This is done, instead of using the 

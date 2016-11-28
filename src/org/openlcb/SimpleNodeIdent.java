@@ -59,6 +59,7 @@ public class SimpleNodeIdent {
     /**
      * Check whether enough messages have arrived to
      * completely fill content.
+     * @return true if we have seen the end of the ident info.
      */
     public boolean contentComplete() {
         // this is for the version 1 case only
