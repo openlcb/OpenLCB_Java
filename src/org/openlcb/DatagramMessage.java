@@ -31,6 +31,8 @@ public class DatagramMessage extends AddressedMessage {
     /**
      * Intended for use by subclasses only
      * to ensure immutable objects
+     * @param source    sender of the datagram
+     * @param dest      recipient of the datagram
      */
     protected DatagramMessage(NodeID source, NodeID dest) {
         super(source, dest);

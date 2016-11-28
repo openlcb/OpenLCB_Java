@@ -247,7 +247,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
 	    /**
 	     * Override here to change behavior when 
 	     * treenode is selected.
-	     */
+         * @param rep    the node selected by the user
+         */
 	    public void select(DefaultMutableTreeNode rep) {
 	        // System.out.println("Selected: "+rep+" for "+name+" on "+node);
 	    }

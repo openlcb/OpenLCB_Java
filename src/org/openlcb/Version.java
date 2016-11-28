@@ -41,7 +41,7 @@ public class Version {
      * @param maj threshold major version
      * @param min threshold minor version
      * @param mod threshold specification modifier
-     * @return true if current specification version >= maj.min.mod
+     * @return true if current specification version &gt;= maj.min.mod
      */
     static public boolean specVersionAtLeast(int maj, int min, int mod) {
         return major > maj || minor > min || specMod >= mod;
@@ -52,7 +52,7 @@ public class Version {
      * @param maj threshold major version
      * @param min threshold minor version
      * @param mod threshold library modifier
-     * @return true if current library version >= maj.min.mod
+     * @return true if current library version &gt;= maj.min.mod
      */
     static public boolean libVersionAtLeast(int maj, int min, int mod) {
         return major > maj || minor > min || libMod >= mod;

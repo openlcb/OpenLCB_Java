@@ -30,8 +30,9 @@ import org.openlcb.implementations.DatagramService;
 public class ThrottleSpeedDatagram {
 
     /**
-     * @param speed Desired speed in scale meters/second. By convention, 100 m/sec is full speed
+     * @param speed Desired speed in scale meters/second. By convention, 128 mph is full speed
      * for DCC locomotives.
+     * @param forward    true if the locomotive shall be forward-moving
      */
     public ThrottleSpeedDatagram(double speed, boolean forward) {
         this.speed = speed;

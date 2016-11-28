@@ -377,6 +377,9 @@ public class BlueGoldCheck /* extends TestCase */ {
          * Add a producer to node.
          * Note this should be a working producer, 
          * already registered, etc
+         * @param n       producer to add
+         * @param name    name of new producer
+         * @throws Exception when test fails
          */
          public void addProducer(SingleProducer n, String name) throws Exception {
             producers.add(n);
@@ -390,6 +393,9 @@ public class BlueGoldCheck /* extends TestCase */ {
          * Add a consumer to node.
          * Note this should be a working consumer, 
          * already registered, etc
+         * @param n       consumer to add
+         * @param name    name of consumer
+         * @throws Exception when test fails
          */
          public void addConsumer(SingleConsumer n, String name) throws Exception {
             consumers.add(n);
