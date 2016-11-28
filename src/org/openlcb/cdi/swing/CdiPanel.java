@@ -169,7 +169,7 @@ public class CdiPanel extends JPanel {
      * This class descends into a CDI group (usually a group repeat) and tries to find a string
      * field. If a string field is found, and only one such, then foundUnique will be set to true
      * and foundEntry will be the field's representation.
-     * <p/>
+     * <p>
      * The iteration does not look inside repeated groups (since anything there would never be
      * unique).
      */

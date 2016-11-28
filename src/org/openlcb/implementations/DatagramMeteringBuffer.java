@@ -44,6 +44,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     /**
      * This is where e.g. replies from the OpenLCB
      * network should be returned to.
+     * @return the connection where to forward messages from the bus (typically the datagram service object)
      */
     public Connection connectionForRepliesFromDownstream() {
         return fromDownstream;

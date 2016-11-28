@@ -212,6 +212,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
      * for each entry.
      *
      * @param baseName name of the prefix of all these group entries
+     * @param segment  memory configuration segment number
      * @param items    the list of CDI entries to render
      * @param output   the list of output variables to append to
      * @param origin   offset in the segment of the beginning of the group payload
