@@ -97,6 +97,7 @@ public abstract class InterfaceTestBase extends TestCase {
     /** Expects that the next outgoing message (not yet matched with an expectation) is the given
      * CAN frame.
      * @param expectedFrame GridConnect-formatted CAN frame.
+     * @param cardinality   how many times to expect this frame, e.g. 'times(2)' or omit for once.
      */
     protected void expectFrame(String expectedFrame, VerificationMode cardinality) {
         class MessageMatchesFrame implements ArgumentMatcher<Message> {

@@ -15,6 +15,8 @@ import edu.umd.cs.findbugs.annotations.*;
 public class SimpleNodeIdentInfoReplyMessage extends AddressedPayloadMessage {
     
     /**
+     * @param source sender Node ID
+     * @param dest destination Node ID
      * @param dataIn the data content without extra wire-protocol bytes
      */
     public SimpleNodeIdentInfoReplyMessage(NodeID source, NodeID dest, byte[] dataIn) {

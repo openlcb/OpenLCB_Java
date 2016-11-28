@@ -83,6 +83,8 @@ public class BitProducerConsumer extends MessageDecoder {
 
     /**
      * Sends out an event message
+     * @param msg    event message to send
+     * @param T      the message type to send.
      */
     <T extends EventMessage> void sendMessage(T msg) {
         if (msg.getEventID().equals(nullEvent)) return;

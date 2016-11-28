@@ -140,6 +140,8 @@ public class OlcbConnection {
 
     /**
      * Creates a new or returns a cached CDI representation for the given node.
+     * @param remoteNode    target node (on the network)
+     * @return the cached CDI representation for that node (may be newly created and thus empty)
      */
     public ConfigRepresentation getConfigForNode(NodeID remoteNode) {
         return getInterface().getConfigForNode(remoteNode);
