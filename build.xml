@@ -167,7 +167,7 @@
         </java>
     </target>
 
-    <target name="run-travis" depends="compile, tests" description="build and run test suite">
+    <target name="run-travis" depends="compile, javadoc, tests" description="build and run test suite">
         <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
             <classpath refid="project.class.path"    />
             <sysproperty key="java.security.policy" value="lib/security.policy"/> 
@@ -232,6 +232,7 @@
                  author="true"
                  version="false"
                  use="true"
+                 failonerror="true"
                  windowtitle="OpenLCB">
             <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
             <group title="Core" packages="org.openlcb"/>
@@ -259,6 +260,7 @@
                  version="false"
                  package="yes"
                  use="true"
+                 failonerror="true"
                  windowtitle="OpenLCB API">
             <arg value="-Xdoclint:all,-missing"/> <!-- dropping some 1.8 warnings -->
             <doclet name="org.umlgraph.doclet.UmlGraphDoc"
@@ -344,7 +346,13 @@
              manifest="manifest" 
              compress="true" />   <!-- compress="true" is default -->
     </target>
-    
+
+    <target name="travis-ci-tests" > <!-- tests used on travis CI -->
+        <antcall target="compile" />
+        <antcall target="run-travis" />
+        <antcall target="javadoc-uml" />
+    </target>
+
 </project>
 
 
