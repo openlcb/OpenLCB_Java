@@ -83,6 +83,7 @@ public class BitProducerConsumer extends MessageDecoder {
 
     /**
      * Sends out an event message
+     * @param <T>    the message type to send.
      * @param msg    event message to send
      */
     <T extends EventMessage> void sendMessage(T msg) {
