@@ -1,7 +1,9 @@
 package org.openlcb.cdi.swing;
 
 import org.openlcb.EventID;
+import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
@@ -17,6 +19,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -28,6 +36,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -64,6 +73,11 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
 
+    /**
+     * We always use the same file chooser in this class, so that the user's
+     * last-accessed directory remains available.
+     */
+    static JFileChooser fci = new JFileChooser();
 
     private ConfigRepresentation rep;
     public CdiPanel () { super(); }
@@ -113,6 +127,15 @@ public class CdiPanel extends JPanel {
         });
         buttonBar.add(bb);
 
+        bb = new JButton("Backup...");
+        bb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                runBackup();
+            }
+        });
+        buttonBar.add(bb);
+
         add(buttonBar);
 
         synchronized(rep) {
@@ -150,6 +173,24 @@ public class CdiPanel extends JPanel {
             if (entry.isDirty()) {
                 entry.writeDisplayTextToNode();
             }
+        }
+    }
+
+    public void runBackup() {
+        // First select a file to save to.
+        fci.setDialogTitle("Select configuration backup file");
+        fci.rescanCurrentDirectory();
+        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+        int retVal = fci.showSaveDialog(null);
+        if (retVal != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        try {
+            BackupConfig.writeConfigToFile(fci.getSelectedFile().getPath(), rep);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Failed to write variables to file " + fci.getSelectedFile().getPath() + ": " + e.toString());
         }
     }
 
