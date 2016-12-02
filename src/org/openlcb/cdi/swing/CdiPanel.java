@@ -17,6 +17,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
@@ -29,6 +31,7 @@ import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -74,6 +77,41 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
+
+        contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+
+        JScrollPane scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        Dimension minScrollerDim = new Dimension(800, 12);
+        scrollPane.setMinimumSize(minScrollerDim);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(30);
+
+        add(scrollPane);
+
+
+        buttonBar = new JPanel();
+        buttonBar.setLayout(new FlowLayout());
+        JButton bb = new JButton("Refresh All");
+        bb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                reloadAll();
+            }
+        });
+        buttonBar.add(bb);
+
+        bb = new JButton("Save changed");
+        bb.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                saveChanged();
+            }
+        });
+        buttonBar.add(bb);
+
+        add(buttonBar);
+
         synchronized(rep) {
             if (rep.getRoot() != null) {
                 displayCdi();
@@ -89,14 +127,39 @@ public class CdiPanel extends JPanel {
     public void initComponents(ConfigRepresentation rep) {
         initComponents(rep, new GuiItemFactory()); // default with no behavior
     }
-    
+
+    /** Adds a button to the bar visible on the bottom line, below the scrollbar.
+     * @param c component to add (typically a button)
+     */
+    public void addButtonToFooter(JComponent c) {
+        buttonBar.add(c);
+    }
+
+    /**
+     * Refreshes all memory variable entries directly from the hardware node.
+     */
+    public void reloadAll() {
+        rep.reloadAll();
+    }
+
+    public void saveChanged() {
+        for (EntryPane entry : allEntries) {
+            if (entry.isDirty()) {
+                entry.writeDisplayTextToNode();
+            }
+        }
+    }
+
     GuiItemFactory factory;
     JPanel loadingPanel;
     JLabel loadingText;
     PropertyChangeListener loadingListener;
     private JButton reloadButton;
+    private final List<EntryPane> allEntries = new ArrayList<>();
 
     boolean loadingIsPacked = false;
+    JPanel contentPanel;
+    JPanel buttonBar;
 
     private void removeLoadingListener() {
         synchronized (rep) {
@@ -134,7 +197,7 @@ public class CdiPanel extends JPanel {
 
     private void displayLoadingProgress() {
         if (loadingPanel == null) createLoadingPane();
-        add(loadingPanel);
+        contentPanel.add(loadingPanel);
         addLoadingListener();
     }
 
@@ -142,7 +205,7 @@ public class CdiPanel extends JPanel {
         displayLoadingProgress();
         loadingText.setText("Creating display...");
         if (rep.getCdiRep().getIdentification() != null) {
-            add(createIdentificationPane(rep.getCdiRep()));
+            contentPanel.add(createIdentificationPane(rep.getCdiRep()));
         }
         repack();
         new Thread(new Runnable() {
@@ -157,7 +220,7 @@ public class CdiPanel extends JPanel {
     private void displayComplete() {
         hideLoadingProgress();
         // add glue at bottom
-        add(Box.createVerticalGlue());
+        contentPanel.add(Box.createVerticalGlue());
         repack();
     }
 
@@ -213,7 +276,7 @@ public class CdiPanel extends JPanel {
             // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
-            add(ret);
+            contentPanel.add(ret);
             EventQueue.invokeLater(() -> repack());
         }
 
@@ -302,19 +365,25 @@ public class CdiPanel extends JPanel {
 
         @Override
         public void visitString(ConfigRepresentation.StringEntry e) {
-            currentLeaf = new StringPane(e);
+            StringPane pp = new StringPane(e);
+            currentLeaf = pp;
+            allEntries.add(pp);
             super.visitString(e);
         }
 
         @Override
         public void visitInt(ConfigRepresentation.IntegerEntry e) {
-            currentLeaf = new IntPane(e);
+            IntPane pp = new IntPane(e);
+            currentLeaf = pp;
+            allEntries.add(pp);
             super.visitInt(e);
         }
 
         @Override
         public void visitEvent(ConfigRepresentation.EventEntry e) {
-            currentLeaf = new EventIdPane(e);
+            EventIdPane pp = new EventIdPane(e);
+            currentLeaf = pp;
+            allEntries.add(pp);
             super.visitEvent(e);
         }
 
@@ -486,6 +555,7 @@ public class CdiPanel extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
+        boolean dirty = false;
         JPanel p3;
 
         EntryPane(ConfigRepresentation.CdiEntry e, String defaultName) {
@@ -577,6 +647,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+            // TODO: is this needed?
             p3.add(Box.createHorizontalGlue());
         }
 
@@ -588,9 +659,15 @@ public class CdiPanel extends JPanel {
             String v = getDisplayText();
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
+                dirty = false;
             } else {
                 textComponent.setBackground(COLOR_EDITED);
+                dirty = true;
             }
+        }
+
+        boolean isDirty() {
+             return dirty;
         }
 
         // Take the value from the text box and write it to the Cdi entry.

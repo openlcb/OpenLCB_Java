@@ -172,6 +172,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         }
     }
 
+    public synchronized void reloadAll() {
+        spaces.clear();  // destroys all the caches
+        prefillCaches();
+    }
+
     /**
      * @return the internal representation of the root entry. The root entry contains all
      * segments as children.
