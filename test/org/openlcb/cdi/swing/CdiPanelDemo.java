@@ -70,6 +70,21 @@ public class CdiPanelDemo {
 
     // Main entry point
     static public void main(String[] args) {
+        try {
+            //UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace();
+            // ignore
+        }
+
+        UIManager.LookAndFeelInfo[] plafs = UIManager.getInstalledLookAndFeels();
+        for (int i = 0; i < plafs.length; i++) {
+            UIManager.LookAndFeelInfo plaf = plafs[i];
+            System.err.println(plaf.getName() + ": " + plaf.getClassName());
+        }
+
+        System.err.println("Current LF: " + UIManager.getLookAndFeel().getName());
+
         CdiPanelDemo d = new CdiPanelDemo();
         d.displayFile();
     }
