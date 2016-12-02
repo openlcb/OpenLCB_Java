@@ -496,6 +496,7 @@ public class CdiPanel extends JPanel {
             }
 
             p3 = new JPanel();
+
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
             p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
@@ -575,13 +576,16 @@ public class CdiPanel extends JPanel {
 
         void updateColor() {
             if (entry.lastVisibleValue == null) {
+                p3.setBorder(BorderFactory.createMatteBorder(2,2,2,2, COLOR_UNFILLED));
                 textComponent.setBackground(COLOR_UNFILLED);
                 return;
             }
             String v = getDisplayText();
             if (v.equals(entry.lastVisibleValue)) {
+                p3.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
                 textComponent.setBackground(COLOR_WRITTEN);
             } else {
+                p3.setBorder(BorderFactory.createMatteBorder(2,2,2,2, COLOR_EDITED));
                 textComponent.setBackground(COLOR_EDITED);
             }
         }
@@ -608,7 +612,6 @@ public class CdiPanel extends JPanel {
 
             textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
             textComponent = textField;
-
             init();
         }
 
