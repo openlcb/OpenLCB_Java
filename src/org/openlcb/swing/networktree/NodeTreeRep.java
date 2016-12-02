@@ -86,8 +86,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         node.setUserObject(new SelectionKey(name, memo.getNodeID()));
         return node;
     }
-    
-    void updateSimpleNodeIdent(SimpleNodeIdent e) {
+
+    synchronized void updateSimpleNodeIdent(SimpleNodeIdent e) {
         if (simpleInfoMfgNode == null) {
             if (e.getMfgName().replace(" ","").length()>0) {
                 simpleInfoMfgNode = newNode("Mfg: "+e.getMfgName());
@@ -166,8 +166,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     }
     
     DefaultMutableTreeNode pipNode;
-    
-    void updateProtocolIdent(ProtocolIdentification pi) {
+
+    synchronized void updateProtocolIdent(ProtocolIdentification pi) {
         if (pi.getValue() != 0) {
 
             if (pipNode == null) {
