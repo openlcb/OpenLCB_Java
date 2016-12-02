@@ -50,7 +50,7 @@
 
 7. Publish to Maven Central
 
-  ```mvn release```
+  ```mvn deploy -P release```
 
 ## Update JMRI for new OpenLCB
 
@@ -58,7 +58,7 @@ This process is generally defined by
 https://github.com/JMRI/JMRI/blob/master/lib/README.md#updates so it's worth to
 check out if the process changed form what's described below.
 
-1. Verify the version to update JMRI with is published at http://search.maven.org/#search|ga|1|openlcb
+1. Verify the version to update JMRI with is published at http://repo1.maven.org/maven2/org/openlcb/openlcb
 
 2. Update the master branch of your fork by pulling from upstream
 
