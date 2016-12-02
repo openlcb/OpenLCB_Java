@@ -80,17 +80,20 @@ public class CdiPanel extends JPanel {
 
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JScrollPane scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
 
-        add(scrollPane);
-
+        //add(scrollPane);
+        add(contentPanel);
 
         buttonBar = new JPanel();
+        buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
         bb.addActionListener(new ActionListener() {
@@ -158,6 +161,7 @@ public class CdiPanel extends JPanel {
     private final List<EntryPane> allEntries = new ArrayList<>();
 
     boolean loadingIsPacked = false;
+    JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
 
