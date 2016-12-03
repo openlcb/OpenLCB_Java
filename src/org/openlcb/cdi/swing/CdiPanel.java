@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -334,6 +335,7 @@ public class CdiPanel extends JPanel {
         p.setBorder(BorderFactory.createTitledBorder("Loading"));
         loadingText = new JLabel(rep.getStatus());
         loadingText.setPreferredSize(new Dimension(400, 20));
+        loadingText.setMinimumSize(new Dimension(400, 20));
         loadingText.setAlignmentX(Component.LEFT_ALIGNMENT);
         p.add(loadingText);
         reloadButton = new JButton("Re-try");
@@ -343,7 +345,12 @@ public class CdiPanel extends JPanel {
                 rep.restartIfNeeded();
             }
         });
-        p.add(reloadButton);
+        reloadButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        reloadButton.setAlignmentY(Component.TOP_ALIGNMENT);
+        JPanel p1 = new JPanel();
+        p1.setLayout(new FlowLayout());
+        p1.add(reloadButton);
+        p.add(p1);
         loadingPanel = p;
     }
 
