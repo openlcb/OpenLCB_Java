@@ -4,6 +4,7 @@ import org.openlcb.EventID;
 import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
+import org.openlcb.cdi.cmd.RestoreConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
@@ -26,7 +27,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
@@ -39,6 +42,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -110,30 +114,23 @@ public class CdiPanel extends JPanel {
         buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
-        bb.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                reloadAll();
-            }
-        });
+        bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
+        bb.addActionListener(actionEvent -> reloadAll());
         buttonBar.add(bb);
 
         bb = new JButton("Save changed");
-        bb.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                saveChanged();
-            }
-        });
+        bb.setToolTipText("Writes every changed value to the hardware.");
+        bb.addActionListener(actionEvent -> saveChanged());
         buttonBar.add(bb);
 
         bb = new JButton("Backup...");
-        bb.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                runBackup();
-            }
-        });
+        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Save changed\" button first.");
+        bb.addActionListener(actionEvent -> runBackup());
+        buttonBar.add(bb);
+
+        bb = new JButton("Restore...");
+        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save changed\" afterwards.");
+        bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
         add(buttonBar);
@@ -178,12 +175,20 @@ public class CdiPanel extends JPanel {
 
     public void runBackup() {
         // First select a file to save to.
-        fci.setDialogTitle("Select configuration backup file");
+        fci.setDialogTitle("Save configuration backup file");
         fci.rescanCurrentDirectory();
         fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
         int retVal = fci.showSaveDialog(null);
-        if (retVal != JFileChooser.APPROVE_OPTION) {
+        if (retVal != JFileChooser.APPROVE_OPTION || fci.getSelectedFile() == null) {
             return;
+        }
+        if (fci.getSelectedFile().exists()) {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Do you want to overwrite the existing file?",
+                    "File already exists", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (confirm != JOptionPane.YES_OPTION)
+                return;
         }
 
         try {
@@ -194,12 +199,48 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    public void runRestore() {
+        // First select a file to save to.
+        fci.setDialogTitle("Open configuration restore file");
+        fci.rescanCurrentDirectory();
+        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+        int retVal = fci.showOpenDialog(null);
+        if (retVal != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        RestoreConfig.parseConfigFromFile(fci.getSelectedFile().getPath(), new RestoreConfig.ConfigCallback() {
+            boolean hasError = false;
+
+            @Override
+            public void onConfigEntry(String key, String value) {
+                EntryPane pp = entriesByKey.get(key);
+                if (pp == null) {
+                    onError("Could not find variable for key " + key);
+                    return;
+                }
+                pp.updateDisplayText(value);
+                //pp.updateColor();
+            }
+
+            @Override
+            public void onError(String error) {
+                if (!hasError) {
+                    System.err.println("Error(s) encountered during loading configuration backup.");
+                    hasError = true;
+                }
+                System.err.println(error);
+            }
+        });
+    }
+
     GuiItemFactory factory;
     JPanel loadingPanel;
     JLabel loadingText;
     PropertyChangeListener loadingListener;
     private JButton reloadButton;
     private final List<EntryPane> allEntries = new ArrayList<>();
+    private final Map<String, EntryPane> entriesByKey = new HashMap<>();
 
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
@@ -309,7 +350,7 @@ public class CdiPanel extends JPanel {
      */
     private class RendererVisitor extends ConfigRepresentation.Visitor {
         private JPanel currentPane;
-        private JPanel currentLeaf;
+        private EntryPane currentLeaf;
         private JTabbedPane currentTabbedPane;
         @Override
         public void visitSegment(ConfigRepresentation.SegmentEntry e) {
@@ -410,30 +451,26 @@ public class CdiPanel extends JPanel {
 
         @Override
         public void visitString(ConfigRepresentation.StringEntry e) {
-            StringPane pp = new StringPane(e);
-            currentLeaf = pp;
-            allEntries.add(pp);
+            currentLeaf = new StringPane(e);
             super.visitString(e);
         }
 
         @Override
         public void visitInt(ConfigRepresentation.IntegerEntry e) {
-            IntPane pp = new IntPane(e);
-            currentLeaf = pp;
-            allEntries.add(pp);
+            currentLeaf = new IntPane(e);
             super.visitInt(e);
         }
 
         @Override
         public void visitEvent(ConfigRepresentation.EventEntry e) {
-            EventIdPane pp = new EventIdPane(e);
-            currentLeaf = pp;
-            allEntries.add(pp);
+            currentLeaf = new EventIdPane(e);
             super.visitEvent(e);
         }
 
         @Override
         public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+            allEntries.add(currentLeaf);
+            entriesByKey.put(currentLeaf.entry.key, currentLeaf);
             currentLeaf.setAlignmentX(Component.LEFT_ALIGNMENT);
             currentPane.add(currentLeaf);
             currentLeaf = null;
