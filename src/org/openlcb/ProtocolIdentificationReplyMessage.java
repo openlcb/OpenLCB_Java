@@ -12,15 +12,21 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProtocolIdentificationReplyMessage extends AddressedMessage {
+public class ProtocolIdentificationReplyMessage extends AddressedPayloadMessage {
     
     public ProtocolIdentificationReplyMessage(NodeID source, NodeID dest, long value) {
-        super(source, dest);
+        super(source, dest, toPayload(value));
         this.value = value;
     }
         
     long value;
-    
+
+    private static byte[] toPayload(long value) {
+        byte[] b = new byte[6];
+        Utilities.HostToNetworkUint48(b, 0, value);
+        return b;
+    }
+
     public long getValue() { return value; }
     
      /**
@@ -48,11 +54,10 @@ public class ProtocolIdentificationReplyMessage extends AddressedMessage {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleProtocolIdentificationReply(this, sender);
      }
-    
+
     @Override
-    public String toString() {
-        return super.toString()
-                +" Protocol Identification Reply with value "+String.format("0x%12X",value);
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.ProtocolSupportReply;
     }
 
     public int getMTI() { return MTI_PROTOCOL_IDENT_REPLY; }

@@ -396,6 +396,9 @@ public class NIDaAlgorithmTest extends TestCase {
     /**
      * Run a series of nodes, taking a frame from each in turn
      * and sending to others.
+     * @param algs       algorithms to test
+     * @param nCycles    number of cycles to allow for each algorithm to produce a message
+     * @return cycle count
      */
     int sequentialRunner(NIDaAlgorithm[] algs, int nCycles) {
         OpenLcbCanFrame f;
@@ -423,6 +426,9 @@ public class NIDaAlgorithmTest extends TestCase {
     /**
      * Run a series of nodes, taking each output in priority order. This
      * simulates nodes sending very fast, so that CAN arbitrates.
+     * @param algs       algorithms to simulate
+     * @param nCycles    number of cycles to simulate
+     * @return cycle count it took for convergence
      */
      int priorityRunner(NIDaAlgorithm[] algs, int nCycles) {
         OpenLcbCanFrame[] q = new OpenLcbCanFrame[algs.length];

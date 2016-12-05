@@ -20,7 +20,8 @@ public interface CanInterface extends Timed {
     public void done();    
     
     /**
-     * A frame from some other interface has been recieved
+     * A frame from some other interface has been received
+     * @param f    incoming frame
      */
     public void receive(CanFrame f);
     

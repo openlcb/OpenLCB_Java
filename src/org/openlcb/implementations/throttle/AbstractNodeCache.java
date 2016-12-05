@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import org.openlcb.Connection;
 import org.openlcb.EventID;
-import org.openlcb.NodeID;
 import org.openlcb.MessageDecoder;
+import org.openlcb.NodeID;
 import org.openlcb.ProducerConsumerEventReportMessage;
 import org.openlcb.ProducerIdentifiedMessage;
 
 /**
  * Maintains a cache of nodes seen to emit a particular EventID.
  *
- * @TODO:  Type of node needs to be made generic T
+ * TODO:  Type of node needs to be made generic T
  *
- * @TODO: make sure name and semantics of contained property are correct for a Bean, e.g.
+ * TODO: make sure name and semantics of contained property are correct for a Bean, e.g.
  * it has the right name and related methods are present.
  *     http://docs.oracle.com/javase/tutorial/javabeans/writing/properties.html
  * How are indexed properties handled in Events?
@@ -76,6 +76,8 @@ public abstract class AbstractNodeCache<T> extends MessageDecoder {
 
     /**
      * Implement this for specific type to be created in this cache - inelegant!
+     * @param id the node for which a new cache entry is being created
+     * @return new object to add to the cache.
      */
     protected abstract T newObject(NodeID id);
 

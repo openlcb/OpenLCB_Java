@@ -3,13 +3,12 @@ package org.openlcb.cdi.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
  * Helper class to get a sequence of ranges and merges them into larger chunks to read from the
  * config space so that fewer reads suffice.
- * <p/>
+ * <p>
  * Created by bracz on 4/2/16.
  */
 public class RangeCacheUtil {
@@ -26,7 +25,7 @@ public class RangeCacheUtil {
     private boolean isSimplified = true;
 
     /**
-     * Merges two ranges. Assumption: range 'next' > range 'current'. The ranges will be merged
+     * Merges two ranges. Assumption: range 'next' &gt; range 'current'. The ranges will be merged
      * if they overlap, touch or there is less than @link RANGE_MERGE_THRESHOLD sized gap
      * between them.
      *

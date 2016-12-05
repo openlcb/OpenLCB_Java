@@ -44,6 +44,7 @@ public class ThrottleImplementation {
     /**
      * @param speed Desired speed in scale meters/second. By convention, 100 m/sec is full speed
      *              for DCC locomotives.
+     * @param forward    true if the speed shall be forward-moving
      */
     public void setSpeed(double speed, boolean forward) {
         ThrottleSpeedDatagram tsd = new ThrottleSpeedDatagram(speed, forward);

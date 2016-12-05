@@ -12,11 +12,11 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class StreamInitiateRequestMessage extends AddressedMessage {
+public class StreamInitiateRequestMessage extends AddressedPayloadMessage {
     
     public StreamInitiateRequestMessage(NodeID source, NodeID dest,
                     int bufferSize, byte sourceStreamID, byte destinationStreamID) {
-        super(source, dest);
+        super(source, dest, toPayload(bufferSize, sourceStreamID, destinationStreamID));
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
         this.destinationStreamID = destinationStreamID;
@@ -29,7 +29,13 @@ public class StreamInitiateRequestMessage extends AddressedMessage {
     public int getBufferSize() { return bufferSize; }
     public byte getSourceStreamID() { return sourceStreamID; }
     public byte getDestinationStreamID() { return destinationStreamID; }
-    
+
+    static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
+        byte[] b = new byte[]{0, 0, 0, 0, sourceStreamID, destStreamID};
+        Utilities.HostToNetworkUint16(b, 0, bufferSize);
+        return b;
+    }
+
     /**
      * Implement message-type-specific
      * processing when this message
@@ -47,14 +53,20 @@ public class StreamInitiateRequestMessage extends AddressedMessage {
         StreamInitiateRequestMessage p = (StreamInitiateRequestMessage) o;
         if (bufferSize != p.bufferSize) return false;
         if (sourceStreamID != p.sourceStreamID) return false;
+        if (destinationStreamID != p.destinationStreamID) return false;
         return super.equals(o);
     } 
 
     public String toString() {
         return super.toString()
-                +" StreamInitiateRequest "
                 +" SSID "+sourceStreamID
-                +" bsize "+bufferSize;     
+                +" DSID "+destinationStreamID
+                +" bsize "+bufferSize;
+    }
+
+    @Override
+    public MessageTypeIdentifier getEMTI() {
+        return MessageTypeIdentifier.StreamInitiateRequest;
     }
 
     public int getMTI() { return MTI_STREAM_INIT_REQUEST; }

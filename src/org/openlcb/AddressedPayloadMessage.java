@@ -21,8 +21,16 @@ public abstract class AddressedPayloadMessage extends AddressedMessage {
     }
 
     public String toString() {
-        return super.toString() + " " + getEMTI().toString() + " with payload " + Utilities
-                .toHexSpaceString(payload);
+        StringBuilder p = new StringBuilder(super.toString());
+        p.append(" ");
+        p.append(getEMTI().toString());
+        if (payload.length > 0) {
+            p.append(" with payload ");
+            p.append(Utilities.toHexSpaceString(payload));
+        } else {
+            p.append(" with no payload");
+        }
+        return p.toString();
     }
 
     public abstract MessageTypeIdentifier getEMTI();
