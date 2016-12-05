@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 /**
  * Traction Control Reply message implementation.
- * <p/>
+ * <p>
  * Created by bracz on 12/29/15.
  */
 @Immutable
@@ -110,16 +110,16 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
         return retval;
     }
 
-    /** Returns the length of the consist list.
+    /** @return the length of the consist list.
      * Valid only for consist query reply message
-      */
+     */
     public int getConsistLength() {
         byte uintval = payload[2];
         int retval = uintval < 0 ? uintval + 256 : uintval;
         return retval;
     }
 
-    /** Returns the index of the returned node in the consist list, or -1 if there is no consist
+    /** @return the index of the returned node in the consist list, or -1 if there is no consist
      * entry in the response.
      * Valid only for consist query reply message
      */

@@ -128,6 +128,8 @@ public enum MessageTypeIdentifier {
         
         /**
          * Provide the enum object matching a particular MTI value
+         * @param mti    the numeric value of the MTI
+         * @return the enum for that numeric value or null if that numeric value is not a known MTI.
          */
         public static MessageTypeIdentifier get(int mti) {
             return mapping.get(Integer.valueOf(mti));

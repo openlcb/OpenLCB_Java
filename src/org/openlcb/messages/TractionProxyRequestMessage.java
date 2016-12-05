@@ -12,7 +12,7 @@ import org.openlcb.NodeID;
 
 /**
  * Traction Proxy Request message implementation.
- * <p/>
+ * <p>
  * Created by bracz on 12/29/15.
  */
 @Immutable

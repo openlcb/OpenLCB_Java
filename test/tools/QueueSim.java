@@ -17,6 +17,7 @@ public class QueueSim {
     
     /**
      * unit exponential random
+     * @return dunno
      */
     static double exp() {
         return -1*Math.log(1.-r.nextDouble());

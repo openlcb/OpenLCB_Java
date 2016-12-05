@@ -1,24 +1,27 @@
 package org.openlcb.cdi.impl;
 
+import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
-import org.openlcb.DefaultPropertyListenerSupport;
+import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
+import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -46,12 +49,15 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public static final String UPDATE_WRITE_COMPLETE = "PENDING_WRITE_COMPLETE";
     private static final String TAG = "ConfigRepresentation";
     private static final Logger logger = Logger.getLogger(TAG);
+    static final Charset UTF8 = Charset.forName("UTF8");
+
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
+    private final CdiPanel.ReadWriteAccess mockAccess;
     private CdiRep cdiRep;
     private String state = "Uninitialized";
     private CdiContainer root = null;
-    private final Map<Integer, MemorySpaceCache> spaces = new HashMap<>();
+    private final Map<Integer, MemorySpaceCache> spaces = new TreeMap<>();
     private final Map<String, CdiEntry> variables = new HashMap<>();
     // Last time the progressbar was updated from the load.
     private long lastProgress;
@@ -65,7 +71,16 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public ConfigRepresentation(OlcbInterface connection, NodeID remoteNodeID) {
         this.connection = connection;
         this.remoteNodeID = remoteNodeID;
+        this.mockAccess = null;
         triggerFetchCdi();
+    }
+
+    public ConfigRepresentation(CdiPanel.ReadWriteAccess memoryAccess, CdiRep xmlRep) {
+        this.connection = null;
+        this.remoteNodeID = null;
+        this.mockAccess = memoryAccess;
+        cdiRep = xmlRep;
+        parseRep();
     }
 
     /**
@@ -107,6 +122,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         setState("Representation complete.");
         prefillCaches();
         firePropertyChange(UPDATE_REP, null, root);
+    }
+
+    public CdiRep getCdiRep() {
+        return cdiRep;
     }
 
     int pendingCacheFills = 0;
@@ -169,7 +188,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         if (spaces.containsKey(space)) {
             return spaces.get(space);
         } else {
-            MemorySpaceCache s = new MemorySpaceCache(connection, remoteNodeID, space);
+            MemorySpaceCache s;
+            if (connection != null) {
+                s = new MemorySpaceCache(connection, remoteNodeID, space);
+            } else {
+                s = new MemorySpaceCache(mockAccess, space);
+            }
             spaces.put(space, s);
             return s;
         }
@@ -188,6 +212,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
      * for each entry.
      *
      * @param baseName name of the prefix of all these group entries
+     * @param segment  memory configuration segment number
      * @param items    the list of CDI entries to render
      * @param output   the list of output variables to append to
      * @param origin   offset in the segment of the beginning of the group payload
@@ -353,7 +378,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         /**
          * Parses the root of the CdiRep into an internal representation that is a container.
-         * @param rep
+         * @param rep the CDI representation
          */
         public Root(CdiRep rep) {
             items = new ArrayList<>();
@@ -584,7 +609,12 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         @Override
         protected void updateVisibleValue() {
-            lastVisibleValue = getValue().toString();
+            EventID v = getValue();
+            if (v != null) {
+                lastVisibleValue = Utilities.toHexDotsString(v.getContents());
+            } else {
+                lastVisibleValue = "";
+            }
         }
 
         public EventID getValue() {
@@ -635,7 +665,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             while (len < b.length && b[len] != 0) ++len;
             byte[] rep = new byte[len];
             System.arraycopy(b, 0, rep, 0, len);
-            String ret = new String(rep);
+            String ret = new String(rep, UTF8);
             return ret;
         }
 
@@ -643,9 +673,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = new byte[size];
             byte[] f;
-            try {
-                f = value.getBytes("UTF-8");
-            } catch (UnsupportedEncodingException e) { return; }
+            f = value.getBytes(UTF8);
             System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
             cache.write(this.origin, b, this);
         }

@@ -5,10 +5,13 @@ package org.openlcb.cdi.jdom;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.beans.PropertyChangeListener;
+import java.util.logging.Logger;
 
 import org.openlcb.*;
 import org.openlcb.Utilities;
 import org.openlcb.implementations.*;
+
+import static java.util.logging.Logger.getLogger;
 
 /**
  * Provide a Reader to the OpenLCB CDI in a node.
@@ -20,7 +23,8 @@ import org.openlcb.implementations.*;
  * @version	$Revision$
  */
 public class CdiMemConfigReader  {
-    
+    private final static Logger log = getLogger(CdiMemConfigReader.class.getName());
+
     final static int LENGTH = 64;
 
     NodeID node;
@@ -62,6 +66,7 @@ public class CdiMemConfigReader  {
             new MemoryConfigurationService.McsReadHandler() {
                 @Override
                 public void handleFailure(int code) {
+                    log.warning("Error reading CDI: " + Integer.toHexString(code));
                     done();
                     // TODO: 5/2/16 proxy error messages to the caller.
                     // don't do next request

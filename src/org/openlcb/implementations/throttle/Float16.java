@@ -26,6 +26,8 @@ public class Float16 {
     /**
      * This allows the use of the -0.0 value if needed. That's not handled
      * by the other constructors
+     * @param d           absolute value to set
+     * @param positive    direction to set
      */
     public Float16(double d, boolean positive) {
         if (d == 0.0) {

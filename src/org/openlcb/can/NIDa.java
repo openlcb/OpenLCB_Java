@@ -42,6 +42,8 @@ public class NIDa {
      * this forces the current seed to a specific
      * value. In the process, it updates the alias
      * to the value implied by this seed.
+     * @param seed1    internal state 1
+     * @param seed2    internal state 2
      */
     protected void forceSeedValue(long seed1, long seed2) {
         lfsr1 = seed1;
@@ -53,6 +55,7 @@ public class NIDa {
      * For use in testing subclasses only,
      * this forces the current alias to a specific
      * value. It does not change the seed.
+     * @param alias    the next alias to return
      */
     protected void forceAliasValue(int alias) {
         nida = alias;
@@ -63,6 +66,7 @@ public class NIDa {
      * of a node ID.
      * <p>Generally, it's easiest to work with
      * the bytes of the ID.  The MSB is id[0].
+     * @param nid    node ID to use as seed
      */
     protected void loadSeed(NodeID nid) {
         this.nid = nid;
@@ -92,6 +96,7 @@ public class NIDa {
 
     /**
      * Reduce the current generator value to an alias value.
+     * @return the current alias projected from the internal state
      */
     protected int computeAliasFromGenerator() {
         return (int)(lfsr1 ^ lfsr2 ^ (lfsr1>>12) ^ (lfsr2>>12) ) & 0xFFF;

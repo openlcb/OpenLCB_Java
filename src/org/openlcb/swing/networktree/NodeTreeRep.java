@@ -2,12 +2,16 @@
 
 package org.openlcb.swing.networktree;
 
-import javax.swing.*;
-import javax.swing.tree.*;
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.ProtocolIdentification;
+import org.openlcb.SimpleNodeIdent;
+
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-import org.openlcb.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 /**
  * Represent a single node for the tree display
@@ -21,7 +25,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     MimicNodeStore.NodeMemo memo;
     MimicNodeStore store;
     DefaultTreeModel treeModel;
-    
+    String nodeDescription = "";
+
     DefaultMutableTreeNode getThis() { return this; }
     DefaultTreeModel getTreeModel() { return treeModel; }
     
@@ -81,8 +86,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         node.setUserObject(new SelectionKey(name, memo.getNodeID()));
         return node;
     }
-    
-    void updateSimpleNodeIdent(SimpleNodeIdent e) {
+
+    synchronized void updateSimpleNodeIdent(SimpleNodeIdent e) {
         if (simpleInfoMfgNode == null) {
             if (e.getMfgName().replace(" ","").length()>0) {
                 simpleInfoMfgNode = newNode("Mfg: "+e.getMfgName());
@@ -143,11 +148,26 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         } else {
             simpleInfoUserDescNode.setUserObject("Desc: "+e.getUserDesc());
         }
+        StringBuilder b = new StringBuilder();
+        String n = e.getUserName().trim();
+        if (!n.isEmpty()) {
+            b.append(n);
+        }
+        n = e.getUserDesc().trim();
+        if (!n.isEmpty()) {
+            if (b.length() > 0) b.append(" - ");
+            b.append(n);
+        }
+        String newDesc = b.toString();
+        if (!nodeDescription.equals(newDesc)) {
+            nodeDescription = newDesc;
+            treeModel.nodeChanged(this);
+        }
     }
     
     DefaultMutableTreeNode pipNode;
-    
-    void updateProtocolIdent(ProtocolIdentification pi) {
+
+    synchronized void updateProtocolIdent(ProtocolIdentification pi) {
         if (pi.getValue() != 0) {
 
             if (pipNode == null) {
@@ -205,7 +225,11 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
      * Currently implemented as toString name of underling nodeID.
      */
     public String toString() {
-        return memo.getNodeID().toString();
+        if (nodeDescription.isEmpty()) {
+            return memo.getNodeID().toString();
+        } else {
+            return memo.getNodeID().toString() + " - " + nodeDescription;
+        }
     }
 	
 	
@@ -223,7 +247,8 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
 	    /**
 	     * Override here to change behavior when 
 	     * treenode is selected.
-	     */
+         * @param rep    the node selected by the user
+         */
 	    public void select(DefaultMutableTreeNode rep) {
 	        // System.out.println("Selected: "+rep+" for "+name+" on "+node);
 	    }

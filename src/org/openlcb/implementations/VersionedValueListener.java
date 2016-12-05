@@ -52,6 +52,8 @@ public abstract class VersionedValueListener<T> implements PropertyChangeListene
         update(parent.getLatestData());
     }
 
-    /** Called when the backend has to update its version. */
+    /** Called when the backend has to update its version.
+     * @param t value as of the new version.
+     * */
     public abstract void update(T t);
 }

@@ -1,10 +1,9 @@
 package org.openlcb.implementations;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.openlcb.*;
 
 /**
@@ -16,7 +15,6 @@ import org.openlcb.*;
  *<p>
  * Datagram negative replies cause a local retransmission. Positive
  * replies are reflected upstream to original source of the datagram.
- *<p>
  *<ul>
  *<li>Does not parallelize Datagrams to separate nodes
  *<li>Needs to timeout and resume operation if no reply received
@@ -46,6 +44,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     /**
      * This is where e.g. replies from the OpenLCB
      * network should be returned to.
+     * @return the connection where to forward messages from the bus (typically the datagram service object)
      */
     public Connection connectionForRepliesFromDownstream() {
         return fromDownstream;
@@ -119,8 +118,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
 
         void forwardDownstream() {
-            toDownstream.put(message, fromDownstream);
             startTimeout();
+            toDownstream.put(message, fromDownstream);
         }
         
         Timer timer;

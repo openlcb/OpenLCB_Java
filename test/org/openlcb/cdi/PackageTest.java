@@ -32,6 +32,7 @@ public class PackageTest extends TestCase {
         
         suite.addTest(org.openlcb.cdi.jdom.PackageTest.suite());
         suite.addTest(org.openlcb.cdi.swing.CdiPanelTest.suite());
+        suite.addTest(org.openlcb.cdi.impl.PackageTest.suite());
 
         return suite;
     }

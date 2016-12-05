@@ -1,5 +1,11 @@
 package org.openlcb.implementations.throttle;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.openlcb.Connection;
 import org.openlcb.Message;
 import org.openlcb.MessageDecoder;
@@ -10,19 +16,13 @@ import org.openlcb.implementations.VersionedValueListener;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
-
 /**
- * Traction protocol based implementation of the throttle. This differs from {@ref
- * ThrottleImplementation} in that it uses the {@ref TractionControlRequest} messages for talking
- * to the train nodes, including proper allocation and deallocation of throttles.
- * <p/>
+ * Traction protocol based implementation of the throttle. This differs from
+ * {@link org.openlcb.implementations.throttle.ThrottleImplementation} in that
+ * it uses the {@link org.openlcb.messages.TractionControlRequestMessage} for
+ * talking to the train nodes, including proper allocation and deallocation of
+ * throttles.
+ * <p>
  * Created by bracz on 12/30/15.
  */
 public class TractionThrottle extends MessageDecoder {
@@ -157,6 +157,7 @@ public class TractionThrottle extends MessageDecoder {
 
     /**
      * Initiates fetching one consist member from the remote node.
+     * @param index    index into the consist list (0 to consist member count - 1)
      */
     public void queryConsistMember(int index) {
         Message m = TractionControlRequestMessage.createConsistIndexQuery(iface.getNodeId(),
@@ -167,6 +168,8 @@ public class TractionThrottle extends MessageDecoder {
     /**
      * Adds a new node to the consist handled by the current assigned node, or updates an
      * existing node's consisting flags.
+     * @param newMember    Node ID to add as a consist member
+     * @param flags        bitmap of consist flags according to the standard (eg. whether forward or reverse, whether to send Fn buttons etc)
      */
     public void addToConsist(NodeID newMember, int flags) {
         Message m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
@@ -178,6 +181,7 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     /** Removes a node from the consist handled by the current assigned node.
+     * @param member    consist member to remove
      */
     public void removeFromConsist(NodeID member) {
         Message m = TractionControlRequestMessage.createConsistDetach(iface.getNodeId(),
@@ -206,6 +210,8 @@ public class TractionThrottle extends MessageDecoder {
 
     /**
      * Creates or returns the FunctionInfo structure for a given function number.
+     * @param fn    OpenLCB funciton number to look up
+     * @return FunctionInfo object that can be used to set or query the function value.
      */
     private synchronized FunctionInfo getFunctionInfo(int fn) {
         FunctionInfo v = functions.get(fn);

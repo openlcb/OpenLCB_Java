@@ -12,18 +12,9 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class LearnEventMessage extends Message {
-    
+public class LearnEventMessage extends EventMessage {
     public LearnEventMessage(NodeID source, EventID eid) {
-        super(source);
-        this.eventID = eid;
-    }
-        
-    EventID eventID;
-    
-    // because EventID is immutable, can directly return object
-    public EventID getEventID() {
-        return eventID;
+        super(source, eid);
     }
 
     /**
@@ -37,12 +28,6 @@ public class LearnEventMessage extends Message {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleLearnEvent(this, sender);
      }
-
-    public boolean equals(Object o) {
-        if (!super.equals(o)) return false;
-        LearnEventMessage p = (LearnEventMessage) o;
-        return eventID.equals(p.eventID);
-    } 
 
     public String toString() {
         return super.toString()
