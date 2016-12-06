@@ -29,6 +29,34 @@ public class BackupConfig {
         }
     }
 
+    public static void writeConfigToFile(String fileName, ConfigRepresentation repr) throws
+            IOException {
+        BufferedWriter outFile = null;
+
+        outFile = Files.newBufferedWriter(Paths.get(fileName), Charset.forName("UTF-8"));
+        final BufferedWriter finalOutFile = outFile;
+        repr.visit(new ConfigRepresentation.Visitor() {
+                       @Override
+                       public void visitString(ConfigRepresentation.StringEntry e) {
+                           writeEntry(finalOutFile, e.key, e.getValue());
+                       }
+
+                       @Override
+                       public void visitInt(ConfigRepresentation.IntegerEntry e) {
+                           writeEntry(finalOutFile, e.key, Long.toString(e.getValue()));
+                       }
+
+                       @Override
+                       public void visitEvent(ConfigRepresentation.EventEntry e) {
+                           writeEntry(finalOutFile, e.key, Utilities.toHexDotsString(e.getValue
+                                   ().getContents()));
+                       }
+                   }
+        );
+        outFile.close();
+    }
+
+
     // Main entry point
     static public void main(String[] args) {
         if (args.length != 5) {
@@ -48,37 +76,10 @@ public class BackupConfig {
         Util.waitForPropertyChange(repr, ConfigRepresentation.UPDATE_REP);
         System.out.println("CDI fetch done. Waiting for caches.");
         Util.waitForPropertyChange(repr, ConfigRepresentation.UPDATE_CACHE_COMPLETE);
-        System.out.println("Caches complete.");
-        BufferedWriter outFile = null;
+        System.out.println("Caches complete. Writing variables.");
 
         try {
-            outFile = Files.newBufferedWriter(Paths.get(dstFile), Charset.forName("UTF-8"));
-        } catch (IOException e) {
-            System.err.println("Failed to create output file: " + e.toString());
-            System.exit(1);
-        }
-        final BufferedWriter finalOutFile = outFile;
-        System.out.println("Writing variables.");
-        repr.visit(new ConfigRepresentation.Visitor() {
-                       @Override
-                       public void visitString(ConfigRepresentation.StringEntry e) {
-                           writeEntry(finalOutFile, e.key, e.getValue());
-                       }
-
-                       @Override
-                       public void visitInt(ConfigRepresentation.IntegerEntry e) {
-                           writeEntry(finalOutFile, e.key, Long.toString(e.getValue()));
-                       }
-
-                       @Override
-                       public void visitEvent(ConfigRepresentation.EventEntry e) {
-                           writeEntry(finalOutFile, e.key, Utilities.toHexDotsString(e.getValue
-                                   ().getContents()));
-                       }
-                   }
-        );
-        try {
-            outFile.close();
+            writeConfigToFile(dstFile, repr);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
