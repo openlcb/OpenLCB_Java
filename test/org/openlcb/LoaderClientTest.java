@@ -119,6 +119,7 @@ public class LoaderClientTest extends TestCase {
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
         xmt.put(new InitializationCompleteMessage(farID), null);
+        delay(200);
         Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
@@ -143,6 +144,7 @@ public class LoaderClientTest extends TestCase {
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
         xmt.put(new InitializationCompleteMessage(farID), null);
+        delay(200);
         Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
@@ -167,6 +169,7 @@ public class LoaderClientTest extends TestCase {
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
         xmt.put(new InitializationCompleteMessage(farID), null);
+        delay(200);
         Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
@@ -192,6 +195,7 @@ public class LoaderClientTest extends TestCase {
         messagesReceived.clear();
         dcs.put(new DatagramAcknowledgedMessage(farID,hereID), null);
         xmt.put(new InitializationCompleteMessage(farID), null);
+        delay(200);
     // PIPRequest
         Assert.assertEquals("PIPRequest", 1, messagesReceived.size());
                                 //System.out.println("testLoaderClientDG PIPRequest");
@@ -246,6 +250,7 @@ public class LoaderClientTest extends TestCase {
         //messagesReceived.clear();
         xmt.put(new InitializationCompleteMessage(farID), null);
     // PIPRequest
+        delay(200);
         Assert.assertEquals("PIPReq", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID))); // DGs ok
         messagesReceived.clear();
@@ -297,6 +302,7 @@ public class LoaderClientTest extends TestCase {
         //messagesReceived.clear();
         xmt.put(new InitializationCompleteMessage(farID), null);
         // PIPRequest
+        delay(200);
         Assert.assertEquals("PIPReq", 1, messagesReceived.size());
                                       // System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID))); // DGs ok
@@ -325,7 +331,18 @@ public class LoaderClientTest extends TestCase {
 
 
     // from here down is testing infrastructure
-    
+
+    private void delay(int msec) {
+        long start = System.currentTimeMillis();
+        while (true) {
+            long left = start + msec - System.currentTimeMillis();
+            if (left < 0) return;
+            try {
+                Thread.sleep(left);
+            } catch(InterruptedException e) {}
+        }
+    }
+
     public LoaderClientTest(String s) {
         super(s);
     }
