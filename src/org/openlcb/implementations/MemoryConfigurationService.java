@@ -8,10 +8,12 @@ import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
 import org.openlcb.Utilities;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -401,7 +403,7 @@ public class MemoryConfigurationService {
     // Holds the memo pointers to all pending operations: datagrams that were sent out and are
     // waiting a response. Must be synchronized(this) for all accesses.
     final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
-    final Map<Integer, List<McsRequestMemo>> queuedRequests = new HashMap<>(5);
+    final Map<Integer, ArrayDeque<McsRequestMemo>> queuedRequests = new HashMap<>(5);
 
 
     /**
@@ -416,9 +418,9 @@ public class MemoryConfigurationService {
                 pendingRequests.remove(memo.getRequestCode());
                 memo = null;
                 if (queuedRequests.containsKey(rqCode)) {
-                    List<McsRequestMemo> l = queuedRequests.get(rqCode);
+                    Queue<McsRequestMemo> l = queuedRequests.get(rqCode);
                     if (!l.isEmpty()) {
-                        memo = l.remove(l.size() - 1);
+                        memo = l.poll();
                         pendingRequests.put(rqCode, memo);
                     }
                 }
@@ -507,8 +509,8 @@ public class MemoryConfigurationService {
         synchronized(this) {
             int rqCode = memo.getRequestCode();
             if (pendingRequests.containsKey(rqCode)) {
-                if (!queuedRequests.containsValue(rqCode)) {
-                    queuedRequests.put(rqCode, new ArrayList<McsRequestMemo>());
+                if (!queuedRequests.containsKey(rqCode)) {
+                    queuedRequests.put(rqCode, new ArrayDeque<>());
                 }
                 queuedRequests.get(rqCode).add(memo);
                 return;
