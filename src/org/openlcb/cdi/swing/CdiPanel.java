@@ -1,7 +1,6 @@
 package org.openlcb.cdi.swing;
 
 import org.openlcb.EventID;
-import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.cmd.RestoreConfig;
@@ -20,16 +19,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
@@ -241,11 +238,30 @@ public class CdiPanel extends JPanel {
     private JButton reloadButton;
     private final List<EntryPane> allEntries = new ArrayList<>();
     private final Map<String, EntryPane> entriesByKey = new HashMap<>();
+    private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
 
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
+
+    final Timer tabColorTimer = new Timer();
+    long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
+    long lastColorRefreshDone = Long.MAX_VALUE; // guarded by tabColorTimer
+
+    private void notifyTabColorRefresh() {
+        long currentTick;
+        synchronized (tabColorTimer) {
+            currentTick = ++lastColorRefreshNeeded;
+        }
+        final long actualRequest = currentTick;
+        tabColorTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                EventQueue.invokeLater(() -> performTabColorRefresh(actualRequest));
+            }
+        }, 500);
+    }
 
     private void removeLoadingListener() {
         synchronized (rep) {
@@ -308,11 +324,48 @@ public class CdiPanel extends JPanel {
         // add glue at bottom
         contentPanel.add(Box.createVerticalGlue());
         repack();
+        synchronized (tabColorTimer) {
+            lastColorRefreshDone = 0;
+        }
+        notifyTabColorRefresh();
     }
 
     private void repack() {
         Window win = SwingUtilities.getWindowAncestor(this);
         if (win != null) win.pack();
+    }
+
+    private void performTabColorRefresh(long requestTick) {
+        synchronized (tabColorTimer) {
+            if (lastColorRefreshDone >= requestTick) return; // nothing to do
+            lastColorRefreshDone = lastColorRefreshNeeded;
+        }
+        rep.visit(new ConfigRepresentation.Visitor() {
+            boolean isDirty = false;
+
+            @Override
+            public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+                boolean oldDirty = isDirty;
+                isDirty = false;
+                super.visitGroupRep(e);
+                JTabbedPane tabs = tabsByKey.get(e.key);
+                if (tabs != null && tabs.getTabCount() >= e.index) {
+                    if (isDirty) {
+
+                        tabs.setBackgroundAt(e.index - 1, COLOR_EDITED);
+                    } else {
+                        tabs.setBackgroundAt(e.index - 1, null);
+                    }
+                }
+                isDirty |= oldDirty;
+            }
+
+            @Override
+            public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+                EntryPane v = entriesByKey.get(e.key);
+                isDirty |= v.isDirty();
+            }
+        });
     }
 
     /**
@@ -447,6 +500,7 @@ public class CdiPanel extends JPanel {
             factory.handleGroupPaneEnd(currentPane);
 
             currentTabbedPane.add(currentPane);
+            tabsByKey.put(e.key, currentTabbedPane);
         }
 
         @Override
@@ -739,12 +793,16 @@ public class CdiPanel extends JPanel {
                 return;
             }
             String v = getDisplayText();
+            boolean oldDirty = dirty;
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
                 dirty = false;
             } else {
                 textComponent.setBackground(COLOR_EDITED);
                 dirty = true;
+            }
+            if (oldDirty != dirty) {
+                notifyTabColorRefresh();
             }
         }
 
