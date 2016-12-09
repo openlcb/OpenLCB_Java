@@ -216,8 +216,17 @@ public class CdiPanel extends JPanel {
                     onError("Could not find variable for key " + key);
                     return;
                 }
+                // TODO: The logical value to display value change should not be the
+                // responsibility of this code; there is duplication over the
+                // ConfigRepresentation.IntegerEntry class. This
+                // should probably go via someplace else.
+                CdiRep.Map map = pp.entry.getCdiItem().getMap();
+                if (map != null && map.getKeys().size() > 0) {
+                    String mapvalue = map.getEntry(value);
+                    if (mapvalue != null) value = mapvalue;
+                }
                 pp.updateDisplayText(value);
-                //pp.updateColor();
+                pp.updateColor();
             }
 
             @Override
@@ -229,6 +238,7 @@ public class CdiPanel extends JPanel {
                 System.err.println(error);
             }
         });
+        log.info("Config load done.");
     }
 
     GuiItemFactory factory;
