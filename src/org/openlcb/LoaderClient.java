@@ -1,13 +1,10 @@
 package org.openlcb;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
-import org.openlcb.implementations.DatagramService.*;
-import org.openlcb.implementations.MemoryConfigurationService.*;
-import org.openlcb.implementations.StreamTransmitter.*;
-import org.openlcb.implementations.DatagramTransmitter.*;
-import org.openlcb.ProtocolIdentificationReplyMessage;
-import org.openlcb.StreamInitiateReplyMessage;
+import org.openlcb.implementations.DatagramService;
+import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.implementations.MemoryConfigurationService.McsWriteHandler;
+import org.openlcb.implementations.MemoryConfigurationService.McsWriteStreamMemo;
+
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -114,8 +111,13 @@ public class LoaderClient extends MessageDecoder {
                 public void handleSuccess(int flags) {
                     if(state==State.FREEZE) {
                         state = State.PIP;
-                        sendPipRequest();
-                        startTimeout(3000);
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                sendPipRequest();
+                                startTimeout(3000);
+                            }
+                        }, 130);
                     } else {
                         // ignore; maybe a late timeout callback.
                     }
@@ -129,10 +131,10 @@ public class LoaderClient extends MessageDecoder {
                 }
             });
     }
-    Timer timer;
+    Timer timer = new Timer();
+    TimerTask task = null;
     void startTimeout(int period) {
-        timer = new Timer();
-        TimerTask task = new TimerTask(){
+        task = new TimerTask(){
             public void run(){
                 timerExpired();
             }
@@ -140,11 +142,12 @@ public class LoaderClient extends MessageDecoder {
         timer.schedule(task, period);
     }
     void endTimeout() {
-        if (timer != null) timer.cancel();
+        if (task != null) task.cancel();
         else {
             state = State.FAIL;
             
         }
+        task = null;
     }
     void timerExpired() {
         failWith(1, "Timed out");

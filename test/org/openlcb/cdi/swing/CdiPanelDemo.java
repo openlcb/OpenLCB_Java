@@ -56,6 +56,7 @@ public class CdiPanelDemo {
 
         JScrollPane sp = new JScrollPane(m);
         f.add( sp );
+        //f.add(m);
 
         // show
         f.pack();

@@ -172,12 +172,25 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         }
     }
 
+    public synchronized void reloadAll() {
+        spaces.clear();  // destroys all the caches
+        prefillCaches();
+    }
+
     /**
      * @return the internal representation of the root entry. The root entry contains all
      * segments as children.
      */
     public CdiContainer getRoot() {
         return root;
+    }
+
+    public String getRemoteNodeAsString() {
+        if (remoteNodeID == null) {
+            return "mock";
+        } else {
+            return remoteNodeID.toString();
+        }
     }
 
     public @Nullable CdiEntry getVariableForKey(@NonNull String key) {
@@ -228,7 +241,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             origin = origin + it.getOffset();
             CdiEntry entry = null;
             String entryName = it.getName();
-            if (entryName == null) {
+            if (entryName == null || entryName.trim().isEmpty()) {
                 entryName = "child" + it.getIndexInParent();
             }
             String name = baseName + "." + entryName;
@@ -406,7 +419,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             this.segment = segment;
             this.items = new ArrayList<>();
             this.key = getName();
-            if (key == null) {
+            if (key == null || key.trim().isEmpty()) {
                 key = "seg" + segment.getIndexInParent();
             }
             this.origin = segment.getOrigin();
