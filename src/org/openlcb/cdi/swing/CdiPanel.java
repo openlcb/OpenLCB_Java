@@ -2,6 +2,8 @@ package org.openlcb.cdi.swing;
 
 import org.openlcb.EventID;
 import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.cmd.BackupConfig;
+import org.openlcb.cdi.cmd.RestoreConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
@@ -17,6 +19,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
@@ -26,9 +36,12 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -61,6 +74,11 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
 
+    /**
+     * We always use the same file chooser in this class, so that the user's
+     * last-accessed directory remains available.
+     */
+    static JFileChooser fci = new JFileChooser();
 
     private ConfigRepresentation rep;
     public CdiPanel () { super(); }
@@ -74,6 +92,46 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
+
+        contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+
+        scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        Dimension minScrollerDim = new Dimension(800, 12);
+        scrollPane.setMinimumSize(minScrollerDim);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(30);
+
+        //add(scrollPane);
+        add(contentPanel);
+
+        buttonBar = new JPanel();
+        buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buttonBar.setLayout(new FlowLayout());
+        JButton bb = new JButton("Refresh All");
+        bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
+        bb.addActionListener(actionEvent -> reloadAll());
+        buttonBar.add(bb);
+
+        bb = new JButton("Save changed");
+        bb.setToolTipText("Writes every changed value to the hardware.");
+        bb.addActionListener(actionEvent -> saveChanged());
+        buttonBar.add(bb);
+
+        bb = new JButton("Backup...");
+        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Save changed\" button first.");
+        bb.addActionListener(actionEvent -> runBackup());
+        buttonBar.add(bb);
+
+        bb = new JButton("Restore...");
+        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save changed\" afterwards.");
+        bb.addActionListener(actionEvent -> runRestore());
+        buttonBar.add(bb);
+
+        add(buttonBar);
+
         synchronized(rep) {
             if (rep.getRoot() != null) {
                 displayCdi();
@@ -89,14 +147,131 @@ public class CdiPanel extends JPanel {
     public void initComponents(ConfigRepresentation rep) {
         initComponents(rep, new GuiItemFactory()); // default with no behavior
     }
-    
+
+    /** Adds a button to the bar visible on the bottom line, below the scrollbar.
+     * @param c component to add (typically a button)
+     */
+    public void addButtonToFooter(JComponent c) {
+        buttonBar.add(c);
+    }
+
+    /**
+     * Refreshes all memory variable entries directly from the hardware node.
+     */
+    public void reloadAll() {
+        rep.reloadAll();
+    }
+
+    public void saveChanged() {
+        for (EntryPane entry : allEntries) {
+            if (entry.isDirty()) {
+                entry.writeDisplayTextToNode();
+            }
+        }
+    }
+
+    public void runBackup() {
+        // First select a file to save to.
+        fci.setDialogTitle("Save configuration backup file");
+        fci.rescanCurrentDirectory();
+        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+        int retVal = fci.showSaveDialog(null);
+        if (retVal != JFileChooser.APPROVE_OPTION || fci.getSelectedFile() == null) {
+            return;
+        }
+        if (fci.getSelectedFile().exists()) {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Do you want to overwrite the existing file?",
+                    "File already exists", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (confirm != JOptionPane.YES_OPTION)
+                return;
+        }
+
+        try {
+            BackupConfig.writeConfigToFile(fci.getSelectedFile().getPath(), rep);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Failed to write variables to file " + fci.getSelectedFile().getPath() + ": " + e.toString());
+        }
+    }
+
+    public void runRestore() {
+        // First select a file to save to.
+        fci.setDialogTitle("Open configuration restore file");
+        fci.rescanCurrentDirectory();
+        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+        int retVal = fci.showOpenDialog(null);
+        if (retVal != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        RestoreConfig.parseConfigFromFile(fci.getSelectedFile().getPath(), new RestoreConfig.ConfigCallback() {
+            boolean hasError = false;
+
+            @Override
+            public void onConfigEntry(String key, String value) {
+                EntryPane pp = entriesByKey.get(key);
+                if (pp == null) {
+                    onError("Could not find variable for key " + key);
+                    return;
+                }
+                // TODO: The logical value to display value change should not be the
+                // responsibility of this code; there is duplication over the
+                // ConfigRepresentation.IntegerEntry class. This
+                // should probably go via someplace else.
+                CdiRep.Map map = pp.entry.getCdiItem().getMap();
+                if (map != null && map.getKeys().size() > 0) {
+                    String mapvalue = map.getEntry(value);
+                    if (mapvalue != null) value = mapvalue;
+                }
+                pp.updateDisplayText(value);
+                pp.updateColor();
+            }
+
+            @Override
+            public void onError(String error) {
+                if (!hasError) {
+                    System.err.println("Error(s) encountered during loading configuration backup.");
+                    hasError = true;
+                }
+                System.err.println(error);
+            }
+        });
+        log.info("Config load done.");
+    }
+
     GuiItemFactory factory;
     JPanel loadingPanel;
     JLabel loadingText;
     PropertyChangeListener loadingListener;
     private JButton reloadButton;
+    private final List<EntryPane> allEntries = new ArrayList<>();
+    private final Map<String, EntryPane> entriesByKey = new HashMap<>();
+    private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
 
     boolean loadingIsPacked = false;
+    JScrollPane scrollPane;
+    JPanel contentPanel;
+    JPanel buttonBar;
+
+    final Timer tabColorTimer = new Timer();
+    long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
+    long lastColorRefreshDone = Long.MAX_VALUE; // guarded by tabColorTimer
+
+    private void notifyTabColorRefresh() {
+        long currentTick;
+        synchronized (tabColorTimer) {
+            currentTick = ++lastColorRefreshNeeded;
+        }
+        final long actualRequest = currentTick;
+        tabColorTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                EventQueue.invokeLater(() -> performTabColorRefresh(actualRequest));
+            }
+        }, 500);
+    }
 
     private void removeLoadingListener() {
         synchronized (rep) {
@@ -134,7 +309,7 @@ public class CdiPanel extends JPanel {
 
     private void displayLoadingProgress() {
         if (loadingPanel == null) createLoadingPane();
-        add(loadingPanel);
+        contentPanel.add(loadingPanel);
         addLoadingListener();
     }
 
@@ -142,7 +317,7 @@ public class CdiPanel extends JPanel {
         displayLoadingProgress();
         loadingText.setText("Creating display...");
         if (rep.getCdiRep().getIdentification() != null) {
-            add(createIdentificationPane(rep.getCdiRep()));
+            contentPanel.add(createIdentificationPane(rep.getCdiRep()));
         }
         repack();
         new Thread(new Runnable() {
@@ -157,13 +332,50 @@ public class CdiPanel extends JPanel {
     private void displayComplete() {
         hideLoadingProgress();
         // add glue at bottom
-        add(Box.createVerticalGlue());
+        contentPanel.add(Box.createVerticalGlue());
         repack();
+        synchronized (tabColorTimer) {
+            lastColorRefreshDone = 0;
+        }
+        notifyTabColorRefresh();
     }
 
     private void repack() {
         Window win = SwingUtilities.getWindowAncestor(this);
         if (win != null) win.pack();
+    }
+
+    private void performTabColorRefresh(long requestTick) {
+        synchronized (tabColorTimer) {
+            if (lastColorRefreshDone >= requestTick) return; // nothing to do
+            lastColorRefreshDone = lastColorRefreshNeeded;
+        }
+        rep.visit(new ConfigRepresentation.Visitor() {
+            boolean isDirty = false;
+
+            @Override
+            public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+                boolean oldDirty = isDirty;
+                isDirty = false;
+                super.visitGroupRep(e);
+                JTabbedPane tabs = tabsByKey.get(e.key);
+                if (tabs != null && tabs.getTabCount() >= e.index) {
+                    if (isDirty) {
+
+                        tabs.setBackgroundAt(e.index - 1, COLOR_EDITED);
+                    } else {
+                        tabs.setBackgroundAt(e.index - 1, null);
+                    }
+                }
+                isDirty |= oldDirty;
+            }
+
+            @Override
+            public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+                EntryPane v = entriesByKey.get(e.key);
+                isDirty |= v.isDirty();
+            }
+        });
     }
 
     /**
@@ -201,7 +413,7 @@ public class CdiPanel extends JPanel {
      */
     private class RendererVisitor extends ConfigRepresentation.Visitor {
         private JPanel currentPane;
-        private JPanel currentLeaf;
+        private EntryPane currentLeaf;
         private JTabbedPane currentTabbedPane;
         @Override
         public void visitSegment(ConfigRepresentation.SegmentEntry e) {
@@ -213,7 +425,7 @@ public class CdiPanel extends JPanel {
             // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
-            add(ret);
+            contentPanel.add(ret);
             EventQueue.invokeLater(() -> repack());
         }
 
@@ -298,6 +510,7 @@ public class CdiPanel extends JPanel {
             factory.handleGroupPaneEnd(currentPane);
 
             currentTabbedPane.add(currentPane);
+            tabsByKey.put(e.key, currentTabbedPane);
         }
 
         @Override
@@ -320,6 +533,8 @@ public class CdiPanel extends JPanel {
 
         @Override
         public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+            allEntries.add(currentLeaf);
+            entriesByKey.put(currentLeaf.entry.key, currentLeaf);
             currentLeaf.setAlignmentX(Component.LEFT_ALIGNMENT);
             currentPane.add(currentLeaf);
             currentLeaf = null;
@@ -486,6 +701,7 @@ public class CdiPanel extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
+        boolean dirty = false;
         JPanel p3;
 
         EntryPane(ConfigRepresentation.CdiEntry e, String defaultName) {
@@ -577,6 +793,7 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
+            // TODO: is this needed?
             p3.add(Box.createHorizontalGlue());
         }
 
@@ -586,11 +803,21 @@ public class CdiPanel extends JPanel {
                 return;
             }
             String v = getDisplayText();
+            boolean oldDirty = dirty;
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
+                dirty = false;
             } else {
                 textComponent.setBackground(COLOR_EDITED);
+                dirty = true;
             }
+            if (oldDirty != dirty) {
+                notifyTabColorRefresh();
+            }
+        }
+
+        boolean isDirty() {
+             return dirty;
         }
 
         // Take the value from the text box and write it to the Cdi entry.
