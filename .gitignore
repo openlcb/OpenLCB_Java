@@ -1,3 +1,7 @@
+# build artifacts
 classes
 target
+doc
+
+# bash autocompletion artifacts
 /.ant-targets-build.xml
