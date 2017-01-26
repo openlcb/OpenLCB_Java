@@ -193,6 +193,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
+                    <argLine>${argLine}</argLine>
                     <excludes>
                         <exclude>AllTest</exclude>
                         <exclude>**.PackageTest</exclude>
@@ -307,13 +308,13 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.6.201602180812</version>
+                <version>0.7.8</version>
                 <configuration>
-                   <dataFile>jacoco.exec</dataFile>
+                   <destFile>${project.build.directory}/target/jacoco.exec</destFile>
+                   <dataFile>${project.build.directory}/target/jacoco.exec</dataFile>
                    <excludes>
                        <File>**/*Test*.class</File>
                        <!-- Exclude testing infrastructure classes -->
-                       <File>**/*Scaffold.class"</File>
                        <File>**/*JUnit*.class</File>
                        <File>**/*Demo.class</File>
                        <File>**/*Mock*.class</File>
@@ -340,11 +341,11 @@
                        <File>scenarios/can/CanScenarios.class</File>
                        <File>scenarios/can/NineOnASegment.class"</File>
                        <File>scenarios/BlueGoldApplet*.class</File>
-                   </excludes>
+                   </excludes> 
                 </configuration>
                 <executions>
                     <execution>
-                        <id>prepare-agent</id>
+                        <id>default-prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
