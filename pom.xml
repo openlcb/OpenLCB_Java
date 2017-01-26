@@ -297,6 +297,7 @@
                 <artifactId>coveralls-maven-plugin</artifactId>
                 <version>4.3.0</version>
                 <configuration>
+                   <branch>${git.branch}</branch>
                    <sourceDirectories>
                           <!-- Additional source directories -->
                           <File>java/tmp</File>
