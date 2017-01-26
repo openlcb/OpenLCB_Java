@@ -21,4 +21,4 @@ cache:
   - $HOME/.m2
 
 after_success:
-  - mvn jacoco:report coveralls:jacoco
+  - mvn jacoco:report coveralls:report
