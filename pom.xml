@@ -193,6 +193,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
+                    <argLine>${argLine}</argLine>
                     <excludes>
                         <exclude>AllTest</exclude>
                         <exclude>**.PackageTest</exclude>
@@ -290,6 +291,67 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>2.9</version>
+            </plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>4.3.0</version>
+                <configuration>
+                   <branch>${git.branch}</branch>
+                   <sourceDirectories>
+                          <!-- Additional source directories -->
+                          <File>java/tmp</File>
+                          <File>target/generated-sources/javacc</File>
+                          <File>target/generated-sources/jjtree</File>
+                   </sourceDirectories>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.8</version>
+                <configuration>
+                   <destFile>${project.build.directory}/target/jacoco.exec</destFile>
+                   <dataFile>${project.build.directory}/target/jacoco.exec</dataFile>
+                   <excludes>
+                       <File>**/*Test*.class</File>
+                       <!-- Exclude testing infrastructure classes -->
+                       <File>**/*JUnit*.class</File>
+                       <File>**/*Demo.class</File>
+                       <File>**/*Mock*.class</File>
+                       <File>**/package-info.class</File>
+                       <File>org/openlcb/FakeConnection.class" </File>
+                       <File>org/openlcb/cdi/jdom/SampleFactory.class</File>
+                       <File>org/openlcb/FakeOlcbInterface.class</File>
+                       <File>tools/jmri/DecoderDefnToCdi.class</File>
+                       <File>tools/cansim/CanFrame.class</File>
+                       <File>tools/cansim/CanSegment.class</File>
+                       <File>tools/cansim/CanInterface.class</File>
+                       <File>tools/Timed.class</File>
+                       <File>tools/Timer.class</File>
+                       <File>tools/QueueSim*.class</File>
+                       <File>simulations/NodeIDCollisions.class</File>
+                       <File>scenarios/ScenarioRunner*.class</File>
+                       <File>scenarios/TwoBusesFiltered.class</File>
+                       <File>scenarios/ThreeBuses.class</File>
+                       <File>scenarios/NineOnALink.class</File>
+                       <File>scenarios/ConfigDemoApplet*.class</File>
+                       <File>scenarios/BlueGoldCheck*.class</File>
+                       <File>scenarios/TwoBuses.class</File>
+                       <File>scenarios/can/TwoOnASegment.class</File>
+                       <File>scenarios/can/CanScenarios.class</File>
+                       <File>scenarios/can/NineOnASegment.class"</File>
+                       <File>scenarios/BlueGoldApplet*.class</File>
+                   </excludes> 
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <sourceDirectory>${basedir}/src</sourceDirectory>
