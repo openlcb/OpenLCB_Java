@@ -1,6 +1,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.openlcb/openlcb/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.openlcb/openlcb)
 [![Javadocs](http://www.javadoc.io/badge/org.openlcb/openlcb.svg)](http://www.javadoc.io/doc/org.openlcb/openlcb)
 [![Build Status](https://travis-ci.org/openlcb/OpenLCB_Java.svg?branch=master)](https://travis-ci.org/openlcb/OpenLCB_Java)
+[![Coverage Status](https://coveralls.io/repos/github/openlcb/OpenLCB_Java/badge.svg?branch=master)](https://coveralls.io/github/openlcb/OpenLCB_Java?branch=master)
 
 # OpenLCB Java Prototype
 
