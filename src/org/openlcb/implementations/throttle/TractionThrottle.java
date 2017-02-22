@@ -36,7 +36,7 @@ public class TractionThrottle extends MessageDecoder {
     public static final String UPDATE_PROP_ENABLED = "updateEnabled";
     public static final String UPDATE_PROP_STATUS = "updateStatus";
     public static final String UPDATE_PROP_CONSISTLIST = "updateConsistList";
-    private static Logger logger = Logger.getLogger("TractionThrottle");
+    private final static Logger logger = Logger.getLogger(TractionThrottle.class.getName());
     private final OlcbInterface iface;
     RemoteTrainNode trainNode;
     boolean assigned = false;

@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.Collection;
 
 import java.util.Queue;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +23,7 @@ import javax.annotation.Nullable;
 public class MimicNodeStore extends AbstractConnection {
 
     public static final String ADD_PROP_NODE = "AddNode";
+    private final static Logger logger = Logger.getLogger(MimicNodeStore.class.getName());
 
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
@@ -261,7 +263,7 @@ public class MimicNodeStore extends AbstractConnection {
                 // check for temporary error
                 if ( (msg.getCode() & 0x1000 ) == 0) {
                     // not a temporary error, assume a permanent error
-                    System.out.println("Permanent error geting Simple Node Info for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    logger.log(Level.SEVERE, "Permanent error geting Simple Node Info for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
                     return;
                 }
                 // have to resend the SNII request
@@ -271,7 +273,7 @@ public class MimicNodeStore extends AbstractConnection {
                 // check for temporary error
                 if ( (msg.getCode() & 0x1000 ) == 0) {
                     // not a temporary error, assume a permanent error
-                    System.out.println("Permanent error geting Protocol Identification information for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    logger.log(Level.SEVERE, "Permanent error geting Protocol Identification information for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
                     return;
                 }
                 // have to resend the PIP request

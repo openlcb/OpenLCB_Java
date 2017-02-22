@@ -1,5 +1,7 @@
 package org.openlcb.implementations;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openlcb.*;
 
 /**
@@ -29,6 +31,7 @@ import org.openlcb.*;
 public class BlueGoldExtendedEngine extends BlueGoldEngine {
 
     boolean[] isSelectedPC;
+    private final static Logger logger = Logger.getLogger(BlueGoldExtendedEngine.class.getName());
     
     public void goldClick() {
         if (getGoldLightOn() && getBlueLightOn()) {
@@ -89,7 +92,7 @@ public class BlueGoldExtendedEngine extends BlueGoldEngine {
         for (int i=0; i<isSelectedPC.length; i++) {
             if (isSelectedPC[i]) {
                 EventID eid = msg.getEventID();
-                System.out.println("Set "+i+" to "+eid);
+                logger.log(Level.INFO, "Set {0} to {1}", new Object[]{i, eid});
                 setEventID(i, eid);
             }
             isSelectedPC[i] = false;

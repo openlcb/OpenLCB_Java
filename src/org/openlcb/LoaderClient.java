@@ -1,16 +1,12 @@
 package org.openlcb;
 
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
 import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.implementations.MemoryConfigurationService.McsWriteHandler;
 import org.openlcb.implementations.MemoryConfigurationService.McsWriteStreamMemo;
-
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.logging.Logger;
-
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
 
 //
 //  LoaderClient.java
@@ -23,7 +19,7 @@ import java.util.logging.Logger;
 //#include "LoaderClient.hpp"
 
 public class LoaderClient extends MessageDecoder {
-    static Logger logger = Logger.getLogger("LoaderClient");
+    private static final Logger logger = Logger.getLogger(LoaderClient.class.getName());
 
     enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, PIPREPLY, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
     Connection connection;

@@ -3,6 +3,8 @@ package org.openlcb.can;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openlcb.*;
 import org.openlcb.implementations.DatagramUtils;
 import org.openlcb.messages.TractionControlReplyMessage;
@@ -23,6 +25,7 @@ import org.openlcb.messages.TractionProxyRequestMessage;
  */
 public class MessageBuilder {
 
+    private final static Logger logger = Logger.getLogger(MessageBuilder.class.getName());
     /**
      * The provided AliasMap will be updated
      * as inbound frames are processed.
@@ -165,7 +168,7 @@ public class MessageBuilder {
             // something bad happened
             String mtiString = "000"+Integer.toHexString(mti).toUpperCase();
             mtiString = mtiString.substring(mtiString.length()-3);
-            System.out.println(" failed to parse MTI 0x"+mtiString);
+            logger.log(Level.SEVERE, " failed to parse MTI 0x{0}", mtiString);
             return retlist;  // nothing in it from this
         }
         
@@ -283,8 +286,7 @@ public class MessageBuilder {
                 return retlist;
                 
             default:
-                System.out.println(String.format(" received unhandled MTI 0x%03X: %s",mti, value
-                        .toString()));
+                logger.warning(String.format(" received unhandled MTI 0x%03X: %s", mti, value.toString()));
                 return null;
         }
     }

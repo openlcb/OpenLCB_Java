@@ -2,10 +2,9 @@
 
 package org.openlcb.swing;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.text.*;
-
-import org.openlcb.*;
 import org.openlcb.implementations.*;
 
 /**
@@ -19,6 +18,7 @@ import org.openlcb.implementations.*;
 public class ConsumerPane extends JPanel  {
 
     final static int DELAY = 2000;
+    private final static Logger logger = Logger.getLogger(ConsumerPane.class.getName());
     
     public ConsumerPane(String name, SingleConsumerNode node) {
         this.name = name;
@@ -44,7 +44,7 @@ public class ConsumerPane extends JPanel  {
                     timer.start();
                 } else if (e.getPropertyName().equals("EventID")) {
                     if (ConsumerPane.this.name == null) sendLabel.setText(e.getNewValue().toString());
-                    System.out.println("new "+e.getNewValue().toString());
+                    logger.log(Level.FINE, "new {0}", e.getNewValue());
                 }
             }
         });
