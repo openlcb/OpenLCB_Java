@@ -1,17 +1,21 @@
 package org.openlcb.cdi.jdom;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 
-import java.io.IOException;
-import java.io.Reader;
-
 /**
  * Created by bracz on 3/31/16.
  */
 public class XmlHelper {
+
+    private final static Logger logger = Logger.getLogger(XmlHelper.class.getName());
+
     public static Element parseXmlFromReader(Reader r) throws Exception {
         SAXBuilder builder = new SAXBuilder(false);
 
@@ -23,7 +27,7 @@ public class XmlHelper {
             doc = builder.build(r);
             return doc.getRootElement();
         } catch (JDOMException | IOException e) {
-            System.err.println("Could not create Document: " + e);
+            logger.log(Level.SEVERE, "Could not create Document: {0}", e);
             throw e;
         }
     }

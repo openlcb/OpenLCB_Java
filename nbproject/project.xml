@@ -13,19 +13,19 @@
                 <source-folder>
                     <label>OpenLCB Prototype</label>
                     <location>.</location>
-                    <encoding>MacRoman</encoding>
+                    <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
                     <label>src</label>
                     <type>java</type>
                     <location>src</location>
-                    <encoding>MacRoman</encoding>
+                    <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
                     <label>test</label>
                     <type>java</type>
                     <location>test</location>
-                    <encoding>MacRoman</encoding>
+                    <encoding>UTF-8</encoding>
                 </source-folder>
             </folders>
             <ide-actions>
@@ -136,20 +136,20 @@
             </view>
             <subprojects/>
         </general-data>
-        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/4">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar</classpath>
+                <classpath mode="compile">lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:lib/xercesImpl.jar</classpath>
                 <built-to>classes</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
-                <source-level>1.6</source-level>
+                <source-level>1.8</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">lib/junit.jar:lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src</classpath>
+                <classpath mode="compile">lib/junit.jar:lib/jdom-2.0.5.jar:lib/jdom.jar:lib/jlfgr-1_0.jar:lib/annotations.jar:lib/jsr305.jar:src:lib/mockito-core-2.2.9.jar</classpath>
                 <built-to>classes</built-to>
-                <source-level>1.6</source-level>
+                <source-level>1.8</source-level>
             </compilation-unit>
         </java-data>
     </configuration>

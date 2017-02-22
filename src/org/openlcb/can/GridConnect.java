@@ -1,18 +1,15 @@
 package org.openlcb.can;
 
-import org.openlcb.implementations.DatagramUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import org.openlcb.implementations.DatagramUtils;
 
 /**
  * Created by bracz on 1/8/16.
  */
 public class GridConnect {
-    private static Logger logger = Logger.getLogger(new Object() {
-    }.getClass().getSuperclass()
-            .getName());
+    private final static Logger logger = Logger.getLogger(GridConnect.class.getName());
 
     public static String format(CanFrame frame) {
         StringBuilder b = new StringBuilder();

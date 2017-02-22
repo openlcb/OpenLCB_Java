@@ -1,12 +1,11 @@
 package org.openlcb.can.impl;
 
-import org.openlcb.can.CanFrame;
-import org.openlcb.can.CanFrameListener;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Logger;
+import org.openlcb.can.CanFrame;
+import org.openlcb.can.CanFrameListener;
 
 /**
  * Converts the sent CAN framesto gridconnect protocol and writes them ot an output stream.
@@ -15,8 +14,7 @@ import java.util.logging.Logger;
  * Created by bracz on 12/23/15.
  */
 public class GridConnectOutput implements CanFrameListener {
-    private final static String TAG = "GridConnectInput";
-    private final static Logger logger = Logger.getLogger(TAG);
+    private final static Logger logger = Logger.getLogger(GridConnectOutput.class.getName());
 
     private BufferedOutputStream output;
     private final Runnable onError;

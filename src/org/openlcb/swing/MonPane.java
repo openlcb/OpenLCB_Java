@@ -9,7 +9,7 @@ import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -20,11 +20,10 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.text.*;
-
 import org.openlcb.*;
 
 /**
- * Pane for monitoring commmunications.
+ * Pane for monitoring communications.
  *<p>
  * Made in large part from jmri.jmrix.AbstractMonFrame
  *
@@ -48,9 +47,11 @@ public class MonPane extends JPanel  {
 
     javax.swing.JFileChooser logFileChooser;
 
-	// for locking
-	MonPane self;
-	
+    // for locking
+    MonPane self;
+
+    private final static Logger logger = Logger.getLogger(MonPane.class.getName());
+    
     public MonPane() {
 	    super();
     	self = this;
@@ -265,7 +266,7 @@ public class MonPane extends JPanel  {
                 if  (logFileChooser != null)
                     logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()));
             } catch (Exception ex) {
-                System.err.println("exception "+ex);
+                logger.severe("exception "+ex);
             }
         }
     }
