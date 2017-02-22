@@ -1,25 +1,18 @@
 package org.openlcb.implementations;
 
-import net.jcip.annotations.Immutable; 
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
+import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
-
 import org.openlcb.FailureCallback;
 import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
 import org.openlcb.Utilities;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Stack;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.logging.Logger;
-
-import javax.xml.crypto.Data;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
@@ -34,7 +27,7 @@ import javax.xml.crypto.Data;
  * @version $Revision: -1 $
  */
 public class MemoryConfigurationService {
-    private static final Logger logger = Logger.getLogger("MemoryConfigurationService");
+    private static final Logger logger = Logger.getLogger(MemoryConfigurationService.class.getName());
     private static final int DATAGRAM_TYPE = 0x20;
 
     public static final int SPACE_CDI = 0xFF;

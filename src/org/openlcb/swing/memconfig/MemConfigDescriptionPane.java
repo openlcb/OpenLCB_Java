@@ -2,12 +2,10 @@
 
 package org.openlcb.swing.memconfig;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.text.*;
-import java.beans.PropertyChangeListener;
-
 import org.openlcb.*;
-import org.openlcb.Utilities;
 import org.openlcb.implementations.*;
 
 /**
@@ -18,6 +16,7 @@ import org.openlcb.implementations.*;
  */
 public class MemConfigDescriptionPane extends JPanel  {
     
+    private final static Logger logger = Logger.getLogger(MemConfigDescriptionPane.class.getName());
     NodeID node;
     MimicNodeStore store;
     MemoryConfigurationService service;
@@ -57,8 +56,7 @@ public class MemConfigDescriptionPane extends JPanel  {
             new MemoryConfigurationService.McsConfigMemo(node) {
                 @Override
                 public void handleFailure(int code) {
-                    System.err.println("Failed to fetch MCS config information from node " + node
-                            + " error 0x" + Integer.toHexString(code));
+                    logger.log(Level.SEVERE, "Failed to fetch MCS config information from node {0} error 0x{1}", new Object[]{node, Integer.toHexString(code)});
                     commandLabel.setText("Failed: 0x" + Integer.toHexString(code));
                 }
 

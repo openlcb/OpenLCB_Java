@@ -2,8 +2,9 @@
 
 package org.openlcb.swing;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
-import javax.swing.text.*;
 
 import org.openlcb.*;
 import org.openlcb.implementations.*;
@@ -15,6 +16,8 @@ import org.openlcb.implementations.*;
  * @version	$Revision$
  */
 public class ProducerPane extends JPanel  {
+
+    private final static Logger logger = Logger.getLogger(ProducerPane.class.getName());
 
     public ProducerPane(String name, SingleProducerNode node) {
         this.node = node;
@@ -43,7 +46,7 @@ public class ProducerPane extends JPanel  {
             public void propertyChange(java.beans.PropertyChangeEvent e) {
                 if (e.getPropertyName().equals("EventID")) {
                     if (ProducerPane.this.name == null) sendButton.setText(e.getNewValue().toString());
-                    System.out.println("new "+e.getNewValue().toString());
+                    logger.log(Level.FINE, "new {0}", e.getNewValue());
                 }
             }
         });

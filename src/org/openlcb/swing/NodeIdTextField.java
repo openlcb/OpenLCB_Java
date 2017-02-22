@@ -2,10 +2,11 @@
 
 package org.openlcb.swing;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.text.*;
 
-import org.openlcb.*;
 
 /**
  * Text field for entry of forced-valid NodeID string.
@@ -17,6 +18,8 @@ import org.openlcb.*;
  * @version	$Revision$
  */
 public class NodeIdTextField extends JFormattedTextField  {
+
+    private final static Logger logger = Logger.getLogger(NodeIdTextField.class.getName());
 
     static public JFormattedTextField getNodeIdTextField() {
         JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH"));
@@ -34,7 +37,7 @@ public class NodeIdTextField extends JFormattedTextField  {
         try {
             formatter = new MaskFormatter(s);
         } catch (java.text.ParseException exc) {
-            System.err.println("formatter is bad: " + exc.getMessage());
+            logger.log(Level.SEVERE, "formatter is bad: {0}", exc.getMessage());
         }
         return formatter;
     }

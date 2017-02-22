@@ -1,25 +1,25 @@
 package org.openlcb.cdi.cmd;
 
-import org.openlcb.EventID;
-import org.openlcb.NodeID;
-import org.openlcb.Utilities;
-import org.openlcb.can.impl.OlcbConnection;
-import org.openlcb.cdi.impl.ConfigRepresentation;
-
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
+import org.openlcb.EventID;
+import org.openlcb.NodeID;
+import org.openlcb.can.impl.OlcbConnection;
+import org.openlcb.cdi.impl.ConfigRepresentation;
 
 /**
  * Created by bracz on 4/9/16.
  */
 public class RestoreConfig {
 
+    private final static Logger logger = Logger.getLogger(RestoreConfig.class.getName());
+    
     public static interface ConfigCallback {
         void onConfigEntry(String key, String value);
         void onError(String error);
@@ -39,7 +39,7 @@ public class RestoreConfig {
                 if (line.charAt(0) == '#') continue;
                 int pos = line.indexOf('=');
                 if (pos < 0) {
-                    System.out.println("Failed to parse line: " + line);
+                    logger.log(Level.WARNING, "Failed to parse line: {0}", line);
                     continue;
                 }
                 String key = Util.unescapeString(line.substring(0, pos));

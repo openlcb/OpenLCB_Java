@@ -1,17 +1,15 @@
 package org.openlcb.implementations.throttle;
 
+import java.io.Reader;
+import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
-
 import org.jdom2.Element;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.XmlHelper;
 import org.openlcb.implementations.MemoryConfigurationService;
-
-import java.io.Reader;
-import java.util.logging.Logger;
 
 /**
  * Represents local view about a remote Train Node, a node that implements the Traction protocol.
@@ -24,9 +22,7 @@ import java.util.logging.Logger;
 public class RemoteTrainNode {
 
     public static final String UPDATE_PROP_FDI = "fdi";
-    private static Logger logger = Logger.getLogger(new Object() {
-    }.getClass().getSuperclass()
-            .getName());
+    private final static Logger logger = Logger.getLogger(RemoteTrainNode.class.getName());
     private final OlcbInterface iface;
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
     private Element fdiRoot;

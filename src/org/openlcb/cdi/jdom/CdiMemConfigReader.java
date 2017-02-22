@@ -2,16 +2,11 @@
 
 package org.openlcb.cdi.jdom;
 
-import javax.swing.*;
-import javax.swing.text.*;
-import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.openlcb.*;
-import org.openlcb.Utilities;
-import org.openlcb.implementations.*;
-
 import static java.util.logging.Logger.getLogger;
+import org.openlcb.*;
+import org.openlcb.implementations.*;
 
 /**
  * Provide a Reader to the OpenLCB CDI in a node.
@@ -23,7 +18,7 @@ import static java.util.logging.Logger.getLogger;
  * @version	$Revision$
  */
 public class CdiMemConfigReader  {
-    private final static Logger log = getLogger(CdiMemConfigReader.class.getName());
+    private final static Logger logger = getLogger(CdiMemConfigReader.class.getName());
 
     final static int LENGTH = 64;
 
@@ -66,7 +61,7 @@ public class CdiMemConfigReader  {
             new MemoryConfigurationService.McsReadHandler() {
                 @Override
                 public void handleFailure(int code) {
-                    log.warning("Error reading CDI: " + Integer.toHexString(code));
+                    logger.warning("Error reading CDI: " + Integer.toHexString(code));
                     done();
                     // TODO: 5/2/16 proxy error messages to the caller.
                     // don't do next request
@@ -97,8 +92,7 @@ public class CdiMemConfigReader  {
         // done, pass back a reader based on the current buffer contents
         if (retval != null) {
             retval.progressNotify(buf.length(), buf.length());
-            System.out.print("Retrieved XML: \n");
-            System.out.print(buf);
+            logger.log(Level.FINE, "Retrieved XML: \n{0}", buf);
             retval.provideReader(new java.io.StringReader(new String(buf)));
         }
     }

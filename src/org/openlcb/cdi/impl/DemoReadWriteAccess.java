@@ -1,24 +1,30 @@
 package org.openlcb.cdi.impl;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
+import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-
 /**
- * Helper vlass for various demo and test code to put in as a fake into the ConfigRepresentation constructor.
+ * Helper class for various demo and test code to put in as a fake into the ConfigRepresentation constructor.
  * Created by bracz on 11/20/16.
  */
 public class DemoReadWriteAccess extends CdiPanel.ReadWriteAccess {
+
+    private final static Logger logger = Logger.getLogger(DemoReadWriteAccess.class.getName());
+    
     @Override
     public void doWrite(long address, int space, byte[] data, MemoryConfigurationService.McsWriteHandler handler) {
-        System.out.println(data.length);
-        System.out.println("write " + address + " " + space + ": " + org.openlcb.Utilities.toHexDotsString(data));
+        logger.log(Level.INFO, "Wrote {0} bytes", data.length);
+        logger.log(Level.INFO, "write {0} {1}: {2}", new Object[]{address, space, org.openlcb.Utilities.toHexDotsString(data)});
     }
 
     @Override
@@ -28,7 +34,7 @@ public class DemoReadWriteAccess extends CdiPanel.ReadWriteAccess {
             resp[i] = (byte)i;
         }
         handler.handleReadData(null, space, address, resp);
-        System.out.println("read " + address + " " + space);
+        logger.log(Level.INFO, "read {0} {1}", new Object[]{address, space});
     }
 
     static public ConfigRepresentation demoRepFromSample(Element root) {
@@ -44,7 +50,7 @@ public class DemoReadWriteAccess extends CdiPanel.ReadWriteAccess {
             SAXBuilder builder = new SAXBuilder("org.apache.xerces.parsers.SAXParser", false);  // argument controls validation
             Document doc = builder.build(new BufferedInputStream(new FileInputStream(file)));
             root = doc.getRootElement();
-        } catch (Exception e) { System.out.println("While reading file: "+e);}
+        } catch (IOException | JDOMException e) { logger.log(Level.INFO, "While reading file: {0}", e);}
 
         return demoRepFromSample(root);
     }
