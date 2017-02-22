@@ -1,12 +1,9 @@
 package org.openlcb.can;
 
-import org.openlcb.*;
-
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-
-import static java.lang.Thread.sleep;
+import org.openlcb.*;
 
 /**
  * Implementation of Node ID Alias assignment computation.
@@ -24,8 +21,7 @@ public class NIDaAlgorithm implements CanFrameListener {
     private CanFrameListener sendInterface;
     private Timer timer;
     private TimerTask task;
-    private static Logger logger = Logger.getLogger(new Object(){}.getClass().getSuperclass()
-            .getName());
+    private final static Logger logger = Logger.getLogger(NIDaAlgorithm.class.getName());
 
     private synchronized void scheduleTimer(long delay) {
         task = new TimerTask() {

@@ -1,13 +1,5 @@
 package org.openlcb.cdi.swing;
 
-import org.openlcb.EventID;
-import org.openlcb.cdi.CdiRep;
-import org.openlcb.cdi.cmd.BackupConfig;
-import org.openlcb.cdi.cmd.RestoreConfig;
-import org.openlcb.cdi.impl.ConfigRepresentation;
-import org.openlcb.implementations.MemoryConfigurationService;
-import org.openlcb.swing.EventIdTextField;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -27,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.annotation.Nonnull;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -50,11 +42,17 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
-
+import org.openlcb.EventID;
+import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.cmd.BackupConfig;
+import org.openlcb.cdi.cmd.RestoreConfig;
+import org.openlcb.cdi.impl.ConfigRepresentation;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
+import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.swing.EventIdTextField;
 
 /**
  * Simple example CDI display.
@@ -66,8 +64,7 @@ import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
  * @author  Balazs Racz Copyright 2016
  */
 public class CdiPanel extends JPanel {
-    private static final String TAG = "CdiPanel";
-    private static final Logger log = Logger.getLogger(TAG);
+    private static final Logger logger = Logger.getLogger(CdiPanel.class.getName());
 
     private static final Color COLOR_EDITED = new Color(0xffa500); // orange
     private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
@@ -192,7 +189,7 @@ public class CdiPanel extends JPanel {
             BackupConfig.writeConfigToFile(fci.getSelectedFile().getPath(), rep);
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Failed to write variables to file " + fci.getSelectedFile().getPath() + ": " + e.toString());
+            logger.severe("Failed to write variables to file " + fci.getSelectedFile().getPath() + ": " + e.toString());
         }
     }
 
@@ -232,13 +229,13 @@ public class CdiPanel extends JPanel {
             @Override
             public void onError(String error) {
                 if (!hasError) {
-                    System.err.println("Error(s) encountered during loading configuration backup.");
+                    logger.severe("Error(s) encountered during loading configuration backup.");
                     hasError = true;
                 }
-                System.err.println(error);
+                logger.severe(error);
             }
         });
-        log.info("Config load done.");
+        logger.info("Config load done.");
     }
 
     GuiItemFactory factory;
@@ -979,11 +976,11 @@ public class CdiPanel extends JPanel {
     public static class ReadWriteAccess {
         public void doWrite(long address, int space, byte[] data, final
                             MemoryConfigurationService.McsWriteHandler handler) {
-            System.out.println("Write to "+address+" in space "+space);
+            logger.log(Level.FINE, "Write to {0} in space {1}", new Object[]{address, space});
         }
         public void doRead(long address, int space, int length, final MemoryConfigurationService
                 .McsReadHandler handler) {
-            System.out.println("Read from "+address+" in space "+space);
+            logger.log(Level.FINE, "Read from {0} in space {1}", new Object[]{address, space});
         }
     }
      

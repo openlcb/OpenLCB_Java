@@ -1,5 +1,7 @@
 package org.openlcb.implementations;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 import org.openlcb.*;
@@ -30,6 +32,8 @@ import org.openlcb.*;
  */
 public class DatagramService extends MessageDecoder {
 
+    private final static Logger logger = Logger.getLogger(DatagramService.class.getName());
+
     /**
      * @param here       our node ID
      * @param downstream Connection in the direction of the layout
@@ -51,7 +55,7 @@ public class DatagramService extends MessageDecoder {
      */
     public void sendData(DatagramServiceTransmitMemo memo){
         if (xmtMemo != null) {
-            System.err.println("Overriding datagram transmit memo. old " + xmtMemo.toString() + " new " + memo.toString()); //log
+            logger.log(Level.SEVERE, "Overriding datagram transmit memo. old {0} new {1}", new Object[]{xmtMemo, memo}); //log
         }
         xmtMemo = memo;
         Message m = new DatagramMessage(here, memo.dest, memo.data);
@@ -97,7 +101,7 @@ public class DatagramService extends MessageDecoder {
             rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
             // check that client replied
             if (! replyMemo.hasReplied())
-                System.err.println("No internal reply received to datagram with contents "+Utilities.toHexDotsString(msg.getData())); //log
+                logger.log(Level.SEVERE, "No internal reply received to datagram with contents {0}", Utilities.toHexDotsString(msg.getData())); //log
         } else {
             // reject
             replyMemo.acceptData(retval);

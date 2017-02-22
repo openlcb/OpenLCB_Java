@@ -1,16 +1,20 @@
 package org.openlcb.cdi.cmd;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openlcb.NodeID;
 import org.openlcb.PropertyListenerSupport;
 import org.openlcb.can.impl.OlcbConnection;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 /**
  * Created by bracz on 4/9/16.
  */
 public class Util {
+    
+    private final static Logger logger = Logger.getLogger(Util.class.getName());
+    
     static void waitForPropertyChange(PropertyListenerSupport tgt, final String propertyName) {
         final Object o = new Object();
         PropertyChangeListener l = new PropertyChangeListener() {
@@ -29,8 +33,7 @@ public class Util {
                 o.wait();
             }
         } catch (InterruptedException e) {
-            System.err.println("Interrupted while waiting for property notification " +
-                    propertyName + " on object of class " + tgt.getClass().getName());
+            logger.log(Level.SEVERE, "Interrupted while waiting for property notification {0} on object of class {1}", new Object[]{propertyName, tgt.getClass().getName()});
         }
         tgt.removePropertyChangeListener(l);
     }
@@ -60,24 +63,24 @@ public class Util {
                 .ConnectionListener() {
             @Override
             public void onConnect() {
-                System.out.println("Connected to " + host + ":" + port);
+                logger.log(Level.FINE, "Connected to {0}:{1}", new Object[]{host, port});
                 s.set(true);
             }
 
             @Override
             public void onDisconnect() {
-                System.out.println("Disconnected.");
+                logger.fine("Disconnected.");
                 s.set(false);
             }
 
             @Override
             public void onStatusChange(String status) {
-                System.out.println(status);
+                logger.fine(status);
             }
 
             @Override
             public void onConnectionPending() {
-                System.out.println("Connecting.");
+                logger.fine("Connecting.");
             }
         };
 

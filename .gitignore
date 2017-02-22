@@ -5,3 +5,4 @@ doc
 
 # bash autocompletion artifacts
 /.ant-targets-build.xml
+/nbproject/private/

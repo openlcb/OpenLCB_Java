@@ -27,8 +27,7 @@ public class MemorySpaceCache {
     public static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
     // This event will be fired on the registered data listeners.
     public static final String UPDATE_DATA = "UPDATE_DATA";
-    private static final String TAG = "MemorySpaceCache";
-    private static final Logger logger = Logger.getLogger(TAG);
+    private static final Logger logger = Logger.getLogger(MemorySpaceCache.class.getName());
     private final int space;
     private final RangeCacheUtil ranges = new RangeCacheUtil();
     private final NavigableMap<Range, byte[]> dataCache = new TreeMap<>();

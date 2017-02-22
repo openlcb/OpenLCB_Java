@@ -3,12 +3,12 @@
 package org.openlcb.swing;
 
 import java.io.*;
-import java.awt.*;
 import java.awt.datatransfer.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.text.*;
 
-import org.openlcb.*;
 
 /**
  * Text field for entry of forced-valid EventID string.
@@ -20,6 +20,8 @@ import org.openlcb.*;
  * @version	$Revision$
  */
 public class EventIdTextField extends JFormattedTextField  {
+
+    private final static Logger logger = Logger.getLogger(EventIdTextField.class.getName());
 
     static public JFormattedTextField getEventIdTextField() {
         JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
@@ -37,7 +39,7 @@ public class EventIdTextField extends JFormattedTextField  {
         try {
             formatter = new MaskFormatter(s);
         } catch (java.text.ParseException exc) {
-            System.err.println("formatter is bad: " + exc.getMessage());
+            logger.log(Level.SEVERE, "formatter is bad: {0}", exc.getMessage());
         }
         return formatter;
     }

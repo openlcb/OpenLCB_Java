@@ -1,5 +1,7 @@
 package org.openlcb.implementations;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openlcb.*;
 
 /**
@@ -27,6 +29,7 @@ import org.openlcb.*;
 public class BlueGoldEngine extends MessageDecoder implements Connection {
 
     int selectedPC = -1;
+    private final static Logger logger = Logger.getLogger(BlueGoldEngine.class.getName());
     
     public void goldClick() {
         if (selectedPC >= 0) {
@@ -35,7 +38,7 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
             setGoldLightOn(false);
             setBlueLightOn(false);
             selectedPC = -1;
-            System.out.println("send learn event");
+            logger.info("send learn event");
             return;
         }
     }
@@ -56,7 +59,7 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
             setBlueLightOn(true);
         }
         // and print for now (no GUI for this, add LEDs?)
-        System.out.println("incremented selectedPC to "+selectedPC);
+        logger.log(Level.INFO, "incremented selectedPC to {0}", selectedPC);
         return;
     }
     
@@ -66,7 +69,7 @@ public class BlueGoldEngine extends MessageDecoder implements Connection {
         // learn
         if (selectedPC >= 0) {
             EventID eid = msg.getEventID();
-            System.out.println("Set "+selectedPC+" to "+eid);
+            logger.log(Level.INFO, "Set {0} to {1}", new Object[]{selectedPC, eid});
             setEventID(selectedPC, eid);
         }
         // exit

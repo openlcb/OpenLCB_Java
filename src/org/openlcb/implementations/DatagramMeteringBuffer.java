@@ -4,6 +4,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openlcb.*;
 
 /**
@@ -28,6 +30,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     //final static int TIMEOUT = 700;
     final static int TIMEOUT = 3000;
+    private final static Logger logger = Logger.getLogger(DatagramMeteringBuffer.class.getName());
     
     public DatagramMeteringBuffer(Connection toDownstream) {
         this.toDownstream = toDownstream;
@@ -134,13 +137,13 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
         void endTimeout() {
             if (timer != null) timer.cancel();
-            else System.out.println("Found timer null for datagram "+(message != null ? message.toString() : " == null"));
+            else logger.log(Level.INFO, "Found timer null for datagram {0}", message != null ? message : " == null");
         }
         void timerExpired() {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
             DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
-            System.out.println("Never received reply for datagram "+(message != null ? message.toString() : " == null"));
+            logger.log(Level.INFO, "Never received reply for datagram {0}", message != null ? message : " == null");
             handleDatagramRejected(msg, null);
             // Inject message to upstream listener
             toUpstream.put(msg, toUpstream);
@@ -158,8 +161,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 DatagramRejectedMessage rejectedMessage = new DatagramRejectedMessage(message
                         .getDestNodeID(), message.getSourceNodeID(),
                         DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT);
-                System.out.println("Destination node has rebooted while waiting for datagram " +
-                        "reply "+ (message != null ? message.toString() : " == null"));
+                logger.log(Level.INFO, "Destination node has rebooted while waiting for datagram reply {0}", message != null ? message : " == null");
                 handleDatagramRejected(rejectedMessage, null);
                 // Inject message to upstream listener
                 toUpstream.put(rejectedMessage, toUpstream);

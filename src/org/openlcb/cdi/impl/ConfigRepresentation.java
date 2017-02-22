@@ -1,5 +1,19 @@
 package org.openlcb.cdi.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
@@ -11,22 +25,6 @@ import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
 import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Maintains a parsed cache of the CDI config of a remote node. Responsible for fetching the CDI,
@@ -47,8 +45,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     public static final String UPDATE_ENTRY_DATA = "UPDATE_ENTRY_DATA";
     // Fired on an CDI entry when the write method completes.
     public static final String UPDATE_WRITE_COMPLETE = "PENDING_WRITE_COMPLETE";
-    private static final String TAG = "ConfigRepresentation";
-    private static final Logger logger = Logger.getLogger(TAG);
+    private static final Logger logger = Logger.getLogger(ConfigRepresentation.class.getName());
     static final Charset UTF8 = Charset.forName("UTF8");
 
     private final OlcbInterface connection;
@@ -254,7 +251,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             } else if (it instanceof CdiRep.StringRep) {
                 entry = new StringEntry(name, (CdiRep.StringRep) it, segment, origin);
             } else {
-                System.err.println("could not process CDI entry type of " + it);
+                logger.log(Level.SEVERE, "could not process CDI entry type of {0}", it);
             }
             if (entry != null) {
                 origin = entry.origin + entry.size;
