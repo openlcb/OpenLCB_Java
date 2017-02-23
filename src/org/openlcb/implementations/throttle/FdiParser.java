@@ -1,13 +1,12 @@
 package org.openlcb.implementations.throttle;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.openlcb.implementations.MemoryConfigurationService;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Helper class to parse the FDI XML representation into a useful set of functions.
@@ -15,9 +14,7 @@ import java.util.logging.Logger;
  * Created by bracz on 1/17/16.
  */
 public class FdiParser {
-    private static Logger logger = Logger.getLogger(new Object() {
-    }.getClass().getSuperclass()
-            .getName());
+    private final static Logger logger = Logger.getLogger(FdiParser.class.getName());
     private ArrayList<FunctionInfo> allFunctions;
 
     public FdiParser(Element root) {

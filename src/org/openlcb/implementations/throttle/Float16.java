@@ -1,8 +1,9 @@
 package org.openlcb.implementations.throttle;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
-import org.openlcb.*;
 
 /**
  * Represents a 16-bit IEEE float.
@@ -15,6 +16,8 @@ import org.openlcb.*;
 @ThreadSafe
 public class Float16 {
 
+    private final static Logger logger = Logger.getLogger(Float16.class.getName());
+
     public Float16(float f) {
         this((double)f, (f>=0.0f));
     }
@@ -26,6 +29,8 @@ public class Float16 {
     /**
      * This allows the use of the -0.0 value if needed. That's not handled
      * by the other constructors
+     * @param d           absolute value to set
+     * @param positive    direction to set
      */
     public Float16(double d, boolean positive) {
         if (d == 0.0) {
@@ -52,7 +57,7 @@ public class Float16 {
         }
         
         int ch =  ((int)(d*1024.))&0x3FF;
-        if ((((int)(d*1024.))&0x400) != 0x400) System.out.println("normalization failed with d="+d+" exp="+exp);
+        if ((((int)(d*1024.))&0x400) != 0x400) logger.log(Level.WARNING, "normalization failed with d={0} exp={1}", new Object[]{d, exp});
         int bits = ch | (exp<<10);
         if (!positive) bits = bits | 0x8000;
         

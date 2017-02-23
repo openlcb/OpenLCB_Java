@@ -1,13 +1,12 @@
 package org.openlcb.can.impl;
 
-import org.openlcb.can.CanFrame;
-import org.openlcb.can.CanFrameListener;
-import org.openlcb.implementations.DatagramUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+import org.openlcb.can.CanFrame;
+import org.openlcb.can.CanFrameListener;
+import org.openlcb.implementations.DatagramUtils;
 
 /**
  * Parses an input stream according to the GridConnect protocol and forwards a set of CAN frames.
@@ -15,8 +14,7 @@ import java.util.logging.Logger;
  * Created by bracz on 12/23/15.
  */
 public class GridConnectInput {
-    private final static String TAG = "GridConnectInput";
-    private final static Logger logger = Logger.getLogger(TAG);
+    private final static Logger logger = Logger.getLogger(GridConnectInput.class.getName());
     private boolean isExtended;
     private int header;
     private boolean isRtr;

@@ -12,6 +12,7 @@ public interface Connection {
 
     /**
      * Put a message to this connection.
+     * @param msg    message to send
      * @param sender Node that is sending the message, used
      *        for tracking, logging, etc.  
      *        (This models a two-ended connection to whatever
@@ -25,6 +26,7 @@ public interface Connection {
      * mechanism that the connection is ready to go, you
      * must register a listener and get the call-back before
      * sending messages through the connection.
+     * @param c    callback object to invoke
      */
     public void registerStartNotification(ConnectionListener c);
 

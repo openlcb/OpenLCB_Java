@@ -7,6 +7,11 @@ import javax.swing.*;
 
 import org.jdom2.*;
 import org.jdom2.input.SAXBuilder;
+import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.cdi.impl.DemoReadWriteAccess;
+import org.openlcb.cdi.jdom.JdomCdiRep;
+
+import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromFile;
 
 /**
  * Provide some demo &amp; development tools for CDI
@@ -22,28 +27,7 @@ public class CdiPanelDemo {
     public void displayFile() {
         JFrame f = new JFrame();
         CdiPanel m = new CdiPanel();
-                
-        m.initComponents(new CdiPanel.ReadWriteAccess(){
-                @Override
-                public void doWrite(long address, int space, byte[] data) {
-                        System.out.println(data.length);
-                        System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
-                    }
-                @Override
-                public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
-                        handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
-                        System.out.println("read "+address+" "+space);
-                    }            
-            },
-                new CdiPanel.GuiItemFactory() {
-                    public JButton handleReadButton(JButton button) {
-                        //System.out.println("process button");
-                        button.setBorder(BorderFactory.createLineBorder(java.awt.Color.yellow));
-                        return button;
-                }
-            }
-        );
-        
+
         // find file & load file
         fci.setDialogTitle("Find desired script file");
         fci.rescanCurrentDirectory();
@@ -58,19 +42,21 @@ public class CdiPanelDemo {
 
         f.setTitle(fci.getSelectedFile().getName());
 
-        Element root = null;
-        try {
-            SAXBuilder builder = new SAXBuilder("org.apache.xerces.parsers.SAXParser", false);  // argument controls validation
-            Document doc = builder.build(new BufferedInputStream(new FileInputStream(fci.getSelectedFile())));
-            root = doc.getRootElement();
-        } catch (Exception e) { System.out.println("While reading file: "+e);}
-        
-        m.loadCDI(
-            new org.openlcb.cdi.jdom.JdomCdiRep(root)
+        ConfigRepresentation configRep = demoRepFromFile(fci.getSelectedFile());
+
+        m.initComponents(configRep,
+                new CdiPanel.GuiItemFactory() {
+                    public JButton handleReadButton(JButton button) {
+                        //System.out.println("process button");
+                        button.setBorder(BorderFactory.createLineBorder(java.awt.Color.yellow));
+                        return button;
+                    }
+                }
         );
-        
+
         JScrollPane sp = new JScrollPane(m);
         f.add( sp );
+        //f.add(m);
 
         // show
         f.pack();

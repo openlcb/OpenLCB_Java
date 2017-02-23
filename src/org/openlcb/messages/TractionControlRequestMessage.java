@@ -1,16 +1,14 @@
 package org.openlcb.messages;
 
+import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
-
 import org.openlcb.AddressedPayloadMessage;
 import org.openlcb.Connection;
 import org.openlcb.MessageDecoder;
 import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
 import org.openlcb.implementations.throttle.Float16;
-
-import java.util.logging.Logger;
 
 /**
  * Traction Control Request message implementation.
@@ -20,9 +18,7 @@ import java.util.logging.Logger;
 @Immutable
 @ThreadSafe
 public class TractionControlRequestMessage extends AddressedPayloadMessage {
-    private static Logger logger = Logger.getLogger(new Object() {
-    }.getClass().getSuperclass()
-            .getName());
+    private final static Logger logger = Logger.getLogger(TractionControlRequestMessage.class.getName());
 
     public final static byte CMD_SET_SPEED = 0x00;
     public final static byte CMD_SET_FN = 0x01;

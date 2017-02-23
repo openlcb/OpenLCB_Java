@@ -1,15 +1,11 @@
 package org.openlcb.implementations;
 
-import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.openlcb.AbstractConnection;
-import org.openlcb.Connection;
 import org.openlcb.DatagramAcknowledgedMessage;
 import org.openlcb.DatagramMessage;
 import org.openlcb.DatagramRejectedMessage;
@@ -24,7 +20,13 @@ import org.openlcb.can.MessageBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * Tests of MemoryCOnfigurationService using the OlcbInterface output concept and proper mocks.
@@ -136,6 +138,56 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    public void testManyWritesQueuesUp() {
+        int space = MemoryConfigurationService.SPACE_CONFIG;
+        long address = 0x12340078;
+
+        int count = 6;
+
+        List<MemoryConfigurationService.McsWriteHandler> hnds = new ArrayList<>();
+
+        // queues up a bunch of requests.
+        for (int i = 0; i < count; ++i) {
+            MemoryConfigurationService.McsWriteHandler mock = mock(
+                    MemoryConfigurationService.McsWriteHandler.class);
+            hnds.add(mock);
+            verifyNoMoreInteractions(mock);
+            iface.getMemoryConfigurationService().requestWrite(farID, space, address + i * 256,
+                    new byte[]{(byte) i, 2}, mock);
+
+            if (i > 0) {
+                assertEquals(i, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
+                MemoryConfigurationService.McsWriteMemo m = (MemoryConfigurationService
+                        .McsWriteMemo) iface.getMemoryConfigurationService().queuedRequests.get
+                        (0).getLast();
+                assertEquals(address + i * 256, m.address);
+            }
+        }
+
+        assertEquals(count - 1, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
+
+        for (int i = 0; i < count; ++i) {
+            MemoryConfigurationService.McsWriteHandler hnd = hnds.get(i);
+
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x01, 0x12, 0x34, i, 0x78, i, 2}));
+
+            // datagram reply comes back
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            verifyNoMoreInteractions(hnd);
+
+            // Incoming reply datagram
+            sendMessage(new DatagramMessage(farID, hereID, new int[]{0x20, 0x11, 0x12, 0x34, i,
+                    0x78}));
+            // which gets ack-ed.
+            expectMessage(new DatagramAcknowledgedMessage(hereID, farID));
+            // note another message will come here as well, the next datagram request.
+            verify(hnd).handleSuccess();
+            verifyNoMoreInteractions(hnd);
+        }
+        expectNoMessages();
+    }
+
     public void testSimpleRead() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -212,6 +264,156 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             verify(hnd).handleReadData(farID, space, address+1, new byte[]{(byte) 0xaa});
             verifyNoMoreInteractions(hnd);
         }
+    }
+
+    private void delay(int msec) {
+        long start = System.currentTimeMillis();
+        while (true) {
+            long left = start + msec - System.currentTimeMillis();
+            if (left < 0) return;
+            try {
+                Thread.sleep(left);
+            } catch(InterruptedException e) {}
+        }
+    }
+
+    private void sendAnother(int space, long address) {
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+        iface.getMemoryConfigurationService().requestRead(farID, space, address, 4, hnd);
+
+        // should have sent datagram
+        expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                0x20, 0x41, 0x12, 0x34, 0x56, (byte)address & 0xff, 4}));
+
+        // datagram reply comes back
+        sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+        verifyNoMoreInteractions(hnd);
+
+        // now return data
+        // Response datagram comes and gets acked.
+        sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                        0x20, 0x51, 0x12, 0x34, 0x56, (byte)address & 0xff, 0xaa}),
+                new DatagramAcknowledgedMessage(hereID, farID));
+
+        verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+        verifyNoMoreInteractions(hnd);
+    }
+
+    public void testReadWithTimeout() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        int length = 4;
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+        iface.getDatagramMeteringBuffer().setTimeout(30);
+        // start of 1st pass
+        {
+            iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
+
+            // should have sent datagram
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x78, 4}));
+
+            System.err.println("Expect 'Never received reply' here -->");
+            delay(50);
+            System.err.println("<--");
+
+            verify(hnd).handleFailure(0x100);
+
+            verifyNoMoreInteractions(hnd);
+
+            // datagram reply comes back
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+
+            System.err.println("Expect 'could not find matching memo' here -->");
+            // now return data
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                            0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
+                    new DatagramAcknowledgedMessage(hereID, farID));
+            System.err.println("<--");
+
+            // the now returned data will never get appropriately assigned.
+            // verify(hnd).handleReadData(farID, space, address, new byte[]{(byte) 0xaa});
+            verifyNoMoreInteractions(hnd);
+        }
+
+        sendAnother(space, address + 1);
+
+        sendAnother(space, address + 5);
+
+    }
+
+    public void testReadWithTimeoutInterleaved() {
+        int space = 0xFD;
+        long address = 0x12345678;
+        int length = 4;
+        MemoryConfigurationService.McsReadHandler hnd = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+        MemoryConfigurationService.McsReadHandler hnd2 = mock(MemoryConfigurationService
+                .McsReadHandler.class);
+        iface.getDatagramMeteringBuffer().setTimeout(30);
+        iface.getMemoryConfigurationService().setTimeoutMillis(30);
+        // start of 1st pass
+        {
+            iface.getMemoryConfigurationService().requestRead(farID, space, address, length, hnd);
+
+            // should have sent datagram
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x78, 4}));
+
+            System.err.println("Expect 'Never received reply' here -->");
+            delay(50);
+            System.err.println("<--");
+
+            verify(hnd).handleFailure(0x100);
+
+            verifyNoMoreInteractions(hnd);
+
+            iface.getMemoryConfigurationService().requestRead(farID, space, address+1, length,
+                    hnd2);
+            // should have sent datagram
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
+
+            // datagram reply comes back
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            consumeMessages();
+
+            // datagram reply comes back
+            sendMessage(new DatagramRejectedMessage(farID, hereID, 0x2020));
+            consumeMessages();
+
+            System.err.println("Expect 'unexpected response datagram' here -->");
+            // now return data for first DG
+            // Response datagram comes and gets acked.
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                            0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
+                    new DatagramAcknowledgedMessage(hereID, farID));
+            System.err.println("<--");
+
+            expectNoMessages();
+
+            delay(50);
+            // retry should be out now.
+            expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
+                    0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            consumeMessages();
+            // datagram reply comes back
+            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
+            consumeMessages();
+            sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
+                            0x20, 0x51, 0x12, 0x34, 0x56, 0x79, 0xaa}),
+                    new DatagramAcknowledgedMessage(hereID, farID));
+            // the now returned data will never get appropriately assigned.
+            verify(hnd2).handleReadData(farID, space, address+1, new byte[]{(byte) 0xaa});
+            verifyNoMoreInteractions(hnd2);
+        }
+
+        System.err.println("Sending another request...");
+        sendAnother(space, address+5);
     }
 
     public void testManyReadsInlinePrint() {

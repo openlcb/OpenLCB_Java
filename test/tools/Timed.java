@@ -11,6 +11,7 @@ public interface Timed {
 
     /**
      * Take actions at the next discrete time
+     * @param time    dunno
      */
     public void tick(long time);
 }

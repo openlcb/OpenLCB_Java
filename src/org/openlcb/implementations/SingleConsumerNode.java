@@ -54,6 +54,7 @@ public class SingleConsumerNode extends SingleLinkNode {
      * Has the message been received?
      *<p>
      * Resets the value each time called
+     * @return true if the consumer has seen the event since the last call to this function.
      */
     public boolean getReceived() {
         boolean retval = received;

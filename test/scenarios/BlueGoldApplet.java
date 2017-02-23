@@ -366,6 +366,8 @@ public class BlueGoldApplet extends JApplet {
          * Add a producer to node.
          * Note this should be a working producer, 
          * already registered, etc
+         * @param n       producer to add
+         * @param name name for the producer
          */
          public void addProducer(SingleProducer n, String name) {
             producers.add(n);
@@ -379,6 +381,8 @@ public class BlueGoldApplet extends JApplet {
          * Add a consumer to node.
          * Note this should be a working consumer, 
          * already registered, etc
+         * @param n       consumer to add
+         * @param name  name for consumer
          */
          public void addConsumer(SingleConsumer n, String name) {
             consumers.add(n);

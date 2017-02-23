@@ -3,7 +3,14 @@ package org.openlcb;
 import java.util.HashMap;
 import java.util.Collection;
 
-import java.beans.PropertyChangeListener;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
 
 /**
  * Store containing mimic proxies for nodes on external connections
@@ -16,6 +23,7 @@ import java.beans.PropertyChangeListener;
 public class MimicNodeStore extends AbstractConnection {
 
     public static final String ADD_PROP_NODE = "AddNode";
+    private final static Logger logger = Logger.getLogger(MimicNodeStore.class.getName());
 
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
@@ -24,6 +32,7 @@ public class MimicNodeStore extends AbstractConnection {
     
     Connection connection;
     NodeID node;
+    Timer timer = new Timer();
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
@@ -47,7 +56,8 @@ public class MimicNodeStore extends AbstractConnection {
     
     /**
      * If node not present, initiate process to find it.
-     * @return NodeMemo already known, but note you have to 
+     * @param id    remote node ID to find
+     * @return NodeMemo already known, but note you have to
      * register listeners before calling in any case
      */
     public NodeMemo findNode(NodeID id) {
@@ -93,12 +103,69 @@ public class MimicNodeStore extends AbstractConnection {
         public NodeID getNodeID() {
             return id;
         }
-        
+
+        Queue<Interaction> pendingInteractions = new ConcurrentLinkedDeque<>();
+        Interaction currentInteraction = null;
+        TimerTask currentTask;
+
+        public synchronized void startInteraction(final Interaction request) {
+            if (currentInteraction == null) {
+                doStart(request);
+            } else {
+                pendingInteractions.add(request);
+            }
+        }
+
+        private synchronized void doStart(final Interaction request) {
+            if (request == null) {
+                return;
+            }
+            currentInteraction = request;
+            request.sendRequest(connection);
+            currentTask = new TimerTask() {
+                @Override
+                public void run() {
+                    request.onTimeout();
+                    tryCompleteInteraction(request);
+                }
+            };
+            timer.schedule(currentTask, request.deadlineMsec);
+        }
+
+        public synchronized void tryCompleteInteraction(@Nullable Interaction request) {
+            if (request == null) return;
+            synchronized (request) {
+                request.isComplete = true;
+            }
+            if (currentInteraction != request) return;
+            completeInteraction(request);
+        }
+
+        public synchronized void completeInteraction(Interaction request) {
+            if (request != currentInteraction) {
+                throw new RuntimeException("Trying to complete an interaction that is not started.");
+            }
+            synchronized (request) {
+                request.isComplete = true;
+            }
+            currentTask.cancel();
+            currentInteraction = null;
+            currentTask = null;
+            if (pendingInteractions.isEmpty()) {
+                return;
+            }
+            currentInteraction = pendingInteractions.remove();
+            doStart(currentInteraction);
+        }
+
         ProtocolIdentification pIdent = null;
+        Interaction pipInteraction = null;
         public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
             pIdent = new ProtocolIdentification(node, msg);
             pcs.firePropertyChange(UPDATE_PROP_PROTOCOL, null, pIdent);
+            tryCompleteInteraction(pipInteraction);
+            pipInteraction = null;
         }  
         public ProtocolIdentification getProtocolIdentification() {
             if (pIdent == null) {
@@ -106,24 +173,87 @@ public class MimicNodeStore extends AbstractConnection {
                     throw new AssertionError("MimicNodeStore id == null");
                 }
                 pIdent = new ProtocolIdentification(node, id);
-                pIdent.start(connection);
+                pipInteraction = new Interaction() {
+                    int numTriesLeft = 3;
+
+                    @Override
+                    void sendRequest(Connection downstream) {
+                        pIdent.start(downstream);
+                    }
+
+                    @Override
+                    NodeID dstNode() {
+                        return node;
+                    }
+
+                    @Override
+                    void onTimeout() {
+                        synchronized (this) {
+                            if (isComplete) return;
+                        }
+                        final Interaction request = this;
+                        if (--numTriesLeft > 0) {
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    startInteraction(request);
+                                }
+                            }, 200);
+                        }
+                    }
+                };
+                startInteraction(pipInteraction);
             }
             return pIdent;
         }
 
         SimpleNodeIdent pSimpleNode = null;
+        Interaction snipInteraction = null;
         public void handleSimpleNodeIdentInfoReply(SimpleNodeIdentInfoReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
             if (pSimpleNode == null) 
                 pSimpleNode = new SimpleNodeIdent(msg);
             else
                 pSimpleNode.addMsg(msg);
+            if (pSimpleNode.contentComplete()) {
+                tryCompleteInteraction(snipInteraction);
+                snipInteraction = null;
+            }
             pcs.firePropertyChange(UPDATE_PROP_SIMPLE_NODE_IDENT, null, pSimpleNode);
         }  
         public SimpleNodeIdent getSimpleNodeIdent() {
             if (pSimpleNode == null) {
                 pSimpleNode = new SimpleNodeIdent(node, id);
-                pSimpleNode.start(connection);
+                snipInteraction = new Interaction() {
+                    int numTriesLeft = 3;
+
+                    @Override
+                    void sendRequest(Connection downstream) {
+                        pSimpleNode.start(downstream);
+                    }
+
+                    @Override
+                    NodeID dstNode() {
+                        return node;
+                    }
+
+                    @Override
+                    void onTimeout() {
+                        synchronized (this) {
+                            if (isComplete) return;
+                        }
+                        final Interaction request = this;
+                        if (--numTriesLeft > 0) {
+                            timer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    startInteraction(request);
+                                }
+                            }, 200);
+                        }
+                    }
+                };
+                startInteraction(snipInteraction);
             }
             return pSimpleNode;
         }
@@ -133,7 +263,7 @@ public class MimicNodeStore extends AbstractConnection {
                 // check for temporary error
                 if ( (msg.getCode() & 0x1000 ) == 0) {
                     // not a temporary error, assume a permanent error
-                    System.out.println("Permanent error geting Simple Node Info for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    logger.log(Level.SEVERE, "Permanent error geting Simple Node Info for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
                     return;
                 }
                 // have to resend the SNII request
@@ -143,7 +273,7 @@ public class MimicNodeStore extends AbstractConnection {
                 // check for temporary error
                 if ( (msg.getCode() & 0x1000 ) == 0) {
                     // not a temporary error, assume a permanent error
-                    System.out.println("Permanent error geting Protocol Identification information for node "+msg.getSourceNodeID()+" code 0x"+Integer.toHexString(msg.getCode()).toUpperCase());
+                    logger.log(Level.SEVERE, "Permanent error geting Protocol Identification information for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
                     return;
                 }
                 // have to resend the PIP request
@@ -157,11 +287,32 @@ public class MimicNodeStore extends AbstractConnection {
             if (!msg.getSourceNodeID().equals(id)) {
                 return;
             }
+            int timeoutMsec = (int) (100 + Math.random() * 200);
+            Interaction fakeInteraction = new Interaction() {
+                @Override
+                void sendRequest(Connection downstream) {
+                    // do nothing
+                }
+
+                @Override
+                NodeID dstNode() {
+                    return node;
+                }
+
+                @Override
+                void onTimeout() {
+                    // do nothing; let the next interaction begin
+                }
+            };
+            fakeInteraction.deadlineMsec = timeoutMsec;
+            startInteraction(fakeInteraction);
             if (pSimpleNode != null) {
-                pSimpleNode.start(connection);
+                pSimpleNode = null;
+                getSimpleNodeIdent();
             }
             if (pIdent != null) {
-                pIdent.start(connection);
+                pIdent = null;
+                getProtocolIdentification();
             }
         }
 

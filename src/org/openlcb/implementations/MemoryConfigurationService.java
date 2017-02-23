@@ -1,21 +1,18 @@
 package org.openlcb.implementations;
 
-import net.jcip.annotations.Immutable; 
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
+import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
-
 import org.openlcb.FailureCallback;
 import org.openlcb.NoReturnCallback;
 import org.openlcb.NodeID;
 import org.openlcb.Utilities;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import java.util.logging.Logger;
-
-import javax.xml.crypto.Data;
 
 /**
  * Service for reading and writing via the Memory Configuration protocol
@@ -30,7 +27,7 @@ import javax.xml.crypto.Data;
  * @version $Revision: -1 $
  */
 public class MemoryConfigurationService {
-    private static final Logger logger = Logger.getLogger("MemoryConfigurationService");
+    private static final Logger logger = Logger.getLogger(MemoryConfigurationService.class.getName());
     private static final int DATAGRAM_TYPE = 0x20;
 
     public static final int SPACE_CDI = 0xFF;
@@ -48,8 +45,12 @@ public class MemoryConfigurationService {
     private static final int SUBCMD_WRITE_STREAM = 0x20;
     private static final int SUBCMD_READ = 0x40;
     private static final int SUBCMD_READ_STREAM = 0x60;
+    private final static long TIMEOUT = 3000;
+    private long timeoutMillis = TIMEOUT;
+    private final static long MAX_TRIES = 3;
 
     /**
+     * @param here       our node ID
      * @param downstream Connection in the direction of the layout
      */
     public MemoryConfigurationService(NodeID here, DatagramService downstream) {
@@ -146,12 +147,14 @@ public class MemoryConfigurationService {
                             logger.warning("Spurious MemCfg response datagram " + Utilities
                                     .toHexSpaceString(data)+": expected source " + rqMemo.getDest()
                                     + " actual source " + dest);
+                            delayRetryMemo(rqMemo);
                             return;
                         }
                         if (!(rqMemo instanceof RequestWithReplyDatagram)) {
                             logger.warning("Spurious MemCfg response datagram " + Utilities.toHexSpaceString(data)+
                                     ": the request memo does not support response datagrams. " +
                                     "Memo: " + rqMemo);
+                            delayRetryMemo(rqMemo);
                             return;
                         }
                         memo = (RequestWithReplyDatagram) rqMemo;
@@ -159,6 +162,7 @@ public class MemoryConfigurationService {
                             logger.warning("Unexpected MemCfg response datagram from " + dest
                                     .toString() + ": " + memo + " payload " + Utilities
                                     .toHexSpaceString(data));
+                            delayRetryMemo(rqMemo);
                             return;
                         } else {
                             checkAndPopMemo(rqMemo);
@@ -170,6 +174,7 @@ public class MemoryConfigurationService {
                     }
                 }
                 if (memo != null) {
+                    rqMemo.foundResponse = true;
                     memo.handleResponseDatagram(data);
                 }
             }
@@ -179,11 +184,15 @@ public class MemoryConfigurationService {
     
     NodeID here;
     DatagramService downstream;
-    
+    Timer retryTimer = new Timer();
+
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);
     }
 
+    public void setTimeoutMillis(long t) {
+        timeoutMillis = t;
+    }
 
     private abstract static class McsRequestMemo {
         protected final NodeID dest;
@@ -191,6 +200,8 @@ public class MemoryConfigurationService {
         // out any bits on the space shortcut.
         protected final int requestCode;
         protected final FailureCallback failureCallback;
+        boolean foundResponse = false;
+        int numTries = 0;
 
         McsRequestMemo(NodeID dest, int requestCode, FailureCallback cb) {
             this.dest = dest;
@@ -236,6 +247,7 @@ public class MemoryConfigurationService {
         /**
          * Returns true if the received response belongs to this request.
          * @param data datagram pyaload
+         * @return true if the response is for this request
          */
         boolean compareResponse(int[] data);
     }
@@ -281,6 +293,7 @@ public class MemoryConfigurationService {
 
         /**
          * Computes the offset where the payload is in the datagram.
+         * @param data    the datagram contents
          * @return 7 if there is a separate space byte, 6 if the space is encoded in the low bits.
          */
         protected int getPayloadOffset(int[] data) {
@@ -383,7 +396,7 @@ public class MemoryConfigurationService {
     // Holds the memo pointers to all pending operations: datagrams that were sent out and are
     // waiting a response. Must be synchronized(this) for all accesses.
     final Map<Integer, McsRequestMemo> pendingRequests = new HashMap<>(5);
-    final Map<Integer, List<McsRequestMemo>> queuedRequests = new HashMap<>(5);
+    final Map<Integer, ArrayDeque<McsRequestMemo>> queuedRequests = new HashMap<>(5);
 
 
     /**
@@ -398,9 +411,9 @@ public class MemoryConfigurationService {
                 pendingRequests.remove(memo.getRequestCode());
                 memo = null;
                 if (queuedRequests.containsKey(rqCode)) {
-                    List<McsRequestMemo> l = queuedRequests.get(rqCode);
+                    Queue<McsRequestMemo> l = queuedRequests.get(rqCode);
                     if (!l.isEmpty()) {
-                        memo = l.remove(l.size() - 1);
+                        memo = l.poll();
                         pendingRequests.put(rqCode, memo);
                     }
                 }
@@ -416,7 +429,41 @@ public class MemoryConfigurationService {
         }
     }
 
+    /**
+     *
+     * @param memo a request memo
+     * @return true if this request memo is already sent, but no response or failure has been
+     * received, i.e. this memo is blocking the pending queue.
+     */
+    private boolean isBlockingPendingQueue(McsRequestMemo memo) {
+        synchronized (this) {
+            return (pendingRequests.get(memo.getRequestCode()) == memo);
+        }
+    }
+
+    /**
+     * Starts a timer and re-tries a request if the timer expired without seeing a response.
+     * @param memo request memo with expected response.
+     */
+    private void delayRetryMemo(final McsRequestMemo memo) {
+        if (memo.numTries >= MAX_TRIES) {
+            // TODO: add proper error code.
+            checkAndPopMemo(memo);
+            memo.failureCallback.handleFailure(0x1000);
+        }
+        TimerTask tt = new TimerTask() {
+            @Override
+            public void run() {
+                if (memo.foundResponse) return;
+                if (!isBlockingPendingQueue(memo)) return;
+                sendRequest(memo);
+            }
+        };
+        retryTimer.schedule(tt, timeoutMillis);
+    }
+
     private void sendRequest(final McsRequestMemo memo) {
+        ++memo.numTries;
         downstream.sendData(new DatagramService.DatagramServiceTransmitMemo(memo.getDest(), memo.renderTransmitDatagram()) {
             @Override
             public void handleSuccess(int flags) {
@@ -455,8 +502,8 @@ public class MemoryConfigurationService {
         synchronized(this) {
             int rqCode = memo.getRequestCode();
             if (pendingRequests.containsKey(rqCode)) {
-                if (!queuedRequests.containsValue(rqCode)) {
-                    queuedRequests.put(rqCode, new ArrayList<McsRequestMemo>());
+                if (!queuedRequests.containsKey(rqCode)) {
+                    queuedRequests.put(rqCode, new ArrayDeque<>());
                 }
                 queuedRequests.get(rqCode).add(memo);
                 return;
@@ -751,6 +798,12 @@ public class MemoryConfigurationService {
         
         /**
          * Overload this for notification of data.
+         * @param dest         remote node ID that sent us this reply
+         * @param commands     supported commands (see standard)
+         * @param options      supported options  (see stadnard)
+         * @param highSpace    largest supported address space number (not counting 0xFD..0xFF)
+         * @param lowSpace     smallest supported address space number (not counting 0xFD..0xFF)
+         * @param name         ?? any additional response bytes the node wanted to send to us
          */
         public void handleConfigData(NodeID dest, int commands, int options, int highSpace, int lowSpace, String name) { 
         }
@@ -802,6 +855,9 @@ public class MemoryConfigurationService {
         addrSpaceMemo = null;
     }
 
+    /**
+     *
+     */
     @Immutable
     @ThreadSafe    
     static public class McsAddrSpaceMemo {
@@ -836,6 +892,12 @@ public class MemoryConfigurationService {
         
         /**
          * Overload this for notification of data.
+         * @param dest          node that sent this reply
+         * @param space         address space we queried
+         * @param hiAddress     largest valid address in this address space
+         * @param lowAddress    smallest valid address in this address space
+         * @param flags         address space flags (e.g. R/O, see standard)
+         * @param desc          string description for this address space
          */
         public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
         }

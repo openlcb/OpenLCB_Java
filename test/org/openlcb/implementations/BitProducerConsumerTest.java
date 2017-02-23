@@ -3,7 +3,10 @@ package org.openlcb.implementations;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * Created by bracz on 1/8/16.
@@ -15,6 +18,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     BitProducerConsumer pc;
 
     public void testHandleIdentifyConsumers() throws Exception {
+        createWithDefaults();
         sendFrameAndExpectResult( //
                 ":X198F4444N0504030201000709;",
                 ":X194C7333N0504030201000709;");
@@ -43,6 +47,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testHandleIdentifyProducers() throws Exception {
+        createWithDefaults();
         sendFrameAndExpectResult( //
                 ":X19914444N0504030201000708;",
                 ":X19547333N0504030201000708;");
@@ -70,19 +75,23 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testHandleProducerIdentified() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X19544333N0504030201000708;", ":X19545333N0504030201000708;");
     }
 
     public void testHandleProducerIdentifiedOff() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X19545333N0504030201000709;", ":X19544333N0504030201000709;");
     }
 
     public void testHandleProducerIdentifiedOnOff() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X19544333N0504030201000708;", ":X19544333N0504030201000709;");
     }
 
     public void helperInputSetClear(String frameOn, String frameOff) {
-        assertTrue(pc.isValueAtDefault());
+        //assertTrue(pc.isValueAtDefault());
+        sendFrame(frameOff);
         assertFalse(pc.getValue().getLatestData());
         sendFrame(frameOn);
         assertFalse(pc.isValueAtDefault());
@@ -114,23 +123,68 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         assertFalse(pc.getValue().getLatestData());
     }
 
+    public void helperInputNoChange(String frameOn, String frameOff) {
+        Boolean data = pc.getValue().getLatestData();
+        boolean atDefault = pc.isValueAtDefault();
+
+        sendFrame(frameOn);
+        assertEquals(data, pc.getValue().getLatestData());
+        assertEquals(atDefault, pc.isValueAtDefault());
+        expectNoFrames();
+
+        sendFrame(frameOff);
+        assertEquals(data, pc.getValue().getLatestData());
+        assertEquals(atDefault, pc.isValueAtDefault());
+        expectNoFrames();
+
+        sendFrame(frameOn);
+        assertEquals(data, pc.getValue().getLatestData());
+        assertEquals(atDefault, pc.isValueAtDefault());
+        expectNoFrames();
+
+        sendFrame(frameOff);
+        assertEquals(data, pc.getValue().getLatestData());
+        assertEquals(atDefault, pc.isValueAtDefault());
+        expectNoFrames();
+    }
+
+    public void helperNotProducing() {
+        VersionedValue<Boolean> v = pc.getValue();
+        v.set(false);
+        expectNoFrames();
+        v.set(true);
+        expectNoFrames();
+        v.set(false);
+        expectNoFrames();
+    }
+
+    void helperNotConsuming() {
+        helperInputNoChange(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+    }
+
     public void testHandleConsumerIdentified() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X194C4333N0504030201000708;", ":X194C5333N0504030201000708;");
     }
 
     public void testHandleConsumerIdentifiedOff() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X194C5333N0504030201000709;", ":X194C4333N0504030201000709;");
     }
 
     public void testHandleConsumerIdentifiedOnOff() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X194C4333N0504030201000708;", ":X194C4333N0504030201000709;");
     }
 
     public void testHandleProducerConsumerEventReport() throws Exception {
+        createWithDefaults();
         helperInputSetClear(":X195B4333N0504030201000708;", ":X195B4333N0504030201000709;");
     }
 
     public void testHandleIdentifyEventsUnknown() throws Exception {
+        createWithDefaults();
         sendFrame(":X19968444N0333;");
         //sendFrame(":X19970444N;");
         expectFrame(":X19547333N0504030201000708;");
@@ -140,6 +194,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testHandleIdentifyEventsKnown() throws Exception {
+        createWithDefaults();
         sendFrame(":X194C5333N0504030201000709;");
         sendFrame(":X19968444N0333;");
 
@@ -162,6 +217,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testGenerateEvents() throws Exception {
+        createWithDefaults();
         VersionedValue<Boolean> v = pc.getValue();
         sendFrameAndExpectResult( //
                 ":X19914444N0504030201000708;",
@@ -190,23 +246,213 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectNoFrames();
     }
 
-    @Override
+    public void testProducerOnlyNoListen() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_PRODUCER);
+        // startup
+        expectFrame(":X19547333N0504030201000708;");
+        expectFrame(":X19547333N0504030201000709;");
+
+        expectNoFrames();
+
+        // send query and get back the same
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X19547333N0504030201000708;");
+        expectFrame(":X19547333N0504030201000709;");
+        expectNoFrames();
+
+        helperInputNoChange(":X19545333N0504030201000708;",
+                ":X19545333N0504030201000709;");
+        helperInputNoChange(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+
+
+        // set the value
+        VersionedValue<Boolean> v = pc.getValue();
+        v.set(false);
+        expectFrame(":X195B4333N0504030201000709;");
+        // now a query tell us different
+        expectNoFrames();
+        assertFalse(pc.isValueAtDefault());
+
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19545333N0504030201000708;");
+        expectNoFrames();
+
+        assertFalse(v.getLatestData());
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        assertTrue(v.getLatestData());
+
+        helperInputNoChange(":X19545333N0504030201000708;",
+                ":X19545333N0504030201000709;");
+        helperInputNoChange(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+    }
+
+    public void testConsumerOnlyNoListen() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER);
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectNoFrames();
+
+        // send query and get back the same
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+        expectNoFrames();
+
+        helperInputNoChange(":X19545333N0504030201000708;",
+                ":X19545333N0504030201000709;");
+        helperInputNoChange(":X194C5333N0504030201000708;",
+                ":X194C5333N0504030201000709;");
+
+        helperInputSetClear(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+
+        // set the value
+        helperNotProducing();
+
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X194C5333N0504030201000708;");
+        expectFrame(":X194C4333N0504030201000709;");
+    }
+
+    public void testConsumerOnlyListenFirst() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.QUERY_AT_STARTUP);
+
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectFrame(":X19914333N0504030201000708;");
+        expectFrame(":X198F4333N0504030201000708;");
+
+        expectNoFrames();
+
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+        expectNoFrames();
+
+        assertTrue(pc.isValueAtDefault());
+        sendFrame(":X19544333N0504030201000708;");
+        expectNoFrames();
+        assertFalse(pc.isValueAtDefault());
+        assertTrue(pc.getValue().getLatestData());
+
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X194C4333N0504030201000708;");
+        expectFrame(":X194C5333N0504030201000709;");
+        expectNoFrames();
+
+        // after the first query we are not listening anymore.
+        helperInputNoChange(":X19545333N0504030201000708;",
+                ":X19545333N0504030201000709;");
+        helperInputNoChange(":X194C5333N0504030201000708;",
+                ":X194C5333N0504030201000709;");
+
+        helperInputSetClear(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+
+        helperNotProducing();
+    }
+
+    public void testConsumerOnlyListenFirstSetState() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.QUERY_AT_STARTUP);
+
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectFrame(":X19914333N0504030201000708;");
+        expectFrame(":X198F4333N0504030201000708;");
+
+        expectNoFrames();
+        // If we set the internal state first, then
+        helperNotProducing();
+        // we will not be listening for initial state anymore
+        helperInputNoChange(":X194C5333N0504030201000708;",
+                ":X194C5333N0504030201000709;");
+    }
+
+    public void testConsumerOnlyListenAlways() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectNoFrames();
+        helperNotProducing();
+        helperInputSetClear(":X194C5333N0504030201000709;",
+                ":X194C5333N0504030201000708;");
+        helperInputSetClear(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+        helperInputSetClear(":X19544333N0504030201000708;",
+                ":X19544333N0504030201000709;");
+    }
+
+    public void testOneEventNull() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, pc.nullEvent, BitProducerConsumer.IS_PRODUCER | BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+
+        expectFrame(":X19547333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000708;");
+
+        expectNoFrames();
+
+        VersionedValue<Boolean> v = pc.getValue();
+        v.set(false);
+        expectNoFrames();
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+        v.set(false);
+        expectNoFrames();
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        // on one event we can flipflop
+        helperInputSetClear(":X194C4333N0504030201000708;",
+                ":X194C5333N0504030201000708;");
+        helperInputSetClear(":X19544333N0504030201000708;",
+                ":X19545333N0504030201000708;");
+        // but the other is ignored
+        helperInputNoChange(":X194C4333N0504030201000709;",
+                ":X194C5333N0504030201000709;");
+
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        expectNoFrames();
+
+        // send query and get back the same
+        sendFrame(":X19968444N0333;");
+        expectFrame(":X19544333N0504030201000708;");
+        expectFrame(":X194C4333N0504030201000708;");
+
+    }
+
+        @Override
     protected void tearDown() throws Exception {
         expectNoFrames();
         super.tearDown();
     }
 
-    @Override
-    public void setUp() {
-        aliasMap.insert(0x444, new NodeID(new byte[]{1,2,3,1,2,3}));
+    private void createWithDefaults() {
         pc = new BitProducerConsumer(iface, onEvent, offEvent, false);
-        expectFrame(":X19547333N0504030201000708;", times(2));
+        expectFrame(":X19547333N0504030201000708;", times(1));
         expectFrame(":X19547333N0504030201000709;");
-        expectFrame(":X194C7333N0504030201000708;", times(2));
+        expectFrame(":X194C7333N0504030201000708;", times(1));
         expectFrame(":X194C7333N0504030201000709;");
 
         expectFrame(":X19914333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
         expectNoFrames();
+    }
+
+    @Override
+    public void setUp() {
+        aliasMap.insert(0x444, new NodeID(new byte[]{1,2,3,1,2,3}));
     }
 }

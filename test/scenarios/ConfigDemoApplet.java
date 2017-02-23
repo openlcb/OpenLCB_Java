@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.swing.*;
+
+import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.cdi.impl.DemoReadWriteAccess;
 import org.openlcb.cdi.swing.CdiPanel;
 
 /**
@@ -46,25 +49,13 @@ public class ConfigDemoApplet extends JApplet {
         JFrame f = new JFrame();
         f.setTitle("Configuration Demonstration");
         CdiPanel m = new CdiPanel();
-                
-        m.initComponents(new CdiPanel.ReadWriteAccess(){
-            @Override
-            public void doWrite(long address, int space, byte[] data) {
-                    System.out.println(data.length);
-                    System.out.println("write "+address+" "+space+": "+org.openlcb.Utilities.toHexDotsString(data));
-                }
-            @Override
-            public void doRead(long address, int space, int length, CdiPanel.ReadReturn handler) {
-                    handler.returnData(new byte[]{1,2,3,4,5,6,7,8});
-                    System.out.println("read "+address+" "+space);
-                }            
-        });
-        m.loadCDI(
-            new org.openlcb.cdi.jdom.JdomCdiRep(
+
+        ConfigRepresentation rep = new ConfigRepresentation(new DemoReadWriteAccess(), new org.openlcb.cdi.jdom.JdomCdiRep(
                 org.openlcb.cdi.jdom.SampleFactory.getBasicSample()
-            )
-        );
-        
+        ));
+
+        m.initComponents(DemoReadWriteAccess.demoRepFromSample(org.openlcb.cdi.jdom.SampleFactory.getBasicSample()));
+
         f.add( m );
 
         // show

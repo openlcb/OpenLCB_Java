@@ -24,6 +24,7 @@ public class ScatterGather {
     /**
      * Provide a connection object for use by
      * a Node
+     * @return a connection
      */
     public Connection getConnection() {
         SingleConnection c = new SingleConnection();

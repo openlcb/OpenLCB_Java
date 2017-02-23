@@ -27,7 +27,6 @@ public class OlcbConnection {
     public static OlcbConnection lastConnection = null;
     private final NodeID nodeId;
     private final ListenerProxy listenerProxy;
-    private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
     private String hostName;
     private int portNumber;
     private GridConnectInput input;
@@ -37,6 +36,7 @@ public class OlcbConnection {
     /// Hub for sent frames (to network).
     private CanFrameHub outputHub;
     private CanInterface canInterface;
+    // TCP-IP connection to the gridconnect server hub.
     private Socket socket;
 
     public OlcbConnection(NodeID nodeId, String
@@ -140,14 +140,11 @@ public class OlcbConnection {
 
     /**
      * Creates a new or returns a cached CDI representation for the given node.
+     * @param remoteNode    target node (on the network)
+     * @return the cached CDI representation for that node (may be newly created and thus empty)
      */
-    public synchronized ConfigRepresentation getConfigForNode(NodeID remoteNode) {
-        if (nodeConfigs.containsKey(remoteNode)) {
-            return nodeConfigs.get(remoteNode);
-        }
-        ConfigRepresentation rep = new ConfigRepresentation(getInterface(), remoteNode);
-        nodeConfigs.put(remoteNode, rep);
-        return rep;
+    public ConfigRepresentation getConfigForNode(NodeID remoteNode) {
+        return getInterface().getConfigForNode(remoteNode);
     }
 
     /**

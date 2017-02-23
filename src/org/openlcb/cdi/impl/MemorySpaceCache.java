@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.cdi.impl.RangeCacheUtil.Range;
+import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
@@ -26,10 +27,7 @@ public class MemorySpaceCache {
     public static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
     // This event will be fired on the registered data listeners.
     public static final String UPDATE_DATA = "UPDATE_DATA";
-    private static final String TAG = "MemorySpaceCache";
-    private static final Logger logger = Logger.getLogger(TAG);
-    private final OlcbInterface connection;
-    private final NodeID remoteNodeID;
+    private static final Logger logger = Logger.getLogger(MemorySpaceCache.class.getName());
     private final int space;
     private final RangeCacheUtil ranges = new RangeCacheUtil();
     private final NavigableMap<Range, byte[]> dataCache = new TreeMap<>();
@@ -40,11 +38,33 @@ public class MemorySpaceCache {
     private long currentRangeNextOffset;
     private byte[] currentRangeData;
     private Queue<Range> rangesToLoad = new LinkedList<>();
+    private final CdiPanel.ReadWriteAccess access;
+    private final String remoteNodeString; // used for error printouts
 
-    public MemorySpaceCache(OlcbInterface connection, NodeID remoteNode, int space) {
-        this.connection = connection;
-        this.remoteNodeID = remoteNode;
+
+    public MemorySpaceCache(OlcbInterface connection, final NodeID remoteNode, int space) {
+        final MemoryConfigurationService mcs = connection.getMemoryConfigurationService();
+        this.remoteNodeString = remoteNode.toString();
+        this.access = new CdiPanel.ReadWriteAccess() {
+            @Override
+            public void doWrite(long address, int space, byte[] data, MemoryConfigurationService
+                    .McsWriteHandler handler) {
+                mcs.requestWrite(remoteNode, space, address, data, handler);
+            }
+
+            @Override
+            public void doRead(long address, int space, int length, MemoryConfigurationService
+                    .McsReadHandler handler) {
+                mcs.requestRead(remoteNode, space, address, length, handler);
+            }
+        };
         this.space = space;
+    }
+
+    public MemorySpaceCache(CdiPanel.ReadWriteAccess access, int space) {
+        this.access = access;
+        this.space = space;
+        this.remoteNodeString = "(mock)";
     }
 
     public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {
@@ -194,12 +214,11 @@ public class MemorySpaceCache {
             count = 64;
         }
         final int fcount = count;
-        connection.getMemoryConfigurationService().requestRead(remoteNodeID, space,
-                currentRangeNextOffset, count,
+        access.doRead(currentRangeNextOffset, space, count,
                 new MemoryConfigurationService.McsReadHandler() {
                     @Override
                     public void handleFailure(int code) {
-                        logger.warning("Error reading memory space cache: dest " + remoteNodeID +
+                        logger.warning("Error reading memory space cache: dest " + remoteNodeString +
                                 "space" + space + " offset " + currentRangeNextOffset + " error " +
                                 "0x" + Integer.toHexString(code));
                         // ignore and continue reading other stuff.
@@ -269,8 +288,7 @@ public class MemorySpaceCache {
         }
         logger.finer("Writing to space " + space + " offset 0x" + Long.toHexString(offset) +
                 " payload length " + data.length);
-        connection.getMemoryConfigurationService().requestWrite(remoteNodeID, space, offset,
-                data, new MemoryConfigurationService.McsWriteHandler() {
+        access.doWrite(offset, space, data, new MemoryConfigurationService.McsWriteHandler() {
                     @Override
                     public void handleFailure(int errorCode) {
                         logger.warning(String.format("Write failed (space %d address %d): 0x" +

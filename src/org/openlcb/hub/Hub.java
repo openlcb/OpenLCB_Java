@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Simple multi-threaded OpenLCB hub implementation.
@@ -24,6 +26,7 @@ import java.util.concurrent.*;
  */
 
 public class Hub {
+    private final static Logger logger = Logger.getLogger(Hub.class.getName());
     public final static int DEFAULT_PORT = 12021;
     final static int CAPACITY = 20;  // not too long, to reduce delay
     
@@ -44,8 +47,8 @@ public class Hub {
                             e.forward(m);
                         }
                     } catch (InterruptedException e) {
-                        System.err.println("Hub: Interrupted in queue handling loop");
-                        System.err.println(e);
+                        logger.severe("Hub: Interrupted in queue handling loop");
+                        logger.log(Level.SEVERE, "", e);
                     }
                 }
             }
@@ -72,8 +75,8 @@ public class Hub {
                 notifyOwner("Connection started with "+getRemoteSocketAddress(clientSocket));
             }
         } catch (IOException e) {
-            System.err.println("Hub: Exception in main loop");
-            System.err.println(e);
+            logger.severe("Hub: Exception in main loop");
+            logger.log(Level.SEVERE, "", e);
         }
     }
     
@@ -83,7 +86,7 @@ public class Hub {
     }
     
     public void notifyOwner(String line) {
-        System.out.println(line);
+        logger.info(line);
     }
     
     // from jmri.util.SocketUtil
@@ -101,7 +104,7 @@ public class Hub {
         try {
             queue.put(new Memo(line, null));
         } catch (InterruptedException e) {
-            System.err.println(e);
+            logger.log(Level.SEVERE, "", e);
         }
     }
     
@@ -154,19 +157,19 @@ public class Hub {
                 }
      
             } catch (IOException e) {
-                System.err.println("Hub: Error while handling input from "+getRemoteSocketAddress(clientSocket));
-                System.err.println(e);
+                logger.log(Level.SEVERE, "Hub: Error while handling input from {0}", getRemoteSocketAddress(clientSocket));
+                logger.log(Level.SEVERE, "", e);
             } catch (InterruptedException e) {
-                System.err.println("Hub: Interrupted while handling input from "+getRemoteSocketAddress(clientSocket));
-                System.err.println(e);
+                logger.log(Level.SEVERE, "Hub: Interrupted while handling input from {0}", getRemoteSocketAddress(clientSocket));
+                logger.log(Level.SEVERE, "", e);
             }
             threads.remove(this);
             notifyOwner("Connection ended with "+getRemoteSocketAddress(clientSocket));
             try {
                 clientSocket.close();
             } catch (IOException e) {
-                System.err.println("Hub: Error while closing socket at end of connection");
-                System.err.println(e);
+                logger.severe("Hub: Error while closing socket at end of connection");
+                logger.log(Level.SEVERE, "", e);
             }
         }
         

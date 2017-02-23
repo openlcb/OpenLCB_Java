@@ -1,19 +1,12 @@
 package org.openlcb;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
-import org.openlcb.implementations.DatagramService.*;
-import org.openlcb.implementations.MemoryConfigurationService.*;
-import org.openlcb.implementations.StreamTransmitter.*;
-import org.openlcb.implementations.DatagramTransmitter.*;
-import org.openlcb.ProtocolIdentificationReplyMessage;
-import org.openlcb.StreamInitiateReplyMessage;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.openlcb.implementations.DatagramService;
+import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.implementations.MemoryConfigurationService.McsWriteHandler;
+import org.openlcb.implementations.MemoryConfigurationService.McsWriteStreamMemo;
 
 //
 //  LoaderClient.java
@@ -26,7 +19,7 @@ import java.util.logging.Logger;
 //#include "LoaderClient.hpp"
 
 public class LoaderClient extends MessageDecoder {
-    static Logger logger = Logger.getLogger("LoaderClient");
+    private static final Logger logger = Logger.getLogger(LoaderClient.class.getName());
 
     enum State { IDLE, ABORT, FREEZE, INITCOMPL, PIP, PIPREPLY, SETUPSTREAM, STREAM, STREAMDATA, DG, UNFREEEZE, SUCCESS, FAIL };
     Connection connection;
@@ -114,8 +107,13 @@ public class LoaderClient extends MessageDecoder {
                 public void handleSuccess(int flags) {
                     if(state==State.FREEZE) {
                         state = State.PIP;
-                        sendPipRequest();
-                        startTimeout(3000);
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                sendPipRequest();
+                                startTimeout(3000);
+                            }
+                        }, 130);
                     } else {
                         // ignore; maybe a late timeout callback.
                     }
@@ -129,10 +127,10 @@ public class LoaderClient extends MessageDecoder {
                 }
             });
     }
-    Timer timer;
+    Timer timer = new Timer();
+    TimerTask task = null;
     void startTimeout(int period) {
-        timer = new Timer();
-        TimerTask task = new TimerTask(){
+        task = new TimerTask(){
             public void run(){
                 timerExpired();
             }
@@ -140,11 +138,12 @@ public class LoaderClient extends MessageDecoder {
         timer.schedule(task, period);
     }
     void endTimeout() {
-        if (timer != null) timer.cancel();
+        if (task != null) task.cancel();
         else {
             state = State.FAIL;
             
         }
+        task = null;
     }
     void timerExpired() {
         failWith(1, "Timed out");

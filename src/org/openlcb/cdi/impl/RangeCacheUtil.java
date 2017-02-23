@@ -3,7 +3,6 @@ package org.openlcb.cdi.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
 /**
@@ -26,7 +25,7 @@ public class RangeCacheUtil {
     private boolean isSimplified = true;
 
     /**
-     * Merges two ranges. Assumption: range 'next' > range 'current'. The ranges will be merged
+     * Merges two ranges. Assumption: range 'next' &gt; range 'current'. The ranges will be merged
      * if they overlap, touch or there is less than @link RANGE_MERGE_THRESHOLD sized gap
      * between them.
      *

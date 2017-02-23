@@ -12,20 +12,11 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class ProducerConsumerEventReportMessage extends Message {
+public class ProducerConsumerEventReportMessage extends EventMessage {
     
     public ProducerConsumerEventReportMessage(NodeID source, EventID eventID) {
-        super(source);
-        this.eventID = eventID;
+        super(source, eventID);
     }
-    
-    private EventID eventID;
-    
-    // because EventID is immutable, can directly return object
-    public EventID getEventID() {
-        return eventID;
-    }
-    
     /**
      * Implement message-type-specific
      * processing when this message
@@ -37,13 +28,7 @@ public class ProducerConsumerEventReportMessage extends Message {
     public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleProducerConsumerEventReport(this, sender);
     }
-    
-    public boolean equals(Object o) {
-        if (!super.equals(o)) return false;
-        ProducerConsumerEventReportMessage p = (ProducerConsumerEventReportMessage) o;
-        return eventID.equals(p.eventID);
-    } 
-    
+
     public String toString() {
         return super.toString()
                 +" Producer/Consumer Event Report with "+eventID.toString();     
