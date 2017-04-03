@@ -6,7 +6,12 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -721,6 +726,8 @@ public class CdiPanel extends JPanel {
             add(p3);
         }
 
+        protected void additionalButtons() {}
+
         protected void init() {
             p3.add(textComponent);
             textComponent.setMaximumSize(textComponent.getPreferredSize());
@@ -790,7 +797,9 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            // TODO: is this needed?
+
+            additionalButtons();
+
             p3.add(Box.createHorizontalGlue());
         }
 
@@ -843,6 +852,47 @@ public class CdiPanel extends JPanel {
             init();
         }
 
+        @Override
+        protected void additionalButtons() {
+            JButton b = new JButton("Copy");
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    String s = getDisplayText();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            textField.selectAll();
+                        }
+                    });
+                    StringSelection eventToCopy = new StringSelection(s);
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(eventToCopy, null);
+                }
+            });
+            p3.add(b);
+
+            b = new JButton("Paste");
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    DataFlavor dataFlavor = DataFlavor.stringFlavor;
+
+                    Object text = null;
+                    try {
+                        text = systemClipboard.getData(dataFlavor);
+                    } catch (UnsupportedFlavorException | IOException e1) {
+                        return;
+                    }
+                    String pasteValue = (String) text;
+                    if (pasteValue != null) {
+                        textField.setText(pasteValue);
+                    }
+                }
+            });
+            p3.add(b);
+        }
 
         @Override
         protected void writeDisplayTextToNode() {
