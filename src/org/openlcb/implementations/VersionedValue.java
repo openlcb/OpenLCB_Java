@@ -31,7 +31,15 @@ public class VersionedValue<T> {
         }
     }
 
+    public boolean setWithForceNotify(int atVersion, T t) {
+        return setInternal(atVersion, t, true);
+    }
+
     public boolean set(int atVersion, T t) {
+        return setInternal(atVersion, t, false);
+    }
+
+    private boolean setInternal(int atVersion, T t, boolean forceNotify) {
         T old;
         boolean updated = false;
         synchronized (this) {
@@ -41,11 +49,11 @@ public class VersionedValue<T> {
             if (nextVersion <= atVersion) {
                 nextVersion = atVersion + 1;
             }
-            if (data.equals(t) && oldVersion != DEFAULT_VERSION) {
+            if (data.equals(t) && oldVersion != DEFAULT_VERSION && !forceNotify) {
                 return true;
             }
             old = data;
-            if (oldVersion == DEFAULT_VERSION) {
+            if (oldVersion == DEFAULT_VERSION || forceNotify) {
                 old = null;
             }
             data = t;
