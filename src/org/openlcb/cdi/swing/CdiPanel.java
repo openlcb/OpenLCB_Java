@@ -100,17 +100,16 @@ public class CdiPanel extends JPanel {
         contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 
-        scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane = new JScrollPane(contentPanel);
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
 
-        //add(scrollPane);
-        add(contentPanel);
+        add(scrollPane);
+        //add(contentPanel);
 
         buttonBar = new JPanel();
-        buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
