@@ -24,25 +24,29 @@ public class CdiPanelDemo {
     public CdiPanelDemo() {
     }
 
-    public void displayFile() {
+    public void displayFile(String fileName) {
         JFrame f = new JFrame();
         CdiPanel m = new CdiPanel();
 
-        // find file & load file
-        fci.setDialogTitle("Find desired script file");
-        fci.rescanCurrentDirectory();
+        File file;
+        if (fileName == null) {
+            // find file & load file
+            fci.setDialogTitle("Find desired script file");
+            fci.rescanCurrentDirectory();
 
-        int retVal = fci.showOpenDialog(null);
-        // handle selection or cancel
-        if (retVal != JFileChooser.APPROVE_OPTION) {
-            File file = fci.getSelectedFile();
-            // Run the script from it's filename
-            System.out.println("No file selected");
+            int retVal = fci.showOpenDialog(null);
+            // handle selection or cancel
+            if (retVal != JFileChooser.APPROVE_OPTION) {
+                // Run the script from it's filename
+                System.out.println("No file selected");
+            }
+            file = fci.getSelectedFile();
+        } else {
+            file = new File(fileName);
         }
+        f.setTitle(file.getName());
 
-        f.setTitle(fci.getSelectedFile().getName());
-
-        ConfigRepresentation configRep = demoRepFromFile(fci.getSelectedFile());
+        ConfigRepresentation configRep = demoRepFromFile(file);
 
         m.initComponents(configRep,
                 new CdiPanel.GuiItemFactory() {
@@ -72,6 +76,6 @@ public class CdiPanelDemo {
     // Main entry point
     static public void main(String[] args) {
         CdiPanelDemo d = new CdiPanelDemo();
-        d.displayFile();
+        d.displayFile(null);
     }
 }

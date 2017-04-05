@@ -6,7 +6,12 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -54,6 +59,8 @@ import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
+import util.CollapsiblePanel;
+
 /**
  * Simple example CDI display.
  *
@@ -95,17 +102,16 @@ public class CdiPanel extends JPanel {
         contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 
-        scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane = new JScrollPane(contentPanel);
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
 
-        //add(scrollPane);
-        add(contentPanel);
+        add(scrollPane);
+        //add(contentPanel);
 
         buttonBar = new JPanel();
-        buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
@@ -127,6 +133,8 @@ public class CdiPanel extends JPanel {
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
+        createSensorCreateHelper();
+
         add(buttonBar);
 
         synchronized(rep) {
@@ -136,6 +144,55 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
+    }
+
+    private void createSensorCreateHelper() {
+        JPanel createHelper = new JPanel();
+        factory.handleGroupPaneStart(createHelper);
+        createHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        createHelper.setLayout(new BoxLayout(createHelper, BoxLayout.Y_AXIS));
+        JPanel lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("User name"));
+        JTextField textField = new JTextField(32) {
+            public java.awt.Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
+        factory.handleStringValue(textField);
+        lineHelper.add(textField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
+        JFormattedTextField activeTextField = factory.handleEventIdTextField(EventIdTextField
+                .getEventIdTextField());
+        activeTextField.setMaximumSize(activeTextField.getPreferredSize());
+        lineHelper.add(activeTextField);
+        addCopyPasteButtons(lineHelper, activeTextField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
+        JFormattedTextField inactiveTextField = factory.handleEventIdTextField(EventIdTextField
+                .getEventIdTextField());
+        inactiveTextField.setMaximumSize(inactiveTextField.getPreferredSize());
+        lineHelper.add(inactiveTextField);
+        addCopyPasteButtons(lineHelper, inactiveTextField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        factory.handleGroupPaneEnd(createHelper);
+        CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
+        cp.setExpanded(false);
+        add(cp);
     }
 
     /**
@@ -669,6 +726,47 @@ public class CdiPanel extends JPanel {
         return p;
     }
 
+    private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
+        JButton b = new JButton("Copy");
+        b.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                String s = textField.getText();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        textField.selectAll();
+                    }
+                });
+                StringSelection eventToCopy = new StringSelection(s);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(eventToCopy, null);
+            }
+        });
+        linePanel.add(b);
+
+        b = new JButton("Paste");
+        b.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                DataFlavor dataFlavor = DataFlavor.stringFlavor;
+
+                Object text = null;
+                try {
+                    text = systemClipboard.getData(dataFlavor);
+                } catch (UnsupportedFlavorException | IOException e1) {
+                    return;
+                }
+                String pasteValue = (String) text;
+                if (pasteValue != null) {
+                    textField.setText(pasteValue);
+                }
+            }
+        });
+        linePanel.add(b);
+    }
+
     public class GroupPane extends JPanel {
         private final ConfigRepresentation.GroupEntry entry;
         private final CdiRep.Item item;
@@ -720,6 +818,8 @@ public class CdiPanel extends JPanel {
             p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
         }
+
+        protected void additionalButtons() {}
 
         protected void init() {
             p3.add(textComponent);
@@ -790,7 +890,9 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            // TODO: is this needed?
+
+            additionalButtons();
+
             p3.add(Box.createHorizontalGlue());
         }
 
@@ -841,6 +943,11 @@ public class CdiPanel extends JPanel {
             textComponent = textField;
 
             init();
+        }
+
+        @Override
+        protected void additionalButtons() {
+            addCopyPasteButtons(p3, textField);
         }
 
 
