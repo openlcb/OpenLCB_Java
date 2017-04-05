@@ -555,8 +555,12 @@ public class MessageBuilder {
         @Override
         public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
-            f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            if (msg.getDestNodeID() != null) {
+                f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsAddressed.mti());
+                f.setDestAlias(map.getAlias(msg.getDestNodeID()));
+            } else {
+                f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
+            }
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }

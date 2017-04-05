@@ -70,6 +70,37 @@ public class MessageBuilderTest extends TestCase {
         compareContent(source.getContents(), f0);
     }
 
+    public void testIdentifyEventsGlobal() {
+
+        Message m = new IdentifyEventsMessage(source, null);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19970123]
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19970123), toHexString(f0.getHeader()));
+        Assert.assertEquals("payload", 0, f0.getNumDataElements());
+        compareContent(new byte[]{}, f0);
+    }
+
+    public void testIdentifyEventsAddressed() {
+        Message m = new IdentifyEventsMessage(source, destination);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19970123]
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19968123), toHexString(f0.getHeader()));
+        Assert.assertEquals("payload", 2, f0.getNumDataElements());
+        compareContent(Utilities.bytesFromHexString("03 21"), f0);
+    }
+
     public void testVerifiedNodeIDNumberMessage() {
         
         Message m = new VerifiedNodeIDNumberMessage(source);
