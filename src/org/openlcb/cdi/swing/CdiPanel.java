@@ -110,8 +110,6 @@ public class CdiPanel extends JPanel {
         add(scrollPane);
         //add(contentPanel);
 
-        createSensorCreateHelper();
-
         buttonBar = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
@@ -134,6 +132,8 @@ public class CdiPanel extends JPanel {
         bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save changed\" afterwards.");
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
+
+        createSensorCreateHelper();
 
         add(buttonBar);
 
