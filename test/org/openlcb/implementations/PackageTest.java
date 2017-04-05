@@ -51,6 +51,7 @@ public class PackageTest extends TestCase {
 
         suite.addTest(org.openlcb.implementations.throttle.PackageTest.suite());
         suite.addTest(new TestSuite(BitProducerConsumerTest.class));
+        suite.addTest(new TestSuite(VersionedValueTest.class));
 
         return suite;
     }
