@@ -25,7 +25,10 @@ public class EventIdTextField extends JFormattedTextField  {
 
     static public JFormattedTextField getEventIdTextField() {
         JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
-        
+
+        // Let's size the event ID fields for the longest event ID in pixels.
+        retval.setValue("DD.DD.DD.DD.DD.DD.DD.DD");
+        retval.setPreferredSize(retval.getPreferredSize());
         retval.setValue("00.00.00.00.00.00.00.00");
         retval.setToolTipText("EventID as eight-byte dotted-hex string, e.g. 01.02.0A.AB.34.56.78.00");
         retval.setDragEnabled(true);
