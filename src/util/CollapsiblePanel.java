@@ -100,16 +100,18 @@ public class CollapsiblePanel extends JPanel {
 
 	public void toggleSelection() {
 		selected = !selected;
-
-		if (contentPanel_.isShowing())
-			contentPanel_.setVisible(false);
-		else
-			contentPanel_.setVisible(true);
+		contentPanel_.setVisible(selected);
 
 		validate();
 
 		headerPanel_.repaint();
 	}
+
+	public void setExpanded(boolean isExpanded) {
+        if (selected != isExpanded) {
+            toggleSelection();
+        }
+    }
 
 	@Override
 	public Dimension getMaximumSize() {
