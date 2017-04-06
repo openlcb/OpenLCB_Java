@@ -31,7 +31,7 @@ public class DemoReadWriteAccess extends CdiPanel.ReadWriteAccess {
     public void doRead(long address, int space, int length, MemoryConfigurationService.McsReadHandler handler) {
         byte[] resp = new byte[length];
         for (int i = 0; i < resp.length; ++i) {
-            resp[i] = (byte)i;
+            resp[i] = (byte)(((address + i) % 91) + 32);
         }
         handler.handleReadData(null, space, address, resp);
         logger.log(Level.INFO, "read {0} {1}", new Object[]{address, space});
