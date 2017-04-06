@@ -345,6 +345,19 @@
              compress="true" />   <!-- compress="true" is default -->
     </target>
 
+    <target name="testrejar" description="re-create working test jar files without clean">
+        <antcall target="compile" />
+        <jar jarfile="${jartarget}/openlcb.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+        <antcall target="tests" />
+        <jar jarfile="${jartarget}/openlcb-demo.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+    </target>
+    
     <target name="travis-ci-tests" > <!-- tests used on travis CI -->
         <antcall target="compile" />
         <antcall target="run-travis" />
