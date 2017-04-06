@@ -56,6 +56,9 @@ import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
+import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
+
+import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
@@ -85,8 +88,22 @@ public class CdiPanel extends JPanel {
     static JFileChooser fci = new JFileChooser();
 
     private ConfigRepresentation rep;
+    private EventTable eventTable = null;
+    private String nodeName = "";
+
     public CdiPanel () { super(); }
-    
+
+    /**
+     * Call this function before initComponents in order to use an event table, both for read and
+     * write purposes in the UI.
+     * @param t the global event table, coming from the OlcbInterface.
+     * @param nodeName is the textual user name of the current node, as represented by SNIP.
+     */
+    public void setEventTable(String nodeName, EventTable t) {
+        eventTable = t;
+        this.nodeName = nodeName;
+    }
+
     /**
      * @param rep Representation of the config to be loaded
      * @param factory Implements hooks for optional interface elements
@@ -562,6 +579,7 @@ public class CdiPanel extends JPanel {
             factory.handleGroupPaneStart(currentPane);
             super.visitGroupRep(e);
             factory.handleGroupPaneEnd(currentPane);
+            currentPane.add(Box.createVerticalGlue());
 
             currentTabbedPane.add(currentPane);
             tabsByKey.put(e.key, currentTabbedPane);
@@ -713,8 +731,9 @@ public class CdiPanel extends JPanel {
     JPanel createDescriptionPane(String d) {
         if (d == null) return null;
         JPanel p = new JPanel();
-        p.setLayout(new BorderLayout());
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
+        /*
+        p.setLayout(new BorderLayout());
         JTextArea area = new JTextArea(d);
         area.setAlignmentX(Component.LEFT_ALIGNMENT);
         area.setFont(UIManager.getFont("Label.font"));
@@ -722,7 +741,7 @@ public class CdiPanel extends JPanel {
         area.setOpaque(false);
         area.setWrapStyleWord(true); 
         area.setLineWrap(true);
-        p.add(area);
+        p.add(area);*/
         return p;
     }
 
@@ -934,6 +953,10 @@ public class CdiPanel extends JPanel {
     public class EventIdPane extends EntryPane {
         private final ConfigRepresentation.EventEntry entry;
         JFormattedTextField textField;
+        JLabel eventNamesLabel = null;
+        EventTable.EventTableEntryHolder eventTableEntryHolder = null;
+        String lastEventText;
+        PropertyChangeListener eventListUpdateListener;
 
         EventIdPane(ConfigRepresentation.EventEntry e) {
             super(e, "EventID");
@@ -942,7 +965,51 @@ public class CdiPanel extends JPanel {
             textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
             textComponent = textField;
 
+            if (eventTable != null) {
+                eventNamesLabel = new JLabel();
+                eventNamesLabel.setVisible(false);
+            }
             init();
+            if (eventTable != null) {
+                add(eventNamesLabel);
+                eventListUpdateListener = new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                        if (propertyChangeEvent.getPropertyName().equals(EventTable
+                                .UPDATED_EVENT_LIST)) {
+                            updateEventDescriptionField((EventTable.EventInfo) propertyChangeEvent.getNewValue());
+                        }
+                    }
+                };
+            }
+            add(Box.createVerticalGlue());
+        }
+
+        /**
+         * Updates the UI for the list of other uses of the event.
+         */
+        private void updateEventDescriptionField(EventTable.EventInfo eventInfo) {
+            EventTable.EventTableEntry[] elist = eventInfo.getAllEntries();
+            StringBuilder b = new StringBuilder();
+            b.append("<html><body>");
+            boolean first = true;
+            for (EventTable.EventTableEntry ee: elist) {
+                if (ee.isOwnedBy(eventTableEntryHolder)) continue;
+                if (first) {
+                    b.append("Other uses of this Event ID:<br>");
+                    first = false;
+                } else {
+                    b.append("<br>");
+                }
+                b.append(ee.getDescription());
+            }
+            b.append("</body></html>");
+            if (first)  {
+                eventNamesLabel.setVisible(false);
+            } else {
+                eventNamesLabel.setText(b.toString());
+                eventNamesLabel.setVisible(true);
+            }
         }
 
         @Override
@@ -961,6 +1028,7 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@Nonnull String value) {
             textField.setText(value);
+
         }
 
         @Nonnull
@@ -968,6 +1036,46 @@ public class CdiPanel extends JPanel {
         protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
+        }
+
+        @Override
+        void updateColor() {
+            super.updateColor();
+            if (eventTable == null) return;
+            // Updates the "other uses of event ID" label.
+            String s = textField.getText();
+            if (s.equals(lastEventText)) {
+                return;
+            }
+            lastEventText = s;
+            EventID id;
+            try {
+                 id = new EventID(s);
+            } catch(RuntimeException e) {
+                // Event is not in the right format. Ignore.
+                return;
+            }
+            if (eventTableEntryHolder != null) {
+                if (eventTableEntryHolder.getEntry().getEvent().equals(id)) {
+                    return;
+                }
+                releaseListener();
+            }
+            if (id.equals(nullEvent)) {
+                // Ignore event if it is the null event.
+                eventNamesLabel.setVisible(false);
+                return;
+            }
+            // TODO: 4/6/17 this needs to contain some user name field.
+            eventTableEntryHolder = eventTable.addEvent(id, entry.key);
+            eventTableEntryHolder.getList().addPropertyChangeListener(eventListUpdateListener);
+            updateEventDescriptionField(eventTableEntryHolder.getList());
+        }
+
+        private void releaseListener() {
+            eventTableEntryHolder.getList().removePropertyChangeListener(eventListUpdateListener);
+            eventTableEntryHolder.release();
+            eventTableEntryHolder = null;
         }
     }
 
