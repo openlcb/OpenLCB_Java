@@ -10,6 +10,7 @@ import org.jdom2.input.SAXBuilder;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.cdi.impl.DemoReadWriteAccess;
 import org.openlcb.cdi.jdom.JdomCdiRep;
+import org.openlcb.implementations.EventTable;
 
 import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromFile;
 
@@ -27,7 +28,7 @@ public class CdiPanelDemo {
     public void displayFile(String fileName) {
         JFrame f = new JFrame();
         CdiPanel m = new CdiPanel();
-
+        EventTable t = new EventTable();
         File file;
         if (fileName == null) {
             // find file & load file
@@ -38,7 +39,7 @@ public class CdiPanelDemo {
             // handle selection or cancel
             if (retVal != JFileChooser.APPROVE_OPTION) {
                 // Run the script from it's filename
-                System.out.println("No file selected");
+                System.out.println("No file selectedd");
             }
             file = fci.getSelectedFile();
         } else {
@@ -47,7 +48,7 @@ public class CdiPanelDemo {
         f.setTitle(file.getName());
 
         ConfigRepresentation configRep = demoRepFromFile(file);
-
+        m.setEventTable("Demo node", t);
         m.initComponents(configRep,
                 new CdiPanel.GuiItemFactory() {
                     public JButton handleReadButton(JButton button) {
@@ -58,9 +59,7 @@ public class CdiPanelDemo {
                 }
         );
 
-        JScrollPane sp = new JScrollPane(m);
-        f.add( sp );
-        //f.add(m);
+        f.add(m);
 
         // show
         f.pack();
@@ -76,6 +75,11 @@ public class CdiPanelDemo {
     // Main entry point
     static public void main(String[] args) {
         CdiPanelDemo d = new CdiPanelDemo();
-        d.displayFile(null);
+        String fname = null;
+        if (args.length > 0) {
+            fname = args[0];
+            System.out.println("Using input file " + fname);
+        }
+        d.displayFile(fname);
     }
 }
