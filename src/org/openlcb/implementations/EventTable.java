@@ -46,7 +46,7 @@ public class EventTable {
      * Collects all registered entries for the same event ID.
      */
     @ThreadSafe
-    class EventInfo extends DefaultPropertyListenerSupport {
+    public class EventInfo extends DefaultPropertyListenerSupport {
         private final EventID eventId;
         private final List<EventTableEntry> entries = new ArrayList<>();
 
@@ -76,7 +76,7 @@ public class EventTable {
             firePropertyChange(UPDATED_EVENT_LIST, null, this);
         }
 
-        EventTableEntry[] getAllEntries() {
+        public EventTableEntry[] getAllEntries() {
             synchronized (entries) {
                 EventTableEntry[] ar = new EventTableEntry[entries.size()];
                 entries.toArray(ar);
@@ -95,6 +95,9 @@ public class EventTable {
 
         public String getDescription() { return description; }
         public EventID getEvent() { return h.event.getEventId(); }
+        public boolean isOwnedBy(EventTableEntryHolder holder) {
+            return holder == h;
+        }
     }
 
     public class EventTableEntryHolder {
@@ -108,6 +111,14 @@ public class EventTable {
 
         public void release() {
             event.remove(this);
+        }
+
+        public EventTableEntry getEntry() {
+            return entry;
+        }
+
+        public EventInfo getList() {
+            return event;
         }
     }
 }
