@@ -100,4 +100,14 @@ public class EventID {
                 +Utilities.toHexPair(contents[6])+"."
                 +Utilities.toHexPair(contents[7]);
     }
+
+    public long toLong() {
+        long ret = 0;
+        for (int i = 0; i < 8; ++i) {
+            ret <<= 8;
+            int e = contents[i];
+            ret |= (e & 0xff);
+        }
+        return ret;
+    }
 }
