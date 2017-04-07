@@ -719,8 +719,7 @@ public class CdiPanel extends JPanel {
             p.setAlignmentY(Component.TOP_ALIGNMENT);
             //p.setBorder(BorderFactory.createTitledBorder(name));
 
-            String d = item.getDescription();
-            if (d != null) p.add(createDescriptionPane(d));
+            createDescriptionPane(this, item.getDescription());
 
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
@@ -728,12 +727,9 @@ public class CdiPanel extends JPanel {
         }
     }
 
-    JPanel createDescriptionPane(String d) {
-        if (d == null) return null;
-        JPanel p = new JPanel();
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        /*
-        p.setLayout(new BorderLayout());
+    void createDescriptionPane(JPanel parent, String d) {
+        if (d == null) return;
+        if (d.trim().length() == 0) return;
         JTextArea area = new JTextArea(d);
         area.setAlignmentX(Component.LEFT_ALIGNMENT);
         area.setFont(UIManager.getFont("Label.font"));
@@ -741,8 +737,9 @@ public class CdiPanel extends JPanel {
         area.setOpaque(false);
         area.setWrapStyleWord(true); 
         area.setLineWrap(true);
-        p.add(area);*/
-        return p;
+        area.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, area.getPreferredSize().height) );
+        parent.add(area);
     }
 
     private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
@@ -798,10 +795,7 @@ public class CdiPanel extends JPanel {
             setBorder(BorderFactory.createTitledBorder(name));
             setName(name);
 
-            String d = item.getDescription();
-            if (d != null) {
-                add(createDescriptionPane(d));
-            }
+            createDescriptionPane(this, item.getDescription());
 
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
@@ -827,10 +821,7 @@ public class CdiPanel extends JPanel {
             String name = (item.getName() != null ? item.getName() : defaultName);
             setBorder(BorderFactory.createTitledBorder(name));
 
-            String d = item.getDescription();
-            if (d != null) {
-                add(createDescriptionPane(d));
-            }
+            createDescriptionPane(this, item.getDescription());
 
             p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -982,7 +973,6 @@ public class CdiPanel extends JPanel {
                     }
                 };
             }
-            add(Box.createVerticalGlue());
         }
 
         /**
