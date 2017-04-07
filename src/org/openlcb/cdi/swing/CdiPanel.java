@@ -89,7 +89,6 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
     private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
     private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
-    private static final Pattern repeatIndexRe = Pattern.compile("[(]([0-9]+)[^0-9]");
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -1180,7 +1179,6 @@ public class CdiPanel extends JPanel {
                 b.insert(nodeName.length(), ".");
             }
             // Now we need to translate from zero-based indexes to 1-based indexes.
-            m = repeatIndexRe.matcher(b);
             for (int i = b.length() - 1; i >= 0; --i) {
                 if (b.charAt(i) == '(') {
                     int j = i+1;
