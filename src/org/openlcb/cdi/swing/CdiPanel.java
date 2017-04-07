@@ -1,6 +1,14 @@
 package org.openlcb.cdi.swing;
 
-import java.awt.BorderLayout;
+import org.openlcb.EventID;
+import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.cmd.BackupConfig;
+import org.openlcb.cdi.cmd.RestoreConfig;
+import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.implementations.EventTable;
+import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.swing.EventIdTextField;
+
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -21,13 +29,18 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.annotation.Nonnull;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -49,22 +62,14 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
-import org.openlcb.EventID;
-import org.openlcb.cdi.CdiRep;
-import org.openlcb.cdi.cmd.BackupConfig;
-import org.openlcb.cdi.cmd.RestoreConfig;
-import org.openlcb.cdi.impl.ConfigRepresentation;
+
+import util.CollapsiblePanel;
+
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
 import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
-
-import org.openlcb.implementations.EventTable;
-import org.openlcb.implementations.MemoryConfigurationService;
-import org.openlcb.swing.EventIdTextField;
-
-import util.CollapsiblePanel;
 
 /**
  * Simple example CDI display.
@@ -82,6 +87,8 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
+    private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
+    private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -339,6 +346,9 @@ public class CdiPanel extends JPanel {
     private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
     // These need to be executed when closing the window.
     private final ArrayList<Runnable> cleanupTasks = new ArrayList<>();
+    // Deferred callbacks that came during the rendering of the window.
+    private final ArrayList<Runnable> startupTasks = new ArrayList<>();
+    private boolean renderingInProgress = true;
 
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
@@ -420,6 +430,11 @@ public class CdiPanel extends JPanel {
     }
 
     private void displayComplete() {
+        synchronized (startupTasks) {
+            renderingInProgress = false;
+        }
+        startupTasks.forEach(r -> r.run());
+
         hideLoadingProgress();
         // add glue at bottom
         contentPanel.add(Box.createVerticalGlue());
@@ -539,6 +554,34 @@ public class CdiPanel extends JPanel {
     }
 
     /**
+     * This class descends into members of a group recursively and updates the visible names of
+     * event fields for their EventTable registration.
+     */
+    private class UpdateGroupNameVisitor extends ConfigRepresentation.Visitor {
+        String baseGroupKey;
+        String labelValue;
+
+        /**
+         * Constructor.
+         *
+         * @param baseGroupKey the key of the GroupRep whose group name has changed.
+         * @param labelValue   the new user name of the group repeat.
+         */
+        UpdateGroupNameVisitor(String baseGroupKey, String labelValue) {
+            this.baseGroupKey = baseGroupKey;
+            this.labelValue = labelValue;
+        }
+
+        @Override
+        public void visitEvent(ConfigRepresentation.EventEntry e) {
+            EventIdPane pane = (EventIdPane) entriesByKey.get(e.key);
+            if (pane == null) return;
+            pane.parentVisibleKeys.put(baseGroupKey, labelValue);
+            pane.updateOwnEventName();
+        }
+    }
+
+    /**
      * This class renders the user interface for a config. All configuration components are
      * handled here.
      */
@@ -619,23 +662,28 @@ public class CdiPanel extends JPanel {
                     @Override
                     public void propertyChange(PropertyChangeEvent event) {
                         if (event.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
-                            if (source.lastVisibleValue != null && !source.lastVisibleValue
-                                    .isEmpty()) {
-                                String newName = (name + " (" + source.lastVisibleValue + ")");
-                                tabPanel.setName(newName);
-                                if (parentTabs.getTabCount() >= e.index) {
-                                    parentTabs.setTitleAt(e.index - 1, newName);
+                            runNowOrLater(() -> {
+                                String downstreamName = "";
+                                if (source.lastVisibleValue != null && !source.lastVisibleValue
+                                        .isEmpty()) {
+                                    String newName = (name + " (" + source.lastVisibleValue + ")");
+                                    tabPanel.setName(newName);
+                                    if (parentTabs.getTabCount() >= e.index) {
+                                        parentTabs.setTitleAt(e.index - 1, newName);
+                                    }
+                                    downstreamName = source.lastVisibleValue;
+                                } else {
+                                    if (parentTabs.getTabCount() >= e.index) {
+                                        parentTabs.setTitleAt(e.index - 1, name);
+                                    }
                                 }
-                            } else {
-                                if (parentTabs.getTabCount() >= e.index) {
-                                    parentTabs.setTitleAt(e.index - 1, name);
-                                }
-                            }
+                                new UpdateGroupNameVisitor(e.key, downstreamName).visitContainer(e);
+                            });
                         }
                     }
                 };
                 source.addPropertyChangeListener(l);
-                cleanupTasks.add(()->{source.removePropertyChangeListener(l);});
+                cleanupTasks.add(() -> source.removePropertyChangeListener(l));
             }
 
             factory.handleGroupPaneStart(currentPane);
@@ -673,6 +721,22 @@ public class CdiPanel extends JPanel {
             currentPane.add(currentLeaf);
             currentLeaf = null;
         }
+    }
+
+    /**
+     * If we are still building up the display, then enqueues the callback to run after the
+     * rendering is done. Otherwise runs the callback inline.
+     *
+     * @param r callback to run
+     */
+    private void runNowOrLater(Runnable r) {
+        synchronized (startupTasks) {
+            if (renderingInProgress) {
+                startupTasks.add(r);
+                return;
+            }
+        }
+        r.run();
     }
 
 
@@ -1019,6 +1083,9 @@ public class CdiPanel extends JPanel {
         EventTable.EventTableEntryHolder eventTableEntryHolder = null;
         String lastEventText;
         PropertyChangeListener eventListUpdateListener;
+        // Stores the user names of known parent repeats. key: a group rep key that's a prefix of
+        // the current key. value: the user name coming from the respective string valued field.
+        Map<String, String> parentVisibleKeys = new TreeMap<>(Collections.reverseOrder());
 
         EventIdPane(ConfigRepresentation.EventEntry e) {
             super(e, "EventID");
@@ -1030,20 +1097,23 @@ public class CdiPanel extends JPanel {
             if (eventTable != null) {
                 eventNamesLabel = new JLabel();
                 eventNamesLabel.setVisible(false);
-            }
-            init();
-            if (eventTable != null) {
-                add(eventNamesLabel);
                 eventListUpdateListener = new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                         if (propertyChangeEvent.getPropertyName().equals(EventTable
                                 .UPDATED_EVENT_LIST)) {
-                            updateEventDescriptionField((EventTable.EventInfo) propertyChangeEvent.getNewValue());
+                            updateEventDescriptionField((EventTable.EventInfo)
+                                    propertyChangeEvent.getNewValue());
                         }
                     }
                 };
-                cleanupTasks.add(()->{releaseListener();});
+                cleanupTasks.add(() -> {
+                    releaseListener();
+                });
+            }
+            init();
+            if (eventTable != null) {
+                add(eventNamesLabel);
             }
         }
 
@@ -1072,6 +1142,45 @@ public class CdiPanel extends JPanel {
                 eventNamesLabel.setText(b.toString());
                 eventNamesLabel.setVisible(true);
             }
+        }
+
+        /**
+         * Updates the exported event name in the event table. This needs to be called when some
+         * user name field in the parent repeated group changes.
+         */
+        void updateOwnEventName() {
+            if (eventTableEntryHolder == null) return;
+            eventTableEntryHolder.getEntry().updateDescription(getEventName());
+        }
+
+        /**
+         * @return the user name of this event.
+         */
+        private String getEventName() {
+            StringBuilder b = new StringBuilder(entry.key);
+            // Adds user names.
+            parentVisibleKeys.forEach((k, v) -> {
+                if (v.trim().length() > 0) {
+                    b.insert(k.length() - 1, "," + v);
+                }
+            });
+            // Clips some common uninteresting patterns.
+            Matcher m = segmentPrefixRe.matcher(b);
+            if (m.find()) {
+                b.delete(m.start(), m.end());
+            }
+            m = entrySuffixRe.matcher(b);
+            if (m.find()) {
+                b.delete(m.start(), m.end());
+            }
+            // Prefix with the node name.
+            if (nodeName.length() > 0) {
+                b.insert(0, nodeName);
+                b.insert(nodeName.length(), ".");
+            }
+            // Now we need to translate from zero-based indexes to 1-based indexes.
+
+            return b.toString();
         }
 
         @Override
@@ -1128,8 +1237,7 @@ public class CdiPanel extends JPanel {
                 eventNamesLabel.setVisible(false);
                 return;
             }
-            // TODO: 4/6/17 this needs to contain some user name field.
-            eventTableEntryHolder = eventTable.addEvent(id, entry.key);
+            eventTableEntryHolder = eventTable.addEvent(id, getEventName());
             eventTableEntryHolder.getList().addPropertyChangeListener(eventListUpdateListener);
             updateEventDescriptionField(eventTableEntryHolder.getList());
         }

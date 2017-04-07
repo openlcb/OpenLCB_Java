@@ -65,7 +65,7 @@ public class EventTable {
             synchronized (entries) {
                 entries.add(newEntry);
             }
-            firePropertyChange(UPDATED_EVENT_LIST, null, this);
+            notifyUpdated();
             return h;
         }
 
@@ -73,6 +73,10 @@ public class EventTable {
             synchronized (entries) {
                 entries.removeIf((EventTableEntry e) -> e.h == h);
             }
+            notifyUpdated();
+        }
+
+        void notifyUpdated() {
             firePropertyChange(UPDATED_EVENT_LIST, null, this);
         }
 
@@ -97,6 +101,14 @@ public class EventTable {
         public EventID getEvent() { return h.event.getEventId(); }
         public boolean isOwnedBy(EventTableEntryHolder holder) {
             return holder == h;
+        }
+
+        public void updateDescription(String newDescription) {
+            synchronized (h.event.entries) {
+                if (description.equals(newDescription)) return;
+                description = newDescription;
+            }
+            h.event.notifyUpdated();
         }
     }
 
