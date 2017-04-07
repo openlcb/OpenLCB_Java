@@ -209,6 +209,8 @@ public class CdiPanel extends JPanel {
         factory.handleGroupPaneEnd(createHelper);
         CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
         cp.setExpanded(false);
+        cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height));
         add(cp);
     }
 
