@@ -14,6 +14,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -91,7 +93,20 @@ public class CdiPanel extends JPanel {
     private EventTable eventTable = null;
     private String nodeName = "";
 
-    public CdiPanel () { super(); }
+    public CdiPanel () {
+        super();
+    }
+
+    /**
+     * Cleans up all property change listeners etc in preparation when closing the window.
+     */
+    public void release() {
+        System.out.println("Cleanup of CDI window for " + nodeName);
+        for (Runnable task : cleanupTasks) {
+            task.run();
+        }
+        cleanupTasks.clear();
+    }
 
     /**
      * Call this function before initComponents in order to use an event table, both for read and
@@ -322,6 +337,8 @@ public class CdiPanel extends JPanel {
     private final List<EntryPane> allEntries = new ArrayList<>();
     private final Map<String, EntryPane> entriesByKey = new HashMap<>();
     private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
+    // These need to be executed when closing the window.
+    private final ArrayList<Runnable> cleanupTasks = new ArrayList<>();
 
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
@@ -411,6 +428,47 @@ public class CdiPanel extends JPanel {
             lastColorRefreshDone = 0;
         }
         notifyTabColorRefresh();
+        SwingUtilities.invokeLater(() -> {
+            Window win = SwingUtilities.getWindowAncestor(this);
+            if (win == null) {
+                System.out.println("Could not add close window listener");
+                return;
+            }
+            win.addWindowListener(new WindowListener() {
+                @Override
+                public void windowOpened(WindowEvent windowEvent) {
+                }
+
+                @Override
+                public void windowClosing(WindowEvent windowEvent) {
+                    release();
+                }
+
+                @Override
+                public void windowClosed(WindowEvent windowEvent) {
+                }
+
+                @Override
+                public void windowIconified(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowDeiconified(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowActivated(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowDeactivated(WindowEvent windowEvent) {
+
+                }
+            });
+        });
     }
 
     private void repack() {
@@ -557,7 +615,7 @@ public class CdiPanel extends JPanel {
                 final ConfigRepresentation.StringEntry source = vv.foundEntry;
                 final JTabbedPane parentTabs = currentTabbedPane;
                 // Creates a binder for listening to the name field changes.
-                source.addPropertyChangeListener(new PropertyChangeListener() {
+                final PropertyChangeListener l = new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent event) {
                         if (event.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
@@ -575,7 +633,9 @@ public class CdiPanel extends JPanel {
                             }
                         }
                     }
-                });
+                };
+                source.addPropertyChangeListener(l);
+                cleanupTasks.add(()->{source.removePropertyChangeListener(l);});
             }
 
             factory.handleGroupPaneStart(currentPane);
@@ -811,6 +871,7 @@ public class CdiPanel extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
+        PropertyChangeListener entryListener = null;
         boolean dirty = false;
         JPanel p3;
 
@@ -829,6 +890,12 @@ public class CdiPanel extends JPanel {
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
             p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
+        }
+
+        void release() {
+            if (entryListener != null) {
+                entry.removePropertyChangeListener(entryListener);
+            }
         }
 
         protected void additionalButtons() {}
@@ -867,7 +934,7 @@ public class CdiPanel extends JPanel {
                     }
                 });
             }
-            entry.addPropertyChangeListener(new PropertyChangeListener() {
+            entryListener = new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                     if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
@@ -881,7 +948,9 @@ public class CdiPanel extends JPanel {
                         //textComponent.setBackground(COLOR_WRITTEN);
                     }
                 }
-            });
+            };
+            entry.addPropertyChangeListener(entryListener);
+            cleanupTasks.add(()->{entry.removePropertyChangeListener(entryListener);});
             entry.fireUpdate();
 
             JButton b;
@@ -974,6 +1043,7 @@ public class CdiPanel extends JPanel {
                         }
                     }
                 };
+                cleanupTasks.add(()->{releaseListener();});
             }
         }
 
@@ -1065,6 +1135,7 @@ public class CdiPanel extends JPanel {
         }
 
         private void releaseListener() {
+            if (eventTableEntryHolder == null) return;
             eventTableEntryHolder.getList().removePropertyChangeListener(eventListUpdateListener);
             eventTableEntryHolder.release();
             eventTableEntryHolder = null;
