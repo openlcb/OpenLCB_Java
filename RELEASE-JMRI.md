@@ -51,7 +51,8 @@
 7. Publish to Maven Central
 
   ```
-  mvn versions:set -DnewVersion=0.7.12
+  mvn versions:set -DnewVersion=0.7.14
+  mvn clean
   mvn deploy -P release
   ```
 
