@@ -104,6 +104,21 @@ public class EventIDTest extends TestCase {
         Assert.assertEquals(e1.toString(), "EventID:00.00.01.10.13.0D.D0.AB");
     }
 
+    public void testToLong() {
+        EventID e1 = new EventID(new byte[]{0,0,0,0,0,0,0,0});
+        assertEquals(0L, e1.toLong());
+        assertEquals(1L, new EventID(new byte[]{0,0,0,0,0,0,0,1}).toLong());
+        assertEquals(256L, new EventID(new byte[]{0,0,0,0,0,0,1,0}).toLong());
+        assertEquals(1L<<32, new EventID(new byte[]{0,0,0,1,0,0,0,0}).toLong());
+        assertEquals(150L<<32, new EventID(new byte[]{0,0,0,(byte)150,0,0,0,0}).toLong());
+
+        assertEquals(127L<<56, new EventID(new byte[]{127,0,0,0,0,0,0,0}).toLong());
+        assertEquals(-1L, new EventID(new byte[]{(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,
+                (byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff}).toLong());
+        assertEquals(-2L, new EventID(new byte[]{(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,
+                (byte)0xff,(byte)0xff,(byte)0xff,(byte)0xfe}).toLong());
+    }
+
     // from here down is testing infrastructure
     
     public EventIDTest(String s) {

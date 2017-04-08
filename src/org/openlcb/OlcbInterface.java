@@ -3,6 +3,7 @@ package org.openlcb;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
+import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
@@ -45,7 +46,9 @@ public class OlcbInterface {
     private MemoryConfigurationService mcs;
     // CDIs for the nodes
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
-
+    // Event Table is a helper for user interfaces to register and retrieve user names for
+    // events. By default this is null, initialized lazily when needed only.
+    private EventTable eventTable = null;
     /**
      * Creates the message-level interface.
      *
@@ -131,6 +134,12 @@ public class OlcbInterface {
         mcs = s;
     }
 
+    public synchronized EventTable getEventTable() {
+        if (eventTable == null) {
+            eventTable = new EventTable();
+        }
+        return eventTable;
+    }
     /**
      * Creates a new or returns a cached CDI representation for the given node.
      * @param remoteNode    target node (on the network)
