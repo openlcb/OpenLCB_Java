@@ -246,6 +246,47 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectNoFrames();
     }
 
+    public void testGenerateUnknown() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_PRODUCER | BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.SEND_UNKNOWN_EVENT_IDENTIFIED);
+
+        expectFrame(":X19547333N0504030201000708;", times(1));
+        expectFrame(":X19547333N0504030201000709;");
+        expectFrame(":X194C7333N0504030201000708;", times(1));
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectNoFrames();
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19547333N0504030201000708;");
+        expectNoFrames();
+
+        // set the value
+        VersionedValue<Boolean> v = pc.getValue();
+        v.set(false);
+        expectFrame(":X195B4333N0504030201000709;");
+        // now a query tell us NO different
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19547333N0504030201000708;");
+        expectNoFrames();
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000709;",
+                ":X19547333N0504030201000709;");
+        expectNoFrames();
+
+        v.set(true);
+        expectFrame(":X195B4333N0504030201000708;");
+        // still a query tell us nothing
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000708;",
+                ":X19547333N0504030201000708;");
+        expectNoFrames();
+        sendFrameAndExpectResult( //
+                ":X19914444N0504030201000709;",
+                ":X19547333N0504030201000709;");
+        expectNoFrames();
+    }
+
     public void testProducerOnlyNoListen() throws Exception {
         pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_PRODUCER);
         // startup

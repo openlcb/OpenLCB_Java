@@ -39,6 +39,8 @@ public class BitProducerConsumer extends MessageDecoder {
     public final static int QUERY_AT_STARTUP = 8;
     /// Flag bit to always listen to event identified messages.
     public final static int LISTEN_EVENT_IDENTIFIED = 16;
+    /// Flag bit to always send UNKNOWN response for event identified messages.
+    public final static int SEND_UNKNOWN_EVENT_IDENTIFIED = 32;
 
     public final static int DEFAULT_FLAGS = IS_PRODUCER | IS_CONSUMER | QUERY_AT_STARTUP |
             LISTEN_EVENT_IDENTIFIED;
@@ -100,7 +102,7 @@ public class BitProducerConsumer extends MessageDecoder {
     }
 
     private EventState getOnEventState() {
-        if (isValueAtDefault()) {
+        if (isValueAtDefault() || ((flags & SEND_UNKNOWN_EVENT_IDENTIFIED) > 0)) {
             return EventState.Unknown;
         }
         if (value.getLatestData()) return EventState.Valid;
