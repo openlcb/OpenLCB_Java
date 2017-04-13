@@ -784,33 +784,33 @@ public class CdiPanel extends JPanel {
         //p.setBorder(BorderFactory.createTitledBorder("Identification"));
 
         CdiRep.Identification id = c.getIdentification();
-        
+
         JPanel p1 = new JPanel();
         p.add(p1);
         p1.setLayout(new util.javaworld.GridLayout2(4,2));
         p1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         p1.add(new JLabel("Manufacturer: "));
         p1.add(new JLabel(id.getManufacturer()));
-        
+
         p1.add(new JLabel("Model: "));
         p1.add(new JLabel(id.getModel()));
-        
+
         p1.add(new JLabel("Hardware Version: "));
         p1.add(new JLabel(id.getHardwareVersion()));
-        
+
         p1.add(new JLabel("Software Version: "));
         p1.add(new JLabel(id.getSoftwareVersion()));
-        
+
         p1.setMaximumSize(p1.getPreferredSize());
-        
+
         // include map if present
         JPanel p2 = createPropertyPane(id.getMap());
         if (p2!=null) {
             p2.setAlignmentX(Component.LEFT_ALIGNMENT);
             p.add(p2);
         }
-        
+
         JPanel ret = new util.CollapsiblePanel("Identification", p);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
         ret.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -827,7 +827,7 @@ public class CdiPanel extends JPanel {
             JPanel p2 = new JPanel();
             p2.setAlignmentX(Component.LEFT_ALIGNMENT);
             p2.setBorder(BorderFactory.createTitledBorder("Properties"));
-            
+
             java.util.List keys = map.getKeys();
             if (keys.isEmpty()) return null;
 
@@ -838,12 +838,13 @@ public class CdiPanel extends JPanel {
 
                 p2.add(new JLabel(key+": "));
                 p2.add(new JLabel(map.getEntry(key)));
-                
+
             }
             p2.setMaximumSize(p2.getPreferredSize());
             return p2;
-        } else 
+        } else {
             return null;
+        }
     }
 
     public class SegmentPane extends JPanel {
@@ -865,15 +866,19 @@ public class CdiPanel extends JPanel {
     void createDescriptionPane(JPanel parent, String d) {
         if (d == null) return;
         if (d.trim().length() == 0) return;
-        JTextArea area = new JTextArea(d);
+        JTextArea area = new JTextArea(d) {
+            // Prevents the area from expanding vertically when there is vertical space to acquire.
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
+        };
         area.setAlignmentX(Component.LEFT_ALIGNMENT);
         area.setFont(UIManager.getFont("Label.font"));
         area.setEditable(false);
         area.setOpaque(false);
-        area.setWrapStyleWord(true); 
+        area.setWrapStyleWord(true);
         area.setLineWrap(true);
-        area.setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, area.getPreferredSize().height) );
         parent.add(area);
     }
 
@@ -1505,9 +1510,9 @@ public class CdiPanel extends JPanel {
         }
     }
 
-     /** 
+    /**
       * Provide access to e.g. a MemoryConfig service.
-      * 
+     *
       * Default just writes output for debug
       */
     public static class ReadWriteAccess {
@@ -1520,10 +1525,10 @@ public class CdiPanel extends JPanel {
             logger.log(Level.FINE, "Read from {0} in space {1}", new Object[]{address, space});
         }
     }
-     
-    /** 
+
+    /**
      * Handle GUI hook requests if needed
-     * 
+     *
      * Default behavior is to do nothing
      */
     public static class GuiItemFactory {
