@@ -34,6 +34,8 @@ public class EventTableTest extends TestCase {
         assertEquals("teste1", h1.entry.getDescription());
         assertEquals("teste2", h2.entry.getDescription());
         assertEquals("teste1alt", h1alt.entry.getDescription());
+        h1alt.getEntry().updateDescription("teste1altupd");
+        assertEquals("teste1altupd", h1alt.entry.getDescription());
 
         EventTable.EventTableEntry[] elist = einfo1.getAllEntries();
         assertEquals(2, elist.length);
@@ -93,6 +95,82 @@ public class EventTableTest extends TestCase {
 
         h1.release();
         l.verifyCall(elist);
+
+        h1 = elist.add("testf3");
+        l.verifyCall(elist);
+
+        h1.getEntry().updateDescription("testf3bar");
+        l.verifyCall(elist);
+    }
+
+    private final static int MPREFIX = 0;
+    private final static int MSUB = 1;
+
+    private boolean match(int type, String description, String query) {
+        boolean actual = false;
+        if (type == MPREFIX) actual = EventTable.wordPrefixMatch(description, query);
+        else if (type == MSUB) actual = EventTable.substringMatch(description, query);
+        else assertTrue("Unexpected match type " + Integer.toString(type), false);
+        return actual;
+    }
+
+    private void expectMatch(int type, String description, String query) {
+        assertTrue("Query '" + query + "' Description '" + description + "': Expected match, actual not match", match(type, description, query));
+    }
+
+    private void expectNotMatch(int type, String description, String query) {
+        assertFalse("Query '" + query + "' Description '" + description + "': Expected not match, actual match", match(type, description, query));
+    }
+
+    public void testSubstringMatch() {
+        expectMatch(MSUB, "", "");
+        expectNotMatch(MSUB, "", "aa");
+        expectMatch(MSUB, "aa", "");
+        expectMatch(MSUB, "aa", "a");
+        expectMatch(MSUB, "aa", "aa");
+        expectNotMatch(MSUB, "aa", "aaa");
+
+        expectMatch(MSUB, "aba", "");
+        expectMatch(MSUB, "aba", "a");
+        expectMatch(MSUB, "aba", "aa");
+        expectNotMatch(MSUB, "aba", "aaa");
+
+        expectMatch(MSUB, "aba", "aba");
+
+        expectMatch(MSUB, "xaba", "");
+        expectMatch(MSUB, "xaba", "a");
+        expectMatch(MSUB, "xaba", "aa");
+        expectNotMatch(MSUB, "xaba", "aaa");
+
+        expectMatch(MSUB, "xaba", "aba");
+    }
+
+    public void testWordPrefixMatch() {
+        expectMatch(MPREFIX, "", "");
+        expectNotMatch(MPREFIX, "", "aa");
+        expectMatch(MPREFIX, "aba", "a");
+        expectNotMatch(MPREFIX, "aba", "b");
+        expectNotMatch(MPREFIX, "aba", "aa");
+        // Adding spaces to the query or description should not matter
+        expectMatch(MPREFIX, "  aba", " a");
+        expectNotMatch(MPREFIX, " aba", " b");
+        expectNotMatch(MPREFIX, " aba", " aa");
+        // non-space too
+        expectMatch(MPREFIX, "  aba aba", " a a");
+        expectNotMatch(MPREFIX, "  aba aba", " aa");
+        expectMatch(MPREFIX, "  aba-aba", " a a");
+        expectNotMatch(MPREFIX, "  a1a-a1a", " aa a");
+    }
+
+
+    private void expectBetterMatch(String query, String better, String worse) {
+        float scbetter = EventTable.match(better, query);
+        float scworse = EventTable.match(worse, query);
+        String msg = String.format("Query '%s' expects '%s' match better()")
+    }
+
+    public void testQuery() {
+
     }
 
 }

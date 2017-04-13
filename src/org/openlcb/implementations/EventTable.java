@@ -5,7 +5,9 @@ import org.openlcb.EventID;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
@@ -59,6 +61,135 @@ public class EventTable {
      */
     public EventTableEntryHolder addEvent(EventID event, String description) {
         return getEventInfo(event).add(description);
+    }
+
+    public List<EventTableEntry> searchForEvent(String query, int maxResults) {
+        class SearchEntryHelper implements Comparable<SearchEntryHelper> {
+            final EventTableEntry entry;
+            final float score;
+
+            SearchEntryHelper(EventTableEntry e, float s) {
+                entry = e;
+                score = s;
+            }
+
+            @Override
+            public int compareTo(@Nonnull SearchEntryHelper o) {
+                int scc = Float.valueOf(score).compareTo(o.score);
+                if (scc != 0) return scc;
+                return entry.description.compareTo(o.entry.description);
+            }
+        }
+        PriorityQueue<SearchEntryHelper> heap = new PriorityQueue<SearchEntryHelper>(maxResults +
+                1);
+        synchronized (entries) {
+            for (EventInfo ev : entries.values()) {
+                for (EventTableEntry entry : ev.entries) {
+                    float sc = match(entry.description, query);
+                    if (sc <= 0) continue; // no match
+                    heap.add(new SearchEntryHelper(entry, sc));
+                    if (heap.size() > maxResults) {
+                        heap.poll();
+                    }
+                }
+            }
+        }
+        LinkedList<EventTableEntry> results = new LinkedList<>();
+        while (!heap.isEmpty()) {
+            results.addFirst(heap.poll().entry);
+        }
+
+        return results;
+    }
+
+    /**
+     * Substring match strategy. Matches when each character of the query appears in the
+     * description; using the same order as the query.
+     *
+     * @param description String to search inside.
+     * @param query       String to search for.
+     * @return true if matched.
+     */
+    static boolean substringMatch(String description, String query) {
+        if (description.isEmpty()) return query.isEmpty();
+        int di = 0;
+        int qi = 0;
+        while (qi < query.length() && (di < description.length())) {
+            if (description.charAt(di) == query.charAt(qi)) {
+                ++di;
+                ++qi;
+            } else {
+                ++di;
+            }
+        }
+        return (qi >= query.length());
+    }
+
+    static boolean wordPrefixMatch(String description, String query) {
+        int di = 0;
+        int qi = 0;
+        while (true) {
+            // Advances query to word start.
+            while (qi < query.length() && (!Character.isLetterOrDigit(query.charAt(qi)) || ((qi >
+                    0) && Character.isLetterOrDigit(query.charAt(qi - 1))))) {
+                ++qi;
+            }
+            if (qi >= query.length()) return true;
+
+            // Advances description to matching word start.
+            while (di < description.length() && ((query.charAt(qi) != description.charAt(di)) || (
+                    (di > 0) && Character.isLetterOrDigit(description.charAt(di - 1))))) {
+                ++di;
+            }
+            if (di >= description.length()) return false;
+
+            int ddi = di;
+            int qqi = qi;
+            // Matches a (partial) word from the query.
+            while (ddi < description.length() &&
+                    qqi < query.length() &&
+                    Character.isLetterOrDigit(query.charAt(qqi)) &&
+                    (query.charAt(qqi) == description.charAt(ddi))) {
+                ++ddi;
+                ++qqi;
+            }
+            // Checks if we should accept the word match.
+            if (qqi >= query.length() || !Character.isLetterOrDigit(query.charAt(qqi))) {
+                // accepted. move forward.
+                di = ddi;
+                qi = qqi;
+            } else {
+                // Failed match. Skip this word.
+                di++;
+                // We can safely skip ahead through all the matched characters since the word is
+                // known to not be right and we'll be looking for the next word anyway.
+                if (ddi > di) di = ddi;
+            }
+        }
+    }
+
+    private static float SUBSTRING_SCORE = 10;
+    private static float SUBSTRINGIC_SCORE = 5;
+    private static float WORDPREF_SCORE = 20;
+    private static float WORDPREFIC_SCORE = 17;
+    private static float HASPAREN_SCORE = -1;
+
+
+    public static float match(String description, String query) {
+        boolean isSubStringICase = substringMatch(description.toLowerCase(), query.toLowerCase());
+        boolean isSubString = substringMatch(description, query);
+        boolean isWordPrefixICase = wordPrefixMatch(description.toLowerCase(), query.toLowerCase());
+        boolean isWordPrefix = wordPrefixMatch(description, query);
+        boolean hasParen = description.indexOf('(') >= 0;
+
+        float score = 0;
+        if (isSubString) score += SUBSTRING_SCORE;
+        if (isSubStringICase) score += SUBSTRINGIC_SCORE;
+        if (isWordPrefix) score += WORDPREF_SCORE;
+        if (isWordPrefixICase) score += WORDPREFIC_SCORE;
+        if (hasParen) score += HASPAREN_SCORE;
+
+        return score;
     }
 
     /**
