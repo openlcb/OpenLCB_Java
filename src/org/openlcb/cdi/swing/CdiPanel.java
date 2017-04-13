@@ -1333,7 +1333,9 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void additionalButtons() {
+            p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
+            p3.add(Box.createHorizontalStrut(5));
             JButton b = new JButton("Searchh");
             b.addActionListener(new ActionListener() {
                 @Override
