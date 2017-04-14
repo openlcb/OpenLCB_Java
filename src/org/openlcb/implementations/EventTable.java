@@ -63,6 +63,15 @@ public class EventTable {
         return getEventInfo(event).add(description);
     }
 
+    /**
+     * Searches for registered events matching a given query. Results will be sorted according to
+     * how well they match the query.
+     *
+     * @param query      user-entered string to match against registered events
+     * @param maxResults maximum number of results to return
+     * @return a list of event table entries with their description matching the query, in the
+     * order of best match first.
+     */
     public List<EventTableEntry> searchForEvent(String query, int maxResults) {
         class SearchEntryHelper implements Comparable<SearchEntryHelper> {
             final EventTableEntry entry;
@@ -77,7 +86,7 @@ public class EventTable {
             public int compareTo(@Nonnull SearchEntryHelper o) {
                 int scc = Float.valueOf(score).compareTo(o.score);
                 if (scc != 0) return scc;
-                return entry.description.compareTo(o.entry.description);
+                return -entry.description.compareTo(o.entry.description);
             }
         }
         PriorityQueue<SearchEntryHelper> heap = new PriorityQueue<SearchEntryHelper>(maxResults +
