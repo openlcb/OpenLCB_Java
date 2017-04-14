@@ -48,6 +48,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -70,6 +72,7 @@ import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.Utilities;
 
 import util.CollapsiblePanel;
 
@@ -926,6 +929,7 @@ public class CdiPanel extends JPanel {
     private class SearchPane extends JPanel {
         JPanel parent = null;
         JTextField textField;
+        JTextField outputField;
         JPopupMenu suggestMenu = null;
         SearchPane() {
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -1004,11 +1008,26 @@ public class CdiPanel extends JPanel {
                 suggestMenu = new JPopupMenu();
                 fresh = true;
             }
+            long startTime = System.nanoTime();
+            List<EventTable.EventTableEntry> results = eventTable.searchForEvent(searchQuery, 8);
+            long timelen = System.nanoTime() - startTime;
+            System.out.println(String.format("Search took %.2f msec", timelen * 1.0 / 1e6));
             suggestMenu.removeAll();
-            suggestMenu.add("Event 1");
-            suggestMenu.add("Event 2 " + searchQuery);
-            suggestMenu.add("Event 3");
-            suggestMenu.add("Event 4");
+            for (EventTable.EventTableEntry result : results) {
+                Action a = new AbstractAction(result.getDescription()) {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String r = org.openlcb.Utilities.toHexDotsString(result.getEvent()
+                                .getContents());
+                        outputField.setText(r);
+                        cancelSearch();
+                    }
+                };
+                suggestMenu.add(a);
+            }
+            if (results.isEmpty()) {
+                suggestMenu.add("No matches.");
+            }
             suggestMenu.setFocusable(false);
             if (!fresh) {
                 suggestMenu.revalidate();
@@ -1031,13 +1050,14 @@ public class CdiPanel extends JPanel {
             }
         }
 
-        void attachParent(JPanel parentPane) {
+        void attachParent(JPanel parentPane, JTextField output) {
             if (parent != null) {
                 cancelSearch();
             }
             textField.setText("");
             parentPane.add(textField);
             parent = parentPane;
+            outputField = output;
             parentPane.revalidate();
             //setVisible(true);
             textField.requestFocusInWindow();
@@ -1333,19 +1353,20 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void additionalButtons() {
+            final JTextField tf = textField;
             p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
             p3.add(Box.createHorizontalStrut(5));
-            JButton b = new JButton("Searchh");
+            JButton b = new JButton("Search");
             b.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    searchPane.attachParent(p3);
+                    searchPane.attachParent(p3, tf);
                 }
             });
             p3.add(b);
+            p3.add(Box.createHorizontalStrut(5));
         }
-
 
         @Override
         protected void writeDisplayTextToNode() {
@@ -1357,7 +1378,6 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@Nonnull String value) {
             textField.setText(value);
-
         }
 
         @Nonnull
