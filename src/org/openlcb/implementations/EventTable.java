@@ -186,9 +186,9 @@ public class EventTable {
 
     public static float match(String description, String query) {
         boolean isSubStringICase = substringMatch(description.toLowerCase(), query.toLowerCase());
-        boolean isSubString = substringMatch(description, query);
+        boolean isSubString = isSubStringICase && substringMatch(description, query);
         boolean isWordPrefixICase = wordPrefixMatch(description.toLowerCase(), query.toLowerCase());
-        boolean isWordPrefix = wordPrefixMatch(description, query);
+        boolean isWordPrefix = isWordPrefixICase && wordPrefixMatch(description, query);
         boolean hasParen = description.indexOf('(') >= 0;
 
         float score = 0;
