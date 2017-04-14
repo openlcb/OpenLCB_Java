@@ -9,11 +9,13 @@ import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
@@ -22,10 +24,14 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +48,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -53,15 +61,18 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.Utilities;
 
 import util.CollapsiblePanel;
 
@@ -354,6 +365,7 @@ public class CdiPanel extends JPanel {
     JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
+    SearchPane searchPane = new SearchPane();
 
     final Timer tabColorTimer = new Timer();
     long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
@@ -914,6 +926,145 @@ public class CdiPanel extends JPanel {
         linePanel.add(b);
     }
 
+    private class SearchPane extends JPanel {
+        JPanel parent = null;
+        JTextField textField;
+        JTextField outputField;
+        JPopupMenu suggestMenu = null;
+        SearchPane() {
+            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            textField = new JTextField(32);
+            textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, textField.getPreferredSize().height));
+
+            textField.setToolTipText("Enter the description of an event here to help pasting the event ID.");
+            textField.getDocument().addDocumentListener(
+                    new DocumentListener() {
+                        @Override
+                        public void insertUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+
+                        @Override
+                        public void removeUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+
+                        @Override
+                        public void changedUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+                    }
+            );
+            textField.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+
+                }
+
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                    if (keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE ){
+                        cancelSearch();
+                    } else if (keyEvent.getKeyCode() == KeyEvent.VK_DOWN) {
+                        if (suggestMenu != null && suggestMenu.isVisible()) {
+                            suggestMenu.setVisible(false);
+                            suggestMenu.setFocusable(true);
+                            suggestMenu.getSelectionModel().setSelectedIndex(0);
+                            suggestMenu.show(textField, 0, textField.getHeight());
+                            // Ugly hack to select the first entry in the menu. The menu needs a bit of time to appear.
+                            javax.swing.Timer t = new javax.swing.Timer(100, new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    try {
+                                        Robot r = new Robot();
+                                        r.keyPress(KeyEvent.VK_DOWN);
+                                        r.keyRelease(KeyEvent.VK_DOWN);
+                                    } catch (AWTException e) {
+                                    }
+                                }
+                            });
+                            t.setRepeats(false);
+                            t.start();
+                            keyEvent.consume();
+                            //suggestMenu.requestFocus();
+                        }
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent keyEvent) {
+
+                }
+            });
+        }
+
+        private void textUpdated() {
+            if (parent == null) return;
+            String searchQuery = textField.getText();
+            System.err.println("Search for: " + searchQuery);
+            boolean fresh = false;
+            if (suggestMenu == null) {
+                suggestMenu = new JPopupMenu();
+                fresh = true;
+            }
+            long startTime = System.nanoTime();
+            List<EventTable.EventTableEntry> results = eventTable.searchForEvent(searchQuery, 8);
+            long timelen = System.nanoTime() - startTime;
+            System.out.println(String.format("Search took %.2f msec", timelen * 1.0 / 1e6));
+            suggestMenu.removeAll();
+            for (EventTable.EventTableEntry result : results) {
+                Action a = new AbstractAction(result.getDescription()) {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String r = org.openlcb.Utilities.toHexDotsString(result.getEvent()
+                                .getContents());
+                        outputField.setText(r);
+                        cancelSearch();
+                    }
+                };
+                suggestMenu.add(a);
+            }
+            if (results.isEmpty()) {
+                suggestMenu.add("No matches.");
+            }
+            suggestMenu.setFocusable(false);
+            if (!fresh) {
+                suggestMenu.revalidate();
+                suggestMenu.pack();
+                suggestMenu.repaint();
+            }
+            suggestMenu.show(textField, 0, textField.getHeight());
+        }
+
+        private void cancelSearch() {
+            System.err.println("Removing search box");
+            if (suggestMenu != null) {
+                suggestMenu.setVisible(false);
+            }
+            if (parent != null) {
+                parent.remove(textField);
+                parent.revalidate();
+                parent.repaint();
+                parent = null;
+            }
+        }
+
+        void attachParent(JPanel parentPane, JTextField output) {
+            if (parent != null) {
+                cancelSearch();
+            }
+            textField.setText("");
+            parentPane.add(textField);
+            parent = parentPane;
+            outputField = output;
+            parentPane.revalidate();
+            //setVisible(true);
+            textField.requestFocusInWindow();
+            //parentPane.repaint();
+        }
+    }
+
     public class GroupPane extends JPanel {
         private final ConfigRepresentation.GroupEntry entry;
         private final CdiRep.Item item;
@@ -1202,9 +1353,20 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void additionalButtons() {
+            final JTextField tf = textField;
+            p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
+            p3.add(Box.createHorizontalStrut(5));
+            JButton b = new JButton("Search");
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    searchPane.attachParent(p3, tf);
+                }
+            });
+            p3.add(b);
+            p3.add(Box.createHorizontalStrut(5));
         }
-
 
         @Override
         protected void writeDisplayTextToNode() {
@@ -1216,7 +1378,6 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@Nonnull String value) {
             textField.setText(value);
-
         }
 
         @Nonnull
