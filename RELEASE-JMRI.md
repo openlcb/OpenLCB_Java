@@ -50,7 +50,11 @@
 
 7. Publish to Maven Central
 
-  ```mvn deploy -P release```
+  ```
+  mvn versions:set -DnewVersion=0.7.14
+  mvn clean
+  mvn deploy -P release
+  ```
 
 ## Update JMRI for new OpenLCB
 

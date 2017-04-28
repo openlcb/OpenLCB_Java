@@ -87,67 +87,43 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         return node;
     }
 
+    enum InfoNodes {
+        MFG("Mfg"),
+        MODEL("Mod"),
+        HARDWARE_VERSION("Hardware"),
+        SOFTWARE_VERSION("Software"),
+        USER_NAME("Name"),
+        USER_DESC("Desc"),
+        NUM_NODES("");
+
+        public final String name;
+        InfoNodes(String n) { name = n; }
+    }
+    DefaultMutableTreeNode simpleInfoNodes[] = new DefaultMutableTreeNode[InfoNodes.NUM_NODES.ordinal()];
+
+    void updateSimpleInfoNode(InfoNodes node, String value) {
+        int num = node.ordinal();
+        if (value == null || value.trim().length() == 0) return;
+        String name = node.name + ": " + value;
+        if (simpleInfoNodes[num] == null) {
+            simpleInfoNodes[num] = newNode(name);
+            getTreeModel().insertNodeInto(simpleInfoNodes[num],
+                    getThis(),
+                    getThis().getChildCount());
+        } else {
+            simpleInfoNodes[num].setUserObject(name);
+            treeModel.nodeChanged(simpleInfoNodes[num]);
+        }
+    }
+
     synchronized void updateSimpleNodeIdent(SimpleNodeIdent e) {
-        if (simpleInfoMfgNode == null) {
-            if (e.getMfgName().replace(" ","").length()>0) {
-                simpleInfoMfgNode = newNode("Mfg: "+e.getMfgName());
-                getTreeModel().insertNodeInto(simpleInfoMfgNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }
-        } else {
-            simpleInfoMfgNode.setUserObject("Mfg: "+e.getMfgName());
-        }
-        if (simpleInfoModelNode == null) {
-            if (e.getModelName().replace(" ","").length()>0) {
-                simpleInfoModelNode = newNode("Mod: "+e.getModelName());
-                getTreeModel().insertNodeInto(simpleInfoModelNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }       
-        } else {
-            simpleInfoModelNode.setUserObject("Mod: "+e.getModelName());
-        }
-        if (simpleInfoHardwareVersionNode == null) {
-            if (e.getHardwareVersion().replace(" ","").length()>0) {
-                simpleInfoHardwareVersionNode = newNode("Hardware: "+e.getHardwareVersion());
-                getTreeModel().insertNodeInto(simpleInfoHardwareVersionNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }
-        } else {
-            simpleInfoHardwareVersionNode.setUserObject("Hardware: "+e.getHardwareVersion());
-        }
-        if (simpleInfoSoftwareVersionNode == null) {
-            if (e.getSoftwareVersion().replace(" ","").length()>0) {
-                simpleInfoSoftwareVersionNode = newNode("Software: "+e.getSoftwareVersion());
-                getTreeModel().insertNodeInto(simpleInfoSoftwareVersionNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }
-        } else {
-            simpleInfoSoftwareVersionNode.setUserObject("Software: "+e.getSoftwareVersion());
-        }
-        if (simpleInfoUserNameNode == null) {
-            if (e.getUserName().replace(" ","").length()>0) {
-                simpleInfoUserNameNode = new DefaultMutableTreeNode("Name: "+e.getUserName());
-                getTreeModel().insertNodeInto(simpleInfoUserNameNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }
-        } else {
-            simpleInfoUserNameNode.setUserObject("Name: "+e.getUserName());
-        }
-        if (simpleInfoUserDescNode == null ) { 
-            if (e.getUserDesc().replace(" ","").length()>0) {
-                simpleInfoUserDescNode = newNode("Desc: "+e.getUserDesc());
-                getTreeModel().insertNodeInto(simpleInfoUserDescNode, 
-                            getThis(),
-                            getThis().getChildCount());
-            }
-        } else {
-            simpleInfoUserDescNode.setUserObject("Desc: "+e.getUserDesc());
-        }
+        updateSimpleInfoNode(InfoNodes.MFG, e.getMfgName());
+        updateSimpleInfoNode(InfoNodes.MODEL, e.getModelName());
+        updateSimpleInfoNode(InfoNodes.HARDWARE_VERSION, e.getHardwareVersion());
+        updateSimpleInfoNode(InfoNodes.SOFTWARE_VERSION, e.getSoftwareVersion());
+        updateSimpleInfoNode(InfoNodes.USER_NAME, e.getUserName());
+        updateSimpleInfoNode(InfoNodes.USER_DESC, e.getUserDesc());
+
         StringBuilder b = new StringBuilder();
         String n = e.getUserName().trim();
         if (!n.isEmpty()) {
@@ -166,6 +142,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     }
     
     DefaultMutableTreeNode pipNode;
+    DefaultMutableTreeNode openConfigNode = null;
 
     synchronized void updateProtocolIdent(ProtocolIdentification pi) {
         if (pi.getValue() != 0) {
@@ -187,6 +164,10 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 switch (p) {
                     case ConfigurationDescription:
                         node = newNode(p.getName(), loader.cdiKey(p.getName(), memo.getNodeID()));
+                        if (openConfigNode == null) {
+                            openConfigNode = newNode(null, loader.cdiKey("Open Configuration dialog", memo.getNodeID()));
+                            getTreeModel().insertNodeInto(openConfigNode, getThis(), 0);
+                        }
                         break;
                     case ProtocolIdentification:
                         node = newNode(p.getName(), loader.pipKey(p.getName(), memo.getNodeID()));
@@ -212,13 +193,6 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             getTreeModel().nodeStructureChanged(pipNode);
         }
     }
-    
-    DefaultMutableTreeNode simpleInfoMfgNode;
-    DefaultMutableTreeNode simpleInfoModelNode;
-    DefaultMutableTreeNode simpleInfoHardwareVersionNode;
-    DefaultMutableTreeNode simpleInfoSoftwareVersionNode;
-    DefaultMutableTreeNode simpleInfoUserNameNode;
-    DefaultMutableTreeNode simpleInfoUserDescNode;
     
     /**
      * Provides the node label in the tree.

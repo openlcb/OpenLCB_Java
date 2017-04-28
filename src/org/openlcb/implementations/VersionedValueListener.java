@@ -38,6 +38,11 @@ public abstract class VersionedValueListener<T> implements PropertyChangeListene
         }
     }
 
+    /**
+     * Sets the value of the shared state as seen from this listener. Will skip callback to this
+     * listener.
+     * @param t new value
+     */
     public void setFromOwner(T t) {
         int newVersion;
         synchronized (this) {
@@ -45,6 +50,20 @@ public abstract class VersionedValueListener<T> implements PropertyChangeListene
             ownerVersion = newVersion;
         }
         parent.set(newVersion, t);
+    }
+
+    /**
+     * Sets the value of the shared state as seen from this listener. Will skip callback to this
+     * listener. Will force callbacks to all other listeners, even if the state has not changed.
+     * @param t new value
+     */
+    public void setFromOwnerWithForceNotify(T t) {
+        int newVersion;
+        synchronized (this) {
+            newVersion = parent.getNewVersion();
+            ownerVersion = newVersion;
+        }
+        parent.setWithForceNotify(newVersion, t);
     }
 
     /** Calls the updater with the latest data. */

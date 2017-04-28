@@ -1,27 +1,55 @@
 package org.openlcb.cdi.swing;
 
-import java.awt.BorderLayout;
+import org.openlcb.EventID;
+import org.openlcb.cdi.CdiRep;
+import org.openlcb.cdi.cmd.BackupConfig;
+import org.openlcb.cdi.cmd.RestoreConfig;
+import org.openlcb.cdi.impl.ConfigRepresentation;
+import org.openlcb.implementations.EventTable;
+import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.swing.EventIdTextField;
+
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.annotation.Nonnull;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -33,26 +61,26 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
-import org.openlcb.EventID;
-import org.openlcb.cdi.CdiRep;
-import org.openlcb.cdi.cmd.BackupConfig;
-import org.openlcb.cdi.cmd.RestoreConfig;
-import org.openlcb.cdi.impl.ConfigRepresentation;
+import javax.swing.text.Utilities;
+
+import util.CollapsiblePanel;
+
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_WRITE_COMPLETE;
-import org.openlcb.implementations.MemoryConfigurationService;
-import org.openlcb.swing.EventIdTextField;
+import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
 
 /**
  * Simple example CDI display.
@@ -70,6 +98,8 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
+    private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
+    private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -78,8 +108,35 @@ public class CdiPanel extends JPanel {
     static JFileChooser fci = new JFileChooser();
 
     private ConfigRepresentation rep;
-    public CdiPanel () { super(); }
-    
+    private EventTable eventTable = null;
+    private String nodeName = "";
+
+    public CdiPanel () {
+        super();
+    }
+
+    /**
+     * Cleans up all property change listeners etc in preparation when closing the window.
+     */
+    public void release() {
+        System.out.println("Cleanup of CDI window for " + nodeName);
+        for (Runnable task : cleanupTasks) {
+            task.run();
+        }
+        cleanupTasks.clear();
+    }
+
+    /**
+     * Call this function before initComponents in order to use an event table, both for read and
+     * write purposes in the UI.
+     * @param t the global event table, coming from the OlcbInterface.
+     * @param nodeName is the textual user name of the current node, as represented by SNIP.
+     */
+    public void setEventTable(String nodeName, EventTable t) {
+        eventTable = t;
+        this.nodeName = nodeName;
+    }
+
     /**
      * @param rep Representation of the config to be loaded
      * @param factory Implements hooks for optional interface elements
@@ -95,17 +152,16 @@ public class CdiPanel extends JPanel {
         contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
 
-        scrollPane = new JScrollPane(contentPanel, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane = new JScrollPane(contentPanel);
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
 
-        //add(scrollPane);
-        add(contentPanel);
+        add(scrollPane);
+        //add(contentPanel);
 
         buttonBar = new JPanel();
-        buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
@@ -127,6 +183,8 @@ public class CdiPanel extends JPanel {
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
+        createSensorCreateHelper();
+
         add(buttonBar);
 
         synchronized(rep) {
@@ -136,6 +194,57 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
+    }
+
+    private void createSensorCreateHelper() {
+        JPanel createHelper = new JPanel();
+        factory.handleGroupPaneStart(createHelper);
+        createHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        createHelper.setLayout(new BoxLayout(createHelper, BoxLayout.Y_AXIS));
+        JPanel lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("User name"));
+        JTextField textField = new JTextField(32) {
+            public java.awt.Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
+        factory.handleStringValue(textField);
+        lineHelper.add(textField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
+        JFormattedTextField activeTextField = factory.handleEventIdTextField(EventIdTextField
+                .getEventIdTextField());
+        activeTextField.setMaximumSize(activeTextField.getPreferredSize());
+        lineHelper.add(activeTextField);
+        addCopyPasteButtons(lineHelper, activeTextField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        lineHelper = new JPanel();
+        lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
+        JFormattedTextField inactiveTextField = factory.handleEventIdTextField(EventIdTextField
+                .getEventIdTextField());
+        inactiveTextField.setMaximumSize(inactiveTextField.getPreferredSize());
+        lineHelper.add(inactiveTextField);
+        addCopyPasteButtons(lineHelper, inactiveTextField);
+        lineHelper.add(Box.createHorizontalGlue());
+        createHelper.add(lineHelper);
+
+        factory.handleGroupPaneEnd(createHelper);
+        CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
+        cp.setExpanded(false);
+        cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height));
+        add(cp);
     }
 
     /**
@@ -246,11 +355,17 @@ public class CdiPanel extends JPanel {
     private final List<EntryPane> allEntries = new ArrayList<>();
     private final Map<String, EntryPane> entriesByKey = new HashMap<>();
     private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
+    // These need to be executed when closing the window.
+    private final ArrayList<Runnable> cleanupTasks = new ArrayList<>();
+    // Deferred callbacks that came during the rendering of the window.
+    private final ArrayList<Runnable> startupTasks = new ArrayList<>();
+    private boolean renderingInProgress = true;
 
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
+    SearchPane searchPane = new SearchPane();
 
     final Timer tabColorTimer = new Timer();
     long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
@@ -327,6 +442,11 @@ public class CdiPanel extends JPanel {
     }
 
     private void displayComplete() {
+        synchronized (startupTasks) {
+            renderingInProgress = false;
+        }
+        startupTasks.forEach(r -> r.run());
+
         hideLoadingProgress();
         // add glue at bottom
         contentPanel.add(Box.createVerticalGlue());
@@ -335,6 +455,47 @@ public class CdiPanel extends JPanel {
             lastColorRefreshDone = 0;
         }
         notifyTabColorRefresh();
+        SwingUtilities.invokeLater(() -> {
+            Window win = SwingUtilities.getWindowAncestor(this);
+            if (win == null) {
+                System.out.println("Could not add close window listener");
+                return;
+            }
+            win.addWindowListener(new WindowListener() {
+                @Override
+                public void windowOpened(WindowEvent windowEvent) {
+                }
+
+                @Override
+                public void windowClosing(WindowEvent windowEvent) {
+                    release();
+                }
+
+                @Override
+                public void windowClosed(WindowEvent windowEvent) {
+                }
+
+                @Override
+                public void windowIconified(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowDeiconified(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowActivated(WindowEvent windowEvent) {
+
+                }
+
+                @Override
+                public void windowDeactivated(WindowEvent windowEvent) {
+
+                }
+            });
+        });
     }
 
     private void repack() {
@@ -401,6 +562,34 @@ public class CdiPanel extends JPanel {
         public void visitGroupRep(ConfigRepresentation.GroupRep e) {
             // Stops descending into repeated subgroups.
             return;
+        }
+    }
+
+    /**
+     * This class descends into members of a group recursively and updates the visible names of
+     * event fields for their EventTable registration.
+     */
+    private class UpdateGroupNameVisitor extends ConfigRepresentation.Visitor {
+        String baseGroupKey;
+        String labelValue;
+
+        /**
+         * Constructor.
+         *
+         * @param baseGroupKey the key of the GroupRep whose group name has changed.
+         * @param labelValue   the new user name of the group repeat.
+         */
+        UpdateGroupNameVisitor(String baseGroupKey, String labelValue) {
+            this.baseGroupKey = baseGroupKey;
+            this.labelValue = labelValue;
+        }
+
+        @Override
+        public void visitEvent(ConfigRepresentation.EventEntry e) {
+            EventIdPane pane = (EventIdPane) entriesByKey.get(e.key);
+            if (pane == null) return;
+            pane.parentVisibleKeys.put(baseGroupKey, labelValue);
+            pane.updateOwnEventName();
         }
     }
 
@@ -481,30 +670,38 @@ public class CdiPanel extends JPanel {
                 final ConfigRepresentation.StringEntry source = vv.foundEntry;
                 final JTabbedPane parentTabs = currentTabbedPane;
                 // Creates a binder for listening to the name field changes.
-                source.addPropertyChangeListener(new PropertyChangeListener() {
+                final PropertyChangeListener l = new PropertyChangeListener() {
                     @Override
                     public void propertyChange(PropertyChangeEvent event) {
                         if (event.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
-                            if (source.lastVisibleValue != null && !source.lastVisibleValue
-                                    .isEmpty()) {
-                                String newName = (name + " (" + source.lastVisibleValue + ")");
-                                tabPanel.setName(newName);
-                                if (parentTabs.getTabCount() >= e.index) {
-                                    parentTabs.setTitleAt(e.index - 1, newName);
+                            runNowOrLater(() -> {
+                                String downstreamName = "";
+                                if (source.lastVisibleValue != null && !source.lastVisibleValue
+                                        .isEmpty()) {
+                                    String newName = (name + " (" + source.lastVisibleValue + ")");
+                                    tabPanel.setName(newName);
+                                    if (parentTabs.getTabCount() >= e.index) {
+                                        parentTabs.setTitleAt(e.index - 1, newName);
+                                    }
+                                    downstreamName = source.lastVisibleValue;
+                                } else {
+                                    if (parentTabs.getTabCount() >= e.index) {
+                                        parentTabs.setTitleAt(e.index - 1, name);
+                                    }
                                 }
-                            } else {
-                                if (parentTabs.getTabCount() >= e.index) {
-                                    parentTabs.setTitleAt(e.index - 1, name);
-                                }
-                            }
+                                new UpdateGroupNameVisitor(e.key, downstreamName).visitContainer(e);
+                            });
                         }
                     }
-                });
+                };
+                source.addPropertyChangeListener(l);
+                cleanupTasks.add(() -> source.removePropertyChangeListener(l));
             }
 
             factory.handleGroupPaneStart(currentPane);
             super.visitGroupRep(e);
             factory.handleGroupPaneEnd(currentPane);
+            currentPane.add(Box.createVerticalGlue());
 
             currentTabbedPane.add(currentPane);
             tabsByKey.put(e.key, currentTabbedPane);
@@ -536,6 +733,22 @@ public class CdiPanel extends JPanel {
             currentPane.add(currentLeaf);
             currentLeaf = null;
         }
+    }
+
+    /**
+     * If we are still building up the display, then enqueues the callback to run after the
+     * rendering is done. Otherwise runs the callback inline.
+     *
+     * @param r callback to run
+     */
+    private void runNowOrLater(Runnable r) {
+        synchronized (startupTasks) {
+            if (renderingInProgress) {
+                startupTasks.add(r);
+                return;
+            }
+        }
+        r.run();
     }
 
 
@@ -574,33 +787,33 @@ public class CdiPanel extends JPanel {
         //p.setBorder(BorderFactory.createTitledBorder("Identification"));
 
         CdiRep.Identification id = c.getIdentification();
-        
+
         JPanel p1 = new JPanel();
         p.add(p1);
         p1.setLayout(new util.javaworld.GridLayout2(4,2));
         p1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         p1.add(new JLabel("Manufacturer: "));
         p1.add(new JLabel(id.getManufacturer()));
-        
+
         p1.add(new JLabel("Model: "));
         p1.add(new JLabel(id.getModel()));
-        
+
         p1.add(new JLabel("Hardware Version: "));
         p1.add(new JLabel(id.getHardwareVersion()));
-        
+
         p1.add(new JLabel("Software Version: "));
         p1.add(new JLabel(id.getSoftwareVersion()));
-        
+
         p1.setMaximumSize(p1.getPreferredSize());
-        
+
         // include map if present
         JPanel p2 = createPropertyPane(id.getMap());
         if (p2!=null) {
             p2.setAlignmentX(Component.LEFT_ALIGNMENT);
             p.add(p2);
         }
-        
+
         JPanel ret = new util.CollapsiblePanel("Identification", p);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
         ret.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -617,7 +830,7 @@ public class CdiPanel extends JPanel {
             JPanel p2 = new JPanel();
             p2.setAlignmentX(Component.LEFT_ALIGNMENT);
             p2.setBorder(BorderFactory.createTitledBorder("Properties"));
-            
+
             java.util.List keys = map.getKeys();
             if (keys.isEmpty()) return null;
 
@@ -628,12 +841,13 @@ public class CdiPanel extends JPanel {
 
                 p2.add(new JLabel(key+": "));
                 p2.add(new JLabel(map.getEntry(key)));
-                
+
             }
             p2.setMaximumSize(p2.getPreferredSize());
             return p2;
-        } else 
+        } else {
             return null;
+        }
     }
 
     public class SegmentPane extends JPanel {
@@ -644,8 +858,7 @@ public class CdiPanel extends JPanel {
             p.setAlignmentY(Component.TOP_ALIGNMENT);
             //p.setBorder(BorderFactory.createTitledBorder(name));
 
-            String d = item.getDescription();
-            if (d != null) p.add(createDescriptionPane(d));
+            createDescriptionPane(this, item.getDescription());
 
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
@@ -653,20 +866,203 @@ public class CdiPanel extends JPanel {
         }
     }
 
-    JPanel createDescriptionPane(String d) {
-        if (d == null) return null;
-        JPanel p = new JPanel();
-        p.setLayout(new BorderLayout());
-        p.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JTextArea area = new JTextArea(d);
+    void createDescriptionPane(JPanel parent, String d) {
+        if (d == null) return;
+        if (d.trim().length() == 0) return;
+        JTextArea area = new JTextArea(d) {
+            // Prevents the area from expanding vertically when there is vertical space to acquire.
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
+        };
         area.setAlignmentX(Component.LEFT_ALIGNMENT);
         area.setFont(UIManager.getFont("Label.font"));
         area.setEditable(false);
         area.setOpaque(false);
-        area.setWrapStyleWord(true); 
+        area.setWrapStyleWord(true);
         area.setLineWrap(true);
-        p.add(area);
-        return p;
+        parent.add(area);
+    }
+
+    private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
+        JButton b = new JButton("Copy");
+        b.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                String s = textField.getText();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        textField.selectAll();
+                    }
+                });
+                StringSelection eventToCopy = new StringSelection(s);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(eventToCopy, null);
+            }
+        });
+        linePanel.add(b);
+
+        b = new JButton("Paste");
+        b.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                DataFlavor dataFlavor = DataFlavor.stringFlavor;
+
+                Object text = null;
+                try {
+                    text = systemClipboard.getData(dataFlavor);
+                } catch (UnsupportedFlavorException | IOException e1) {
+                    return;
+                }
+                String pasteValue = (String) text;
+                if (pasteValue != null) {
+                    textField.setText(pasteValue);
+                }
+            }
+        });
+        linePanel.add(b);
+    }
+
+    private class SearchPane extends JPanel {
+        JPanel parent = null;
+        JTextField textField;
+        JTextField outputField;
+        JPopupMenu suggestMenu = null;
+        SearchPane() {
+            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            textField = new JTextField(32);
+            textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, textField.getPreferredSize().height));
+
+            textField.setToolTipText("Enter the description of an event here to help pasting the event ID.");
+            textField.getDocument().addDocumentListener(
+                    new DocumentListener() {
+                        @Override
+                        public void insertUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+
+                        @Override
+                        public void removeUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+
+                        @Override
+                        public void changedUpdate(DocumentEvent documentEvent) {
+                            textUpdated();
+                        }
+                    }
+            );
+            textField.addKeyListener(new KeyListener() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+
+                }
+
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                    if (keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE ){
+                        cancelSearch();
+                    } else if (keyEvent.getKeyCode() == KeyEvent.VK_DOWN) {
+                        if (suggestMenu != null && suggestMenu.isVisible()) {
+                            suggestMenu.setVisible(false);
+                            suggestMenu.setFocusable(true);
+                            suggestMenu.getSelectionModel().setSelectedIndex(0);
+                            suggestMenu.show(textField, 0, textField.getHeight());
+                            // Ugly hack to select the first entry in the menu. The menu needs a bit of time to appear.
+                            javax.swing.Timer t = new javax.swing.Timer(100, new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    try {
+                                        Robot r = new Robot();
+                                        r.keyPress(KeyEvent.VK_DOWN);
+                                        r.keyRelease(KeyEvent.VK_DOWN);
+                                    } catch (AWTException e) {
+                                    }
+                                }
+                            });
+                            t.setRepeats(false);
+                            t.start();
+                            keyEvent.consume();
+                            //suggestMenu.requestFocus();
+                        }
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent keyEvent) {
+
+                }
+            });
+        }
+
+        private void textUpdated() {
+            if (parent == null) return;
+            String searchQuery = textField.getText();
+            System.err.println("Search for: " + searchQuery);
+            boolean fresh = false;
+            if (suggestMenu == null) {
+                suggestMenu = new JPopupMenu();
+                fresh = true;
+            }
+            long startTime = System.nanoTime();
+            List<EventTable.EventTableEntry> results = eventTable.searchForEvent(searchQuery, 8);
+            long timelen = System.nanoTime() - startTime;
+            System.out.println(String.format("Search took %.2f msec", timelen * 1.0 / 1e6));
+            suggestMenu.removeAll();
+            for (EventTable.EventTableEntry result : results) {
+                Action a = new AbstractAction(result.getDescription()) {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        String r = org.openlcb.Utilities.toHexDotsString(result.getEvent()
+                                .getContents());
+                        outputField.setText(r);
+                        cancelSearch();
+                    }
+                };
+                suggestMenu.add(a);
+            }
+            if (results.isEmpty()) {
+                suggestMenu.add("No matches.");
+            }
+            suggestMenu.setFocusable(false);
+            if (!fresh) {
+                suggestMenu.revalidate();
+                suggestMenu.pack();
+                suggestMenu.repaint();
+            }
+            suggestMenu.show(textField, 0, textField.getHeight());
+        }
+
+        private void cancelSearch() {
+            System.err.println("Removing search box");
+            if (suggestMenu != null) {
+                suggestMenu.setVisible(false);
+            }
+            if (parent != null) {
+                parent.remove(textField);
+                parent.revalidate();
+                parent.repaint();
+                parent = null;
+            }
+        }
+
+        void attachParent(JPanel parentPane, JTextField output) {
+            if (parent != null) {
+                cancelSearch();
+            }
+            textField.setText("");
+            parentPane.add(textField);
+            parent = parentPane;
+            outputField = output;
+            parentPane.revalidate();
+            //setVisible(true);
+            textField.requestFocusInWindow();
+            //parentPane.repaint();
+        }
     }
 
     public class GroupPane extends JPanel {
@@ -681,10 +1077,7 @@ public class CdiPanel extends JPanel {
             setBorder(BorderFactory.createTitledBorder(name));
             setName(name);
 
-            String d = item.getDescription();
-            if (d != null) {
-                add(createDescriptionPane(d));
-            }
+            createDescriptionPane(this, item.getDescription());
 
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
@@ -698,6 +1091,7 @@ public class CdiPanel extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
+        PropertyChangeListener entryListener = null;
         boolean dirty = false;
         JPanel p3;
 
@@ -710,16 +1104,21 @@ public class CdiPanel extends JPanel {
             String name = (item.getName() != null ? item.getName() : defaultName);
             setBorder(BorderFactory.createTitledBorder(name));
 
-            String d = item.getDescription();
-            if (d != null) {
-                add(createDescriptionPane(d));
-            }
+            createDescriptionPane(this, item.getDescription());
 
             p3 = new JPanel();
             p3.setAlignmentX(Component.LEFT_ALIGNMENT);
             p3.setLayout(new BoxLayout(p3, BoxLayout.X_AXIS));
             add(p3);
         }
+
+        void release() {
+            if (entryListener != null) {
+                entry.removePropertyChangeListener(entryListener);
+            }
+        }
+
+        protected void additionalButtons() {}
 
         protected void init() {
             p3.add(textComponent);
@@ -755,7 +1154,7 @@ public class CdiPanel extends JPanel {
                     }
                 });
             }
-            entry.addPropertyChangeListener(new PropertyChangeListener() {
+            entryListener = new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
                     if (propertyChangeEvent.getPropertyName().equals(UPDATE_ENTRY_DATA)) {
@@ -769,7 +1168,9 @@ public class CdiPanel extends JPanel {
                         //textComponent.setBackground(COLOR_WRITTEN);
                     }
                 }
-            });
+            };
+            entry.addPropertyChangeListener(entryListener);
+            cleanupTasks.add(()->{entry.removePropertyChangeListener(entryListener);});
             entry.fireUpdate();
 
             JButton b;
@@ -790,7 +1191,9 @@ public class CdiPanel extends JPanel {
                 }
             });
             p3.add(b);
-            // TODO: is this needed?
+
+            additionalButtons();
+
             p3.add(Box.createHorizontalGlue());
         }
 
@@ -832,6 +1235,13 @@ public class CdiPanel extends JPanel {
     public class EventIdPane extends EntryPane {
         private final ConfigRepresentation.EventEntry entry;
         JFormattedTextField textField;
+        JLabel eventNamesLabel = null;
+        EventTable.EventTableEntryHolder eventTableEntryHolder = null;
+        String lastEventText;
+        PropertyChangeListener eventListUpdateListener;
+        // Stores the user names of known parent repeats. key: a group rep key that's a prefix of
+        // the current key. value: the user name coming from the respective string valued field.
+        Map<String, String> parentVisibleKeys = new TreeMap<>(Collections.reverseOrder());
 
         EventIdPane(ConfigRepresentation.EventEntry e) {
             super(e, "EventID");
@@ -840,9 +1250,123 @@ public class CdiPanel extends JPanel {
             textField = factory.handleEventIdTextField(EventIdTextField.getEventIdTextField());
             textComponent = textField;
 
+            if (eventTable != null) {
+                eventNamesLabel = new JLabel();
+                eventNamesLabel.setVisible(false);
+                eventListUpdateListener = new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                        if (propertyChangeEvent.getPropertyName().equals(EventTable
+                                .UPDATED_EVENT_LIST)) {
+                            updateEventDescriptionField((EventTable.EventInfo)
+                                    propertyChangeEvent.getNewValue());
+                        }
+                    }
+                };
+                cleanupTasks.add(() -> {
+                    releaseListener();
+                });
+            }
             init();
+            if (eventTable != null) {
+                add(eventNamesLabel);
+            }
         }
 
+        /**
+         * Updates the UI for the list of other uses of the event.
+         */
+        private void updateEventDescriptionField(EventTable.EventInfo eventInfo) {
+            EventTable.EventTableEntry[] elist = eventInfo.getAllEntries();
+            StringBuilder b = new StringBuilder();
+            b.append("<html><body>");
+            boolean first = true;
+            for (EventTable.EventTableEntry ee: elist) {
+                if (ee.isOwnedBy(eventTableEntryHolder)) continue;
+                if (first) {
+                    b.append("Other uses of this Event ID:<br>");
+                    first = false;
+                } else {
+                    b.append("<br>");
+                }
+                b.append(ee.getDescription());
+            }
+            b.append("</body></html>");
+            if (first)  {
+                eventNamesLabel.setVisible(false);
+            } else {
+                eventNamesLabel.setText(b.toString());
+                eventNamesLabel.setVisible(true);
+            }
+        }
+
+        /**
+         * Updates the exported event name in the event table. This needs to be called when some
+         * user name field in the parent repeated group changes.
+         */
+        void updateOwnEventName() {
+            if (eventTableEntryHolder == null) return;
+            eventTableEntryHolder.getEntry().updateDescription(getEventName());
+        }
+
+        /**
+         * @return the user name of this event.
+         */
+        private String getEventName() {
+            StringBuilder b = new StringBuilder(entry.key);
+            // Adds user names.
+            parentVisibleKeys.forEach((k, v) -> {
+                if (v.trim().length() > 0) {
+                    b.insert(k.length() - 1, "," + v);
+                }
+            });
+            // Clips some common uninteresting patterns.
+            Matcher m = segmentPrefixRe.matcher(b);
+            if (m.find()) {
+                b.delete(m.start(), m.end());
+            }
+            m = entrySuffixRe.matcher(b);
+            if (m.find()) {
+                b.delete(m.start(), m.end());
+            }
+            // Prefix with the node name.
+            if (nodeName.length() > 0) {
+                b.insert(0, nodeName);
+                b.insert(nodeName.length(), ".");
+            }
+            // Now we need to translate from zero-based indexes to 1-based indexes.
+            for (int i = b.length() - 1; i >= 0; --i) {
+                if (b.charAt(i) == '(') {
+                    int j = i+1;
+                    while (j < b.length() && Character.isDigit(b.charAt(j))) {
+                        ++j;
+                    }
+                    if (j > i+1) {
+                        int val = Integer.valueOf(b.substring(i + 1, j));
+                        ++val;
+                        b.replace(i+1,j,Integer.toString(val));
+                    }
+                }
+            }
+            return b.toString();
+        }
+
+        @Override
+        protected void additionalButtons() {
+            final JTextField tf = textField;
+            p3.add(Box.createHorizontalStrut(5));
+            addCopyPasteButtons(p3, textField);
+            p3.add(Box.createHorizontalStrut(5));
+            JButton b = new JButton("Search");
+            b.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    searchPane.attachParent(p3, tf);
+                }
+            });
+            p3.add(b);
+            p3.add(Box.createHorizontalStrut(5));
+        }
 
         @Override
         protected void writeDisplayTextToNode() {
@@ -861,6 +1385,46 @@ public class CdiPanel extends JPanel {
         protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
+        }
+
+        @Override
+        void updateColor() {
+            super.updateColor();
+            if (eventTable == null) return;
+            // Updates the "other uses of event ID" label.
+            String s = textField.getText();
+            if (s.equals(lastEventText)) {
+                return;
+            }
+            lastEventText = s;
+            EventID id;
+            try {
+                 id = new EventID(s);
+            } catch(RuntimeException e) {
+                // Event is not in the right format. Ignore.
+                return;
+            }
+            if (eventTableEntryHolder != null) {
+                if (eventTableEntryHolder.getEntry().getEvent().equals(id)) {
+                    return;
+                }
+                releaseListener();
+            }
+            if (id.equals(nullEvent)) {
+                // Ignore event if it is the null event.
+                eventNamesLabel.setVisible(false);
+                return;
+            }
+            eventTableEntryHolder = eventTable.addEvent(id, getEventName());
+            eventTableEntryHolder.getList().addPropertyChangeListener(eventListUpdateListener);
+            updateEventDescriptionField(eventTableEntryHolder.getList());
+        }
+
+        private void releaseListener() {
+            if (eventTableEntryHolder == null) return;
+            eventTableEntryHolder.getList().removePropertyChangeListener(eventListUpdateListener);
+            eventTableEntryHolder.release();
+            eventTableEntryHolder = null;
         }
     }
 
@@ -968,9 +1532,9 @@ public class CdiPanel extends JPanel {
         }
     }
 
-     /** 
+    /**
       * Provide access to e.g. a MemoryConfig service.
-      * 
+     *
       * Default just writes output for debug
       */
     public static class ReadWriteAccess {
@@ -983,10 +1547,10 @@ public class CdiPanel extends JPanel {
             logger.log(Level.FINE, "Read from {0} in space {1}", new Object[]{address, space});
         }
     }
-     
-    /** 
+
+    /**
      * Handle GUI hook requests if needed
-     * 
+     *
      * Default behavior is to do nothing
      */
     public static class GuiItemFactory {

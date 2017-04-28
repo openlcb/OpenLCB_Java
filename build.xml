@@ -39,6 +39,7 @@
         <pathelement location="lib/mockito-core-2.2.9-javadoc.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/mockito-core-2.2.9.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/hamcrest-core-1.3.jar" /> <!-- only needed for tests compile and run -->
+        <pathelement location="lib/hamcrest-library-1.3.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
@@ -345,6 +346,19 @@
              compress="true" />   <!-- compress="true" is default -->
     </target>
 
+    <target name="testrejar" description="re-create working test jar files without clean">
+        <antcall target="compile" />
+        <jar jarfile="${jartarget}/openlcb.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+        <antcall target="tests" />
+        <jar jarfile="${jartarget}/openlcb-demo.jar" 
+             basedir="${target}"
+             manifest="manifest" 
+             compress="true" />   <!-- compress="true" is default -->
+    </target>
+    
     <target name="travis-ci-tests" > <!-- tests used on travis CI -->
         <antcall target="compile" />
         <antcall target="run-travis" />

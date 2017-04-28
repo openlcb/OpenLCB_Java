@@ -4,7 +4,7 @@
     <groupId>org.openlcb</groupId>
     <artifactId>openlcb</artifactId>
     <packaging>jar</packaging>
-    <version>0.7.11</version>
+    <version>0.7.14</version>
     <name>OpenLCB</name>
     <description>OpenLCB Java Reference Implementation.</description>
     <url>http://openlcb.github.com/OpenLCB_Java</url>
@@ -100,6 +100,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.2.9</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
