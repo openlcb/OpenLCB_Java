@@ -80,6 +80,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         parseRep();
     }
 
+    public @Nullable OlcbInterface getConnection() { return connection; }
+    public @Nullable NodeID getRemoteNodeID() { return remoteNodeID; }
+
     /**
      * Retrieves the CDI from the remote node, and if successful, calls @link parseRep.
      */

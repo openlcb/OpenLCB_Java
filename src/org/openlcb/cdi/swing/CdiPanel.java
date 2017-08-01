@@ -19,8 +19,10 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -100,6 +102,7 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
     private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
     private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
+    private static final Color COLOR_COPIED = new Color(0xffa500); // orange
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -182,6 +185,13 @@ public class CdiPanel extends JPanel {
         bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save changed\" afterwards.");
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
+
+        if (rep.getConnection() != null && rep.getRemoteNodeID() != null) {
+            bb = new JButton("Reboot");
+            bb.setToolTipText("Requests the configured node to restart.");
+            bb.addActionListener(actionEvent -> runReboot());
+            buttonBar.add(bb);
+        }
 
         createSensorCreateHelper();
 
@@ -345,6 +355,10 @@ public class CdiPanel extends JPanel {
             }
         });
         logger.info("Config load done.");
+    }
+
+    public void runReboot() {
+        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
     }
 
     GuiItemFactory factory;
@@ -886,7 +900,8 @@ public class CdiPanel extends JPanel {
     }
 
     private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
-        JButton b = new JButton("Copy");
+        final JButton b = new JButton("Copy");
+        final Color defaultColor = b.getBackground();
         b.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -899,13 +914,21 @@ public class CdiPanel extends JPanel {
                 });
                 StringSelection eventToCopy = new StringSelection(s);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(eventToCopy, null);
+                clipboard.setContents(eventToCopy, new ClipboardOwner() {
+                    @Override
+                    public void lostOwnership(Clipboard clipboard, Transferable transferable) {
+                        b.setBackground(defaultColor);
+                        b.setText("Copy");
+                    }
+                });
+                b.setBackground(COLOR_COPIED);
+                b.setText("Copied");
             }
         });
         linePanel.add(b);
 
-        b = new JButton("Paste");
-        b.addActionListener(new ActionListener() {
+        JButton bb = new JButton("Paste");
+        bb.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -923,7 +946,7 @@ public class CdiPanel extends JPanel {
                 }
             }
         });
-        linePanel.add(b);
+        linePanel.add(bb);
     }
 
     private class SearchPane extends JPanel {
