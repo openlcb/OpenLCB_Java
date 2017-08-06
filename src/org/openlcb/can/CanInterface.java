@@ -54,7 +54,7 @@ public class CanInterface {
             public void run() {
                 initialize();
             }
-        }).start();
+        }, "openlcb-if-initialize").start();
     }
 
     public CanFrameListener frameInput() { return frameInput; }

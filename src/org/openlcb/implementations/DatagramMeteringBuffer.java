@@ -88,7 +88,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     private void datagramComplete() {
         currentMemo = null;
-        new Thread(new Consumer(queue)).start();
+        new Thread(new Consumer(queue), "openlcb-datagram-queue").start();
     }
 
     class ReplyHandler extends AbstractConnection {

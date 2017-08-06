@@ -34,7 +34,7 @@ public class GridConnectInput {
         this.input = input;
         this.listener = listener;
         this.onError = onError;
-        new Thread() {
+        new Thread("openlcb-gc-input") {
             public void run() {
                 threadBody();
             }

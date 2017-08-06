@@ -37,7 +37,7 @@ public class Hub {
     public Hub(int port) {
         this.port = port;
         // create array server thread
-        Thread t = new Thread() {
+        Thread t = new Thread("openlcb-hub-output") {
             public void run() {
                 while (true) {
                     try {

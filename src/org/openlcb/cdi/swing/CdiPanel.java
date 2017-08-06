@@ -438,7 +438,7 @@ public class CdiPanel extends JPanel {
                 rep.visit(new RendererVisitor());
                 EventQueue.invokeLater(() -> displayComplete());
             }
-        }).start();
+        }, "openlcb-cdi-render").start();
     }
 
     private void displayComplete() {
