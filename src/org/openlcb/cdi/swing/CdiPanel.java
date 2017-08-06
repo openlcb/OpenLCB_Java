@@ -526,6 +526,7 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void windowClosing(WindowEvent windowEvent) {
                     release();
+                    runUpdateComplete();
                 }
 
                 @Override
