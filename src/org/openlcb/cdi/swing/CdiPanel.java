@@ -390,10 +390,6 @@ public class CdiPanel extends JPanel {
         logger.info("Config load done.");
     }
 
-    private void showMore() {
-
-    }
-
     private void runReboot() {
         rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
     }
