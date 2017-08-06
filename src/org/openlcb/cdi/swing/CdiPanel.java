@@ -190,7 +190,11 @@ public class CdiPanel extends JPanel {
             bb = new JButton("Reboot");
             bb.setToolTipText("Requests the configured node to restart.");
             bb.addActionListener(actionEvent -> runReboot());
-            buttonBar.add(bb);
+            addButtonToMoreFunctions(bb);
+            bb = new JButton("Update Complete");
+            bb.setToolTipText("Tells the configured node that the you are done with changing the settings and they should be taking effect now. Might restart the node.");
+            bb.addActionListener(actionEvent -> runUpdateComplete());
+            addButtonToMoreFunctions(bb);
         }
 
         createSensorCreateHelper();
@@ -268,7 +272,36 @@ public class CdiPanel extends JPanel {
      * @param c component to add (typically a button)
      */
     public void addButtonToFooter(JComponent c) {
-        buttonBar.add(c);
+        if (c instanceof JButton) {
+            addButtonToMoreFunctions((JButton)c);
+        } else {
+            buttonBar.add(c);
+        }
+    }
+
+    private void addButtonToMoreFunctions(final JButton b) {
+        if (moreButton == null) {
+            moreButton = new JButton("More...");
+            moreButton.setToolTipText("Shows additional operations you can do here.");
+            moreButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    showMoreFunctionsMenu();
+                }
+            });
+            buttonBar.add(moreButton);
+        }
+        Action a = new AbstractAction(b.getText()) {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                b.doClick();
+            }
+        };
+        moreMenu.add(a);
+    }
+
+    private void showMoreFunctionsMenu() {
+        moreMenu.show(moreButton, 0, moreButton.getHeight());
     }
 
     /**
@@ -357,8 +390,16 @@ public class CdiPanel extends JPanel {
         logger.info("Config load done.");
     }
 
-    public void runReboot() {
+    private void showMore() {
+
+    }
+
+    private void runReboot() {
         rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
+    }
+
+    private void runUpdateComplete() {
+        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA8});
     }
 
     GuiItemFactory factory;
@@ -379,6 +420,8 @@ public class CdiPanel extends JPanel {
     JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
+    JPopupMenu moreMenu = new JPopupMenu();
+    JButton moreButton;
     SearchPane searchPane = new SearchPane();
 
     final Timer tabColorTimer = new Timer();
