@@ -122,8 +122,6 @@ public class TreePane extends JPanel  {
             }
         };
         if (connection != null) connection.registerStartNotification(cl);
-        
-
     }
 
     /**

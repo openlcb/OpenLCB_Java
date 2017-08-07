@@ -169,7 +169,14 @@ public class TreePaneTest extends TestCase {
                 );
         store.put(msg, null);
     }
-    
+
+    public void testRefresh() {
+        // fill up with nodes
+        testNodeOrder();
+        assertEquals(5, pane.nodes.getChildCount());
+        store.refresh();
+        assertEquals(0, pane.nodes.getChildCount());
+    }
    
     // from here down is testing infrastructure
     
