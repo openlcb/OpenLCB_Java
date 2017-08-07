@@ -2,16 +2,24 @@
 
 package org.openlcb.swing.networktree;
 
+import com.sun.awt.AWTUtilities;
+
 import org.openlcb.Connection;
 import org.openlcb.MimicNodeStore;
 import org.openlcb.NodeID;
 import org.openlcb.VerifyNodeIDNumberMessage;
 
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -58,17 +66,37 @@ public class TreePane extends JPanel  {
         JScrollPane treeView = new JScrollPane(tree);
         add(treeView);
 
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new FlowLayout());
+
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.setToolTipText("Reloads network view including the status of all nodes.");
+        btnRefresh.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                store.refresh();
+            }
+        });
+        bottomPanel.add(btnRefresh);
+        bottomPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int)bottomPanel.getPreferredSize().getHeight()));
+        add(bottomPanel);
+
         // listen for newly arrived nodes
         store.addPropertyChangeListener(
             new PropertyChangeListener(){
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
-
-                if (e.getPropertyName().equals("AddNode")) {
+                if (e.getPropertyName().equals(MimicNodeStore.ADD_PROP_NODE)) {
                     MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
                     if (!memo.getNodeID().equals(nullNode)) {
                         NodeTreeRep n = new NodeTreeRep(memo, getStore(), getTreeModel(), loader);
                         addNewHardwareNode(n);
                         n.initConnections();
+                    }
+                } else if (e.getPropertyName().equals(MimicNodeStore.CLEAR_ALL_NODES)) {
+                    synchronized (nodes) {
+                        nodes.removeAllChildren();
+                        treeModel.nodeStructureChanged(nodes);
+                        SwingUtilities.invokeLater(()->tree.expandPath(new TreePath(nodes.getPath())));
                     }
                 }
             }
