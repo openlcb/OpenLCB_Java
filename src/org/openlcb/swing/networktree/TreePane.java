@@ -96,7 +96,8 @@ public class TreePane extends JPanel  {
     public void initComponents(MimicNodeStore store, final Connection connection, 
                                 final NodeID node, final NodeTreeRep.SelectionKeyLoader loader) {
         this.store = store;
-        
+
+        setPreferredSize(new Dimension(500, 700));
         nodes = new DefaultMutableTreeNode("OpenLCB Network");
     
         // build GUI
