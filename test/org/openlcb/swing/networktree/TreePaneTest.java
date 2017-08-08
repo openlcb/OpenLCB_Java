@@ -15,8 +15,14 @@ import org.openlcb.ProducerIdentifiedMessage;
 import org.openlcb.ProtocolIdentificationReplyMessage;
 import org.openlcb.SimpleNodeIdentInfoReplyMessage;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 import javax.swing.JFrame;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -82,12 +88,10 @@ public class TreePaneTest extends TestCase {
         frame.pack();
         frame.setMinimumSize(new java.awt.Dimension(200,200));
         frame.setVisible(true);
-        
-        
     }
     
     public void tearDown() {
-        //frame.setVisible(false);
+        frame.setVisible(false);
     }
             
     public void testPriorMessage() {
@@ -123,6 +127,38 @@ public class TreePaneTest extends TestCase {
         assertEquals("00.00.00.00.00.02 - hello - desc", pane.nodes.getChildAt(1).toString());
     }
 
+    private void addNodeWithSnii(NodeID node, String manufacturer, String model, String userName, String userDesc) {
+        List<Byte> dt = new ArrayList<>();
+        dt.add((byte)1);
+        for (Byte b : manufacturer.getBytes()) {
+            dt.add(b);
+        }
+        dt.add((byte)0);
+        for (Byte b : model.getBytes()) {
+            dt.add(b);
+        }
+        dt.add((byte)0);
+        dt.add((byte)0);
+        dt.add((byte)0);
+        dt.add((byte)1);
+        for (Byte b : userName.getBytes()) {
+            dt.add(b);
+        }
+        dt.add((byte)0);
+        for (Byte b : userDesc.getBytes()) {
+            dt.add(b);
+        }
+        dt.add((byte)0);
+
+        store.put(new ProducerIdentifiedMessage(node, eventA, EventState.Unknown), null);
+        store.put(new ProtocolIdentificationReplyMessage(node, nid1, 0xF01800000000L), null);
+
+        byte[] ba = new byte[dt.size()];
+        for (int i = 0; i < dt.size(); ++i) ba[i] = dt.get(i);
+        Message msg = new SimpleNodeIdentInfoReplyMessage(node, nid1, ba);
+        store.put(msg, null);
+    }
+
     public void testNodeOrder() {
         frame.setTitle("test node order");
         store.put(new ProtocolIdentificationReplyMessage(nid2, nid1, 0xF01800000000L), null);
@@ -139,7 +175,110 @@ public class TreePaneTest extends TestCase {
         assertEquals("00.00.00.00.00.04", pane.nodes.getChildAt(3).toString().substring(0, 17));
         assertEquals("00.00.00.00.00.06", pane.nodes.getChildAt(4).toString().substring(0, 17));
     }
-        
+
+    public void testAddNodeWithSnii() {
+        addNodeWithSnii(nid5, "manuf42", "model55", "username92", "userdesc93");
+        MimicNodeStore.NodeMemo memo = store.findNode(nid5);
+        assertNotNull(memo);
+        assertEquals("manuf42", memo.getSimpleNodeIdent().getMfgName());
+        assertEquals("model55", memo.getSimpleNodeIdent().getModelName());
+        assertEquals("username92", memo.getSimpleNodeIdent().getUserName());
+        assertEquals("userdesc93", memo.getSimpleNodeIdent().getUserDesc());
+    }
+
+    public void testSortOrder() {
+        addNodeWithSnii(nid2, "3", "2", "2", "4");
+        addNodeWithSnii(nid5, "1", "4", "3", "2");
+        MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
+        MimicNodeStore.NodeMemo memo2 = store.findNode(nid2);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo2, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo2, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo2, memo5) > 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo2, memo5) > 0);
+    }
+
+    public void testSortOrder2() {
+        addNodeWithSnii(nid4, "xxx", "ppp", "bbb", "ccc");
+        addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
+        MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
+        MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
+    }
+
+    public void testSortOrder3() {
+        addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
+        addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
+        MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
+        MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) > 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) > 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) > 0);
+    }
+
+    public void testSortOrder4() {
+        addNodeWithSnii(nid3, "xxx", "qqq", "bbb", "ccd");
+        addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
+        addNodeWithSnii(nid5, "xxx", "qqq", "bbb", "ccc");
+        MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
+        MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
+        MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo5) < 0);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
+    }
+
+    public void testSort() throws InvocationTargetException, InterruptedException {
+        store.refresh(); // clears nid1.
+        addNodeWithSnii(nid2, "xxx", "qqq", "aaa", "bbb");
+        addNodeWithSnii(nid3, "yyy", "ppp", "ccc", "aaa");
+        addNodeWithSnii(nid4, "xxx", "ppp", "bbb", "ccc");
+
+        assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+
+        pane.setSortOrder(TreePane.SortOrder.BY_NAME);
+        SwingUtilities.invokeAndWait(()->{});
+        assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+
+        pane.setSortOrder(TreePane.SortOrder.BY_DESCRIPTION);
+        SwingUtilities.invokeAndWait(()->{});
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+
+        pane.setSortOrder(TreePane.SortOrder.BY_MODEL);
+        SwingUtilities.invokeAndWait(()->{});
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+
+        addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
+        Thread.sleep(200);
+
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid5.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        assertEquals(nid2.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(3).toString().substring(0, 17));
+    }
+
+    public void testSortFallback() throws InvocationTargetException, InterruptedException {
+        store.refresh(); // clears nid1.
+        store.put(new ProtocolIdentificationReplyMessage(nid4, nid1, 0xF01800000000L), null);
+        store.put(new ProtocolIdentificationReplyMessage(nid3, nid1, 0xF01800000000L), null);
+        pane.setSortOrder(TreePane.SortOrder.BY_MODEL);
+        SwingUtilities.invokeAndWait(()->{});
+
+        assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+    }
+
     public void testWithSelect() {
         frame.setTitle("listener test");
         
