@@ -231,6 +231,22 @@ public class TreePaneTest extends TestCase {
         assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
     }
 
+    public void testSortOrder5() {
+        addNodeWithSnii(nid3, "", "", "", "");
+        addNodeWithSnii(nid4, "", "", "", "");
+        MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
+        MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
+    }
+
+    public void testSortOrder6() {
+        addNodeWithSnii(nid3, "", "", "", "");
+        addNodeWithSnii(nid4, "abcd", "", "", "");
+        MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
+        MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
+        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) > 0);
+    }
+
     public void testSort() throws InvocationTargetException, InterruptedException {
         store.refresh(); // clears nid1.
         addNodeWithSnii(nid2, "xxx", "qqq", "aaa", "bbb");

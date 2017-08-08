@@ -234,17 +234,27 @@ public class TreePane extends JPanel  {
         private String findCompareKey(MimicNodeStore.NodeMemo memo) {
             SimpleNodeIdent ident = memo.getSimpleNodeIdent();
             if (ident == null) return null;
+            String s = null, t = null;
             switch (sortOrder) {
                 case BY_NODE_ID:
                     return null;
                 case BY_NAME:
-                    return ident.getUserName() + "\0" + ident.getUserDesc();
+                    s = ident.getUserName();
+                    t = ident.getUserDesc();
+                    break;
                 case BY_DESCRIPTION:
-                    return ident.getUserDesc() + "\0" + ident.getUserName();
+                    s = ident.getUserDesc();
+                    t = ident.getUserName();
+                    break;
                 case BY_MODEL:
-                    return ident.getMfgName() + "\0" + ident.getModelName();
+                    s = ident.getMfgName();
+                    t = ident.getModelName();
+                    break;
             }
-            return null;
+            if (s == null) s = "";
+            if (t == null) t = "";
+            if (s.isEmpty() && t.isEmpty()) return null;
+            return s + "\0" + t;
         }
 
         public int compare(MimicNodeStore.NodeMemo m1, MimicNodeStore.NodeMemo m2) {
@@ -253,9 +263,9 @@ public class TreePane extends JPanel  {
             if (entry1 == null && entry2 == null) {
                 return m1.getNodeID().toString().compareTo(m2.getNodeID().toString());
             } else if (entry1 == null) {
-                return -1;
-            } else if (entry2 == null) {
                 return 1;
+            } else if (entry2 == null) {
+                return -1;
             } else {
                 int cc = entry1.compareTo(entry2);
                 if (cc != 0) {
