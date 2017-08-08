@@ -86,7 +86,7 @@ public class OlcbInterface {
                     public void run() {
                         queuedOutputConnection.run();
                     }
-                }).start();
+                }, "openlcb-output-queue").start();
             }
         });
     }
