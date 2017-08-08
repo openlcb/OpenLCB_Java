@@ -2,8 +2,6 @@
 
 package org.openlcb.swing.networktree;
 
-import com.sun.awt.AWTUtilities;
-
 import org.openlcb.Connection;
 import org.openlcb.MimicNodeStore;
 import org.openlcb.NodeID;
@@ -12,6 +10,7 @@ import org.openlcb.VerifyNodeIDNumberMessage;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -22,8 +21,12 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
@@ -122,6 +125,22 @@ public class TreePane extends JPanel  {
             }
         });
         bottomPanel.add(btnRefresh);
+
+        JButton btnSetSort = new JButton("Sort by...");
+        btnSetSort.setToolTipText("Changes the sort order of the nodes.");
+        btnSetSort.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JPopupMenu sortMenu = new JPopupMenu();
+                sortMenu.add(createSortMenuEntry("Node ID", SortOrder.BY_NODE_ID));
+                sortMenu.add(createSortMenuEntry("Name", SortOrder.BY_NAME));
+                sortMenu.add(createSortMenuEntry("Description", SortOrder.BY_DESCRIPTION));
+                sortMenu.add(createSortMenuEntry("Mfg/Model", SortOrder.BY_MODEL));
+                sortMenu.show(btnSetSort, 0, btnSetSort.getHeight());
+            }
+        });
+        bottomPanel.add(btnSetSort);
+
         bottomPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int)bottomPanel.getPreferredSize().getHeight()));
         add(bottomPanel);
 
@@ -167,6 +186,18 @@ public class TreePane extends JPanel  {
             }
         };
         if (connection != null) connection.registerStartNotification(cl);
+    }
+
+    private JMenuItem createSortMenuEntry(String text, final SortOrder order) {
+        AbstractAction action = new AbstractAction(text) {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                setSortOrder(order);
+            }
+        };
+        JCheckBoxMenuItem it = new JCheckBoxMenuItem(action);
+        it.setState(order == sortOrder);
+        return it;
     }
 
     /**
