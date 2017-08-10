@@ -3,9 +3,15 @@ package org.openlcb.implementations;
 import junit.framework.TestCase;
 
 import org.openlcb.Connection;
+import org.openlcb.ConsumerIdentifiedMessage;
 import org.openlcb.EventID;
+import org.openlcb.EventState;
+import org.openlcb.IdentifyConsumersMessage;
+import org.openlcb.IdentifyProducersMessage;
+import org.openlcb.LearnEventMessage;
 import org.openlcb.NodeID;
 import org.openlcb.ProducerConsumerEventReportMessage;
+import org.openlcb.ProducerIdentifiedMessage;
 import org.openlcb.VerifyNodeIDNumberMessage;
 
 import static org.mockito.Mockito.mock;
@@ -34,6 +40,12 @@ public class EventDispatcherTest extends org.openlcb.InterfaceTestBase {
     public void setUp() throws Exception {
         super.setUp();
         dispatcher = new EventDispatcher(iface);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        verifyHelper();
+        super.tearDown();
     }
 
     private void verifyHelper() throws Exception {
@@ -89,23 +101,33 @@ public class EventDispatcherTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testHandleLearnEvent() throws Exception {
-
+        registerAll();
+        dispatcher.put(new LearnEventMessage(s, e2), cs);
+        verify(c2).put(new LearnEventMessage(s, e2), cs);
     }
 
     public void testHandleIdentifyConsumers() throws Exception {
-
+        registerAll();
+        dispatcher.put(new IdentifyConsumersMessage(s, e2), cs);
+        verify(c2).put(new IdentifyConsumersMessage(s, e2), cs);
     }
 
     public void testHandleConsumerIdentified() throws Exception {
-
+        registerAll();
+        dispatcher.put(new ConsumerIdentifiedMessage(s, e2, EventState.Invalid), cs);
+        verify(c2).put(new ConsumerIdentifiedMessage(s, e2, EventState.Invalid), cs);
     }
 
     public void testHandleIdentifyProducers() throws Exception {
-
+        registerAll();
+        dispatcher.put(new IdentifyProducersMessage(s, e2), cs);
+        verify(c2).put(new IdentifyProducersMessage(s, e2), cs);
     }
 
     public void testHandleProducerIdentified() throws Exception {
-
+        registerAll();
+        dispatcher.put(new ProducerIdentifiedMessage(s, e2, EventState.Invalid), cs);
+        verify(c2).put(new ProducerIdentifiedMessage(s, e2, EventState.Invalid), cs);
     }
 
 }
