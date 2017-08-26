@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 public class MimicNodeStore extends AbstractConnection {
 
     public static final String ADD_PROP_NODE = "AddNode";
+    public static final String CLEAR_ALL_NODES = "ClearAllNodes";
     private final static Logger logger = Logger.getLogger(MimicNodeStore.class.getName());
 
     public MimicNodeStore(Connection connection, NodeID node) {
@@ -43,7 +44,16 @@ public class MimicNodeStore extends AbstractConnection {
         // check for necessary updates in specific node
         memo.put(msg, sender);
     }
-    
+
+    /**
+     * Resets the node store object by clearing all members, and sending out a new message to the bus to validate all nodes. Will cause a callback for clearing all nodes, then an AddNode for all nodes that actually exist on the network.
+     */
+    public void refresh() {
+        map.clear();
+        pcs.firePropertyChange(CLEAR_ALL_NODES, null, null);
+        connection.put(new VerifyNodeIDNumberMessage(node), this);
+    }
+
     public NodeMemo addNode(NodeID id) {
         NodeMemo memo = map.get(id);
         if (memo == null) {
