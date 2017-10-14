@@ -36,7 +36,7 @@ public class EventDispatcher extends MessageDecoder {
      * Constructor.
      * @param iface registers the dispatcher to this interface.
      */
-    EventDispatcher(OlcbInterface iface) {
+    public EventDispatcher(OlcbInterface iface) {
         this.iface = iface;
         iface.registerMessageListener(this);
     }

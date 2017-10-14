@@ -3,6 +3,7 @@ package org.openlcb;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
+import org.openlcb.implementations.EventDispatcher;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
@@ -35,20 +36,22 @@ public class OlcbInterface {
 
     // These are protocol support libraries for various OpenLCB protocols.
 
-    // Client library for SNIP, PIP etc protocols.
+    /// Client library for SNIP, PIP etc protocols.
     private final MimicNodeStore nodeStore;
-    // Outgoing connection wrapper for datagrams that ensures that we only send one datagram at a
-    // time to one destination node.
+    /// Outgoing connection wrapper for datagrams that ensures that we only send one datagram at a
+    /// time to one destination node.
     private final DatagramMeteringBuffer dmb;
-    // Client (and server) for datagrams.
+    /// Client (and server) for datagrams.
     private final DatagramService dcs;
-    // Client for memory configuration requests.
+    /// Client for memory configuration requests.
     private MemoryConfigurationService mcs;
-    // CDIs for the nodes
+    /// CDIs for the nodes
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
-    // Event Table is a helper for user interfaces to register and retrieve user names for
-    // events. By default this is null, initialized lazily when needed only.
+    /// Event Table is a helper for user interfaces to register and retrieve user names for
+    /// events. By default this is null, initialized lazily when needed only.
     private EventTable eventTable = null;
+    /// Helper class for registering listeners that are interested in individual event messages.
+    private final EventDispatcher eventDispatcher;
     /**
      * Creates the message-level interface.
      *
@@ -72,7 +75,10 @@ public class OlcbInterface {
         inputConnection.registerMessageListener(nodeStore);
         inputConnection.registerMessageListener(dmb.connectionForRepliesFromDownstream());
         inputConnection.registerMessageListener(dcs);
-        new VerifyNodeIdHandler(nodeId, this); // will register itself.
+
+        // These will register itself.
+        new VerifyNodeIdHandler(nodeId, this);
+        eventDispatcher = new EventDispatcher(this);
 
         outputConnection.registerStartNotification(new Connection.ConnectionListener() {
             @Override
