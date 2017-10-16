@@ -96,6 +96,7 @@ public class PackageTest extends TestCase {
         suite.addTest(org.openlcb.messages.PackageTest.suite());
         suite.addTest(org.openlcb.swing.PackageTest.suite());
         suite.addTest(org.openlcb.cdi.PackageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(org.openlcb.hub.PackageTest.class));       
         
         // test CAN classes
         suite.addTest(org.openlcb.can.PackageTest.suite());
