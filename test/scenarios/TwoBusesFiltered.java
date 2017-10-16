@@ -98,7 +98,7 @@ public class TwoBusesFiltered extends TwoBuses {
     // Main entry point
     static public void main(String[] args) {
         String[] testCaseName = {TwoBusesFiltered.class.getName()};
-        junit.swingui.TestRunner.main(testCaseName);
+        junit.textui.TestRunner.main(testCaseName);
     }
 
     // test suite from all defined tests
