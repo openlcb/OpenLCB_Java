@@ -34,7 +34,7 @@
   
     <path id="project.class.path">
         <pathelement location="." />
-        <pathelement location="lib/junit.jar" />
+        <pathelement location="lib/junit-4.12.jar" />
         <pathelement location="lib/xercesImpl.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/mockito-core-2.2.9-javadoc.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/mockito-core-2.2.9.jar" /> <!-- only needed for tests compile and run -->
@@ -134,6 +134,7 @@
                debug="yes" >
             <!-- <compilerarg value="-Xlint:{fallthrough,path,finally,-unchecked,-serial} "/> -->
             <!-- <compilerarg value="-Xlint:unchecked" /> -->
+            <compilerarg value="-Xmaxerrs"/><compilerarg value="1000"/><!-- change from default 100 errors -->
             <classpath refid="project.class.path"    />
         </javac>
     </target>
@@ -153,6 +154,7 @@
                memorymaximumsize="256m"
                deprecation="${deprecation}"
                debug="yes" >
+            <compilerarg value="-Xmaxerrs"/><compilerarg value="1000"/><!-- change from default 100 errors -->
             <classpath refid="project.class.path"    />
         </javac>
     </target>

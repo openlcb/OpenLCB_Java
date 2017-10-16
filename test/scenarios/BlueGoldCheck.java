@@ -112,7 +112,7 @@ public class BlueGoldCheck /* extends TestCase */ {
     // Main entry point
     static public void main(String[] args) throws Exception {
         String[] testCaseName = {BlueGoldCheck.class.getName()};
-        //junit.swingui.TestRunner.main(testCaseName);
+        //junit.textui.TestRunner.main(testCaseName);
         
         runTest();
     }

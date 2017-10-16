@@ -3,6 +3,7 @@ package org.openlcb.implementations.throttle;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
@@ -21,7 +22,7 @@ public class PackageTest extends TestCase {
     // Main entry point
     static public void main(String[] args) {
         String[] testCaseName = {PackageTest.class.getName()};
-        junit.swingui.TestRunner.main(testCaseName);
+        junit.textui.TestRunner.main(testCaseName);
     }
 
     // test suite from all defined tests
@@ -35,6 +36,7 @@ public class PackageTest extends TestCase {
         suite.addTest(RemoteTrainNodeCacheTest.suite());
 
         suite.addTest(org.openlcb.implementations.throttle.dcc.PackageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(ThrottleFunctionDatagramTest.class));       
 
         return suite;
     }
