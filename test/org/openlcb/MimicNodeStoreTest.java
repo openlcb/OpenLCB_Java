@@ -5,6 +5,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import java.beans.PropertyChangeEvent;
 import java.util.Collection;
 import java.beans.PropertyChangeListener;
 
@@ -201,8 +202,40 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertTrue(lastMessage == null);
         
     }
-    
-    
+
+    public void testRefresh() {
+        store.put(pim1,null);
+        store.put(pim2,null);
+        assertNotNull(store.findNode(nid1));
+        assertNotNull(store.findNode(nid2));
+
+        // Adds a dummy listener to test callbacks.
+        class MyListener implements PropertyChangeListener {
+            public PropertyChangeEvent lastEvent;
+
+            @Override
+            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                lastEvent = propertyChangeEvent;
+            }
+        };
+        MyListener l = new MyListener();
+        store.addPropertyChangeListener(l);
+        store.refresh();
+
+        // There is a side effect of a callback to clear everything.
+        assertNotNull(l.lastEvent);
+        assertEquals(MimicNodeStore.CLEAR_ALL_NODES,l.lastEvent.getPropertyName());
+
+        // And a verify node ID message going out.
+        assertNotNull(lastMessage);
+        assertTrue(lastMessage instanceof VerifyNodeIDNumberMessage);
+
+        // As well as the node tree being clear now.
+        assertEquals(0, store.getNodeMemos().size());
+        assertNull(store.findNode(nid1));
+        assertNull(store.findNode(nid2));
+    }
+
     // from here down is testing infrastructure
     
     public MimicNodeStoreTest(String s) {

@@ -49,7 +49,7 @@ public class OlcbConnection {
     }
 
     public void startConnect() {
-        new Thread() {
+        new Thread("openlcb-connect") {
             public void run() {
                 connect();
             }

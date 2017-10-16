@@ -19,8 +19,10 @@ import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -100,6 +102,7 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
     private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
     private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
+    private static final Color COLOR_COPIED = new Color(0xffa500); // orange
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -183,6 +186,17 @@ public class CdiPanel extends JPanel {
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
+        if (rep.getConnection() != null && rep.getRemoteNodeID() != null) {
+            bb = new JButton("Reboot");
+            bb.setToolTipText("Requests the configured node to restart.");
+            bb.addActionListener(actionEvent -> runReboot());
+            addButtonToMoreFunctions(bb);
+            bb = new JButton("Update Complete");
+            bb.setToolTipText("Tells the configured node that the you are done with changing the settings and they should be taking effect now. Might restart the node.");
+            bb.addActionListener(actionEvent -> runUpdateComplete());
+            addButtonToMoreFunctions(bb);
+        }
+
         createSensorCreateHelper();
 
         add(buttonBar);
@@ -258,7 +272,36 @@ public class CdiPanel extends JPanel {
      * @param c component to add (typically a button)
      */
     public void addButtonToFooter(JComponent c) {
-        buttonBar.add(c);
+        if (c instanceof JButton) {
+            addButtonToMoreFunctions((JButton)c);
+        } else {
+            buttonBar.add(c);
+        }
+    }
+
+    private void addButtonToMoreFunctions(final JButton b) {
+        if (moreButton == null) {
+            moreButton = new JButton("More...");
+            moreButton.setToolTipText("Shows additional operations you can do here.");
+            moreButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    showMoreFunctionsMenu();
+                }
+            });
+            buttonBar.add(moreButton);
+        }
+        Action a = new AbstractAction(b.getText()) {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                b.doClick();
+            }
+        };
+        moreMenu.add(a);
+    }
+
+    private void showMoreFunctionsMenu() {
+        moreMenu.show(moreButton, 0, moreButton.getHeight());
     }
 
     /**
@@ -347,6 +390,14 @@ public class CdiPanel extends JPanel {
         logger.info("Config load done.");
     }
 
+    private void runReboot() {
+        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
+    }
+
+    private void runUpdateComplete() {
+        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA8});
+    }
+
     GuiItemFactory factory;
     JPanel loadingPanel;
     JLabel loadingText;
@@ -365,6 +416,8 @@ public class CdiPanel extends JPanel {
     JScrollPane scrollPane;
     JPanel contentPanel;
     JPanel buttonBar;
+    JPopupMenu moreMenu = new JPopupMenu();
+    JButton moreButton;
     SearchPane searchPane = new SearchPane();
 
     final Timer tabColorTimer = new Timer();
@@ -438,7 +491,7 @@ public class CdiPanel extends JPanel {
                 rep.visit(new RendererVisitor());
                 EventQueue.invokeLater(() -> displayComplete());
             }
-        }).start();
+        }, "openlcb-cdi-render").start();
     }
 
     private void displayComplete() {
@@ -469,6 +522,7 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void windowClosing(WindowEvent windowEvent) {
                     release();
+                    runUpdateComplete();
                 }
 
                 @Override
@@ -886,7 +940,8 @@ public class CdiPanel extends JPanel {
     }
 
     private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
-        JButton b = new JButton("Copy");
+        final JButton b = new JButton("Copy");
+        final Color defaultColor = b.getBackground();
         b.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -899,13 +954,21 @@ public class CdiPanel extends JPanel {
                 });
                 StringSelection eventToCopy = new StringSelection(s);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(eventToCopy, null);
+                clipboard.setContents(eventToCopy, new ClipboardOwner() {
+                    @Override
+                    public void lostOwnership(Clipboard clipboard, Transferable transferable) {
+                        b.setBackground(defaultColor);
+                        b.setText("Copy");
+                    }
+                });
+                b.setBackground(COLOR_COPIED);
+                b.setText("Copied");
             }
         });
         linePanel.add(b);
 
-        b = new JButton("Paste");
-        b.addActionListener(new ActionListener() {
+        JButton bb = new JButton("Paste");
+        bb.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -923,7 +986,7 @@ public class CdiPanel extends JPanel {
                 }
             }
         });
-        linePanel.add(b);
+        linePanel.add(bb);
     }
 
     private class SearchPane extends JPanel {
