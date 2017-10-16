@@ -80,8 +80,7 @@ public class PackageTest extends TestCase {
         suite.addTest(MimicNodeStoreTest.suite());
         
         suite.addTest(LoaderClientTest.suite());
-        suite.addTest(new JUnit4TestAdapter(CommonidentifiersTest.class));       
-
+        suite.addTest(new JUnit4TestAdapter(CommonIdentifiersTest.class));       
         suite.addTest(new JUnit4TestAdapter(DatagramAcknowledgedMessageTest.class));       
         suite.addTest(new JUnit4TestAdapter(DatagramRejectedMessageTest.class));       
         suite.addTest(new JUnit4TestAdapter(DefaultPropertyListenerSupportTest.class));       
