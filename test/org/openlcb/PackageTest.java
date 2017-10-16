@@ -4,10 +4,10 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009, 2012
- * @version $Revision$
  */
 public class PackageTest extends TestCase {
     public void testStart() {
@@ -22,7 +22,7 @@ public class PackageTest extends TestCase {
     // Main entry point
     static public void main(String[] args) {
         String[] testCaseName = {PackageTest.class.getName()};
-        junit.swingui.TestRunner.main(testCaseName);
+        junit.textui.TestRunner.main(testCaseName);
     }
 
     // test suite from all defined tests
@@ -80,7 +80,17 @@ public class PackageTest extends TestCase {
         suite.addTest(MimicNodeStoreTest.suite());
         
         suite.addTest(LoaderClientTest.suite());
-        
+        suite.addTest(new JUnit4TestAdapter(CommonidentifiersTest.class));       
+
+        suite.addTest(new JUnit4TestAdapter(DatagramAcknowledgedMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(DatagramRejectedMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(DefaultPropertyListenerSupportTest.class));       
+        suite.addTest(new JUnit4TestAdapter(OlcbInterfaceTest.class));       
+        suite.addTest(new JUnit4TestAdapter(StreamDataCompleteMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(StreamDataProceedMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(StreamDataSendMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(StreamInitiateReplyMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(StreamInitiateRequestMessageTest.class));       
 
         // test implementation classes
         suite.addTest(org.openlcb.implementations.PackageTest.suite());
