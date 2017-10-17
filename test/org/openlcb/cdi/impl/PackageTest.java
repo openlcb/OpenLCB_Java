@@ -3,6 +3,7 @@ package org.openlcb.cdi.impl;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 import org.openlcb.cdi.jdom.CdiMemConfigReaderTest;
 import org.openlcb.cdi.jdom.JdomCdiRepTest;
@@ -34,6 +35,7 @@ public class PackageTest extends TestCase {
         
         suite.addTest(RangeCacheUtilTest.suite());
         suite.addTest(ConfigRepresentationTest.suite());
+        suite.addTest(new JUnit4TestAdapter(MemorySpaceCacheTest.class));       
 
         return suite;
     }
