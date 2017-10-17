@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009, 2012
@@ -52,6 +53,8 @@ public class PackageTest extends TestCase {
         suite.addTest(org.openlcb.implementations.throttle.PackageTest.suite());
         suite.addTest(new TestSuite(BitProducerConsumerTest.class));
         suite.addTest(new TestSuite(VersionedValueTest.class));
+        suite.addTest(new JUnit4TestAdapter(FakeMemoryConfigurationServiceTest.class));       
+        suite.addTest(new JUnit4TestAdapter(MemoryConfigSpaceRetrieverTest.class));       
 
         return suite;
     }
