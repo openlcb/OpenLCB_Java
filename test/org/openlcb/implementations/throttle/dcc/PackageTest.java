@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
@@ -30,6 +31,7 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
 
         suite.addTest(DccProxyCacheTest.suite());
+        suite.addTest(new JUnit4TestAdapter(RemoteDccProxyTest.class));       
 
         return suite;
     }

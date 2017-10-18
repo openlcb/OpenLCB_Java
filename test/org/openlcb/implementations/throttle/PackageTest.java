@@ -37,6 +37,8 @@ public class PackageTest extends TestCase {
 
         suite.addTest(org.openlcb.implementations.throttle.dcc.PackageTest.suite());
         suite.addTest(new JUnit4TestAdapter(ThrottleFunctionDatagramTest.class));       
+        suite.addTest(new JUnit4TestAdapter(TractionThrottleTest.class));       
+        suite.addTest(new JUnit4TestAdapter(TrainNodeCacheTest.class));       
 
         return suite;
     }

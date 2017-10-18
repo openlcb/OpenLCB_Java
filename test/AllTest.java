@@ -3,6 +3,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
@@ -30,6 +31,7 @@ public class AllTest extends TestCase {
         suite.addTest(tools.ToolsTest.suite());
         suite.addTest(org.openlcb.PackageTest.suite());
         suite.addTest(scenarios.PackageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(org.openlcb.protocols.PackageTest.class));       
         return suite;
     }
 }
