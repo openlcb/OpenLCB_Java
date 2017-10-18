@@ -3,19 +3,7 @@ package org.openlcb.messages;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.openlcb.implementations.BlueGoldEngineTest;
-import org.openlcb.implementations.DatagramMeteringBufferTest;
-import org.openlcb.implementations.DatagramReceiverTest;
-import org.openlcb.implementations.DatagramServiceTest;
-import org.openlcb.implementations.DatagramTransmitterTest;
-import org.openlcb.implementations.EventFilterGatewayTest;
-import org.openlcb.implementations.MemoryConfigurationServiceTest;
-import org.openlcb.implementations.ScatterGatherTest;
-import org.openlcb.implementations.SingleConsumerNodeTest;
-import org.openlcb.implementations.SingleProducerNodeTest;
-import org.openlcb.implementations.StreamReceiverTest;
-import org.openlcb.implementations.StreamTransmitterTest;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009, 2012
@@ -42,6 +30,9 @@ public class PackageTest extends TestCase {
         TestSuite suite = new TestSuite(PackageTest.class);
 
         suite.addTest(TractionControlRequestMessageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(TractionControlReplyMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(TractionProxyRequestMessageTest.class));       
+        suite.addTest(new JUnit4TestAdapter(TractionProxyReplyMessageTest.class));       
 
         return suite;
     }
