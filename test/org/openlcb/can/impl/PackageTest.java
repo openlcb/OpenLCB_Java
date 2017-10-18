@@ -8,6 +8,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
    GridConnectInputTest.class,
    GridConnectOutputTest.class,
+   OlcbConnectionTest.class
 })
 /**
  * Tests for the org.openlcb.can.impl package

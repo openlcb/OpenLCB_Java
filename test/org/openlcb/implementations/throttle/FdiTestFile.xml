@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type='text/xsl' href='xslt/fdi.xsl'?> 
+<fdi xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:noNamespaceSchemaLocation=' http://openlcb.org/trunk/prototypes/xml/schema/fdi.xsd'> 
+<segment space='249'>
+<group>
+<name/> 
+<function size='1' kind='binary'> 
+<name>Light</name> 
+<number>0</number> 
+</function> 
+<function size='1' kind='binary'>
+<name>Coupler</name> 
+<number>1</number>
+</function>
+<function size='1' kind='momentary'>
+<name>Horn</name>
+<number>2</number> 
+</function> 
+<function size='1' kind='binary'> 
+<name>Shunt</name> 
+<number>3</number> 
+</function> 
+<function size='1' kind='binary'> 
+<name>Mom off</name> 
+<number>4</number> 
+</function> 
+<function size='1' kind='binary'> 
+<name>F6</name> 
+<number>6</number>
+</function> 
+</group>
+</segment>
+</fdi>
