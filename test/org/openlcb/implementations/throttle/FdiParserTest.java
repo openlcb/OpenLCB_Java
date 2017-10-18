@@ -10,6 +10,8 @@ import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.openlcb.*;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  *
@@ -48,6 +50,14 @@ public class FdiParserTest {
         fa.setAttribute("kind","analog");
         group.addContent(fa);
         e.addContent(group);
+        FdiParser t = new FdiParser(e);
+        Assert.assertNotNull("exists",t);
+    }
+
+    @Test
+    public void testReadFromFile() throws Exception {
+        FileReader r = new FileReader("test/org/openlcb/implementations/throttle/FdiTestFile.xml");
+        Element e = org.openlcb.cdi.jdom.XmlHelper.parseXmlFromReader(r);
         FdiParser t = new FdiParser(e);
         Assert.assertNotNull("exists",t);
     }
