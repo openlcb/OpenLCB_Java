@@ -58,6 +58,7 @@ public class PackageTest extends TestCase {
         suite.addTest(new JUnit4TestAdapter(SingleConsumerTest.class));       
         suite.addTest(new JUnit4TestAdapter(SingleProducerTest.class));       
         suite.addTest(new JUnit4TestAdapter(VersionOutOfDateExceptionTest.class));       
+        suite.addTest(new JUnit4TestAdapter(BlueGoldExtendedEngineTest.class));       
 
         return suite;
     }
