@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2011
@@ -33,6 +34,7 @@ public class PackageTest extends TestCase {
         suite.addTest(org.openlcb.cdi.jdom.PackageTest.suite());
         suite.addTest(org.openlcb.cdi.swing.CdiPanelTest.suite());
         suite.addTest(org.openlcb.cdi.impl.PackageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(org.openlcb.cdi.cmd.PackageTest.class));       
 
         return suite;
     }

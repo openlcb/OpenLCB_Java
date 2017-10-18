@@ -55,6 +55,9 @@ public class PackageTest extends TestCase {
         suite.addTest(new TestSuite(VersionedValueTest.class));
         suite.addTest(new JUnit4TestAdapter(FakeMemoryConfigurationServiceTest.class));       
         suite.addTest(new JUnit4TestAdapter(MemoryConfigSpaceRetrieverTest.class));       
+        suite.addTest(new JUnit4TestAdapter(SingleConsumerTest.class));       
+        suite.addTest(new JUnit4TestAdapter(SingleProducerTest.class));       
+        suite.addTest(new JUnit4TestAdapter(VersionOutOfDateExceptionTest.class));       
 
         return suite;
     }

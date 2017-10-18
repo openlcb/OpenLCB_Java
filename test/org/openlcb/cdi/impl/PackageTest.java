@@ -36,6 +36,7 @@ public class PackageTest extends TestCase {
         suite.addTest(RangeCacheUtilTest.suite());
         suite.addTest(ConfigRepresentationTest.suite());
         suite.addTest(new JUnit4TestAdapter(MemorySpaceCacheTest.class));       
+        suite.addTest(new JUnit4TestAdapter(DemoReadWriteAccessTest.class));       
 
         return suite;
     }

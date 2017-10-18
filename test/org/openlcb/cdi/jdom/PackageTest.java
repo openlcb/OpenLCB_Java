@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2011
@@ -32,6 +33,8 @@ public class PackageTest extends TestCase {
         
         suite.addTest(JdomCdiRepTest.suite());
         suite.addTest(CdiMemConfigReaderTest.suite());
+        suite.addTest(new JUnit4TestAdapter(JdomCdiReaderTest.class));       
+        suite.addTest(new JUnit4TestAdapter(XmlHelperTest.class));       
 
         return suite;
     }
