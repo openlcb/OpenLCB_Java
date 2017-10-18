@@ -36,14 +36,14 @@ public class FdiParserTest {
         Element ft = new Element("function");
         Element ftn = new Element("name");
         ftn.addContent("F2");
-        ft.addContent(fmn);
+        ft.addContent(ftn);
         ft.setAttribute("size","1");
         ft.setAttribute("kind","toggle");
         group.addContent(ft);
         Element fa = new Element("function");
         Element fan = new Element("name");
         fan.addContent("F3");
-        fa.addContent(fmn);
+        fa.addContent(fan);
         fa.setAttribute("size","1");
         fa.setAttribute("kind","analog");
         group.addContent(fa);
