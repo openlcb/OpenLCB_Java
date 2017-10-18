@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 import javax.swing.*;
 
@@ -34,6 +35,7 @@ public class PackageTest extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(PackageTest.class);
         suite.addTest(TreePaneTest.suite());
+        suite.addTest(new JUnit4TestAdapter(NodeTreeRepTest.class));       
 
         return suite;
     }
