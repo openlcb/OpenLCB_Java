@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 import javax.swing.*;
 
@@ -39,6 +40,9 @@ public class PackageTest extends TestCase {
 
         suite.addTest(org.openlcb.swing.networktree.PackageTest.suite());
         suite.addTest(org.openlcb.swing.memconfig.PackageTest.suite());
+        suite.addTest(new JUnit4TestAdapter(ConsumerPaneTest.class));       
+        suite.addTest(new JUnit4TestAdapter(ProducerPaneTest.class));       
+        suite.addTest(new JUnit4TestAdapter(NodeIdTextFieldTest.class));       
 
         return suite;
     }

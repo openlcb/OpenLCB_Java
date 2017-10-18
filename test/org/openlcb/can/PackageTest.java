@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import junit.framework.JUnit4TestAdapter;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
@@ -35,6 +36,8 @@ public class PackageTest extends TestCase {
         suite.addTest(NIDaAlgorithmTest.suite());
         suite.addTest(AliasMapTest.suite());
         suite.addTest(new TestSuite(GridConnectTest.class));
+        suite.addTest(new JUnit4TestAdapter(CanInterfaceTest.class));       
+        suite.addTest(new JUnit4TestAdapter(org.openlcb.can.impl.PackageTest.class));       
 
         return suite;
     }
