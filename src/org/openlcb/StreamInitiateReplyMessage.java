@@ -31,8 +31,8 @@ public class StreamInitiateReplyMessage extends AddressedPayloadMessage {
     public byte getSourceStreamID() { return sourceStreamID; } //dph 20151229
 
     static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
-        byte[] b = new byte[]{0, 0, sourceStreamID, destStreamID};
-        Utilities.HostToNetworkUint16(b, 0, bufferSize);
+        byte[] b = new byte[]{0, 0, 0, 0, sourceStreamID, destStreamID};
+        Utilities.HostToNetworkUint16(b, 2, bufferSize);
         return b;
     }
 
