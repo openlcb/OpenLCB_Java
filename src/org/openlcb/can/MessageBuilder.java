@@ -270,11 +270,11 @@ public class MessageBuilder {
                 return retlist;
          // dph: add all stream messages reply and proceed.
             case StreamInitiateRequest:
-                retlist.add(new StreamInitiateRequestMessage(source,dest,content[2]<<8+content[3],content[4],
+                retlist.add(new StreamInitiateRequestMessage(source,dest,Utilities.NetworkToHostUint16(content, 0),content[4],
                         (content.length > 5 ? content[5] : -1)));
                 return retlist;
             case StreamInitiateReply:
-                retlist.add(new StreamInitiateReplyMessage(source,dest,content[2]<<8+content[3],content[4], content[5]));
+                retlist.add(new StreamInitiateReplyMessage(source,dest,Utilities.NetworkToHostUint16(content, 0),content[4], content[5]));
                 return retlist;
             // case StreamData is Format 7
             case StreamDataProceed:
@@ -373,7 +373,10 @@ public class MessageBuilder {
     List<Message> processFormat7(CanFrame f) {
         // stream data
         NodeID source = map.getNodeID(getSourceID(f));
-        int bufSize = 64; // need to define this  !!!!!!!!!!!!!!!!!!!!!!!!!!
+        // @todo need to define this  !!!!!!!!!!!!!!!!!!!!!!!!!!
+        int bufSize = 64;
+        int destID = f.getElement(0);
+        // @todo support more than one stream per destination, use destID as key.
         List<Integer> list = streamData.get(source);
         if (list == null) {
             list = new ArrayList<Integer>();
@@ -381,22 +384,24 @@ public class MessageBuilder {
         int n = Math.min(bufSize, f.getNumDataElements());
         if(n < bufSize) {
             // won't fill buffer, so add all
-            for (int i = 0; i < f.getNumDataElements(); i++) list.add(f.getElement(i));
+            for (int i = 1; i < f.getNumDataElements(); i++) list.add(f.getElement(i));
             return null;
         } else {
             // got a full buffer, fill it and send it on
-            for (int i = 0; i < n; i++) list.add(f.getElement(i));
+            for (int i = 1; i < n; i++) list.add(f.getElement(i));
             int[] data = new int[list.size()];
             for(int i=0; i<bufSize; i++) data[i] = list.get(i);
             List<Message> retlist = new java.util.ArrayList<Message>();
             NodeID dest = map.getNodeID( (f.getHeader() & 0x00FFF000) >> 12);
             //retlist.add(new DatagramMessage(source, dest, data));
-            retlist.add(new StreamDataSendMessage(source, dest, data));
+            retlist.add(new StreamDataSendMessage(source, dest, (byte)destID, data));
             // make a new List and fill it with the rest of received data
             list = new ArrayList<Integer>();
             for (int i=n; i<f.getNumDataElements(); i++) list.add(f.getElement(i));
             return retlist;
         }
+        // @todo the list variable needs to be saved into the streamData map, otherwise we lose
+        // the accumulated bytes.
     }
         
 
@@ -606,22 +611,19 @@ public class MessageBuilder {
         public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
             // dph
             // must loop over data to send 8 byte chunks
-            // do we need to check the destinationStreamID????????????????????
             int remains = msg.getData().length;
             int j = 0;
             // always sends at least one stream message, even with zero bytes  ???????
             do {
-                int size = Math.min(8, remains);
-                byte[] data = new byte[size];
+                int size = Math.min(7, remains);
+                byte[] data = new byte[size+1];
+                data[0] = msg.getDestinationStreamID();
                 for (int i = 0; i<size; i++) {
-                    data[i] = (byte)msg.getData()[j++];
+                    data[i+1] = (byte)msg.getData()[j++];
                 }
                 
-                OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-                f.setOpenLcbMTI(MessageTypeIdentifier.StreamDataSend.mti());
-                f.setData(data);
-                f.setDestAlias(map.getAlias(msg.getDestNodeID()));
-                f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                OpenLcbCanFrame f = new OpenLcbCanFrame(map.getAlias(msg.getSourceNodeID()));
+                f.setStream(data, map.getAlias(msg.getDestNodeID()));
                 retlist.add(f);
                 
                 remains = remains - size;

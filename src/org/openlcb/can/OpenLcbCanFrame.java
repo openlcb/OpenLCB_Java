@@ -393,7 +393,7 @@ public class OpenLcbCanFrame implements CanFrame {
      * @param content      datagram payload (up to 8 bytes, one byte per entry)
      * @param destAlias    alias of the destination node
      * @param first        true if this is the first of the payload
-     * @param last         true if this is the last of the payload
+     * @param last         true if this is the lastl of the payload
      */
   void setDatagram(int[] content, int destAlias, boolean first, boolean last) {
     init(nodeAlias);
@@ -412,6 +412,13 @@ public class OpenLcbCanFrame implements CanFrame {
     for (int i = 0; i< content.length; i++) {
         data[i] = (byte)(content[i]&0xFF);
     }
+  }
+
+  void setStream(byte[] content, int destAlias) {
+      init(nodeAlias);
+      setVariableField((FRAME_FORMAT_STREAM_CODE << 12) | destAlias);
+      length = content.length;
+      System.arraycopy(content, 0, data, 0, content.length);
   }
 
     public boolean equals(Object other) {

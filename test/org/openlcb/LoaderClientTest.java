@@ -264,18 +264,18 @@ public class LoaderClientTest extends TestCase {
         dcs.put(m, null);
     // Stream Setup
         Assert.assertEquals("StreamSetup", 1, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamInitiateRequestMessage(hereID,farID,64,(byte)4,(byte)0))); // Stream negn
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamInitiateRequestMessage(hereID,farID,16384,(byte)4,(byte)0))); // Stream negn
         messagesReceived.clear();
         // *********** note small buffersize! **********
         xmt.put(new StreamInitiateReplyMessage(hereID,farID,6,(byte)4,(byte)6), null);
     // Stream Data
         Assert.assertEquals("stream data", 1, messagesReceived.size());
                                         //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'a','b','c','d','e','f'})));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,(byte)6,new int[]{'a','b','c','d','e','f'})));
         messagesReceived.clear();
         xmt.put(new StreamDataProceedMessage(farID,hereID,(byte)4,(byte)6),null);
         Assert.assertEquals("second stream data, stream complete, unfreeze", 3, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'g','h','i','j'})));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,(byte)6,new int[]{'g','h','i','j'})));
         Assert.assertTrue(messagesReceived.get(1).equals(new StreamDataCompleteMessage(hereID,farID,(byte)4,(byte)6)));
     // Unfreeze
         Assert.assertTrue(messagesReceived.get(2).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45}))); // Unfreeze
@@ -315,13 +315,13 @@ public class LoaderClientTest extends TestCase {
         Message m = new DatagramAcknowledgedMessage(farID,hereID);
         dcs.put(m, null);
         // Stream Setup
-        Assert.assertEquals(new StreamInitiateRequestMessage(hereID, farID, 64, (byte)4, (byte)0), messagesReceived.get(0));
+        Assert.assertEquals(new StreamInitiateRequestMessage(hereID, farID, 16384, (byte)4, (byte)0), messagesReceived.get(0));
         messagesReceived.clear();
         // *********** note larger buffersize! **********
         xmt.put(new StreamInitiateReplyMessage(hereID,farID,64,(byte)4,(byte)6), null);
         // Stream Data
         Assert.assertEquals("stream data", 3, messagesReceived.size());
-        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,new int[]{'a','b','c','d','e','f','g','h','i','j'})));
+        Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,(byte)6,new int[]{'a','b','c','d','e','f','g','h','i','j'})));
         // StreamComplete
         Assert.assertTrue(messagesReceived.get(1).equals(new StreamDataCompleteMessage(hereID,farID,(byte)4,(byte)6)));
         // Unfreeze

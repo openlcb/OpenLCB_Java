@@ -32,7 +32,7 @@ public class StreamInitiateReplyMessage extends AddressedPayloadMessage {
 
     static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
         byte[] b = new byte[]{0, 0, 0, 0, sourceStreamID, destStreamID};
-        Utilities.HostToNetworkUint16(b, 2, bufferSize);
+        Utilities.HostToNetworkUint16(b, 0, bufferSize);
         return b;
     }
 

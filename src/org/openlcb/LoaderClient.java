@@ -205,7 +205,7 @@ public class LoaderClient extends MessageDecoder {
 // ============================= STREAMS ==============================================
     void setupStream() {
                                       // System.out.println("lSetup Stream ");
-        bufferSize = 64;
+        bufferSize = 16384;
         state = State.STREAM;
         
         mcs.request(new McsWriteStreamMemo(dest, space, address, 4) {
@@ -253,7 +253,7 @@ public class LoaderClient extends MessageDecoder {
         // copy the needed data
         for (int i=0; i<size; i++) data[i] = content[nextIndex+i];
                                          // System.out.println("\nsendStreamNext: "+data);
-        Message m = new StreamDataSendMessage(src, dest, data);
+        Message m = new StreamDataSendMessage(src, dest, destStreamID, data);
         connection.put(m, this);
         // are we done?
         nextIndex = nextIndex+size;
