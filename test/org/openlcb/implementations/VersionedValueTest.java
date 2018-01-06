@@ -15,12 +15,20 @@ public class VersionedValueTest extends TestCase {
     public void testDefaultAndSet() throws Exception {
         assertEquals("default value", Integer.valueOf(42), v.getLatestData());
         assertEquals(v.DEFAULT_VERSION, v.getVersion());
+        assertTrue(v.isVersionAtDefault());
+        assertEquals(42, (int)v.getLatestData());
 
         v.set(13);
         assertEquals("set value", Integer.valueOf(13), v.getLatestData());
         assert(v.DEFAULT_VERSION < v.getVersion());
-    }
+        assertFalse(v.isVersionAtDefault());
+        assertEquals(13, (int)v.getLatestData());
 
+        v.setVersionToDefault();
+        assert(v.DEFAULT_VERSION < v.getVersion());
+        assertTrue(v.isVersionAtDefault());
+        assertEquals(13, (int)v.getLatestData());
+    }
 
     public void testSetWithForceNotify() throws Exception {
         v.set(33); // gets rid of the default value condition
@@ -82,6 +90,33 @@ public class VersionedValueTest extends TestCase {
         verify(l1.stub).update(33);
         verify(l2.stub).update(33);
         verifyNoMoreInteractions(l2.stub);
+        verifyNoMoreInteractions(l1.stub);
+        reset(l1.stub, l2.stub);
+
+        // skips duplicate notification
+        l1.setFromOwner(33);
+        verifyNoMoreInteractions(l2.stub);
+        verifyNoMoreInteractions(l1.stub);
+        reset(l1.stub, l2.stub);
+
+        // After reset to default we will get an update notification.
+        v.setVersionToDefault();
+        l1.setFromOwner(33);
+        verify(l2.stub).update(33);
+        verifyNoMoreInteractions(l1.stub);
+        reset(l1.stub, l2.stub);
+
+        // After reset to default we will get both update notifications.
+        v.setVersionToDefault();
+        v.set(33);
+        verify(l1.stub).update(33);
+        verify(l2.stub).update(33);
+        reset(l1.stub, l2.stub);
+
+        // After reset to default we will get an update notification.
+        v.setVersionToDefault();
+        l1.setFromOwner(42);
+        verify(l2.stub).update(42);
         verifyNoMoreInteractions(l1.stub);
         reset(l1.stub, l2.stub);
     }
