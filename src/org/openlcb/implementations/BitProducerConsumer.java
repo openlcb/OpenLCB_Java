@@ -84,6 +84,21 @@ public class BitProducerConsumer extends MessageDecoder {
     }
 
     /**
+     * Resets the producer/consumer to its default state. This will not change the actual state (also not trigger listeners), but will start reporting unknown state to the network, and enables sending a new query message to the network using @link sendQuery(), assuming the flags are set up for that.
+     */
+    public void resetToDefault() {
+        value.setVersionToDefault();
+    }
+
+    /**
+     * Sends out query messages to the bus. Useful to be called after resetToDefault().
+     */
+    public void sendQuery() {
+        sendMessage(new IdentifyProducersMessage(iface.getNodeId(), eventOn));
+        sendMessage(new IdentifyConsumersMessage(iface.getNodeId(), eventOn));
+    }
+
+    /**
      * Sends out an event message
      * @param <T>    the message type to send.
      * @param msg    event message to send
@@ -98,7 +113,7 @@ public class BitProducerConsumer extends MessageDecoder {
      * default value passed in.
      */
     public boolean isValueAtDefault() {
-        return (value.getVersion() == value.DEFAULT_VERSION);
+        return (value.isVersionAtDefault());
     }
 
     private EventState getOnEventState() {
@@ -135,8 +150,7 @@ public class BitProducerConsumer extends MessageDecoder {
                     getOffEventState()));
         }
         if (queryState) {
-            sendMessage(new IdentifyProducersMessage(iface.getNodeId(), eventOn));
-            sendMessage(new IdentifyConsumersMessage(iface.getNodeId(), eventOn));
+            sendQuery();
         }
     }
 
