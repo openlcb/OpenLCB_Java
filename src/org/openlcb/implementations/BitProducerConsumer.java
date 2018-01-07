@@ -27,6 +27,7 @@ public class BitProducerConsumer extends MessageDecoder {
     private final int flags;
 
     public final static EventID nullEvent = new EventID(new byte[]{0, 0, 0, 0, 0, 0, 0, 0});
+    //private final static Logger log = Logger.getLogger(VersionedValue.class.getCanonicalName());
 
     /// Flag bit to set default value. (set: true; clear: false).
     public final static int DEFAULT_TRUE = 1;

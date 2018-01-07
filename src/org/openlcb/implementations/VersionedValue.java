@@ -1,5 +1,7 @@
 package org.openlcb.implementations;
 
+import java.util.logging.Logger;
+
 /**
  * Created by bracz on 12/30/15.
  */
@@ -10,6 +12,7 @@ public class VersionedValue<T> {
     java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
     static int DEFAULT_VERSION = 1;
     private int defaultVersion = DEFAULT_VERSION;
+    private final static Logger log = Logger.getLogger(VersionedValue.class.getCanonicalName());
 
     public VersionedValue(T t) {
         version = DEFAULT_VERSION;
