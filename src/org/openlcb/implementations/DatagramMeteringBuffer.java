@@ -55,6 +55,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     
     BlockingQueue<MessageMemo> queue = new LinkedBlockingQueue<MessageMemo>();
     int pendingEntries = 0;
+    int threadPending = 0;
 
     public void setTimeout(int timeoutMillis) {
         this.timeoutMillis = timeoutMillis;
@@ -64,6 +65,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         while(true) {
             synchronized (this) {
                 if (pendingEntries == 0) return;
+                if (threadPending == 0) return;
             }
             try {
                 Thread.sleep(10);
@@ -88,6 +90,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     private void datagramComplete() {
         currentMemo = null;
+        synchronized (this) {
+            threadPending++;
+        }
         new Thread(new Consumer(queue), "openlcb-datagram-queue").start();
     }
 
@@ -214,7 +219,12 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 synchronized (DatagramMeteringBuffer.this) {
                     pendingEntries--;
                 }
-            } catch (InterruptedException ex) {}
+            } catch (InterruptedException ex) {
+            } finally {
+                synchronized (DatagramMeteringBuffer.this) {
+                    threadPending--;
+                }
+            }
             // and exits. Another has to be started with this item is done.
         }
         void consume(MessageMemo x) { x.sendIt(); }
