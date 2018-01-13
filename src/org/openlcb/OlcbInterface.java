@@ -170,6 +170,13 @@ public class OlcbInterface {
         inputConnection.unRegisterMessageListener(c);
     }
 
+    /**
+     * @return how many listeners are currently registered using registerMessageListener.
+     */
+    public int numMessageListeners() {
+        return inputConnection.numListeners();
+    }
+
     class MessageDispatcher extends AbstractConnection {
         // This is not the ideal container for add/remove, but keeping the ordering of
         // registrations is useful in ensuring that the system components receive the messages
@@ -184,6 +191,10 @@ public class OlcbInterface {
 
         public synchronized void unRegisterMessageListener(Connection c) {
             unpendingListeners.add(c);
+        }
+
+        public synchronized int numListeners() {
+            return listeners.size() + pendingListeners.size() - unpendingListeners.size();
         }
 
         @Override
