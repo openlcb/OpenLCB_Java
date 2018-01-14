@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -192,6 +193,20 @@ public class MemoryConfigurationService {
 
     public void setTimeoutMillis(long t) {
         timeoutMillis = t;
+    }
+
+    /**
+     * Waits to ensure that all pending timer tasks are complete. Used for testing.
+     */
+    public void waitForTimer() throws InterruptedException {
+        final Semaphore s = new Semaphore(0);
+        retryTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                s.release();
+            }
+        }, 1);
+        s.acquire();
     }
 
     private abstract static class McsRequestMemo {
