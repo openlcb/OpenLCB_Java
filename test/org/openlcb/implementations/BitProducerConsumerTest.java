@@ -474,6 +474,93 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
 
     }
 
+    public void testSendQuery() {
+        createWithDefaults();
+
+        pc.sendQuery();
+        expectFrame(":X19914333N0504030201000708;");
+        expectFrame(":X198F4333N0504030201000708;");
+        expectNoFrames();
+    }
+
+    public void testResetToDefault() {
+        createWithDefaults();
+        MockVersionedValueListener<Boolean> listener = new MockVersionedValueListener<>(pc
+                .getValue());
+
+        // baseline: at default.
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C7333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C7333N0504030201000708;");
+
+        verifyNoMoreInteractions(listener.stub);
+
+        // Sets to off. Callback comes.
+        sendFrame(":X195B4444N0504030201000709;");
+
+        verify(listener.stub).update(false);
+        verifyNoMoreInteractions(listener.stub);
+        reset(listener.stub);
+        // queries return definite state
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C4333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C5333N0504030201000708;");
+        // fun starts here
+        pc.resetToDefault();
+        // queries return unknown
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C7333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C7333N0504030201000708;");
+
+        verifyNoMoreInteractions(listener.stub);
+        reset(listener.stub);
+
+        // Sets to off with a PCER
+        sendFrame(":X195B4444N0504030201000709;");
+        // queries return definite state
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C4333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C5333N0504030201000708;");
+
+        verify(listener.stub).update(false);
+        verifyNoMoreInteractions(listener.stub);
+        reset(listener.stub);
+
+        pc.resetToDefault();
+        // queries return unknown
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C7333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C7333N0504030201000708;");
+        // Sets to off with a consumer identified. This usually happens when sendQuery() is
+        // invoked and the layout responds. We will get a callback too.
+        sendFrame(":X19545333N0504030201000708;");
+        verify(listener.stub).update(false);
+        verifyNoMoreInteractions(listener.stub);
+        reset(listener.stub);
+        // queries return definite state
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000709;",
+                ":X194C4333N0504030201000709;");
+        sendFrameAndExpectResult( //
+                ":X198F4444N0504030201000708;",
+                ":X194C5333N0504030201000708;");
+    }
+
         @Override
     protected void tearDown() throws Exception {
         expectNoFrames();
