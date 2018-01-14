@@ -379,17 +379,23 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                     0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
 
-            // datagram reply comes back
+            // This datagram reply will be misinterpreted to the 0x12345679 datagram, and a
+            // response will be waited for, but will never come.
             sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
             consumeMessages();
 
-            // datagram reply comes back
+            // Instead, that second datagram is rejected with retry-immediately error.
             sendMessage(new DatagramRejectedMessage(farID, hereID, 0x2020));
             consumeMessages();
 
+            // We need to make sure that the datagram metering buffer will not timeout when we
+            // wait for the retry timer of the memory config service to have expired.
+            iface.getDatagramMeteringBuffer().setTimeout(700);
+
             System.err.println("Expect 'unexpected response datagram' here -->");
             // now return data for first DG
-            // Response datagram comes and gets acked.
+            // Response datagram comes and gets acked, but internally it does not match the
+            // expectation on what address should be being read.
             sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
                             0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
                     new DatagramAcknowledgedMessage(hereID, farID));
@@ -399,18 +405,17 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
             delay(50);
             iface.getMemoryConfigurationService().waitForTimer();
-            // retry should be out now.
+            // retry of the second request should be out now.
             expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                     0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
-            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
-            consumeMessages();
             // datagram reply comes back
             sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
             consumeMessages();
+            // and here is the actual payload being sent back by the remote node.
             sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
                             0x20, 0x51, 0x12, 0x34, 0x56, 0x79, 0xaa}),
                     new DatagramAcknowledgedMessage(hereID, farID));
-            // the now returned data will never get appropriately assigned.
+            // the now returned data will indeed get appropriately assigned.
             verify(hnd2).handleReadData(farID, space, address+1, new byte[]{(byte) 0xaa});
             verifyNoMoreInteractions(hnd2);
         }
