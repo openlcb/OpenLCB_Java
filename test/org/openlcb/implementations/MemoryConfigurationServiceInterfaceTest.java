@@ -300,7 +300,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
-    public void testReadWithTimeout() {
+    public void testReadWithTimeout() throws InterruptedException {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
@@ -317,6 +317,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
             System.err.println("Expect 'Never received reply' here -->");
             delay(50);
+            iface.getDatagramMeteringBuffer().waitForSendCallbacks();
             System.err.println("<--");
 
             verify(hnd).handleFailure(0x100);
@@ -345,7 +346,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     }
 
-    public void testReadWithTimeoutInterleaved() {
+    public void testReadWithTimeoutInterleaved() throws InterruptedException {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
@@ -365,6 +366,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
             System.err.println("Expect 'Never received reply' here -->");
             delay(50);
+            iface.getDatagramMeteringBuffer().waitForSendCallbacks();
             System.err.println("<--");
 
             verify(hnd).handleFailure(0x100);
@@ -396,6 +398,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             expectNoMessages();
 
             delay(50);
+            iface.getMemoryConfigurationService().waitForTimer();
             // retry should be out now.
             expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                     0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));

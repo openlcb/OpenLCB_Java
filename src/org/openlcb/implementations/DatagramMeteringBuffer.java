@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openlcb.*;
@@ -42,6 +43,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
+    final Timer timer = new Timer("OpenLCB-datagram-timer");
     int timeoutMillis = TIMEOUT;
 
     /**
@@ -61,15 +63,52 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         this.timeoutMillis = timeoutMillis;
     }
 
+    /**
+     * Waits until all pending entries are sent or we are blocked on sending multiple requests to
+     * the same target node.
+     */
     public void waitForSendQueue() {
         while(true) {
             synchronized (this) {
-                if (pendingEntries == 0) return;
-                if (threadPending == 0) return;
+                if (pendingEntries == 0 || threadPending == 0) {
+                    break;
+                }
             }
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {}
+        }
+        waitForTimer();
+    }
+
+    /**
+     * Waits until all pending entries are sent and their callbacks are executed.
+     */
+    public void waitForSendCallbacks() throws InterruptedException {
+        while(true) {
+            synchronized (this) {
+                if (pendingEntries == 0 && threadPending == 1) {
+                    break;
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {}
+        }
+        waitForTimer();
+    }
+
+    private void waitForTimer() {
+        final Semaphore s = new Semaphore(0);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                s.release();
+            }
+        }, 1);
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
         }
     }
 
@@ -113,7 +152,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         DatagramMessage message;
         Connection toDownstream;
         Connection toUpstream;
-        
+        TimerTask timerTask;
+
         MessageMemo(DatagramMessage msg, Connection toUpstream, Connection toDownstream) {
             message = msg;
             this.toUpstream = toUpstream;
@@ -130,18 +170,16 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             toDownstream.put(message, fromDownstream);
         }
         
-        Timer timer;
         void startTimeout() {
-            timer = new Timer();
-            TimerTask task = new TimerTask(){
+            timerTask = new TimerTask(){
                 public void run(){
                     timerExpired();
                 }
             };
-            timer.schedule(task, timeoutMillis);
+            timer.schedule(timerTask, timeoutMillis);
         }
         void endTimeout() {
-            if (timer != null) timer.cancel();
+            if (timerTask != null) timerTask.cancel();
             else logger.log(Level.INFO, "Found timer null for datagram {0}", message != null ? message : " == null");
         }
         void timerExpired() {
