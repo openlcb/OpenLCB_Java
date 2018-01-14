@@ -368,6 +368,8 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectFrame(":X194C7333N0504030201000708;");
         expectFrame(":X194C7333N0504030201000709;");
 
+        expectFrame(":X19914333N0504030201000709;");
+        expectFrame(":X198F4333N0504030201000709;");
         expectFrame(":X19914333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
 
@@ -407,6 +409,8 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectFrame(":X194C7333N0504030201000708;");
         expectFrame(":X194C7333N0504030201000709;");
 
+        expectFrame(":X19914333N0504030201000709;");
+        expectFrame(":X198F4333N0504030201000709;");
         expectFrame(":X19914333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
 
@@ -419,7 +423,7 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
     }
 
     public void testConsumerOnlyListenAlways() throws Exception {
-        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED | BitProducerConsumer.LISTEN_INVALID_STATE);
 
         expectFrame(":X194C7333N0504030201000708;");
         expectFrame(":X194C7333N0504030201000709;");
@@ -434,8 +438,26 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
                 ":X19544333N0504030201000709;");
     }
 
+    public void testListenNoInvalid() throws Exception {
+        pc = new BitProducerConsumer(iface, onEvent, offEvent, BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+
+        expectFrame(":X194C7333N0504030201000708;");
+        expectFrame(":X194C7333N0504030201000709;");
+
+        expectNoFrames();
+        helperNotProducing();
+
+        helperInputSetClear(":X195B4333N0504030201000708;",
+                ":X195B4333N0504030201000709;");
+        helperInputSetClear(":X19544333N0504030201000708;",
+                ":X19544333N0504030201000709;");
+        helperInputNoChange(":X194C5333N0504030201000709;",
+                ":X194C5333N0504030201000708;");
+    }
+
     public void testOneEventNull() throws Exception {
-        pc = new BitProducerConsumer(iface, onEvent, pc.nullEvent, BitProducerConsumer.IS_PRODUCER | BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED);
+        pc = new BitProducerConsumer(iface, onEvent, pc.nullEvent, BitProducerConsumer.IS_PRODUCER | BitProducerConsumer.IS_CONSUMER | BitProducerConsumer.LISTEN_EVENT_IDENTIFIED |
+                BitProducerConsumer.LISTEN_INVALID_STATE);
 
         expectFrame(":X19547333N0504030201000708;");
         expectFrame(":X194C7333N0504030201000708;");
@@ -478,6 +500,8 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         createWithDefaults();
 
         pc.sendQuery();
+        expectFrame(":X19914333N0504030201000709;");
+        expectFrame(":X198F4333N0504030201000709;");
         expectFrame(":X19914333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
         expectNoFrames();
@@ -574,6 +598,8 @@ public class BitProducerConsumerTest extends org.openlcb.InterfaceTestBase {
         expectFrame(":X194C7333N0504030201000708;", times(1));
         expectFrame(":X194C7333N0504030201000709;");
 
+        expectFrame(":X19914333N0504030201000709;");
+        expectFrame(":X198F4333N0504030201000709;");
         expectFrame(":X19914333N0504030201000708;");
         expectFrame(":X198F4333N0504030201000708;");
         expectNoFrames();
