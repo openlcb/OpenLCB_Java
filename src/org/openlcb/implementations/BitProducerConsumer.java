@@ -42,9 +42,11 @@ public class BitProducerConsumer extends MessageDecoder {
     public final static int LISTEN_EVENT_IDENTIFIED = 16;
     /// Flag bit to always send UNKNOWN response for event identified messages.
     public final static int SEND_UNKNOWN_EVENT_IDENTIFIED = 32;
+    /// Flag bit to interpret INVALID response for event identified messages.
+    public final static int LISTEN_INVALID_STATE = 64;
 
     public final static int DEFAULT_FLAGS = IS_PRODUCER | IS_CONSUMER | QUERY_AT_STARTUP |
-            LISTEN_EVENT_IDENTIFIED;
+            LISTEN_EVENT_IDENTIFIED | LISTEN_INVALID_STATE;
 
     public BitProducerConsumer(OlcbInterface iface, EventID eventOn, EventID eventOff) {
         this(iface, eventOn, eventOff, DEFAULT_FLAGS);
@@ -95,6 +97,8 @@ public class BitProducerConsumer extends MessageDecoder {
      * Sends out query messages to the bus. Useful to be called after resetToDefault().
      */
     public void sendQuery() {
+        sendMessage(new IdentifyProducersMessage(iface.getNodeId(), eventOff));
+        sendMessage(new IdentifyConsumersMessage(iface.getNodeId(), eventOff));
         sendMessage(new IdentifyProducersMessage(iface.getNodeId(), eventOn));
         sendMessage(new IdentifyConsumersMessage(iface.getNodeId(), eventOn));
     }
@@ -200,7 +204,8 @@ public class BitProducerConsumer extends MessageDecoder {
         }
         if (msg.getEventState().equals(EventState.Valid)) {
             setValueFromNetwork(isOn);
-        } else if (msg.getEventState().equals(EventState.Invalid)) {
+        } else if (msg.getEventState().equals(EventState.Invalid) && ((flags &
+                LISTEN_INVALID_STATE) != 0)) {
             setValueFromNetwork(!isOn);
         }
     }
@@ -218,7 +223,8 @@ public class BitProducerConsumer extends MessageDecoder {
         }
         if (msg.getEventState().equals(EventState.Valid)) {
             setValueFromNetwork(isOn);
-        } else if (msg.getEventState().equals(EventState.Invalid)) {
+        } else if (msg.getEventState().equals(EventState.Invalid) && ((flags &
+                LISTEN_INVALID_STATE) != 0)) {
             setValueFromNetwork(!isOn);
         }
     }
