@@ -16,8 +16,6 @@ import org.openlcb.implementations.MemoryConfigurationService.McsWriteStreamMemo
 //
 //
 
-//#include "LoaderClient.hpp"
-
 public class LoaderClient extends MessageDecoder {
     private static final Logger logger = Logger.getLogger(LoaderClient.class.getName());
 
@@ -127,7 +125,7 @@ public class LoaderClient extends MessageDecoder {
                 }
             });
     }
-    Timer timer = new Timer();
+    Timer timer = new Timer("OpenLCB LoaderClient Timeout Timer");
     TimerTask task = null;
     void startTimeout(int period) {
         task = new TimerTask(){

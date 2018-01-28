@@ -185,7 +185,7 @@ public class MemoryConfigurationService {
     
     NodeID here;
     DatagramService downstream;
-    Timer retryTimer = new Timer();
+    Timer retryTimer = new Timer("OpenLCB Memory Configuration Service Retry Timer");
 
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);

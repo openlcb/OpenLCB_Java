@@ -420,7 +420,7 @@ public class CdiPanel extends JPanel {
     JButton moreButton;
     SearchPane searchPane = new SearchPane();
 
-    final Timer tabColorTimer = new Timer();
+    final Timer tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
     long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
     long lastColorRefreshDone = Long.MAX_VALUE; // guarded by tabColorTimer
 
