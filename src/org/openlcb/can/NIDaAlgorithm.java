@@ -41,7 +41,7 @@ public class NIDaAlgorithm implements CanFrameListener {
     public NIDaAlgorithm(NodeID n, CanFrameListener sendInterface) {
         this(n);
         this.sendInterface = sendInterface;
-        timer = new Timer();
+        timer = new Timer("OpenLCB NIDaAlgorithm Timer");
     }
 
     public void start(Runnable done) {

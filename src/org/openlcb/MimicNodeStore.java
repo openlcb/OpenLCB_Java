@@ -33,7 +33,7 @@ public class MimicNodeStore extends AbstractConnection {
     
     Connection connection;
     NodeID node;
-    Timer timer = new Timer();
+    Timer timer = new Timer("OpenLCB Mimic Node Store Timer");
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
