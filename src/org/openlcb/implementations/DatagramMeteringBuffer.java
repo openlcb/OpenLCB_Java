@@ -38,12 +38,13 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         datagramComplete();
         
         fromDownstream = new ReplyHandler();
+        timer = new Timer("OpenLCB-datagram-timer");
     }
     
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
-    final Timer timer = new Timer("OpenLCB-datagram-timer");
+    private Timer timer = null;
     int timeoutMillis = TIMEOUT;
     private Thread queueThread = null;
 
@@ -173,6 +174,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
         
         void startTimeout() {
+            if(timer==null) {
+               return;
+            }
             timerTask = new TimerTask(){
                 public void run(){
                     timerExpired();
@@ -180,10 +184,15 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             };
             timer.schedule(timerTask, timeoutMillis);
         }
+
         void endTimeout() {
+            if(timer==null) {
+               return;
+            }
             if (timerTask != null) timerTask.cancel();
             else logger.log(Level.INFO, "Found timer null for datagram {0}", message != null ? message : " == null");
         }
+
         void timerExpired() {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
@@ -271,7 +280,16 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     }
    
     public void terminateThreads(){
-         timer.cancel();
-         queueThread.interrupt();
+         if(queueThread!=null) {
+            queueThread.interrupt();
+            queueThread=null;
+         }
+         try {
+            timer.cancel();
+         } catch(java.lang.IllegalStateException ise){
+            // no action.  The timer is probably already stopped.
+         } finally {
+           timer=null;
+         }
     } 
 }
