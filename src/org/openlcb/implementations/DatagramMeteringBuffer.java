@@ -45,6 +45,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     MessageMemo currentMemo;
     final Timer timer = new Timer("OpenLCB-datagram-timer");
     int timeoutMillis = TIMEOUT;
+    private Thread queueThread = null;
 
     /**
      * This is where e.g. replies from the OpenLCB
@@ -132,7 +133,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         synchronized (this) {
             threadPending++;
         }
-        new Thread(new Consumer(queue), "openlcb-datagram-queue").start();
+        queueThread = new Thread(new Consumer(queue), "openlcb-datagram-queue");
+        queueThread.start();
     }
 
     class ReplyHandler extends AbstractConnection {
@@ -267,5 +269,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         }
         void consume(MessageMemo x) { x.sendIt(); }
     }
-    
+   
+    public void terminateThreads(){
+         timer.cancel();
+         queueThread.interrupt();
+    } 
 }
