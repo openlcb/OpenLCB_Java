@@ -209,6 +209,9 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram2));        
     }
 
+    public void tearDown() {
+        buffer.dispose(); 
+    }
     
     // from here down is testing infrastructure
     

@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -49,6 +51,15 @@ public class OlcbInterface {
     // Event Table is a helper for user interfaces to register and retrieve user names for
     // events. By default this is null, initialized lazily when needed only.
     private EventTable eventTable = null;
+
+
+    private ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 1;
+    final static int maxThreads = 10;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+
+
     /**
      * Creates the message-level interface.
      *
@@ -58,6 +69,9 @@ public class OlcbInterface {
      *                          network. Usually this is an internal object of the CanInterface.
      */
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
+        if(threadPool == null){
+           threadPool = new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+        }
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
         this.wrappedOutputConnection = new OutputConnectionSniffer(internalOutputConnection);
@@ -81,13 +95,13 @@ public class OlcbInterface {
                 outputConnection.put(m, getInputConnection());
                 // Starts the output queue once we have the confirmation from the lower level that
                 // the connection is ready and we have enqueued the initialization complete message.
-                new Thread(new Runnable() {
+                threadPool.execute(new Runnable() {
                     @Override
                     public void run() {
                         queuedOutputConnection.run();
                     }
-                }, "openlcb-output-queue").start();
-            }
+                });
+           }
         });
     }
 
@@ -246,6 +260,18 @@ public class OlcbInterface {
             realOutput.registerStartNotification(c);
         }
     }
+
+    /**
+     * cleanup local resources
+     */
+    public void dispose(){
+        // shut down the thread pool
+        if(threadPool != null) {
+           threadPool.shutdownNow();
+        }
+        threadPool = null;
+        dmb.dispose();
+    }    
 
     /**
      * This class keeps an output connection operating using an internal queue. It keeps

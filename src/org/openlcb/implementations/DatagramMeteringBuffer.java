@@ -5,6 +5,8 @@ import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openlcb.*;
@@ -32,8 +34,18 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     //final static int TIMEOUT = 700;
     final static int TIMEOUT = 3000;
     private final static Logger logger = Logger.getLogger(DatagramMeteringBuffer.class.getName());
+    private ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 10;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
     
     public DatagramMeteringBuffer(Connection toDownstream) {
+        if(threadPool == null){
+           threadPool = new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+        }
+        if(timer == null){
+           timer = new Timer("OpenLCB-datagram-timer");
+        }
         this.toDownstream = toDownstream;
         datagramComplete();
         
@@ -43,7 +55,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
-    final Timer timer = new Timer("OpenLCB-datagram-timer");
+    static Timer timer = null;
     int timeoutMillis = TIMEOUT;
 
     /**
@@ -132,7 +144,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         synchronized (this) {
             threadPending++;
         }
-        new Thread(new Consumer(queue), "openlcb-datagram-queue").start();
+        threadPool.execute(new Consumer(queue));
     }
 
     class ReplyHandler extends AbstractConnection {
@@ -246,7 +258,22 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             }
         }
     }
-    
+
+    /**
+     * cleanup local resources
+     */
+    public void dispose(){
+        // shut down the thread pool
+        if(threadPool != null) {
+           threadPool.shutdownNow();
+        }
+        threadPool = null;
+        // and cancel the timer
+        timer.cancel();
+        timer = null;
+    }    
+
+
     class Consumer implements Runnable {
         private final BlockingQueue<MessageMemo> queue;
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
@@ -266,6 +293,5 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             // and exits. Another has to be started with this item is done.
         }
         void consume(MessageMemo x) { x.sendIt(); }
-    }
-    
+    }    
 }

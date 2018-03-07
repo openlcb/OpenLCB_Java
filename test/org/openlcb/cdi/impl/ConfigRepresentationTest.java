@@ -83,6 +83,12 @@ public class ConfigRepresentationTest extends TestCase {
         mcs = new FakeMemoryConfigurationService(iface);
     }
 
+    @Override
+    protected void tearDown() throws Exception {
+        iface.dispose();
+        super.tearDown();
+    }
+
     // test suite from all defined tests
     public static Test suite() {
         TestSuite suite = new TestSuite(ConfigRepresentationTest.class);

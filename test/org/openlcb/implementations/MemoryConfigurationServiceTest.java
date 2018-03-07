@@ -21,7 +21,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
     MemoryConfigurationService service;
     
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
         testConnection = new AbstractConnection(){

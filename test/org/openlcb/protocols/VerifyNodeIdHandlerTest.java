@@ -24,6 +24,7 @@ public class VerifyNodeIdHandlerTest {
         OlcbInterface oi = new OlcbInterface(nodeID,testConnection);
         VerifyNodeIdHandler t = new VerifyNodeIdHandler(nodeID,oi);
         Assert.assertNotNull("exists",t);
+        oi.dispose();
     }
 
     // The minimal setup for log4J

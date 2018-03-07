@@ -24,6 +24,7 @@ public class MemorySpaceCacheTest {
         OlcbInterface oi = new OlcbInterface(nodeID,testConnection);
         MemorySpaceCache t = new MemorySpaceCache(oi,nodeID,42);
         Assert.assertNotNull("exists",t);
+        oi.dispose();
     }
 
     // The minimal setup for log4J
