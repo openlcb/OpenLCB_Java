@@ -39,13 +39,17 @@ public class OlcbInterface {
 
     // Client library for SNIP, PIP etc protocols.
     private final MimicNodeStore nodeStore;
+
     // Outgoing connection wrapper for datagrams that ensures that we only send one datagram at a
     // time to one destination node.
     private final DatagramMeteringBuffer dmb;
+
     // Client (and server) for datagrams.
     private final DatagramService dcs;
+
     // Client for memory configuration requests.
     private MemoryConfigurationService mcs;
+
     // CDIs for the nodes
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
     // Event Table is a helper for user interfaces to register and retrieve user names for
