@@ -66,10 +66,6 @@ public class DatagramMeteringBufferTest extends TestCase {
         replyNAKresend = new DatagramRejectedMessage(farID, hereID, 0x210);
     }
 
-    public void tearDown(){
-       buffer.terminateThreads();
-    }
-    
     public void testSend() {
         buffer.put(datagram1, replyConnection1);
 
