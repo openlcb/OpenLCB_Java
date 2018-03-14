@@ -196,10 +196,6 @@ public class OlcbInterface {
         return inputConnection.numListeners();
     }
 
-    public void terminateThreads(){
-         dmb.terminateThreads();
-    } 
-
     class MessageDispatcher extends AbstractConnection {
         // This is not the ideal container for add/remove, but keeping the ordering of
         // registrations is useful in ensuring that the system components receive the messages
