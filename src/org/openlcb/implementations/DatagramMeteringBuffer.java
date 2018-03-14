@@ -196,6 +196,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             if (timerTask != null) timerTask.cancel();
             else logger.log(Level.INFO, "Found timer null for datagram {0}", message != null ? message : " == null");
         }
+
         void timerExpired() {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
