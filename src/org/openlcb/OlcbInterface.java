@@ -53,9 +53,9 @@ public class OlcbInterface {
     private EventTable eventTable = null;
 
 
-    private ThreadPoolExecutor threadPool = null;
-    final static int minThreads = 1;
-    final static int maxThreads = 10;
+    private static ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 100;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
 
@@ -71,6 +71,7 @@ public class OlcbInterface {
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
         if(threadPool == null){
            threadPool = new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
+           threadPool.allowCoreThreadTimeOut(true);
         }
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
@@ -80,7 +81,7 @@ public class OlcbInterface {
         inputConnection = new MessageDispatcher();
 
         nodeStore = new MimicNodeStore(getOutputConnection(), nodeId);
-        dmb = new DatagramMeteringBuffer(getOutputConnection());
+        dmb = new DatagramMeteringBuffer(getOutputConnection(),threadPool);
         dcs = new DatagramService(nodeId, dmb);
         mcs = new MemoryConfigurationService(nodeId, dcs);
         inputConnection.registerMessageListener(nodeStore);
@@ -271,6 +272,8 @@ public class OlcbInterface {
         }
         threadPool = null;
         dmb.dispose();
+        mcs.dispose();
+        nodeStore.dispose();
     }    
 
     /**
@@ -317,7 +320,7 @@ public class OlcbInterface {
          * Never returns.
          */
         private void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     QEntry m = outputQueue.take();
                     try {

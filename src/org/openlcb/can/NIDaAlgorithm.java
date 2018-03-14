@@ -127,4 +127,9 @@ public class NIDaAlgorithm implements CanFrameListener {
     public void send(CanFrame frame) {
         processFrame(new OpenLcbCanFrame(frame));
     }
+
+    public void dispose(){
+       timer.cancel();
+    }
+
 }

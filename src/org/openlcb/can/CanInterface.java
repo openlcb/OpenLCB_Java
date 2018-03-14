@@ -3,6 +3,10 @@ package org.openlcb.can;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.openlcb.Connection;
 import org.openlcb.Connection.ConnectionListener;
 import org.openlcb.Message;
@@ -35,7 +39,17 @@ public class CanInterface {
 
     boolean initialized = false;
 
-    public CanInterface(NodeID interfaceId, CanFrameListener frameOutput) {
+    private static ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 10;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+    public CanInterface(NodeID interfaceId, CanFrameListener frameOutput){
+          this(interfaceId,frameOutput, new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>()));
+    }
+
+    public CanInterface(NodeID interfaceId, CanFrameListener frameOutput, ThreadPoolExecutor tpe ) {
+        this.threadPool = tpe;
         this.frameOutput = frameOutput;
         this.frameRenderer = new FrameRenderer();
         this.nodeId = interfaceId;
@@ -49,12 +63,12 @@ public class CanInterface {
         aliasWatcher = new NIDaAlgorithm(interfaceId, frameOutput);
 
         this.frameInput = new FrameParser();
-        new Thread(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 initialize();
             }
-        }, "openlcb-if-initialize").start();
+        });
     }
 
     public CanFrameListener frameInput() { return frameInput; }
@@ -140,4 +154,9 @@ public class CanInterface {
             addStartListener(c);
         }
     }
+
+    public void dispose(){
+       aliasWatcher.dispose();
+    }
+
 }

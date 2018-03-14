@@ -34,15 +34,17 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     //final static int TIMEOUT = 700;
     final static int TIMEOUT = 3000;
     private final static Logger logger = Logger.getLogger(DatagramMeteringBuffer.class.getName());
-    private ThreadPoolExecutor threadPool = null;
+    private static ThreadPoolExecutor threadPool = null;
     final static int minThreads = 10;
     final static int maxThreads = 10;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+    public DatagramMeteringBuffer(Connection toDownStream ){
+          this(toDownStream, new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>()));
+    }
     
-    public DatagramMeteringBuffer(Connection toDownstream) {
-        if(threadPool == null){
-           threadPool = new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
-        }
+    public DatagramMeteringBuffer(Connection toDownstream,ThreadPoolExecutor tpe) {
+        threadPool = tpe;
         if(timer == null){
            timer = new Timer("OpenLCB-datagram-timer");
         }
@@ -279,6 +281,10 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
         @Override
         public void run() {
+            if(threadPool == null || threadPool.isShutdown()) {
+               // the buffer has been disposed of, so just return
+               return;
+            }
             try {
                 consume(queue.take());
                 synchronized (DatagramMeteringBuffer.this) {

@@ -49,6 +49,7 @@ public abstract class InterfaceTestBase extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         expectNoMessages();
+        iface.dispose();
         super.tearDown();
     }
 

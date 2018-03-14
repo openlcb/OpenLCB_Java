@@ -19,6 +19,7 @@ public class CanInterfaceTest {
         NodeID nodeID = new NodeID(new byte[]{1,2,3,4,5,6});
         CanInterface t = new CanInterface(nodeID, new CanFrameListenerScaffold() );
         Assert.assertNotNull("exists",t);
+        t.dispose();
     }
 
     // The minimal setup for log4J
