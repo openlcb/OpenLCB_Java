@@ -1,7 +1,7 @@
 package org.openlcb;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.verification.VerificationMode;
@@ -23,19 +23,15 @@ import static org.mockito.Mockito.*;
  *
  * Created by bracz on 1/9/16.
  */
-public abstract class InterfaceTestBase extends TestCase {
+public abstract class InterfaceTestBase {
     protected Connection outputConnectionMock = mock(AbstractConnection.class);
     protected OlcbInterface iface = null;
     protected AliasMap aliasMap = new AliasMap();
     protected boolean testWithCanFrameRendering = false;
     private boolean debugFrames = false;
 
-    public InterfaceTestBase(String s) {
-        super(s);
-        expectInit();
-    }
-
-    public InterfaceTestBase() {
+    @Before
+    public void setUp() {
         expectInit();
     }
 
@@ -46,11 +42,10 @@ public abstract class InterfaceTestBase extends TestCase {
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         expectNoMessages();
         iface.dispose();
-        super.tearDown();
     }
 
     /** Sends one or more OpenLCB message, as represented by the given CAN frames, to the
