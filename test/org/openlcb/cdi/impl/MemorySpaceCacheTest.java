@@ -14,26 +14,29 @@ import org.openlcb.*;
  */
 public class MemorySpaceCacheTest {
 
+    private OlcbInterface oi;
+    private NodeID nodeID;
+ 
     @Test
     public void testCTor() {
-        NodeID nodeID = new NodeID(new byte[]{1,2,3,4,5,6});
-        Connection testConnection = new AbstractConnection(){
-            public void put(Message msg, Connection node) {
-            }
-        };
-        OlcbInterface oi = new OlcbInterface(nodeID,testConnection);
         MemorySpaceCache t = new MemorySpaceCache(oi,nodeID,42);
         Assert.assertNotNull("exists",t);
-        oi.dispose();
     }
 
     // The minimal setup for log4J
     @Before
     public void setUp() {
+        nodeID = new NodeID(new byte[]{1,2,3,4,5,6});
+        Connection testConnection = new AbstractConnection(){
+            public void put(Message msg, Connection node) {
+            }
+        };
+        oi = new OlcbInterface(nodeID,testConnection);
     }
 
     @After
     public void tearDown() {
+        oi.dispose();
     }
 
 }
