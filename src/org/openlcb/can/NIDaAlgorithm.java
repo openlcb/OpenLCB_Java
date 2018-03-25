@@ -30,7 +30,12 @@ public class NIDaAlgorithm implements CanFrameListener {
             timerExpired();
         }
         };
-        timer.schedule(task, delay);
+        try {
+           timer.schedule(task, delay);
+        } catch (IllegalStateException ise){
+           // the timer was canceled, dispose occured before
+           // the task was scheduled.
+        }
     }
 
     public NIDaAlgorithm(NodeID n) {

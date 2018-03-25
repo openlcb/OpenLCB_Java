@@ -125,8 +125,9 @@ public class LoaderClient extends MessageDecoder {
                 }
             });
     }
-    Timer timer = new Timer("OpenLCB LoaderClient Timeout Timer");
-    TimerTask task = null;
+
+    private Timer timer = new Timer("OpenLCB LoaderClient Timeout Timer");
+    private TimerTask task = null;
     void startTimeout(int period) {
         task = new TimerTask(){
             public void run(){

@@ -186,7 +186,7 @@ public class MemoryConfigurationService {
     
     NodeID here;
     DatagramService downstream;
-    Timer retryTimer;
+    private Timer retryTimer;
 
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);

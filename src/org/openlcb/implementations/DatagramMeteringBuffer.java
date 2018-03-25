@@ -34,13 +34,21 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     //final static int TIMEOUT = 700;
     final static int TIMEOUT = 3000;
     private final static Logger logger = Logger.getLogger(DatagramMeteringBuffer.class.getName());
-    private static ThreadPoolExecutor threadPool = null;
+    private ThreadPoolExecutor threadPool = null;
     final static int minThreads = 10;
     final static int maxThreads = 10;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
+    /**
+     * @deprecated since OlcbLibrary version 0.18.  Use {@link #DatagramMeteringBuffer(Connection,ThreadPoolExecutor)} instead.
+     */
+    @Deprecated
     public DatagramMeteringBuffer(Connection toDownStream ){
-          this(toDownStream, new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>()));
+          this(toDownStream,
+               new ThreadPoolExecutor(minThreads,maxThreads,
+                                      threadTimeout,TimeUnit.SECONDS,
+                                 new LinkedBlockingQueue<Runnable>(),
+                                 new OlcbThreadFactory()));
     }
     
     public DatagramMeteringBuffer(Connection toDownstream,ThreadPoolExecutor tpe) {
@@ -57,7 +65,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
-    static Timer timer = null;
+    private Timer timer = null;
     int timeoutMillis = TIMEOUT;
 
     /**
@@ -90,7 +98,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             }
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                return;
+            }
         }
         waitForTimer();
     }
@@ -107,7 +117,9 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             }
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                throw e;
+            }
         }
         waitForTimer();
     }
@@ -123,6 +135,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         try {
             s.acquire();
         } catch (InterruptedException e) {
+            return;
         }
     }
 
@@ -267,8 +280,23 @@ public class DatagramMeteringBuffer extends MessageDecoder {
      */
     public void dispose(){
         // shut down the thread pool
-        if(threadPool != null) {
-           threadPool.shutdownNow();
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                     logger.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
         }
         threadPool = null;
         // and cancel the timer
@@ -292,6 +320,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                     pendingEntries--;
                 }
             } catch (InterruptedException ex) {
+                // interrupted while processing, but not in a loop.
             } finally {
                 synchronized (DatagramMeteringBuffer.this) {
                     threadPending--;

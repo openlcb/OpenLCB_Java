@@ -33,8 +33,9 @@ public class DatagramMeteringBufferTest extends TestCase {
     
     DatagramAcknowledgedMessage replyOK;
     DatagramRejectedMessage replyNAKresend;
-    
-    public void setUp() {
+
+    @Override    
+    protected void setUp() {
 
         repliesReturned1 = new java.util.ArrayList<Message>();
         replyConnection1 = new AbstractConnection(){
@@ -209,7 +210,8 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram2));        
     }
 
-    public void tearDown() {
+    @Override
+    protected void tearDown() {
         buffer.dispose(); 
     }
     

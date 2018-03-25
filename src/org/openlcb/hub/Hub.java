@@ -49,6 +49,7 @@ public class Hub {
                     } catch (InterruptedException e) {
                         logger.severe("Hub: Interrupted in queue handling loop");
                         logger.log(Level.SEVERE, "", e);
+                        return; // we have been asked to exit.
                     }
                 }
             }

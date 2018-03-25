@@ -12,6 +12,7 @@ import org.openlcb.Connection.ConnectionListener;
 import org.openlcb.Message;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
+import java.util.logging.Logger;
 
 /**
  * CanInterface collects all objects necessary to operate a standards-compliant node that connects
@@ -20,6 +21,9 @@ import org.openlcb.OlcbInterface;
  * Created by bracz on 12/27/15.
  */
 public class CanInterface {
+
+    private final static Logger logger = Logger.getLogger(CanInterface.class.getName());
+
     /// Keeps tracks of aliases.
     private final AliasMap aliasMap;
     /// State machines for frame reassembly.
@@ -39,23 +43,28 @@ public class CanInterface {
 
     boolean initialized = false;
 
-    private static ThreadPoolExecutor threadPool = null;
+    private ThreadPoolExecutor threadPool = null;
     final static int minThreads = 10;
     final static int maxThreads = 10;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
-    public CanInterface(NodeID interfaceId, CanFrameListener frameOutput){
-          this(interfaceId,frameOutput, new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>()));
+    public CanInterface(NodeID interfaceId, CanFrameListener frameOutput) {
+        this(interfaceId,frameOutput,
+                          new ThreadPoolExecutor(minThreads,maxThreads,
+                          threadTimeout,TimeUnit.SECONDS,
+                          new LinkedBlockingQueue<Runnable>(),
+                          new org.openlcb.OlcbThreadFactory()));
+        threadPool.allowCoreThreadTimeOut(true);
     }
 
     public CanInterface(NodeID interfaceId, CanFrameListener frameOutput, ThreadPoolExecutor tpe ) {
-        this.threadPool = tpe;
+        threadPool=tpe;
         this.frameOutput = frameOutput;
         this.frameRenderer = new FrameRenderer();
         this.nodeId = interfaceId;
 
         // Creates high-level OpenLCB interface.
-        olcbInterface = new OlcbInterface(nodeId, frameRenderer);
+        olcbInterface = new OlcbInterface(nodeId, frameRenderer,threadPool);
 
         // Creates CAN-level OpenLCB objects.
         aliasMap = new AliasMap();
@@ -106,7 +115,10 @@ public class CanInterface {
         frameOutput.send(gReqFrame);
         try {
             Thread.sleep(200);
-        } catch(InterruptedException e) {}
+        } catch(InterruptedException e) {
+            // if the thread was interrupted, we are trying to terminate.
+            return;
+        }
         // Stores local node alias.
         aliasMap.insert(aliasWatcher.getNIDa(), nodeId);
         /// TODO(balazs.racz): If the alias changes, we need to update the local alias map.
@@ -156,7 +168,27 @@ public class CanInterface {
     }
 
     public void dispose(){
-       aliasWatcher.dispose();
+        aliasWatcher.dispose();
+        // shut down the thread pool
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                     logger.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
+        }
+        threadPool = null;
     }
 
 }

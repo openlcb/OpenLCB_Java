@@ -40,7 +40,7 @@ public class MimicNodeStore extends AbstractConnection {
     
     Connection connection;
     NodeID node;
-    Timer timer;
+    private Timer timer;
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
@@ -123,7 +123,7 @@ public class MimicNodeStore extends AbstractConnection {
 
         Queue<Interaction> pendingInteractions = new ConcurrentLinkedDeque<>();
         Interaction currentInteraction = null;
-        TimerTask currentTask;
+        private TimerTask currentTask;
 
         public synchronized void startInteraction(final Interaction request) {
             if (currentInteraction == null) {

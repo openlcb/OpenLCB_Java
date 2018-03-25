@@ -15,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Logger;
 
 /**
@@ -57,7 +58,7 @@ public class OlcbInterface {
     private EventTable eventTable = null;
 
 
-    private static ThreadPoolExecutor threadPool = null;
+    private ThreadPoolExecutor threadPool = null;
     final static int minThreads = 10;
     final static int maxThreads = 100;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
@@ -72,11 +73,21 @@ public class OlcbInterface {
      * @param outputConnection_ implements the hardware interface for sending messages to the
      *                          network. Usually this is an internal object of the CanInterface.
      */
+    /**
+     * @deprecated since OlcbLibrary version 0.18.  Use {@link #OlcbInterface(NodeID, Connection, ThreadPoolExecutor)} instead.
+     */
+    @Deprecated
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
-        if(threadPool == null){
-           threadPool = new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>());
-           threadPool.allowCoreThreadTimeOut(true);
-        }
+          this(nodeId_,outputConnection_, 
+               new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,
+                                      TimeUnit.SECONDS,
+                                      new LinkedBlockingQueue<Runnable>(),
+                                      new OlcbThreadFactory()));
+          threadPool.allowCoreThreadTimeOut(true);
+    }
+
+    public OlcbInterface(NodeID nodeId_, Connection outputConnection_,ThreadPoolExecutor tpe) {
+        threadPool = tpe;
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
         this.wrappedOutputConnection = new OutputConnectionSniffer(internalOutputConnection);
@@ -271,8 +282,23 @@ public class OlcbInterface {
      */
     public void dispose(){
         // shut down the thread pool
-        if(threadPool != null) {
-           threadPool.shutdownNow();
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                     log.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
         }
         threadPool = null;
         dmb.dispose();
@@ -316,7 +342,9 @@ public class OlcbInterface {
                 }
                 try {
                     Thread.sleep(10);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                    return;
+                }
             }
         }
 
@@ -329,6 +357,8 @@ public class OlcbInterface {
                     QEntry m = outputQueue.take();
                     try {
                         realOutput.put(m.message, m.connection);
+                    } catch (RejectedExecutionException ex) {
+                        throw ex; // re-throw so the outer try will handle these.
                     } catch (Throwable e) {
                         log.warning("Exception while sending message: " + e.toString());
                         e.printStackTrace();
@@ -336,8 +366,9 @@ public class OlcbInterface {
                     synchronized(this) {
                         pendingCount--;
                     }
-                } catch (InterruptedException e) {
-                    continue;
+                } catch (InterruptedException|RejectedExecutionException e) {
+                    // thread must exit when interrupted or rejected.
+                    return;
                 }
             }
         }
