@@ -49,6 +49,11 @@ public class MimicNodeStoreTest extends TestCase {
         listenerFired = false;
     }
 
+    @Override
+    protected void tearDown() {
+       store.dispose();
+    }
+
     public void testCtor() {
         Assert.assertNotNull(store);
     }

@@ -35,6 +35,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
         service = new MemoryConfigurationService(hereID, datagramService);
     }
+
+    @Override
+    protected void tearDown(){
+       service.dispose();
+    }
     
     
     

@@ -65,6 +65,8 @@ public class MemConfigReadWritePaneTest extends TestCase {
     
     public void tearDown() {
         //frame.setVisible(false);
+        store.dispose();
+        service.dispose();
     }
             
     public void testSetup() {

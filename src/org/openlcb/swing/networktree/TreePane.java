@@ -48,6 +48,7 @@ public class TreePane extends JPanel  {
 
     public TreePane() {
 	    super();
+            timer = new Timer("OpenLCB Tree Pane Timer");
     }
 
     public enum SortOrder {
@@ -67,7 +68,7 @@ public class TreePane extends JPanel  {
     SortOrder sortOrder = SortOrder.BY_NODE_ID;
 
     NodeID nullNode = new NodeID(new byte[]{0,0,0,0,0,0});
-    final Timer timer = new Timer("OpenLCB Tree Pane Timer");
+    private Timer timer;
     private boolean needResortTree = false;
 
     // This listener ensures that if any node's SNIP data changes we resort the visible tree.

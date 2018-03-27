@@ -47,7 +47,9 @@ public class NodeSelectorTest extends TestCase {
         
     }
     
-    public void tearDown() {}
+    public void tearDown() {
+       store.dispose();
+    }
             
     public void testCtor() {
         // test is really in setUp()

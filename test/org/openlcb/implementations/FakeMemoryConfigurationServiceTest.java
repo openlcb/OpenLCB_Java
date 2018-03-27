@@ -19,6 +19,7 @@ public class FakeMemoryConfigurationServiceTest {
         OlcbInterface oi = new FakeOlcbInterface();
         FakeMemoryConfigurationService t = new FakeMemoryConfigurationService(oi);
         Assert.assertNotNull("exists",t);
+        t.dispose();
         oi.dispose();
     }
 

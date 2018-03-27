@@ -49,6 +49,7 @@ public class NodeTreeRepTest {
 
         NodeTreeRep t = new NodeTreeRep((MimicNodeStore.NodeMemo)list.toArray()[0],store,treeModel,loader);
         Assert.assertNotNull("exists",t);
+        store.dispose();
     }
 
     // The minimal setup for log4J

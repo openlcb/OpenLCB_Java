@@ -49,6 +49,7 @@ public class LoaderClient extends MessageDecoder {
         connection = _connection;
         dcs = _dcs;
         mcs = _mcs;
+        timer = new Timer("OpenLCB LoaderClient Timeout Timer");
     }
     
     /* Protocol:
@@ -126,7 +127,7 @@ public class LoaderClient extends MessageDecoder {
             });
     }
 
-    private Timer timer = new Timer("OpenLCB LoaderClient Timeout Timer");
+    private Timer timer;
     private TimerTask task = null;
     void startTimeout(int period) {
         task = new TimerTask(){
@@ -362,5 +363,12 @@ public class LoaderClient extends MessageDecoder {
         if (b) {
             sendUnfreeze();
         }
+    }
+
+    /*
+     * clean up local storage
+     */
+    public void dispose(){
+       timer.cancel();
     }
 }

@@ -86,6 +86,7 @@ public class ConfigRepresentationTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         iface.dispose();
+        mcs.dispose();
         super.tearDown();
     }
 

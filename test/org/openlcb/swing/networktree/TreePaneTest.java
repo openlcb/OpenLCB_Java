@@ -92,6 +92,7 @@ public class TreePaneTest extends TestCase {
     
     public void tearDown() {
         frame.setVisible(false);
+        store.dispose();
     }
             
     public void testPriorMessage() {

@@ -36,6 +36,10 @@ public class ThrottleImplementationTest extends TestCase {
         store = new MimicNodeStore(testConnection, hereID);
     }
 
+    public void tearDown() {
+       store.dispose();
+    }
+
     public void testCtors() {
         new ThrottleImplementation(1234, true, store, service);
         new ThrottleImplementation(3, true, store, service);
