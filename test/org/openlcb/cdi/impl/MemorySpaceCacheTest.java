@@ -37,6 +37,8 @@ public class MemorySpaceCacheTest {
     @After
     public void tearDown() {
         oi.dispose();
+        oi = null;
+        nodeID = null;
     }
 
 }

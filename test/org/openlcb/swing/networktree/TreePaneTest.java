@@ -94,6 +94,9 @@ public class TreePaneTest extends TestCase {
         frame.setVisible(false);
         pane.release();
         store.dispose();
+        store = null;
+        pane = null;
+        frame = null;
     }
             
     public void testPriorMessage() {

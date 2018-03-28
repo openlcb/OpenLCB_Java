@@ -918,6 +918,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
     @After
     public void tearDown() {
         super.tearDown();
+        hereID = null;
+        farID = null;
     }
 
 }

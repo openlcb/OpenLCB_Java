@@ -213,6 +213,17 @@ public class DatagramMeteringBufferTest extends TestCase {
     @Override
     protected void tearDown() {
         buffer.dispose(); 
+        repliesReturned1 = null; 
+        replyConnection1 = null;
+        messagesForwarded = null;
+        forwardConnection = null;
+        data = null;
+        buffer = null;
+        returnConnection = null;
+        datagram1 = null;
+        datagram2 = null;                                        
+        replyOK = null;
+        replyNAKresend = null;
     }
     
     // from here down is testing infrastructure

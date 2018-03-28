@@ -46,6 +46,7 @@ public abstract class InterfaceTestBase {
     public void tearDown() {
         expectNoMessages();
         iface.dispose();
+        iface = null;
     }
 
     /** Sends one or more OpenLCB message, as represented by the given CAN frames, to the
