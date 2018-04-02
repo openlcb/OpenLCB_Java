@@ -40,17 +40,23 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
     /**
+     * @param toDownstream connection object associated with the new buffer 
+     *
      * @deprecated since OlcbLibrary version 0.18.  Use {@link #DatagramMeteringBuffer(Connection,ThreadPoolExecutor)} instead.
      */
     @Deprecated
-    public DatagramMeteringBuffer(Connection toDownStream ){
-          this(toDownStream,
+    public DatagramMeteringBuffer(Connection toDownstream ){
+          this(toDownstream,
                new ThreadPoolExecutor(minThreads,maxThreads,
                                       threadTimeout,TimeUnit.SECONDS,
                                  new LinkedBlockingQueue<Runnable>(),
                                  new OlcbThreadFactory()));
     }
     
+    /**
+     * @param toDownstream Connection object associated with the new buffer 
+     * @param tpe Thread pool in which threads associated with the buffer run.
+     */
     public DatagramMeteringBuffer(Connection toDownstream,ThreadPoolExecutor tpe) {
         threadPool = tpe;
         if(timer == null){
@@ -107,6 +113,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     /**
      * Waits until all pending entries are sent and their callbacks are executed.
+     * @throws {@link InterrptedException} when interrupted.
      */
     public void waitForSendCallbacks() throws InterruptedException {
         while(true) {
