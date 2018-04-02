@@ -30,7 +30,12 @@ public class NIDaAlgorithm implements CanFrameListener {
             timerExpired();
         }
         };
-        timer.schedule(task, delay);
+        try {
+           timer.schedule(task, delay);
+        } catch (IllegalStateException | NullPointerException ise){
+           // the timer was canceled, dispose occured before
+           // the task was scheduled.
+        }
     }
 
     public NIDaAlgorithm(NodeID n) {
@@ -127,4 +132,13 @@ public class NIDaAlgorithm implements CanFrameListener {
     public void send(CanFrame frame) {
         processFrame(new OpenLcbCanFrame(frame));
     }
+
+    public void dispose(){
+       cancelTimer();  // dispose of the timer task
+       timer.cancel();
+       timer = null;
+       done = null;
+       complete = true;
+    }
+
 }

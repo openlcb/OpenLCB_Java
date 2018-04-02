@@ -24,7 +24,7 @@ public class CanSegmentTest extends TestCase {
         seg.add(sender);
         
         seg.send(new CanFrame(12), sender);
-        
+
     }
     
     boolean received = false;

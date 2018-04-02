@@ -51,6 +51,8 @@ public class CdiMemConfigReaderTest extends TestCase {
     }
     
     public void tearDown() {
+       store.dispose();
+       service.dispose();
     }
             
     public void testSetup() {

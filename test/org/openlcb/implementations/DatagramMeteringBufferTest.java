@@ -33,8 +33,9 @@ public class DatagramMeteringBufferTest extends TestCase {
     
     DatagramAcknowledgedMessage replyOK;
     DatagramRejectedMessage replyNAKresend;
-    
-    public void setUp() {
+
+    @Override    
+    protected void setUp() {
 
         repliesReturned1 = new java.util.ArrayList<Message>();
         replyConnection1 = new AbstractConnection(){
@@ -66,10 +67,6 @@ public class DatagramMeteringBufferTest extends TestCase {
         replyNAKresend = new DatagramRejectedMessage(farID, hereID, 0x210);
     }
 
-    public void tearDown(){
-       buffer.terminateThreads();
-    }
-    
     public void testSend() {
         buffer.put(datagram1, replyConnection1);
 
@@ -213,6 +210,21 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram2));        
     }
 
+    @Override
+    protected void tearDown() {
+        buffer.dispose(); 
+        repliesReturned1 = null; 
+        replyConnection1 = null;
+        messagesForwarded = null;
+        forwardConnection = null;
+        data = null;
+        buffer = null;
+        returnConnection = null;
+        datagram1 = null;
+        datagram2 = null;                                        
+        replyOK = null;
+        replyNAKresend = null;
+    }
     
     // from here down is testing infrastructure
     

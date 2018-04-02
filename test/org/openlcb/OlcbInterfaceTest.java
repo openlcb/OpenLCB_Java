@@ -23,7 +23,7 @@ public class OlcbInterfaceTest {
         };
         OlcbInterface t = new OlcbInterface(nodeID,testConnection);
         Assert.assertNotNull("exists",t);
-        t.terminateThreads();
+        t.dispose();
     }
 
     // The minimal setup for log4J

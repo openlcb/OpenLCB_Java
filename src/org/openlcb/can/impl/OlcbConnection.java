@@ -271,4 +271,8 @@ public class OlcbConnection {
         }
     }
 
+    public void dispose(){
+       canInterface.dispose();
+    }
+
 }
