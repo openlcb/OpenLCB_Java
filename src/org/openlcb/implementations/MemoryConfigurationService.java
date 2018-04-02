@@ -198,7 +198,7 @@ public class MemoryConfigurationService {
 
     /**
      * Waits to ensure that all pending timer tasks are complete. Used for testing.
-     * @throws {@link InterruptedException} if interrupted
+     * @throws {@link java.lang.InterruptedException} if interrupted
      */
     public void waitForTimer() throws InterruptedException {
         final Semaphore s = new Semaphore(0);

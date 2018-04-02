@@ -113,7 +113,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     /**
      * Waits until all pending entries are sent and their callbacks are executed.
-     * @throws {@link InterrptedException} when interrupted.
+     * @throws {@link java.lang.InterruptedException} when interrupted.
      */
     public void waitForSendCallbacks() throws InterruptedException {
         while(true) {
