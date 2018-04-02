@@ -72,8 +72,7 @@ public class OlcbInterface {
      *                          initialized ready with this node ID.
      * @param outputConnection_ implements the hardware interface for sending messages to the
      *                          network. Usually this is an internal object of the CanInterface.
-     */
-    /**
+     *
      * @deprecated since OlcbLibrary version 0.18.  Use {@link #OlcbInterface(NodeID, Connection, ThreadPoolExecutor)} instead.
      */
     @Deprecated
@@ -86,6 +85,15 @@ public class OlcbInterface {
           threadPool.allowCoreThreadTimeOut(true);
     }
 
+    /**
+     * Creates the message-level interface.
+     *
+     * @param nodeId_           is the node ID for the node on this interface. Will send out a node
+     *                          initialized ready with this node ID.
+     * @param outputConnection_ implements the hardware interface for sending messages to the
+     *                          network. Usually this is an internal object of the CanInterface.
+     * @param tpe ThreadPoolExecutor for the interface.
+     */
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_,ThreadPoolExecutor tpe) {
         threadPool = tpe;
         nodeId = nodeId_;

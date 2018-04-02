@@ -1341,6 +1341,8 @@ public class CdiPanel extends JPanel {
 
         /**
          * Updates the UI for the list of other uses of the event.
+         * 
+         * @param eventInfo from the event table.
          */
         private void updateEventDescriptionField(EventTable.EventInfo eventInfo) {
             EventTable.EventTableEntry[] elist = eventInfo.getAllEntries();
