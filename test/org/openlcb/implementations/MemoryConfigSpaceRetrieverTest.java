@@ -24,8 +24,9 @@ public class MemoryConfigSpaceRetrieverTest {
         OlcbInterface oi = new OlcbInterface(nodeID,testConnection);
         MemoryConfigSpaceRetriever t = new MemoryConfigSpaceRetriever(nodeID,oi,42,null);
         Assert.assertNotNull("exists",t);
+        oi.dispose();
     }
-
+ 
     // The minimal setup for log4J
     @Before
     public void setUp() {

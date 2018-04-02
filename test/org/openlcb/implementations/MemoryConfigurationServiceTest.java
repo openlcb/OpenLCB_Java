@@ -21,7 +21,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
     MemoryConfigurationService service;
     
     @Override
-    public void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
         testConnection = new AbstractConnection(){
@@ -33,6 +34,11 @@ public class MemoryConfigurationServiceTest extends TestCase {
         datagramService = new DatagramService(hereID, testConnection);
         
         service = new MemoryConfigurationService(hereID, datagramService);
+    }
+
+    @Override
+    protected void tearDown(){
+       service.dispose();
     }
     
     

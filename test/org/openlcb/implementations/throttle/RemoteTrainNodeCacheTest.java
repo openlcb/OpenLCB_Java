@@ -110,4 +110,8 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         fakeInterface = new FakeOlcbInterface();
         cache = new TrainNodeCache(fakeInterface);
     }
+
+    public void tearDown() {
+        fakeInterface.dispose();
+    }
 }

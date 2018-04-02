@@ -55,6 +55,7 @@ public class MemoryConfigurationService {
      * @param downstream Connection in the direction of the layout
      */
     public MemoryConfigurationService(NodeID here, DatagramService downstream) {
+        retryTimer = new Timer("OpenLCB Memory Configuration Service Retry Timer");
         this.here = here;
         this.downstream = downstream;   
         
@@ -185,7 +186,7 @@ public class MemoryConfigurationService {
     
     NodeID here;
     DatagramService downstream;
-    Timer retryTimer = new Timer("OpenLCB Memory Configuration Service Retry Timer");
+    private Timer retryTimer;
 
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);
@@ -197,6 +198,8 @@ public class MemoryConfigurationService {
 
     /**
      * Waits to ensure that all pending timer tasks are complete. Used for testing.
+     *
+     * @throws java.lang.InterruptedException if interrupted
      */
     public void waitForTimer() throws InterruptedException {
         final Semaphore s = new Semaphore(0);
@@ -947,5 +950,10 @@ public class MemoryConfigurationService {
         }
         
 
+    }
+
+
+    public void dispose(){
+       retryTimer.cancel();
     }
 }

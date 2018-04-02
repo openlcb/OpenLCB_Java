@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Logger;
 
 /**
@@ -37,18 +40,31 @@ public class OlcbInterface {
 
     // Client library for SNIP, PIP etc protocols.
     private final MimicNodeStore nodeStore;
+
     // Outgoing connection wrapper for datagrams that ensures that we only send one datagram at a
     // time to one destination node.
     private final DatagramMeteringBuffer dmb;
+
     // Client (and server) for datagrams.
     private final DatagramService dcs;
+
     // Client for memory configuration requests.
     private MemoryConfigurationService mcs;
+
     // CDIs for the nodes
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
     // Event Table is a helper for user interfaces to register and retrieve user names for
     // events. By default this is null, initialized lazily when needed only.
     private EventTable eventTable = null;
+
+
+    private ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 100;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+
+
     /**
      * Creates the message-level interface.
      *
@@ -56,8 +72,30 @@ public class OlcbInterface {
      *                          initialized ready with this node ID.
      * @param outputConnection_ implements the hardware interface for sending messages to the
      *                          network. Usually this is an internal object of the CanInterface.
+     *
+     * @deprecated since OlcbLibrary version 0.18.  Use {@link #OlcbInterface(NodeID, Connection, ThreadPoolExecutor)} instead.
      */
+    @Deprecated
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
+          this(nodeId_,outputConnection_, 
+               new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,
+                                      TimeUnit.SECONDS,
+                                      new LinkedBlockingQueue<Runnable>(),
+                                      new OlcbThreadFactory()));
+          threadPool.allowCoreThreadTimeOut(true);
+    }
+
+    /**
+     * Creates the message-level interface.
+     *
+     * @param nodeId_           is the node ID for the node on this interface. Will send out a node
+     *                          initialized ready with this node ID.
+     * @param outputConnection_ implements the hardware interface for sending messages to the
+     *                          network. Usually this is an internal object of the CanInterface.
+     * @param tpe ThreadPoolExecutor for the interface.
+     */
+    public OlcbInterface(NodeID nodeId_, Connection outputConnection_,ThreadPoolExecutor tpe) {
+        threadPool = tpe;
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
         this.wrappedOutputConnection = new OutputConnectionSniffer(internalOutputConnection);
@@ -66,7 +104,7 @@ public class OlcbInterface {
         inputConnection = new MessageDispatcher();
 
         nodeStore = new MimicNodeStore(getOutputConnection(), nodeId);
-        dmb = new DatagramMeteringBuffer(getOutputConnection());
+        dmb = new DatagramMeteringBuffer(getOutputConnection(),threadPool);
         dcs = new DatagramService(nodeId, dmb);
         mcs = new MemoryConfigurationService(nodeId, dcs);
         inputConnection.registerMessageListener(nodeStore);
@@ -81,13 +119,13 @@ public class OlcbInterface {
                 outputConnection.put(m, getInputConnection());
                 // Starts the output queue once we have the confirmation from the lower level that
                 // the connection is ready and we have enqueued the initialization complete message.
-                new Thread(new Runnable() {
+                threadPool.execute(new Runnable() {
                     @Override
                     public void run() {
                         queuedOutputConnection.run();
                     }
-                }, "openlcb-output-queue").start();
-            }
+                });
+           }
         });
     }
 
@@ -248,6 +286,35 @@ public class OlcbInterface {
     }
 
     /**
+     * cleanup local resources
+     */
+    public void dispose(){
+        // shut down the thread pool
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                     log.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
+        }
+        threadPool = null;
+        dmb.dispose();
+        mcs.dispose();
+        nodeStore.dispose();
+    }    
+
+    /**
      * This class keeps an output connection operating using an internal queue. It keeps
      * messages in an internal thread-safe queue and sends them on a separate thread.
      * <p>
@@ -283,7 +350,9 @@ public class OlcbInterface {
                 }
                 try {
                     Thread.sleep(10);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                    return;
+                }
             }
         }
 
@@ -291,11 +360,13 @@ public class OlcbInterface {
          * Never returns.
          */
         private void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     QEntry m = outputQueue.take();
                     try {
                         realOutput.put(m.message, m.connection);
+                    } catch (RejectedExecutionException ex) {
+                        throw ex; // re-throw so the outer try will handle these.
                     } catch (Throwable e) {
                         log.warning("Exception while sending message: " + e.toString());
                         e.printStackTrace();
@@ -303,8 +374,9 @@ public class OlcbInterface {
                     synchronized(this) {
                         pendingCount--;
                     }
-                } catch (InterruptedException e) {
-                    continue;
+                } catch (InterruptedException|RejectedExecutionException e) {
+                    // thread must exit when interrupted or rejected.
+                    return;
                 }
             }
         }

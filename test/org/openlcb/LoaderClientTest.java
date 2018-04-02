@@ -56,6 +56,7 @@ public class LoaderClientTest extends TestCase {
     boolean flag;
     LoaderClient.LoaderStatusReporter reporter;
     
+    @Override
     public void setUp() {
                                       // System.out.println("SetUp()");
         messagesReceived = new java.util.ArrayList<Message>();
@@ -69,7 +70,11 @@ public class LoaderClientTest extends TestCase {
         mcs = new MemoryConfigurationService(hereID, dcs);
         flag = false;
     };
-
+ 
+    @Override
+    protected void tearDown(){
+       mcs.dispose();
+    }
 
 
 /* Protocol:
@@ -124,6 +129,7 @@ public class LoaderClientTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
         xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x400000000000L), null);
+        xmt.dispose();
     }
     
     
@@ -149,6 +155,7 @@ public class LoaderClientTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
         xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x000010000000L), null);
+        xmt.dispose();
     }
     
     
@@ -174,6 +181,7 @@ public class LoaderClientTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0).equals(new ProtocolIdentificationRequestMessage(hereID,farID)));
         messagesReceived.clear();
         xmt.put(new ProtocolIdentificationReplyMessage(farID,hereID,0x000030000000L), null);
+        xmt.dispose();
     }
 
 
@@ -227,6 +235,7 @@ public class LoaderClientTest extends TestCase {
                                 //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertEquals(messagesReceived.get(0),new DatagramMessage(hereID,farID,
                 new int []{0x20, 0xA0, 0xEF}));
+        xmt.dispose();
     }
 
     
@@ -280,6 +289,7 @@ public class LoaderClientTest extends TestCase {
     // Unfreeze
         Assert.assertTrue(messagesReceived.get(2).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45}))); // Unfreeze
         messagesReceived.clear();
+        xmt.dispose();
     }
 
 
@@ -327,6 +337,7 @@ public class LoaderClientTest extends TestCase {
         // Unfreeze
         Assert.assertTrue(messagesReceived.get(2).equals(new DatagramMessage(hereID,farID,new int[]{0x20, 0xA0, 45}))); // Unfreeze
         messagesReceived.clear();
+        xmt.dispose();
     }
 
 
