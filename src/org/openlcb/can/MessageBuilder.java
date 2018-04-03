@@ -274,7 +274,7 @@ public class MessageBuilder {
                         (content.length > 5 ? content[5] : -1)));
                 return retlist;
             case StreamInitiateReply:
-                retlist.add(new StreamInitiateReplyMessage(source,dest,content[0]<<8+content[1],content[2], content[3]));
+                retlist.add(new StreamInitiateReplyMessage(source,dest,(content[0]<<8)+(content[1]),content[2], content[3]));
                 return retlist;
             // case StreamData is Format 7
             case StreamDataProceed:

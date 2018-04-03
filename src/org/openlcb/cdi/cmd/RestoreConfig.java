@@ -85,7 +85,7 @@ public class RestoreConfig {
                 if (e instanceof ConfigRepresentation.EventEntry) {
                     ((ConfigRepresentation.EventEntry) e).setValue(new EventID(value));
                 } else if (e instanceof ConfigRepresentation.IntegerEntry) {
-                    ((ConfigRepresentation.IntegerEntry) e).setValue(Long.valueOf(value));
+                    ((ConfigRepresentation.IntegerEntry) e).setValue(Long.parseLong(value));
                 } else if (e instanceof ConfigRepresentation.StringEntry) {
                     ((ConfigRepresentation.StringEntry) e).setValue(value);
                 } else {

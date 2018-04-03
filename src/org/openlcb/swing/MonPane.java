@@ -264,7 +264,7 @@ public class MonPane extends JPanel  {
             try {
                 setFileChooser();
                 if  (logFileChooser != null)
-                    logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()));
+                    logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()),true,"ISO-8859-1");
             } catch (Exception ex) {
                 logger.severe("exception "+ex);
             }

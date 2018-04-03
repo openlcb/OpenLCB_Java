@@ -67,14 +67,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>findbugs-annotations</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>net.jcip</groupId>
             <artifactId>jcip-annotations</artifactId>
             <version>1.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>3.1.2</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jdom</groupId>
@@ -176,20 +178,31 @@
                     <plugin>
                         <groupId>com.github.spotbugs</groupId>
                         <artifactId>spotbugs-maven-plugin</artifactId>
-                        <version>3.1.1</version>
+                        <version>3.1.2</version>
                         <!-- configured to fail on High priority bugs during test phase -->
+                        <configuration>
+                           <effort>Max</effort>
+                           <threshold>High</threshold>
+                           <maxHeap>1536</maxHeap>
+                           <timeout>1200000</timeout><!-- 20 minutes -->
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>failing-on-high</id>
+                                <id>spotbugs-fail-on-high</id>
                                 <phase>test</phase>
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
+                            </execution>
+                            <execution>
+                                <id>spotbugs-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
+                                </goals>
                                 <configuration>
-                                    <effort>Max</effort>
-                                    <threshold>High</threshold>
-                                    <maxHeap>1536</maxHeap>
-                                    <timeout>1200000</timeout><!-- 20 minutes -->
+                                    <threshold>Low</threshold>
+                                    <failOnError>false</failOnError>
                                 </configuration>
                             </execution>
                         </executions>

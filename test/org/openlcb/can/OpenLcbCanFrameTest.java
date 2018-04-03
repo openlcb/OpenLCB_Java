@@ -23,6 +23,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue("12a equals 12a", cf12a.equals(cf12a));
         Assert.assertTrue("12a equals 12b", cf12a.equals(cf12b));
         Assert.assertTrue("12a not equals 13", !cf12a.equals(cf13));
+        Assert.assertEquals("hashcodes equal when equal",cf12a.hashCode(),cf12b.hashCode());
     }
     
     public void testArrayGet() {

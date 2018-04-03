@@ -39,6 +39,7 @@ public class EventIDTest extends TestCase {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e2));
+        Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e2.hashCode());
     }
     
     public void testStringArgDotted() {
@@ -68,17 +69,20 @@ public class EventIDTest extends TestCase {
         Object e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e2));
+        Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e2.hashCode());
     }
     
     public void testEqualsSelf() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e1));
+        Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e1.hashCode());
     }
     
     public void testEqualsCastSelf() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Object e2 = e1;
         Assert.assertTrue(e1.equals(e2));
+        Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e1.hashCode());
     }
     
     public void testNotEquals() {

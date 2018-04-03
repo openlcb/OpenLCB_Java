@@ -16,7 +16,7 @@ script:
   #default mvn build skips javadoc.
   - mvn test javadoc:javadoc -B 
   # runs spotbugs
-  - mvn clean test -U -P spotbugs --batch-mode
+  - mvn clean verify -U -P spotbugs --batch-mode
 
 cache:
   directories:
