@@ -1,5 +1,6 @@
 package org.openlcb.can;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.openlcb.*;
 import org.openlcb.implementations.DatagramUtils;
 
@@ -414,6 +415,9 @@ public class OpenLcbCanFrame implements CanFrame {
     }
   }
 
+    @Override
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_MIGHT_BE_INFEASIBLE",
+            justification = "Because of the returns, data cannot be null when checking length.")
     public boolean equals(Object other) {
         // try to cast, else not equal
         try {
@@ -430,6 +434,13 @@ public class OpenLcbCanFrame implements CanFrame {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode(){
+       return 42; // this meets the contract of equals, which says the
+                  // hash codes must be the same when equals returns true
+                  // but will not allow good hashing of OpenLcbCanFrames
     }
     
     public String toString() {

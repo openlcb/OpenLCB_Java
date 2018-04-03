@@ -1067,7 +1067,7 @@ public class CdiPanel extends JPanel {
         private void textUpdated() {
             if (parent == null) return;
             String searchQuery = textField.getText();
-            logger.log(Level.FINE, String.format("Search for: {0}",searchQuery));
+            logger.log(Level.FINE, String.format("Search for: %s",searchQuery));
             boolean fresh = false;
             if (suggestMenu == null) {
                 suggestMenu = new JPopupMenu();
@@ -1410,7 +1410,7 @@ public class CdiPanel extends JPanel {
                         ++j;
                     }
                     if (j > i+1) {
-                        int val = Integer.valueOf(b.substring(i + 1, j));
+                        int val = Integer.parseInt(b.substring(i + 1, j));
                         ++val;
                         b.replace(i+1,j,Integer.toString(val));
                     }

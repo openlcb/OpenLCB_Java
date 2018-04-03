@@ -221,7 +221,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
             DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
-            logger.log(Level.INFO, "Never received reply for datagram {0}", message != null ? message : " == null");
+            logger.log(Level.INFO, "Never received reply for datagram {0}", message);
             handleDatagramRejected(msg, null);
             // Inject message to upstream listener
             toUpstream.put(msg, toUpstream);
@@ -239,7 +239,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 DatagramRejectedMessage rejectedMessage = new DatagramRejectedMessage(message
                         .getDestNodeID(), message.getSourceNodeID(),
                         DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT);
-                logger.log(Level.INFO, "Destination node has rebooted while waiting for datagram reply {0}", message != null ? message : " == null");
+                logger.log(Level.INFO, "Destination node has rebooted while waiting for datagram reply {0}", message);
                 handleDatagramRejected(rejectedMessage, null);
                 // Inject message to upstream listener
                 toUpstream.put(rejectedMessage, toUpstream);

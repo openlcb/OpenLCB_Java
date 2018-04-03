@@ -84,7 +84,7 @@ public class EventTable {
 
             @Override
             public int compareTo(@Nonnull SearchEntryHelper o) {
-                int scc = Float.valueOf(score).compareTo(o.score);
+                int scc = Float.compare(score,o.score);
                 if (scc != 0) return scc;
                 return -entry.description.compareTo(o.entry.description);
             }

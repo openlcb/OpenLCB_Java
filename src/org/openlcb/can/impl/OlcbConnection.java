@@ -80,7 +80,7 @@ public class OlcbConnection {
             socket = new Socket(hostName, portNumber);
             socket.setTcpNoDelay(true);
             reader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream()));
+                    new InputStreamReader(socket.getInputStream(),"ISO-8859-1"));
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
             listenerProxy.onStatusChange("Connection failed: " + e.toString());

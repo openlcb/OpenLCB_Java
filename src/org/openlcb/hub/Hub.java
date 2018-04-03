@@ -126,7 +126,7 @@ public class Hub {
         public void run() {
             try {
                 input = new DataInputStream(clientSocket.getInputStream());
-                output = new PrintStream(clientSocket.getOutputStream());
+                output = new PrintStream(clientSocket.getOutputStream(),true,"ISO-8859-1");
         
                 while (true) {
                     String line = input.readLine();
