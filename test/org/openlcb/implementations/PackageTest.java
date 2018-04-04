@@ -51,7 +51,7 @@ public class PackageTest extends TestCase {
         suite.addTest(MemoryConfigurationServiceTest.suite());
 
         suite.addTest(org.openlcb.implementations.throttle.PackageTest.suite());
-        suite.addTest(new TestSuite(BitProducerConsumerTest.class));
+        suite.addTest(new JUnit4TestAdapter(BitProducerConsumerTest.class));
         suite.addTest(new TestSuite(VersionedValueTest.class));
         suite.addTest(new JUnit4TestAdapter(FakeMemoryConfigurationServiceTest.class));       
         suite.addTest(new JUnit4TestAdapter(MemoryConfigSpaceRetrieverTest.class));       
