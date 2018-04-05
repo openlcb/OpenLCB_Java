@@ -2,12 +2,15 @@
 
 ## Prerequisites
 
+* You need to have an account on https://oss.sonatype.org that is allowed to upload OpenLCB releases.
 * You need to have a git checkout of the OpenLCB_Java repository. This may be a
   fork or you need to have write access to the repository.
 * You need to be able to compile java using the ant build toolchain.
 * You need to have a git checkout of JMRI, presumably from a fork.
 * For the JMRI update you need to have the maven tool installed. (For me maven2
   did not work, had to use maven: ```apt-get install maven```)
+* The maven ```settings.xml``` file needs to be configured to authenticate with the ossrh server as described here http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
+* You must have a GPG key to sign the release.
 
 ## Release OpenLCB
 
