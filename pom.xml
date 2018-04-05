@@ -4,7 +4,7 @@
     <groupId>org.openlcb</groupId>
     <artifactId>openlcb</artifactId>
     <packaging>jar</packaging>
-    <version>0.7.17</version>
+    <version>0.7.18</version>
     <name>OpenLCB</name>
     <description>OpenLCB Java Reference Implementation.</description>
     <url>http://openlcb.github.com/OpenLCB_Java</url>
