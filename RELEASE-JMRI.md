@@ -10,7 +10,7 @@
 * For the JMRI update you need to have the maven tool installed. (For me maven2
   did not work, had to use maven: ```apt-get install maven```)
 * The maven ```settings.xml``` file needs to be configured to authenticate with the ossrh server as described here http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
-
+* You must have a GPG key to sign the release.
 
 ## Release OpenLCB
 
