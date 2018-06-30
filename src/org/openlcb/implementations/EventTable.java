@@ -243,7 +243,12 @@ public class EventTable {
          */
         void remove(EventTableEntryHolder h) {
             synchronized (entries) {
-                entries.removeIf((EventTableEntry e) -> e.h == h);
+                for (int i = 0; i < entries.size(); ++i) {
+                    if (entries.get(i).h == h) {
+                        entries.remove(i);
+                        --i;
+                    }
+                }
             }
             notifyUpdated();
         }

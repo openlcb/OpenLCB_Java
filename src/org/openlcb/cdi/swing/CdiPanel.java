@@ -1236,7 +1236,12 @@ public class CdiPanel extends JPanel {
                 }
             };
             entry.addPropertyChangeListener(entryListener);
-            cleanupTasks.add(()->{entry.removePropertyChangeListener(entryListener);});
+            cleanupTasks.add(new Runnable() {
+                @Override
+                public void run() {
+                    entry.removePropertyChangeListener(entryListener);
+                }
+            });
             entry.fireUpdate();
 
             JButton b;
