@@ -1,8 +1,6 @@
 package org.openlcb.cdi.swing;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import org.mockito.Mockito;
 import org.openlcb.cdi.impl.ConfigRepresentation;
@@ -27,16 +25,10 @@ import static org.openlcb.cdi.impl.DemoReadWriteAccess.demoRepFromSample;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision: 2175 $
  */
-public class CdiPanelTest extends TestCase {
-    
-    // from here down is testing infrastructure
-    
-    public CdiPanelTest(String s) {
-        super(s);
-    }
-
+public class CdiPanelTest {
+   
+    @Test	
     public void testDisplay() {
         JFrame f = new JFrame();
         f.setTitle("Configuration Demonstration");
@@ -59,6 +51,7 @@ public class CdiPanelTest extends TestCase {
         f.setVisible(true);        
     }
     
+    @Test	
     public void testLocoCdiDisplay() {
         JFrame f = new JFrame();
         f.setTitle("Locomotive CDI Demonstration");
@@ -81,6 +74,7 @@ public class CdiPanelTest extends TestCase {
         f.setVisible(true);        
     }
 
+    @Test	
     public void testOffsets() {
       /* Annotated CDI:
 <cdi>
@@ -152,19 +146,5 @@ public class CdiPanelTest extends TestCase {
                     (readOffsets[i][1]), any());
             verifyNoMoreInteractions(access);
         }
-    }
-
-
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {CdiPanelTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(CdiPanelTest.class);
-        return suite;
     }
 }

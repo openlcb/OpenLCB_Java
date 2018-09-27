@@ -5,10 +5,7 @@ import org.openlcb.implementations.*;
 import org.openlcb.LoaderClient;
 import org.openlcb.LoaderClient.LoaderStatusReporter;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  David Harris   Copyright 2016
@@ -44,7 +41,7 @@ import junit.framework.TestSuite;
  */
 
 
-public class LoaderClientTest extends TestCase {
+public class LoaderClientTest {
 
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID  = new NodeID(new byte[]{1,1,1,1,1,1});
@@ -56,7 +53,7 @@ public class LoaderClientTest extends TestCase {
     boolean flag;
     LoaderClient.LoaderStatusReporter reporter;
     
-    @Override
+    @Before
     public void setUp() {
                                       // System.out.println("SetUp()");
         messagesReceived = new java.util.ArrayList<Message>();
@@ -71,9 +68,14 @@ public class LoaderClientTest extends TestCase {
         flag = false;
     };
  
-    @Override
-    protected void tearDown(){
+    @After
+    public void tearDown(){
+       dcs.dispose();
        mcs.dispose();
+       dcs=null;
+       mcs=null;
+       messagesReceived = null;
+       testConnection = null;
     }
 
 
@@ -105,8 +107,7 @@ public class LoaderClientTest extends TestCase {
  
  */
     
-    //public void testFake() {}
-
+    @Test
     public void testLoaderClientDGPIPFail1() {
         data =new byte[80];
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -133,6 +134,7 @@ public class LoaderClientTest extends TestCase {
     }
     
     
+    @Test
     public void testLoaderClientDGPIPFail2() {
         data =new byte[80];
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -159,6 +161,7 @@ public class LoaderClientTest extends TestCase {
     }
     
     
+    @Test
     public void testLoaderClientDGPIPFail3() {
         data =new byte[80];
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -185,6 +188,7 @@ public class LoaderClientTest extends TestCase {
     }
 
 
+    @Test
     public void testLoaderClientDG() {
         data =new byte[80];
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -240,6 +244,7 @@ public class LoaderClientTest extends TestCase {
 
     
     
+    @Test
     public void testLoaderClientStream() {
         data = new byte[]{'a','b','c','d','e','f','g','h','i','j'};
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -293,6 +298,7 @@ public class LoaderClientTest extends TestCase {
     }
 
 
+    @Test
     public void testLoaderClientStream2() {
         data = new byte[]{'a','b','c','d','e','f','g','h','i','j'};
         LoaderClient xmt = new LoaderClient(testConnection, mcs, dcs);
@@ -340,9 +346,6 @@ public class LoaderClientTest extends TestCase {
         xmt.dispose();
     }
 
-
-    // from here down is testing infrastructure
-
     private void delay(int msec) {
         long start = System.currentTimeMillis();
         while (true) {
@@ -352,22 +355,6 @@ public class LoaderClientTest extends TestCase {
                 Thread.sleep(left);
             } catch(InterruptedException e) {}
         }
-    }
-
-    public LoaderClientTest(String s) {
-        super(s);
-    }
-    
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {LoaderClientTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-    
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(LoaderClientTest.class);
-        return suite;
     }
 }
 
