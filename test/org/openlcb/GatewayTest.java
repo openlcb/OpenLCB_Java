@@ -1,23 +1,23 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class GatewayTest extends TestCase {
+public class GatewayTest {
+
     protected Gateway getGateway() {
         return new Gateway();
     }
-    
+
+    @Test    
     public void testCtor() {
         getGateway();
     }
 
+    @Test    
     public void testGet() {
         g = getGateway();
         Connection cE = g.getEastConnection();
@@ -55,6 +55,7 @@ public class GatewayTest extends TestCase {
         cW = g.getWestConnection();
     }
 
+    @Test    
     public void testEastToWest() {
         buildGateway();
         Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
@@ -72,6 +73,7 @@ public class GatewayTest extends TestCase {
         resultW = false;
     }
     
+    @Test    
     public void testWestToEast() {
         buildGateway();
         Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
@@ -89,21 +91,4 @@ public class GatewayTest extends TestCase {
         resultW = false;
     }
         
-    // from here down is testing infrastructure
-    
-    public GatewayTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {GatewayTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(GatewayTest.class);
-        return suite;
-    }
 }
