@@ -2,16 +2,12 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class ScatterGatherTest extends TestCase {
+public class ScatterGatherTest {
 
     NodeID nodeID = new NodeID(new byte[]{1,2,3,4,5,6});
     
@@ -25,16 +21,19 @@ public class ScatterGatherTest extends TestCase {
     boolean result1;
     boolean result2;
     boolean result3;
-    
+
+    @Test    
     public void testCreate() {
         new ScatterGather();
     }
     
+    @Test 
     public void testGetConnection() {
         ScatterGather sg = new ScatterGather();
         Connection c = sg.getConnection();
     }
     
+    @Test 
     public void testPassThrough() {
         ScatterGather sg = new ScatterGather();
         result1 = false;
@@ -65,6 +64,7 @@ public class ScatterGatherTest extends TestCase {
         Assert.assertTrue(result3);
     }
     
+    @Test 
     public void testNoEcho() {
         ScatterGather sg = new ScatterGather();
         result1 = false;
@@ -81,21 +81,4 @@ public class ScatterGatherTest extends TestCase {
         Assert.assertTrue(!result1);
     }
     
-    // from here down is testing infrastructure
-    
-    public ScatterGatherTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ScatterGatherTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ScatterGatherTest.class);
-        return suite;
-    }
 }

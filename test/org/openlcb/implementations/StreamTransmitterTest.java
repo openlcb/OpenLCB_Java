@@ -2,16 +2,12 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class StreamTransmitterTest extends TestCase {
+public class StreamTransmitterTest {
     
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID  = new NodeID(new byte[]{1,1,1,1,1,1});
@@ -19,7 +15,8 @@ public class StreamTransmitterTest extends TestCase {
     int[] data;
 
     java.util.ArrayList<Message> messagesReceived;
-    
+   
+    @Test 
     public void testInitialization() {
         messagesReceived = new java.util.ArrayList<Message>();
         Connection testConnection = new AbstractConnection(){
@@ -36,6 +33,7 @@ public class StreamTransmitterTest extends TestCase {
         Assert.assertEquals(new StreamInitiateRequestMessage(hereID, farID, 64, (byte)4, (byte)0), messagesReceived.get(0));
     }
     
+    @Test 
     public void testShortStream() {
         messagesReceived = new java.util.ArrayList<Message>();
         Connection testConnection = new AbstractConnection(){
@@ -67,6 +65,7 @@ public class StreamTransmitterTest extends TestCase {
                 (byte)4, (byte)0));
     }
     
+    @Test 
     public void testTwoMsgStream() {
         messagesReceived = new java.util.ArrayList<Message>();
         Connection testConnection = new AbstractConnection(){
@@ -112,21 +111,4 @@ public class StreamTransmitterTest extends TestCase {
 
     }
     
-    // from here down is testing infrastructure
-    
-    public StreamTransmitterTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {StreamTransmitterTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(StreamTransmitterTest.class);
-        return suite;
-    }
 }
