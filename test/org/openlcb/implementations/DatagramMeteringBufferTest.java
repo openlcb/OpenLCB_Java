@@ -2,16 +2,12 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class DatagramMeteringBufferTest extends TestCase {
+public class DatagramMeteringBufferTest {
     
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID  = new NodeID(new byte[]{1,1,1,1,1,1});
@@ -34,8 +30,8 @@ public class DatagramMeteringBufferTest extends TestCase {
     DatagramAcknowledgedMessage replyOK;
     DatagramRejectedMessage replyNAKresend;
 
-    @Override    
-    protected void setUp() {
+    @Before
+    public void setUp() {
 
         repliesReturned1 = new java.util.ArrayList<Message>();
         replyConnection1 = new AbstractConnection(){
@@ -67,12 +63,14 @@ public class DatagramMeteringBufferTest extends TestCase {
         replyNAKresend = new DatagramRejectedMessage(farID, hereID, 0x210);
     }
 
+    @Test
     public void testSend() {
         buffer.put(datagram1, replyConnection1);
 
         buffer.waitForSendQueue();
     }
 
+    @Test
     public void testSendNonDatagramGoesThrough() {
         Message m = new InitializationCompleteMessage(hereID);
         buffer.put(m, replyConnection1);
@@ -82,6 +80,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(0).equals(m));        
     }
 
+    @Test
     public void testFirstDatagramSendGoesThrough() {
         buffer.put(datagram1, replyConnection1);
 
@@ -90,6 +89,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(0).equals(datagram1));        
     }
 
+    @Test
     public void testSendReplyOK() {
         buffer.put(datagram1, replyConnection1);
 
@@ -108,6 +108,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertEquals("forwarded messages", 1, messagesForwarded.size());
     }
 
+    @Test
     public void testSendReplyNakRetransmit() {
         buffer.put(datagram1, replyConnection1);
 
@@ -120,6 +121,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram1));
     }
 
+    @Test
     public void testSendReplyNakRetransmitreplyOK() {
         buffer.put(datagram1, replyConnection1);
 
@@ -141,8 +143,8 @@ public class DatagramMeteringBufferTest extends TestCase {
 
         buffer.waitForSendQueue();
 
-        assertEquals("forwarded new datagram",pastSendMsg + 1, messagesForwarded.size());
-        assertEquals("new forward", datagram2, messagesForwarded.get(messagesForwarded.size() - 1));
+        Assert.assertEquals("forwarded new datagram",pastSendMsg + 1, messagesForwarded.size());
+        Assert.assertEquals("new forward", datagram2, messagesForwarded.get(messagesForwarded.size() - 1));
     }
 
     private void assertSendBusy() {
@@ -151,9 +153,10 @@ public class DatagramMeteringBufferTest extends TestCase {
 
         buffer.waitForSendQueue();
 
-        assertEquals("not forwarded new datagram",pastSendMsg, messagesForwarded.size());
+        Assert.assertEquals("not forwarded new datagram",pastSendMsg, messagesForwarded.size());
     }
 
+    @Test
     public void testSendReplyOtherNakNoInterfere() {
         buffer.put(datagram1, replyConnection1);
 
@@ -180,6 +183,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         assertSendReady();
     }
 
+    @Test
     public void testSendTwoNonDatagramGoesThrough() {
         Message m = new InitializationCompleteMessage(hereID);
         buffer.put(m, replyConnection1);
@@ -191,6 +195,7 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(m));        
     }
 
+    @Test
     public void testSendTwoBeforeReply() {
         buffer.put(datagram1, replyConnection1);
         buffer.put(datagram2, replyConnection1);
@@ -210,8 +215,8 @@ public class DatagramMeteringBufferTest extends TestCase {
         Assert.assertTrue(messagesForwarded.get(1).equals(datagram2));        
     }
 
-    @Override
-    protected void tearDown() {
+    @After
+    public void tearDown() {
         buffer.dispose(); 
         repliesReturned1 = null; 
         replyConnection1 = null;
@@ -224,23 +229,5 @@ public class DatagramMeteringBufferTest extends TestCase {
         datagram2 = null;                                        
         replyOK = null;
         replyNAKresend = null;
-    }
-    
-    // from here down is testing infrastructure
-    
-    public DatagramMeteringBufferTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {DatagramMeteringBufferTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(DatagramMeteringBufferTest.class);
-        return suite;
     }
 }
