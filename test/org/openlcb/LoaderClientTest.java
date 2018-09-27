@@ -70,7 +70,6 @@ public class LoaderClientTest {
  
     @After
     public void tearDown(){
-       dcs.dispose();
        mcs.dispose();
        dcs=null;
        mcs=null;
