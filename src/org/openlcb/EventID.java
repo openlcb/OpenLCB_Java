@@ -73,6 +73,14 @@ public class EventID {
         }
     }  
 
+    /// Checks whether a given Event ID comes from a given Node ID's space.
+    public boolean startsWith(NodeID id) {
+        for (int i = 0; i < 6; ++i) {
+            if (contents[i] != id.contents[i]) return false;
+        }
+        return true;
+    }
+
     @CheckReturnValue
     @Override
     public int hashCode() {
