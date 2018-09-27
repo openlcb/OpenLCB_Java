@@ -3,10 +3,7 @@ package scenarios.can;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * Simulate two nodes interacting on a single CAN segment
@@ -15,28 +12,12 @@ import junit.framework.TestSuite;
  * </ul>
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class TwoOnASegment extends TestCase {
+public class TwoOnASegment {
 
+    @Test
+    @Ignore("there is no test here")
     public void testBuild() {
     }    
     
-    // from here down is testing infrastructure
-    
-    public TwoOnASegment(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {TwoOnASegment.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(TwoOnASegment.class);
-        return suite;
-    }
 }

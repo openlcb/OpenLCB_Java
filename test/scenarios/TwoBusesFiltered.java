@@ -3,10 +3,7 @@ package scenarios;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * Simulate two buses East and West, 
@@ -20,18 +17,19 @@ import junit.framework.TestSuite;
  * is a check of the filtering algorithm
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class TwoBusesFiltered extends TwoBuses {
 
-    // Use a filtering gateway 
+    // Use a filtering gateway
+    @Override 
     protected void createGateway() {
         gate = new org.openlcb.implementations.EventFilterGateway();
     }
     
     // first will be specific tests of filtering
     // followed by all the inherited tests of TwoBusTest (which doesn't test filtering)
-    
+   
+    @Test 
     public void testNoExtraMessages() {
 
         // similar to testMessagesInOrder() in parent,
@@ -87,23 +85,5 @@ public class TwoBusesFiltered extends TwoBuses {
 
         checkAllReset();
 
-    }
-            
-    // from here down is testing infrastructure
-    
-    public TwoBusesFiltered(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {TwoBusesFiltered.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(TwoBusesFiltered.class);
-        return suite;
     }
 }

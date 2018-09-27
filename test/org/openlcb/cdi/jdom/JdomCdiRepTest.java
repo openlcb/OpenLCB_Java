@@ -1,9 +1,6 @@
 package org.openlcb.cdi.jdom;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import org.jdom2.*;
 
@@ -11,14 +8,15 @@ import org.openlcb.cdi.CdiRep;
 
 /**
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision: 34 $
  */
-public class JdomCdiRepTest extends TestCase {
-    
+public class JdomCdiRepTest {
+ 
+    @Test	
     public void testCtor() {
         new JdomCdiRep(null);
     }
     
+    @Test	
     public void testGetIdent() {
         CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
@@ -31,6 +29,7 @@ public class JdomCdiRepTest extends TestCase {
         Assert.assertEquals("software", "0.4", id.getSoftwareVersion());
     }
     
+    @Test	
     public void testMap() {
         Element e = new Element("map")
                     .addContent(new Element("relation")
@@ -67,6 +66,7 @@ public class JdomCdiRepTest extends TestCase {
         Assert.assertEquals("key3", "prop3", list.get(2));
     }
     
+    @Test	
     public void testSegments() {
         CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
@@ -88,6 +88,7 @@ public class JdomCdiRepTest extends TestCase {
         Assert.assertEquals("description", "Memory locations controlling resets", segment.getDescription());
     }
         
+    @Test	
     public void testGroupsInSegments() {
         CdiRep rep = new JdomCdiRep(SampleFactory.getBasicSample());
         
@@ -104,20 +105,4 @@ public class JdomCdiRepTest extends TestCase {
         Assert.assertEquals("contents length",4,items.size());
     }
 
-    public JdomCdiRepTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {JdomCdiRepTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(JdomCdiRepTest.class);
-
-        return suite;
-    }
 }

@@ -3,10 +3,7 @@ package scenarios.can;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * Simulate nine nodes interacting on a single CAN bus OpenLCB segment.
@@ -20,26 +17,11 @@ import junit.framework.TestSuite;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class NineOnASegment extends TestCase {
+public class NineOnASegment {
 
+    @Test
+    @Ignore("There is no test here")
     public void testBuild() {
     }    
     
-    // from here down is testing infrastructure
-    
-    public NineOnASegment(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {NineOnASegment.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(NineOnASegment.class);
-        return suite;
-    }
 }
