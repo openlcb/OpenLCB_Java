@@ -1,8 +1,6 @@
 package org.openlcb.cdi.impl;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -16,7 +14,7 @@ import java.io.StringWriter;
 /**
  * Created by bracz on 11/9/16.
  */
-public class ConfigRepresentationTest extends TestCase {
+public class ConfigRepresentationTest {
     protected FakeOlcbInterface iface;
     protected FakeMemoryConfigurationService mcs;
     protected NodeID remoteNode = new NodeID("05.01.01.01.14.39");
@@ -36,6 +34,7 @@ public class ConfigRepresentationTest extends TestCase {
         }
     }
 
+    @Test
     public void testComplexCdiLoad() throws Exception {
         addCdiData(SampleFactory.getOffsetSample());
         byte[] config = new byte[1000];
@@ -43,11 +42,11 @@ public class ConfigRepresentationTest extends TestCase {
         ConfigRepresentation rep = new ConfigRepresentation(iface, remoteNode);
         // Since all of our memory configuration commands execute inline, the representation will
         // be ready by the time it returns.
-        assertEquals("Representation complete.", rep.getStatus());
-        assertNotNull(rep.getRoot());
+        Assert.assertEquals("Representation complete.", rep.getStatus());
+        Assert.assertNotNull(rep.getRoot());
 
         ConfigRepresentation.CdiContainer cont = rep.getRoot();
-        assertEquals(2, cont.getEntries().size());
+        Assert.assertEquals(2, cont.getEntries().size());
 
         class Offset {
             int i;
@@ -76,24 +75,16 @@ public class ConfigRepresentationTest extends TestCase {
         });
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() {
         iface = new FakeOlcbInterface();
         mcs = new FakeMemoryConfigurationService(iface);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown(){
         iface.dispose();
         mcs.dispose();
-        super.tearDown();
     }
 
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ConfigRepresentationTest.class);
-
-        return suite;
-    }
 }

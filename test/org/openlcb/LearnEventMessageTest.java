@@ -1,17 +1,13 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class LearnEventMessageTest extends TestCase {
-    boolean result;
-    
+public class LearnEventMessageTest {
+   
+    @Test	
     public void testEqualsSame() {
         Message m1 = new LearnEventMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}),
@@ -23,6 +19,7 @@ public class LearnEventMessageTest extends TestCase {
         Assert.assertTrue(m1.equals(m2));
     }
 
+    @Test	
     public void testNotEqualsDifferentNode() {
         Message m1 = new LearnEventMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}),
@@ -34,6 +31,7 @@ public class LearnEventMessageTest extends TestCase {
         Assert.assertTrue( ! m1.equals(m2));
     }
 
+    @Test	
     public void testNotEqualsDifferentEvent() {
         Message m1 = new LearnEventMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}),
@@ -45,6 +43,8 @@ public class LearnEventMessageTest extends TestCase {
         Assert.assertTrue( ! m1.equals(m2));
     }
 
+    private boolean result;
+    @Test	
     public void testHandling() {
         result = false;
         Node n = new Node(){
@@ -62,21 +62,4 @@ public class LearnEventMessageTest extends TestCase {
         Assert.assertTrue(result);
     }
     
-    // from here down is testing infrastructure
-    
-    public LearnEventMessageTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {LearnEventMessageTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(LearnEventMessageTest.class);
-        return suite;
-    }
 }

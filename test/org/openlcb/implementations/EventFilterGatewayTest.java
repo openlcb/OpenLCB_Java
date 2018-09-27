@@ -2,18 +2,15 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class EventFilterGatewayTest extends GatewayTest {
     
     // create a filtering gateway for parent tests
+    @Override
     protected Gateway getGateway() {
         return new EventFilterGateway();
     }
@@ -26,6 +23,7 @@ public class EventFilterGatewayTest extends GatewayTest {
     // first will be specific tests of filtering
     // followed by all the inherited tests of a regular Gateway
 
+    @Test
     public void testEventNotPassByDefaultEtoW() {
         buildGateway();
         Message m = new ProducerConsumerEventReportMessage(node1, eventA);
@@ -42,6 +40,7 @@ public class EventFilterGatewayTest extends GatewayTest {
         resultW = false;
     }
 
+    @Test
     public void testEventNotPassByDefaultWtoE() {
         buildGateway();
         Message m = new ProducerConsumerEventReportMessage(node1, eventA);
@@ -51,6 +50,7 @@ public class EventFilterGatewayTest extends GatewayTest {
         checkMovedNeitherWay();
     }
     
+    @Test
     public void testReqEventPassesEtoW() {
         buildGateway();
 
@@ -63,6 +63,7 @@ public class EventFilterGatewayTest extends GatewayTest {
         checkMovedEastToWestOnly();
     }
     
+    @Test
     public void testReqEventPassesWtoE() {
         buildGateway();
 
@@ -75,21 +76,4 @@ public class EventFilterGatewayTest extends GatewayTest {
         checkMovedWestToEastOnly();
     }
     
-    // from here down is testing infrastructure
-    
-    public EventFilterGatewayTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {EventFilterGatewayTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(EventFilterGatewayTest.class);
-        return suite;
-    }
 }

@@ -1,9 +1,6 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import java.beans.PropertyChangeEvent;
 import java.util.Collection;
@@ -13,7 +10,7 @@ import java.beans.PropertyChangeListener;
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision$
  */
-public class MimicNodeStoreTest extends TestCase {
+public class MimicNodeStoreTest {
     MimicNodeStore store = null;
     
     NodeID nid1 = new NodeID(new byte[]{1,3,3,4,5,6});
@@ -38,7 +35,8 @@ public class MimicNodeStoreTest extends TestCase {
     };
     
     NodeID src = new NodeID(new byte[]{1,2,3,4,5,6});
-                                   
+
+    @Before    
     public void setUp() {
         store = new MimicNodeStore(connection, src);
         lastMessage = null;
@@ -49,41 +47,50 @@ public class MimicNodeStoreTest extends TestCase {
         listenerFired = false;
     }
 
-    @Override
-    protected void tearDown() {
+    @After
+    public void tearDown() {
        store.dispose();
+       store = null;
+       listener = null;
     }
 
+    @Test
     public void testCtor() {
         Assert.assertNotNull(store);
     }
     
+    @Test
     public void testListExists() {
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         Assert.assertNotNull(list);        
     }
 
+    @Test
     public void testListInitiallyEmpty() {
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         Assert.assertTrue(list.size()==0);        
     }
     
+    @Test
     public void testAcceptsMessage() {
         store.put(pim1,null);
     }
     
+    @Test
     public void testMessageAddsToList() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         Assert.assertTrue(list.size()==1);
     }
     
+    @Test
     public void testMessageMemoKnowsNodeID() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
         Assert.assertEquals(list.iterator().next().getNodeID(), nid1);
     }
     
+    @Test
     public void testHandleMultipleNodes() {
         store.put(pim1,null);
         store.put(pim2,null);
@@ -91,6 +98,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertTrue(list.size()==2);
     }
     
+    @Test
     public void testHandleMultipleMessagesFromNode() {
         store.put(pim1,null);
         store.put(pim1,null);
@@ -98,6 +106,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertTrue(list.size()==1);
     }
     
+    @Test
     public void testNoDefaultProtocolInfo() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
@@ -106,6 +115,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertNotNull(memo.getProtocolIdentification());
     }
 
+    @Test
     public void testProtocolInfoAvailableFromNode() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
@@ -115,6 +125,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertNotNull(memo.getProtocolIdentification());
     }
     
+    @Test
     public void testForNotificationOfNode() {
         store.addPropertyChangeListener(
             new PropertyChangeListener(){
@@ -131,6 +142,7 @@ public class MimicNodeStoreTest extends TestCase {
         
     }
 
+    @Test
     public void testForNotificationOfOnlyOneNode() {
         store.put(pim1,null);
 
@@ -152,6 +164,7 @@ public class MimicNodeStoreTest extends TestCase {
         
     }
 
+    @Test
     public void testForNotificationOfProtocolIdent() {
         store.addPropertyChangeListener(listener);
         store.put(pim1,null);
@@ -159,6 +172,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertTrue(listenerFired);
     }
     
+    @Test
     public void testNoDefaultSimpleInfo() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
@@ -167,6 +181,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertNotNull(memo.getSimpleNodeIdent());
     }
 
+    @Test
     public void testSimpleInfoAvailableFromNode() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
@@ -178,6 +193,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertEquals("abc", memo.getSimpleNodeIdent().getMfgName());
     }
 
+    @Test
     public void testSimpleInfoRetry() {
         store.put(pim1,null);
         Collection<MimicNodeStore.NodeMemo> list = store.getNodeMemos();
@@ -190,6 +206,7 @@ public class MimicNodeStoreTest extends TestCase {
         Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(src, nid1) );
     }
     
+    @Test
     public void testFindNodeNotPresent() {
         MimicNodeStore.NodeMemo retval = store.findNode(nid1);
 
@@ -198,6 +215,7 @@ public class MimicNodeStoreTest extends TestCase {
         
     }
     
+    @Test
     public void testFindNodePresent() {
         store.put(pim1,null);
 
@@ -208,11 +226,12 @@ public class MimicNodeStoreTest extends TestCase {
         
     }
 
+    @Test
     public void testRefresh() {
         store.put(pim1,null);
         store.put(pim2,null);
-        assertNotNull(store.findNode(nid1));
-        assertNotNull(store.findNode(nid2));
+        Assert.assertNotNull(store.findNode(nid1));
+        Assert.assertNotNull(store.findNode(nid2));
 
         // Adds a dummy listener to test callbacks.
         class MyListener implements PropertyChangeListener {
@@ -228,34 +247,17 @@ public class MimicNodeStoreTest extends TestCase {
         store.refresh();
 
         // There is a side effect of a callback to clear everything.
-        assertNotNull(l.lastEvent);
-        assertEquals(MimicNodeStore.CLEAR_ALL_NODES,l.lastEvent.getPropertyName());
+        Assert.assertNotNull(l.lastEvent);
+        Assert.assertEquals(MimicNodeStore.CLEAR_ALL_NODES,l.lastEvent.getPropertyName());
 
         // And a verify node ID message going out.
-        assertNotNull(lastMessage);
-        assertTrue(lastMessage instanceof VerifyNodeIDNumberMessage);
+        Assert.assertNotNull(lastMessage);
+        Assert.assertTrue(lastMessage instanceof VerifyNodeIDNumberMessage);
 
         // As well as the node tree being clear now.
-        assertEquals(0, store.getNodeMemos().size());
-        assertNull(store.findNode(nid1));
-        assertNull(store.findNode(nid2));
+        Assert.assertEquals(0, store.getNodeMemos().size());
+        Assert.assertNull(store.findNode(nid1));
+        Assert.assertNull(store.findNode(nid2));
     }
 
-    // from here down is testing infrastructure
-    
-    public MimicNodeStoreTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MimicNodeStoreTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MimicNodeStoreTest.class);
-        return suite;
-    }
 }
