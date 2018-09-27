@@ -3,16 +3,12 @@ package org.openlcb.implementations.throttle;
 import org.openlcb.*;
 import org.openlcb.implementations.DatagramService;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class ThrottleImplementationTest extends TestCase {
+public class ThrottleImplementationTest {
     
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
@@ -22,7 +18,7 @@ public class ThrottleImplementationTest extends TestCase {
     DatagramService service;
     MimicNodeStore store;
 
-    @Override
+    @Before
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
@@ -36,16 +32,23 @@ public class ThrottleImplementationTest extends TestCase {
         store = new MimicNodeStore(testConnection, hereID);
     }
 
+    @After
     public void tearDown() {
        store.dispose();
+       store = null;
+       service = null;
+       testConnection = null;
+       messagesReceived = null;
     }
 
+    @Test
     public void testCtors() {
         new ThrottleImplementation(1234, true, store, service);
         new ThrottleImplementation(3, true, store, service);
         new ThrottleImplementation(3, false, store, service);       
     }
     
+    @Test
     public void testStartUnknownNode() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -58,6 +61,7 @@ public class ThrottleImplementationTest extends TestCase {
 
     }
     
+    @Test
     public void testSetSpeed100() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -75,6 +79,7 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(0x40, content[3]);
     }
 
+    @Test
     public void testSetSpeedZero() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -92,6 +97,7 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(0x00, content[3]);
     }
     
+    @Test
     public void testSetSpeedReverseZero() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -109,6 +115,7 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(0x00, content[3]);
     }
     
+    @Test
     public void testSetF1On() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -132,6 +139,7 @@ public class ThrottleImplementationTest extends TestCase {
         
     }
     
+    @Test
     public void testSetF2Off() {
         ThrottleImplementation t = new ThrottleImplementation(1234, true, store, service);
         t.start();
@@ -152,24 +160,5 @@ public class ThrottleImplementationTest extends TestCase {
         Assert.assertEquals(2,    content[5]);  // address
         Assert.assertEquals(0xF9, content[6]); // address space
         Assert.assertEquals(0x00, content[7]); // data
-        
-    }
-    
-    // from here down is testing infrastructure
-    
-    public ThrottleImplementationTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ThrottleImplementationTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ThrottleImplementationTest.class);
-        return suite;
     }
 }

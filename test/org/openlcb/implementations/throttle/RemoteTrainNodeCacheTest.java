@@ -1,9 +1,6 @@
 package org.openlcb.implementations.throttle;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import org.openlcb.CommonIdentifiers;
 import org.openlcb.EventID;
@@ -17,37 +14,23 @@ import org.openlcb.ProducerIdentifiedMessage;
 
 /**
  * @author Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class RemoteTrainNodeCacheTest extends TestCase {
+public class RemoteTrainNodeCacheTest {
     TrainNodeCache cache;
     FakeOlcbInterface fakeInterface;
 
-    public RemoteTrainNodeCacheTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {RemoteTrainNodeCacheTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(RemoteTrainNodeCacheTest.class);
-        return suite;
-    }
-
+    @Test
     public void testSetup() {
         Assert.assertTrue(cache != null);
     }
 
+    @Test
     public void testEmpty() {
         Assert.assertTrue(cache.getList() != null);
         Assert.assertEquals(0, cache.getList().size());
     }
 
+    @Test
     public void testIgnoresMessage() {
 
         Message m = new OptionalIntRejectedMessage(null, null, 0, 0);
@@ -57,6 +40,7 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         Assert.assertEquals(0, cache.getList().size());
     }
 
+    @Test
     public void testIgnoresEvent() {
 
         Message m = new ProducerConsumerEventReportMessage(null, new EventID("01.02.03.04.05.06" +
@@ -67,8 +51,7 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         Assert.assertEquals(0, cache.getList().size());
     }
 
-    // from here down is testing infrastructure
-
+    @Test
     public void testSeesIsTrainEvent() {
         Message m = new ProducerConsumerEventReportMessage(new NodeID(new byte[]{1, 1, 0, 0, 4,
                 4}), CommonIdentifiers.IS_TRAIN);
@@ -82,6 +65,7 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         Assert.assertTrue(tn.getNodeId().equals(new NodeID(new byte[]{1, 1, 0, 0, 4, 4})));
     }
 
+    @Test
     public void testNoDuplicates() {
         Message m = new ProducerConsumerEventReportMessage(new NodeID(new byte[]{1, 1, 0, 0, 4,
                 4}), CommonIdentifiers.IS_TRAIN);
@@ -106,12 +90,16 @@ public class RemoteTrainNodeCacheTest extends TestCase {
         Assert.assertEquals(new NodeID(new byte[]{1, 1, 0, 0, 4, 5}), cache.getCache(1).getNodeId());
     }
 
+    @Before
     public void setUp() {
         fakeInterface = new FakeOlcbInterface();
         cache = new TrainNodeCache(fakeInterface);
     }
 
+    @After
     public void tearDown() {
         fakeInterface.dispose();
+	fakeInterface = null;
+	cache = null;
     }
 }

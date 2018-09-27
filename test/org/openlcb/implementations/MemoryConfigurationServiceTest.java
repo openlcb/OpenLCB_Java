@@ -1,16 +1,12 @@
 package org.openlcb.implementations;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 import org.openlcb.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision: -1 $
  */
-public class MemoryConfigurationServiceTest extends TestCase {
+public class MemoryConfigurationServiceTest {
     
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
@@ -20,9 +16,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
     DatagramService datagramService;
     MemoryConfigurationService service;
     
-    @Override
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
         testConnection = new AbstractConnection(){
@@ -36,16 +31,22 @@ public class MemoryConfigurationServiceTest extends TestCase {
         service = new MemoryConfigurationService(hereID, datagramService);
     }
 
-    @Override
-    protected void tearDown(){
+    @After
+    public void tearDown(){
        service.dispose();
+       messagesReceived = null;
+       testConnection = null;
+       datagramService = null;
+       service = null;
     }
     
     
-    
+    @Test 
     public void testCtorViaSetup() {
+	Assert.assertNotNull("exists",service);
     }
     
+    @Test 
     public void testReadMemoIsRealClass() {
         MemoryConfigurationService.McsReadHandler hnd = new MemoryConfigurationService
                 .McsReadHandler() {
@@ -74,6 +75,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
     public void testWriteMemoIsRealClass() {
         MemoryConfigurationService.McsWriteHandler hnd = new MemoryConfigurationService.McsWriteHandler() {
             @Override
@@ -113,6 +115,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
     public void testSimpleWrite() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -121,7 +124,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
             new MemoryConfigurationService.McsWriteHandler() {
                 @Override
                 public void handleFailure(int errorCode) {
-                    assertEquals("Write failed. error code is ", 0, errorCode);
+                    Assert.assertEquals("Write failed. error code is ", 0, errorCode);
                 }
 
                 @Override
@@ -168,7 +171,10 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
-        /*
+    
+    /*
+    @Test
+    @Ignore("commented out in JUnit 3") 
     public void testSimpleRead() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -178,7 +184,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
                 @Override
                 public void handleFailure(int code) {
                     flag = true;
-                    assertEquals("Read failed. error code is ", 0, code);
+                    Assert.assertEquals("Read failed. error code is ", 0, code);
                 }
 
                 @Override
@@ -236,6 +242,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
+    @Ignore("commented out in JUnit 3") 
     public void testTwoSimpleReadsInSequence() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -245,7 +253,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
                 @Override
                 public void handleFailure(int code) {
                     flag = true;
-                    assertEquals("Read failed. error code is ", 0, code);
+                    Assert.assertEquals("Read failed. error code is ", 0, code);
                 }
 
                 @Override
@@ -353,6 +361,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
         }
     }
 
+    @Test 
+    @Ignore("commented out in JUnit 3") 
     public void testSimpleReadFails() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -421,6 +431,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
+    @Ignore("commented out in JUnit 3") 
     public void testSimpleReadFromSpace1() {
         int space = 0x01;
         long address = 0x12345678;
@@ -488,6 +500,8 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
     */
+
+    @Test 
     public void testConfigMemoIsRealClass() {
         class TestMemo extends MemoryConfigurationService.McsConfigMemo {
             public TestMemo(NodeID dest) {
@@ -513,13 +527,14 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
     public void testGetConfig() {
         MemoryConfigurationService.McsConfigMemo memo = 
             new MemoryConfigurationService.McsConfigMemo(farID) {
                 @Override
                 public void handleFailure(int code) {
                     flag = true;
-                    assertEquals("Config get failed. error code is ", 0, code);
+                    Assert.assertEquals("Config get failed. error code is ", 0, code);
                 }
 
                 @Override
@@ -561,6 +576,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
     public void testAddrSpaceMemoIsRealClass() {
         MemoryConfigurationService.McsAddrSpaceMemo m20 = 
             new MemoryConfigurationService.McsAddrSpaceMemo(farID,0xFD);
@@ -581,6 +597,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         
     }
 
+    @Test 
     public void testGetAddrSpace1() {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
@@ -632,6 +649,7 @@ public class MemoryConfigurationServiceTest extends TestCase {
         Assert.assertTrue(flag);
                 
     }
+    @Test 
     public void testGetAddrSpace2() {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
@@ -684,21 +702,4 @@ public class MemoryConfigurationServiceTest extends TestCase {
                 
     }
 
-    // from here down is testing infrastructure
-    
-    public MemoryConfigurationServiceTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MemoryConfigurationServiceTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MemoryConfigurationServiceTest.class);
-        return suite;
-    }
 }
