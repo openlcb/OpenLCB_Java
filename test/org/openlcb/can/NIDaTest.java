@@ -2,22 +2,21 @@ package org.openlcb.can;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class NIDaTest extends TestCase {
-    
+public class NIDaTest  {
+
+    @Test	
     public void testPRNGbuild() {
         na.nextAlias();
     }
     
     // not really checking the sequence, just checking for differences.
+    @Test	
     public void testPRNGdiffers() {
         int first = na.getNIDa();
         na.nextAlias();
@@ -42,7 +41,9 @@ public class NIDaTest extends TestCase {
     }
     
     // print the first few from a zero seed, not normally done
-    public void XtestListValues() {
+    @Test	
+    @Ignore("named so it did not run in JUnit 3")
+    public void testListValues() {
         for (int i = 0; i< 200; i++) {
             System.out.println("0x"+Integer.toHexString(na.getNIDa()));
             na.nextAlias();
@@ -50,6 +51,7 @@ public class NIDaTest extends TestCase {
     }
     
     // test takes a couple minutes, not normally done
+    @Test	
     public void XtestAltPRNG() {
       // http://en.wikipedia.org/wiki/Linear_feedback_shift_register
       long lfsr = 1;
@@ -68,26 +70,15 @@ public class NIDaTest extends TestCase {
     NodeID node;
     NIDa na;
 
+    @Before
     public void setUp() {
         node = new NodeID(new byte[]{0,0,0,1,0,2}); 
         na = new NIDa(node);
     }
 
-    // from here down is testing infrastructure
-    
-    public NIDaTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {NIDaTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(NIDaTest.class);
-        return suite;
+    @After
+    public void tearDown(){
+        node = null;
+        na = null;
     }
 }

@@ -2,24 +2,22 @@ package org.openlcb.can;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2010
- * @version $Revision$
  */
-public class AliasMapTest extends TestCase {
-    
+public class AliasMapTest  {
+ 
+    @Test	
     public void testEmptyStart() {
         AliasMap map = new AliasMap();
         
         Assert.assertEquals("get Alias", -1, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
         Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
-    
+   
+    @Test 
     public void testAfterFrame() {
         AliasMap map = new AliasMap();
         
@@ -30,6 +28,7 @@ public class AliasMapTest extends TestCase {
         Assert.assertEquals("check alias", 0x123, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
     }
     
+    @Test 
     public void testAfterInsert() {
         AliasMap map = new AliasMap();
         
@@ -38,6 +37,7 @@ public class AliasMapTest extends TestCase {
         Assert.assertEquals("check alias", 0x123, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
     }
     
+    @Test 
     public void testAfterAMR() {
         AliasMap map = new AliasMap();
         
@@ -52,21 +52,4 @@ public class AliasMapTest extends TestCase {
         Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
     
-    // from here down is testing infrastructure
-    
-    public AliasMapTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {AliasMapTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(AliasMapTest.class);
-        return suite;
-    }
 }

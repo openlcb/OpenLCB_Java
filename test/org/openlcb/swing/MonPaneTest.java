@@ -3,10 +3,7 @@ package org.openlcb.swing;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import javax.swing.*;
 /**
@@ -21,7 +18,7 @@ import javax.swing.*;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class MonPaneTest extends TestCase {
+public class MonPaneTest {
 
     NodeID id1 = new NodeID(new byte[]{0,0,0,0,0,1});
     NodeID id2 = new NodeID(new byte[]{0,0,0,0,0,2});
@@ -48,10 +45,12 @@ public class MonPaneTest extends TestCase {
     SingleConsumerNode node9;
     
     ScatterGather sg;
-    
+    JFrame f; 
+   
+    @Before 
     public void setUp() throws Exception {
         // Test is really popping a window before doing all else
-        JFrame f = new JFrame();
+        f = new JFrame();
         f.setTitle("MonPane Test");
         MonPane m = new MonPane();
         f.add( m );
@@ -93,8 +92,22 @@ public class MonPaneTest extends TestCase {
         sg.register(node9);
         
     }
-    
-    public void tearDown() {}
+   
+    @After 
+    public void tearDown() {
+        f.setVisible(false);
+	f.dispose();
+        sg = null;
+        node1 = null;
+        node2 = null;
+        node3 = null;
+        node4 = null;
+        node5 = null;
+        node6 = null;
+        node7 = null;
+        node8 = null;
+        node9 = null;
+    }
         
     void initAll() {
         node1.initialize();
@@ -107,7 +120,8 @@ public class MonPaneTest extends TestCase {
         node8.initialize();
         node9.initialize();
     }
-    
+   
+    @Test 
     public void testMessagesInOrder() {
         initAll();
         
@@ -116,24 +130,5 @@ public class MonPaneTest extends TestCase {
         node5.send(); 
         node2.send();  
         node3.send();  
-    }
-        
-   
-    // from here down is testing infrastructure
-    
-    public MonPaneTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MonPaneTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MonPaneTest.class);
-        return suite;
     }
 }
