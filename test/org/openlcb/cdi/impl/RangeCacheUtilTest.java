@@ -1,9 +1,6 @@
 package org.openlcb.cdi.impl;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import java.util.List;
 import org.openlcb.cdi.impl.RangeCacheUtil.Range;
@@ -12,13 +9,15 @@ import org.openlcb.cdi.jdom.JdomCdiRepTest;
 /**
  * Created by bracz on 4/9/16.
  */
-public class RangeCacheUtilTest extends TestCase {
+public class RangeCacheUtilTest {
     
+    @Test
     public void testToString() throws Exception {
         Range r1 = new Range(1,3);
         Assert.assertEquals("Range[1,3)", r1.toString());
     }
 
+    @Test
     public void testToEquals() throws Exception {
         Range r1 = new Range(1,3);
         Range r2 = new Range(2, 3);
@@ -29,11 +28,11 @@ public class RangeCacheUtilTest extends TestCase {
         Assert.assertTrue(r1.equals(r4));
         Assert.assertTrue(r4.equals(r1));
         Assert.assertEquals("hashcodes equal when equal",r1.hashCode(),r4.hashCode());
-        assertFalse(r3.equals(r4));
-        assertFalse(r4.equals(r3));
+        Assert.assertFalse(r3.equals(r4));
+        Assert.assertFalse(r4.equals(r3));
     }
 
-
+    @Test
     public void testGetRanges() throws Exception {
         RangeCacheUtil util = new RangeCacheUtil();
         util.addRange(10, 12);
@@ -52,10 +51,4 @@ public class RangeCacheUtilTest extends TestCase {
         Assert.assertEquals(new Range(0, 28), rng.get(0));
     }
 
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(RangeCacheUtilTest.class);
-
-        return suite;
-    }
 }
