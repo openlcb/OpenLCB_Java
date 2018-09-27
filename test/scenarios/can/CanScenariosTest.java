@@ -10,8 +10,9 @@ import org.junit.runners.Suite;
 })
 
 /**
+ * This Package is named so that maven will automatically pick it up to run.
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class CanScenarios {
+public class CanScenariosTest {
 }

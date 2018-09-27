@@ -10,15 +10,15 @@ import org.junit.Test;
         TwoBuses.class,
         TwoBusesFiltered.class,
         ThreeBuses.class,
-        scenarios.can.CanScenarios.class
+        scenarios.can.CanScenariosTest.class
 })
 /**
  * Primary test runner for this package.
+ * This Package is named so that maven will automatically pick it up to run.
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class PackageTest {
+public class ScenariosTest {
     
     // BlueGoldCheck not JUnit so can run standalone
     @Test
