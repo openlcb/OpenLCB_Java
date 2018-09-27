@@ -30,7 +30,7 @@ public class AllTest extends TestCase {
         TestSuite suite = new TestSuite(AllTest.class);
         suite.addTest(tools.ToolsTest.suite());
         suite.addTest(new JUnit4TestAdapter(org.openlcb.PackageTest.class));
-        suite.addTest(new JUnit4TestAdapter(scenarios.PackageTest.class));
+        suite.addTest(new JUnit4TestAdapter(scenarios.ScenariosTest.class));
         return suite;
     }
 }

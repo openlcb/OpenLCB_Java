@@ -1,16 +1,13 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class MessageTest extends TestCase {
+public class MessageTest {
 
+    @Test
     public void testEqualsSame() {
         Message m1 = new Message(new NodeID(new byte[]{1,2,3,4,5,6}) )
             {public int getMTI() {return 0; }};
@@ -20,6 +17,7 @@ public class MessageTest extends TestCase {
         Assert.assertTrue(m1.equals(m2));
     }
 
+    @Test
     public void testNotEqualsDifferent() {
         Message m1 = new Message(new NodeID(new byte[]{1,2,3,4,5,6}) )
             {public int getMTI() {return 0; }};
@@ -27,23 +25,5 @@ public class MessageTest extends TestCase {
             {public int getMTI() {return 0; }};
     
         Assert.assertTrue( ! m1.equals(m2));
-    }
-
-    // from here down is testing infrastructure
-    
-    public MessageTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MessageTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MessageTest.class);
-        return suite;
     }
 }

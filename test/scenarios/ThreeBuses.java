@@ -154,7 +154,6 @@ public class ThreeBuses {
         initAll();
     }
     
-    @Test 
     void initAll() {
         nodeWP1.initialize();
         nodeWP2.initialize();
