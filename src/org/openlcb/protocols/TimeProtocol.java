@@ -35,7 +35,7 @@ public interface TimeProtocol {
         int r = cnt[6];
         r &= 0xff;
         r <<= 8;
-        r |= cnt[7];
+        r |= (cnt[7] & 0xff);
         return r;
     }
 
