@@ -9,6 +9,7 @@ import org.openlcb.ProducerConsumerEventReportMessage;
 import org.openlcb.ProducerIdentifiedMessage;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * Implementation of the Clock Consumer feature for the Time Broadcast Protocol.
@@ -25,10 +26,22 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
         this.timeKeeper = new TimeKeeper();
         this.iface = iface;
         iface.registerMessageListener(this);
+        lastReportedTime.set(Calendar.SECOND, 0);
+        lastReportedTime.set(Calendar.MILLISECOND, 0);
+    }
+
+    /**
+     * Overrides default time zone. If never called, uses computer's local time.
+     * @param tz This timezone will be used to convert the date and time values coming on
+     *           the wire into a long (milliseconds since epoch).
+     */
+    public void setTimeZone(TimeZone tz) {
+        timeZone = tz;
+        lastReportedTime.setTimeZone(tz);
     }
 
     /// De-registers message listeners to prepare for deallocating this object.
-    void dispose() {
+    public void dispose() {
         iface.unRegisterMessageListener(this);
     }
 
@@ -69,12 +82,16 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
                 break;
             }
             case NIB_YEAR_REPORT: {
-                int year =  d & 0xfff;
+                int year = d & 0xfff;
                 setYear(year, force);
                 break;
             }
             case NIB_RATE_REPORT: {
-                double r = (d & 0xfff);
+                int ir = d & 0xfff;
+                // Sign-extends the 12-bit value to 32 bits.
+                ir <<= (32-12);
+                ir >>= (32-12);
+                double r = ir;
                 r /= 4;
                 timeKeeper.setRate(r);
                 break;
@@ -112,7 +129,7 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
      */
     private void setHoursMins(int hrs, int min, boolean force) {
         Calendar c = lastReportedTime;
-        c.set(Calendar.HOUR, hrs);
+        c.set(Calendar.HOUR_OF_DAY, hrs);
         c.set(Calendar.MINUTE, min);
         long newTime = c.getTimeInMillis();
         // We only set the fast clock if the actual time is more than one minute apart. Otherwise we would be better off with a bit of skew.
@@ -132,15 +149,15 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
      */
     private void setDate(int month, int day, boolean force) {
         Calendar c = lastReportedTime;
-        c.set(Calendar.MONTH, month);
+        c.set(Calendar.MONTH, month - 1);
         c.set(Calendar.DAY_OF_MONTH, day);
 
         if (force) {
             // Apply also to running clock.
-            c = Calendar.getInstance();
+            c = Calendar.getInstance(timeZone);
             long ctime = timeKeeper.getTime();
             c.setTimeInMillis(ctime);
-            c.set(Calendar.MONTH, month);
+            c.set(Calendar.MONTH, month - 1);
             c.set(Calendar.DAY_OF_MONTH, day);
             long newTime = c.getTimeInMillis();
             if (Math.abs(newTime - ctime) > 60*1000) {
@@ -161,7 +178,7 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
         if (force) {
             // Apply also to running clock.
             long ctime = timeKeeper.getTime();
-            c = Calendar.getInstance();
+            c = Calendar.getInstance(timeZone);
             c.setTimeInMillis(ctime);
             c.set(Calendar.YEAR, year);
             long newTime = c.getTimeInMillis();
@@ -174,10 +191,12 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
 
     /// Stores the individual fields of the last reported time, collecting the varous events coming from the network.
     private Calendar lastReportedTime = Calendar.getInstance();
+    /// if not null, the client has set the timezone.
+    private TimeZone timeZone = TimeZone.getDefault();
     /// Interface we are registered to.
     private final OlcbInterface iface;
     /// Storesthe prefix of the event ID that represents our clock.
     private final NodeID clock;
     /// Internal implementation for the current (fast) time.
-    private TimeKeeper timeKeeper;
+    TimeKeeper timeKeeper;
 }
