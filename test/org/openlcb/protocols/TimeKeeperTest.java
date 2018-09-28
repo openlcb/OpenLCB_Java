@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
  * Created by bracz on 9/27/18.
  */
 public class TimeKeeperTest {
-    private class FakeTimeKeeper extends TimeKeeper {
+    public static class FakeTimeKeeper extends TimeKeeper {
         @Override
         protected long currentTimeMillis() {
             return overrideTime;
@@ -59,6 +59,12 @@ public class TimeKeeperTest {
         tk.overrideTime += 1000;
         long tt2 = tk.getTime();
         assertEquals(13000, tt2-tt1);
+
+        tk.setRate(-10.0);
+        long tu1 = tk.getTime();
+        tk.overrideTime += 1000;
+        long tu2 = tk.getTime();
+        assertEquals(-10000, tu2-tu1);
     }
 
     @Test
