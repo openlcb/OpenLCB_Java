@@ -28,7 +28,7 @@ public class AllTest extends TestCase {
     // test suite from all defined tests
     public static Test suite() {
         TestSuite suite = new TestSuite(AllTest.class);
-        suite.addTest(tools.ToolsTest.suite());
+        suite.addTest(new JUnit4TestAdapter(tools.ToolsTest.class));
         suite.addTest(new JUnit4TestAdapter(org.openlcb.PackageTest.class));
         suite.addTest(new JUnit4TestAdapter(scenarios.ScenariosTest.class));
         return suite;

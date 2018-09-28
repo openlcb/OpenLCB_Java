@@ -3,10 +3,7 @@ package org.openlcb.swing;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -14,22 +11,27 @@ import javax.swing.text.*;
 /**
  *
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class EventIdTextFieldTest extends TestCase {
+public class EventIdTextFieldTest  {
     
     JFrame frame;
-    
+ 
+    @Before   
     public void setUp() throws Exception {
         
         frame = new JFrame();
         frame.setTitle("EventIdTextField Test");
         
     }
-    
+   
+    @After 
     public void tearDown() {
+	frame.setVisible(false);
+	frame.dispose();
+        frame = null;
     }
-            
+    
+    @Test    
     public void testVisibleVersion() {
         JFormattedTextField p = EventIdTextField.getEventIdTextField();
 
@@ -40,23 +42,5 @@ public class EventIdTextFieldTest extends TestCase {
 
         Assert.assertEquals("00.00.00.00.00.00.00.00", p.getValue());
         
-    }
-   
-    // from here down is testing infrastructure
-    
-    public EventIdTextFieldTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {EventIdTextFieldTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(EventIdTextFieldTest.class);
-        return suite;
     }
 }

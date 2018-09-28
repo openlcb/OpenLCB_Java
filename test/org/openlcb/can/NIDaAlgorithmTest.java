@@ -2,22 +2,21 @@ package org.openlcb.can;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class NIDaAlgorithmTest extends TestCase {
-    
+public class NIDaAlgorithmTest  {
+   
+    @Test	
     public void testBuild() {
         // just checks ctor via setup
         Assert.assertTrue("not complete", !alg.isComplete());
     }
     
+    @Test	
     public void testAliasSequence() {
         NIDa alg = new NIDa(new NodeID(new byte[]{2,3,4,5,6,7}));
 
@@ -28,6 +27,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals("proper 2nd alias", (long)0x6BA, alg.getNIDa());
     }
 
+    @Test	
     public void testFirst() {
         OpenLcbCanFrame f = alg.nextFrame();        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -37,6 +37,7 @@ public class NIDaAlgorithmTest extends TestCase {
 
     }
     
+    @Test	
     public void testFifth() {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -53,6 +54,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals((f = alg.nextFrame()), null);
     }
     
+    @Test	
     public void testNotAConflict() {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -85,6 +87,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals((f = alg.nextFrame()), null);
     }
     
+    @Test	
     public void testConflictAfterOne() {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -109,6 +112,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertEquals((f = alg.nextFrame()), null);
     }
     
+    @Test	
     public void testLatecomerConflict() {
         OpenLcbCanFrame f;        
         Assert.assertTrue("not complete", !alg.isComplete());
@@ -135,6 +139,7 @@ public class NIDaAlgorithmTest extends TestCase {
         Assert.assertTrue((f = alg.nextFrame()).isRIM());
     }
     
+    @Test	
     public void testSequentialStart2() {
         NIDaAlgorithm alg1 = new NIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
         NIDaAlgorithm alg2 = new NIDaAlgorithm(new NodeID(new byte[]{20,21,22,23,24,25}));
@@ -161,6 +166,7 @@ public class NIDaAlgorithmTest extends TestCase {
         
     }
     
+    @Test	
     public void testSequentialCollisionStart2() {
         // this is getting identical aliases by tricking the seed computation.
         NubNIDaAlgorithm alg1 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
@@ -195,6 +201,7 @@ public class NIDaAlgorithmTest extends TestCase {
      * The simulates the case where nodes send slowly, so
      * CAN propagates them in order.
      */
+    @Test	
     public void testSequentialStart10() {
         NIDaAlgorithm alg1 = new NIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
         NIDaAlgorithm alg2 = new NIDaAlgorithm(new NodeID(new byte[]{20,21,22,23,14,15}));
@@ -246,6 +253,7 @@ public class NIDaAlgorithmTest extends TestCase {
      * The simulates the case where nodes are sending as fast as possible, so
      * CAN arbitrates. Seeds are different.
      */
+    @Test	
     public void testPriorityStart10() {
         NIDaAlgorithm alg1 = new NIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
         NIDaAlgorithm alg2 = new NIDaAlgorithm(new NodeID(new byte[]{20,21,22,23,14,15}));
@@ -298,6 +306,7 @@ public class NIDaAlgorithmTest extends TestCase {
      * CAN arbitrates. Seeds are forced to be the same, but NodeIDs differ.
      * 
      */
+    @Test	
     public void testPriorityCollisionStart10() {
         NubNIDaAlgorithm alg1 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
         NubNIDaAlgorithm alg2 = new NubNIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,25}));
@@ -358,6 +367,7 @@ public class NIDaAlgorithmTest extends TestCase {
      * in order.
      * 
      */
+    @Test	
     public void testPriorityMultiMsgSerialNumbers() {
         byte nNodes = 20;
         byte nMfgs =5;
@@ -473,35 +483,25 @@ public class NIDaAlgorithmTest extends TestCase {
         public void forceSeedValue(long seed1, long seed2) { ((NubNIDa)nida).forceSeedValue(seed1, seed2); }
         public void forceAliasValue(int alias) { ((NubNIDa)nida).forceAliasValue(alias); }
     }
+
     class NubNIDa extends NIDa {
         public NubNIDa(NodeID nid) { super(nid);}
         public void forceSeedValue(long seed1, long seed2 ) { super.forceSeedValue(seed1,seed2); }
         public void forceAliasValue(int alias) { super.forceAliasValue(alias); }
     }
-   
+
+    @Before   
     public void setUp() {
         alg = new NIDaAlgorithm(new NodeID(new byte[]{10,11,12,13,14,15}));
+    }
+
+    @After
+    public void tearDown(){
+        alg = null;
     }
 
     // Local micro-logger
     void warn(String msg) { System.out.println(msg); }
     void debug(String msg) { System.out.println(msg); }
     
-    // from here down is testing infrastructure
-    
-    public NIDaAlgorithmTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {NIDaAlgorithmTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(NIDaAlgorithmTest.class);
-        return suite;
-    }
 }

@@ -2,17 +2,12 @@ package org.openlcb;
 
 import org.openlcb.implementations.DatagramService;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class ThrottleTest extends TestCase {
-
+public class ThrottleTest  {
 
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,10});
     NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
@@ -21,7 +16,7 @@ public class ThrottleTest extends TestCase {
     boolean flag;
     DatagramService datagramService;
     
-    @Override
+    @Before
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         flag = false;
@@ -34,10 +29,19 @@ public class ThrottleTest extends TestCase {
         datagramService = new DatagramService(hereID, testConnection);
     }
 
+    @After
+    public void tearDown(){
+        messagesReceived = null;
+        testConnection = null;
+        datagramService = null;
+    } 
 
+    @Test
     public void testCtor() {
-        new Throttle(farID, datagramService);
+        Assert.assertNotNull("throttle exists",new Throttle(farID, datagramService));
     }
+
+    @Test
     public void testSend() {
         Throttle t = new Throttle(farID, datagramService);
         
@@ -53,23 +57,5 @@ public class ThrottleTest extends TestCase {
         Assert.assertEquals("datagram type", 0x30, content[0]);
         Assert.assertEquals("set speed command", 0x01, (content[1]));
 
-    }
-    
-    // from here down is testing infrastructure
-    
-    public ThrottleTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ThrottleTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ThrottleTest.class);
-        return suite;
     }
 }

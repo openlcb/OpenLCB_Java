@@ -1,8 +1,6 @@
 package org.openlcb.swing.networktree;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import org.openlcb.AbstractConnection;
 import org.openlcb.Connection;
@@ -39,7 +37,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision: 34 $
  */
-public class TreePaneTest extends TestCase {
+public class TreePaneTest  {
 
     NodeID nid1 = new NodeID(new byte[]{0,0,0,0,0,1});
     NodeID nid2 = new NodeID(new byte[]{0,0,0,0,0,2});
@@ -64,7 +62,8 @@ public class TreePaneTest extends TestCase {
     };
     
     MimicNodeStore store;
-    
+
+    @Before    
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nid1);
         Message msg = new ProducerIdentifiedMessage(nid1, eventA, EventState.Unknown);
@@ -90,6 +89,7 @@ public class TreePaneTest extends TestCase {
         frame.setVisible(true);
     }
     
+    @After
     public void tearDown() {
         frame.setVisible(false);
         pane.release();
@@ -98,17 +98,20 @@ public class TreePaneTest extends TestCase {
         pane = null;
         frame = null;
     }
-            
+    
+    @Test    
     public void testPriorMessage() {
         frame.setTitle("Prior Message");
     }
 
+    @Test    
     public void testAfterMessage() {
         frame.setTitle("After Message");
         Message msg = new ProducerIdentifiedMessage(nid2, eventA, EventState.Unknown);
         store.put(msg, null);
     }
         
+    @Test    
     public void testWithProtocolID() {
         frame.setTitle("2nd has protocol id");
         Message msg;
@@ -117,6 +120,7 @@ public class TreePaneTest extends TestCase {
         store.put(pipmsg, null);
     }
         
+    @Test    
     public void testWith1stSNII() {
         frame.setTitle("3rd has PIP && 1st SNII");
         Message msg;
@@ -129,7 +133,7 @@ public class TreePaneTest extends TestCase {
                         0x00, 0, 0, 0, 1, 'h', 'e', 'l', 'l', 'o', 0, 'd', 'e', 's', 'c', 0}
                 );
         store.put(msg, null);
-        assertEquals("00.00.00.00.00.02 - hello - desc", pane.nodes.getChildAt(1).toString());
+        Assert.assertEquals("00.00.00.00.00.02 - hello - desc", pane.nodes.getChildAt(1).toString());
     }
 
     private void addNodeWithSnii(NodeID node, String manufacturer, String model, String userName, String userDesc) {
@@ -164,66 +168,72 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
     }
 
+    @Test    
     public void testNodeOrder() {
         frame.setTitle("test node order");
         store.put(new ProtocolIdentificationReplyMessage(nid2, nid1, 0xF01800000000L), null);
-        assertEquals(2, pane.nodes.getChildCount());
+        Assert.assertEquals(2, pane.nodes.getChildCount());
         store.put(new ProtocolIdentificationReplyMessage(nid6, nid1, 0xF01800000000L), null);
-        assertEquals(3, pane.nodes.getChildCount());
+        Assert.assertEquals(3, pane.nodes.getChildCount());
         store.put(new ProtocolIdentificationReplyMessage(nid3, nid1, 0xF01800000000L), null);
-        assertEquals(4, pane.nodes.getChildCount());
+        Assert.assertEquals(4, pane.nodes.getChildCount());
         store.put(new ProtocolIdentificationReplyMessage(nid4, nid1, 0xF01800000000L), null);
-        assertEquals(5, pane.nodes.getChildCount());
-        assertEquals("00.00.00.00.00.01", pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals("00.00.00.00.00.02", pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals("00.00.00.00.00.03", pane.nodes.getChildAt(2).toString().substring(0, 17));
-        assertEquals("00.00.00.00.00.04", pane.nodes.getChildAt(3).toString().substring(0, 17));
-        assertEquals("00.00.00.00.00.06", pane.nodes.getChildAt(4).toString().substring(0, 17));
+        Assert.assertEquals(5, pane.nodes.getChildCount());
+        Assert.assertEquals("00.00.00.00.00.01", pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals("00.00.00.00.00.02", pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals("00.00.00.00.00.03", pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals("00.00.00.00.00.04", pane.nodes.getChildAt(3).toString().substring(0, 17));
+        Assert.assertEquals("00.00.00.00.00.06", pane.nodes.getChildAt(4).toString().substring(0, 17));
     }
 
+    @Test    
     public void testAddNodeWithSnii() {
         addNodeWithSnii(nid5, "manuf42", "model55", "username92", "userdesc93");
         MimicNodeStore.NodeMemo memo = store.findNode(nid5);
-        assertNotNull(memo);
-        assertEquals("manuf42", memo.getSimpleNodeIdent().getMfgName());
-        assertEquals("model55", memo.getSimpleNodeIdent().getModelName());
-        assertEquals("username92", memo.getSimpleNodeIdent().getUserName());
-        assertEquals("userdesc93", memo.getSimpleNodeIdent().getUserDesc());
+        Assert.assertNotNull(memo);
+        Assert.assertEquals("manuf42", memo.getSimpleNodeIdent().getMfgName());
+        Assert.assertEquals("model55", memo.getSimpleNodeIdent().getModelName());
+        Assert.assertEquals("username92", memo.getSimpleNodeIdent().getUserName());
+        Assert.assertEquals("userdesc93", memo.getSimpleNodeIdent().getUserDesc());
     }
 
+    @Test    
     public void testSortOrder() {
         addNodeWithSnii(nid2, "3", "2", "2", "4");
         addNodeWithSnii(nid5, "1", "4", "3", "2");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
         MimicNodeStore.NodeMemo memo2 = store.findNode(nid2);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo2, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo2, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo2, memo5) > 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo2, memo5) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo2, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo2, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo2, memo5) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo2, memo5) > 0);
     }
 
+    @Test    
     public void testSortOrder2() {
         addNodeWithSnii(nid4, "xxx", "ppp", "bbb", "ccc");
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
     }
 
+    @Test    
     public void testSortOrder3() {
         addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) > 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) > 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NODE_ID).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo4, memo5) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_DESCRIPTION).compare(memo4, memo5) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) > 0);
     }
 
+    @Test    
     public void testSortOrder4() {
         addNodeWithSnii(nid3, "xxx", "qqq", "bbb", "ccd");
         addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
@@ -231,64 +241,68 @@ public class TreePaneTest extends TestCase {
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
         MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo5) < 0);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo4, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
     }
 
+    @Test    
     public void testSortOrder5() {
         addNodeWithSnii(nid3, "", "", "", "");
         addNodeWithSnii(nid4, "", "", "", "");
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
         MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) < 0);
     }
 
+    @Test    
     public void testSortOrder6() {
         addNodeWithSnii(nid3, "", "", "", "");
         addNodeWithSnii(nid4, "abcd", "", "", "");
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
         MimicNodeStore.NodeMemo memo3 = store.findNode(nid3);
-        assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) > 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_MODEL).compare(memo3, memo4) > 0);
     }
 
+    @Test    
     public void testSort() throws InvocationTargetException, InterruptedException {
         store.refresh(); // clears nid1.
         addNodeWithSnii(nid2, "xxx", "qqq", "aaa", "bbb");
         addNodeWithSnii(nid3, "yyy", "ppp", "ccc", "aaa");
         addNodeWithSnii(nid4, "xxx", "ppp", "bbb", "ccc");
 
-        assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
 
         pane.setSortOrder(TreePane.SortOrder.BY_NAME);
         SwingUtilities.invokeAndWait(()->{});
-        assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
 
         pane.setSortOrder(TreePane.SortOrder.BY_DESCRIPTION);
         SwingUtilities.invokeAndWait(()->{});
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
 
         pane.setSortOrder(TreePane.SortOrder.BY_MODEL);
         SwingUtilities.invokeAndWait(()->{});
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
 
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
         Thread.sleep(200);
 
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid5.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
-        assertEquals(nid2.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(3).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid5.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(3).toString().substring(0, 17));
     }
 
+    @Test    
     public void testSortFallback() throws InvocationTargetException, InterruptedException {
         store.refresh(); // clears nid1.
         store.put(new ProtocolIdentificationReplyMessage(nid4, nid1, 0xF01800000000L), null);
@@ -296,10 +310,11 @@ public class TreePaneTest extends TestCase {
         pane.setSortOrder(TreePane.SortOrder.BY_MODEL);
         SwingUtilities.invokeAndWait(()->{});
 
-        assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
-        assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
+        Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
+        Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
     }
 
+    @Test    
     public void testWithSelect() {
         frame.setTitle("listener test");
         
@@ -330,29 +345,12 @@ public class TreePaneTest extends TestCase {
         store.put(msg, null);
     }
 
+    @Test    
     public void testRefresh() {
         // fill up with nodes
         testNodeOrder();
-        assertEquals(5, pane.nodes.getChildCount());
+        Assert.assertEquals(5, pane.nodes.getChildCount());
         store.refresh();
-        assertEquals(0, pane.nodes.getChildCount());
-    }
-   
-    // from here down is testing infrastructure
-    
-    public TreePaneTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {TreePaneTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(TreePaneTest.class);
-        return suite;
+        Assert.assertEquals(0, pane.nodes.getChildCount());
     }
 }

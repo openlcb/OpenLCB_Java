@@ -1,20 +1,21 @@
 
 package org.openlcb.can;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 import org.openlcb.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class OpenLcbCanFrameTest extends TestCase {
+public class OpenLcbCanFrameTest  {
+
+    @Test
+    @Ignore("no test here")
     public void testStart() {
     }
 
+    @Test
     public void testSimpleEquals() {
         CanFrame cf12a = new OpenLcbCanFrame(12);
         CanFrame cf12b = new OpenLcbCanFrame(12);
@@ -26,6 +27,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertEquals("hashcodes equal when equal",cf12a.hashCode(),cf12b.hashCode());
     }
     
+    @Test
     public void testArrayGet() {
         OpenLcbCanFrame cf12a = new OpenLcbCanFrame(12);
         cf12a.setData(new byte[]{10,20,30});
@@ -37,6 +39,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertEquals(30, b[2]);
     }
     
+    @Test
     public void testSimpleEqualObject() {
         Object cf12a = new OpenLcbCanFrame(12);
         Object cf12b = new OpenLcbCanFrame(12);
@@ -47,6 +50,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue("12a not equals 13", !cf12a.equals(cf13));
     }
         
+    @Test
     public void testBasicFieldMaps(){
         OpenLcbCanFrame f;
         f = new OpenLcbCanFrame(0xFFF);
@@ -54,17 +58,21 @@ public class OpenLcbCanFrameTest extends TestCase {
         
     }
     
+    @Test
+    @Ignore("only declares a value. Never initializes the value")
     public void testGetTypeField(){
         OpenLcbCanFrame c;
               
     }
     
+    @Test
     public void testInitializationComplete(){
         OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
         f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
         Assert.assertTrue("isIC", f.isInitializationComplete());         
     }
 
+    @Test
     public void testMakeCim() {
         OpenLcbCanFrame f = new OpenLcbCanFrame(123);
         f.setCIM(1, 2, 123);
@@ -72,6 +80,7 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue(!f.isRIM());
     }
     
+    @Test
     public void testMakeRim() {
         OpenLcbCanFrame f = new OpenLcbCanFrame(123);
         f.setRIM(123);
@@ -79,21 +88,4 @@ public class OpenLcbCanFrameTest extends TestCase {
         Assert.assertTrue(f.isRIM());
     }
     
-    // from here down is testing infrastructure
-    
-    public OpenLcbCanFrameTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {OpenLcbCanFrameTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(OpenLcbCanFrameTest.class);
-        return suite;
-    }
 }
