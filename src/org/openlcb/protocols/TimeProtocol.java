@@ -96,6 +96,19 @@ public interface TimeProtocol extends PropertyListenerSupport {
         return (NIB_RATE_REPORT << 12) | (r4 & 0xfff);
     }
 
+    /// Decodes a set rate suffix.
+    /// @param suffix is a suffix starting with NIB_RATE_REPORT.
+    /// @return decoded rate.
+    static double decodeRate(int suffix) {
+        int ir = suffix & 0xfff;
+        // Sign-extends the 12-bit value to 32 bits.
+        ir <<= (32 - 12);
+        ir >>= (32 - 12);
+        double r = ir;
+        r /= 4;
+        return r;
+    }
+
     /// @return the current rate of the clock.
     double getRate();
 

@@ -56,6 +56,8 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
         int producerSuffix = 0x8000;
         iface.getOutputConnection().put(new ProducerRangeIdentifiedMessage(iface.getNodeId(),
                 TimeProtocol.createClockEvent(clock, producerSuffix)), messageHandler);
+
+        requestQuery();
     }
 
     /**
@@ -130,12 +132,7 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
                 break;
             }
             case NIB_RATE_REPORT: {
-                int ir = d & 0xfff;
-                // Sign-extends the 12-bit value to 32 bits.
-                ir <<= (32 - 12);
-                ir >>= (32 - 12);
-                double r = ir;
-                r /= 4;
+                double r = TimeProtocol.decodeRate(d);
                 updateRate(r);
                 break;
             }
@@ -258,7 +255,7 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
     /// Stores the individual fields of the last reported time, collecting the varous events
     /// coming from the network.
     private Calendar lastReportedTime = Calendar.getInstance();
-    /// if not null, the client has set the timezone.
+    /// The client-set timezone to use for interpreting the set time (in msec) to translate to the wire time (hh:mm).
     private TimeZone timeZone = TimeZone.getDefault();
     /// Interface we are registered to.
     private final OlcbInterface iface;
