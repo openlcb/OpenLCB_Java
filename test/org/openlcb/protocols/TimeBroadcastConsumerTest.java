@@ -281,5 +281,31 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         assertEquals((double)midnight - 60e3,  (double)tcslave.timeKeeper.getTime(), 1);
     }
 
+    @Test
+    public void testSetEvents() {
+        expectNoFrames();
+
+        tcslave.setTimeZone(TimeZone.getTimeZone("GMT"));
+        tcslave.requestStart();
+        expectFrame(":X195B4333N010100000102F002;");
+        expectNoFrames();
+        tcslave.requestStop();
+        expectFrame(":X195B4333N010100000102F001;");
+        expectNoFrames();
+
+        tcslave.requestSetRate(-13.25);
+        expectFrame(":X195B4333N010100000102CFCB;");
+        expectNoFrames();
+        tcslave.requestSetRate(2.5);
+        expectFrame(":X195B4333N010100000102C00A;");
+        expectNoFrames();
+
+        tcslave.requestSetTime(-513153000L * 1000L);
+        expectFrame(":X195B4333N010100000102B7A1;"); // 1953
+        expectFrame(":X195B4333N010100000102A91B;"); // 09/27
+        expectFrame(":X195B4333N010100000102911E;"); // 17:30
+        expectNoFrames();
+    }
+
     TimeBroadcastConsumer tcslave;
 }
