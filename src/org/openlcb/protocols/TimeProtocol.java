@@ -2,6 +2,7 @@ package org.openlcb.protocols;
 
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
+import org.openlcb.PropertyListenerSupport;
 
 /**
  * Clock interface. Functions for controlling a fast clock and listening to / getting fast
@@ -13,7 +14,7 @@ import org.openlcb.NodeID;
  * Created by bracz on 9/26/18.
  */
 
-public interface TimeProtocol {
+public interface TimeProtocol extends PropertyListenerSupport {
     final static NodeID DEFAULT_CLOCK = new NodeID(new byte[]{1,1,0,0,1,0});
     final static NodeID DEFAULT_RT_CLOCK = new NodeID(new byte[]{1,1,0,0,1,1});
     final static NodeID ALT_CLOCK_1 = new NodeID(new byte[]{1,1,0,0,1,2});

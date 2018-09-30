@@ -22,13 +22,13 @@ import java.util.TimeZone;
  * Created by bracz on 9/25/18.
  */
 
-public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtocol {
+public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implements TimeProtocol {
 
     public TimeBroadcastConsumer(OlcbInterface iface, NodeID clock) {
         this.clock = clock;
         this.timeKeeper = new TimeKeeper();
         this.iface = iface;
-        iface.registerMessageListener(this);
+        iface.registerMessageListener(messageHandler);
         lastReportedTime.set(Calendar.SECOND, 0);
         lastReportedTime.set(Calendar.MILLISECOND, 0);
     }
@@ -42,12 +42,12 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
     public void setTimeZone(TimeZone tz) {
         timeZone = tz;
         lastReportedTime.setTimeZone(tz);
-        lastReportedTime.setTimeInMillis(-500L*365*24*86400*1000);
+        lastReportedTime.setTimeInMillis(-500L*365*86400*1000);
     }
 
     /// De-registers message listeners to prepare for deallocating this object.
     public void dispose() {
-        iface.unRegisterMessageListener(this);
+        iface.unRegisterMessageListener(messageHandler);
     }
 
     public NodeID getClockID() {
@@ -72,7 +72,11 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
             }
             case TimeProtocol.DATE_ROLLOVER: {
                 // This is an advisory message that we are moving over to the next day.
-                lastReportedTime.add(Calendar.DAY_OF_MONTH, 1);
+                if (timeKeeper.rate >= 0) {
+                    lastReportedTime.add(Calendar.DAY_OF_MONTH, 1);
+                } else {
+                    lastReportedTime.add(Calendar.DAY_OF_MONTH, -1);
+                }
                 break;
             }
         }
@@ -108,28 +112,30 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
             }
             // We ignore all other nibble values.
         }
-
     }
 
-    @Override
-    public void handleProducerConsumerEventReport(ProducerConsumerEventReportMessage msg,
-                                                  Connection sender) {
-        int d = TimeProtocol.decodeClock(msg.getEventID(), clock);
-        if (d < 0) {
-            // not for us
-            return;
+    /// Listener for incoming messages from the interface.
+    private class Handler extends MessageDecoder {
+                @Override
+        public void handleProducerConsumerEventReport(ProducerConsumerEventReportMessage msg,
+                                                      Connection sender) {
+            int d = TimeProtocol.decodeClock(msg.getEventID(), clock);
+            if (d < 0) {
+                // not for us
+                return;
+            }
+            handleTimeEvent(d, true);
         }
-        handleTimeEvent(d, true);
-    }
 
-    @Override
-    public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender) {
-        int d = TimeProtocol.decodeClock(msg.getEventID(), clock);
-        if (d < 0) {
-            // not for us
-            return;
+        @Override
+        public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender) {
+            int d = TimeProtocol.decodeClock(msg.getEventID(), clock);
+            if (d < 0) {
+                // not for us
+                return;
+            }
+            handleTimeEvent(d, false);
         }
-        handleTimeEvent(d, false);
     }
 
     /**
@@ -205,6 +211,7 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
         }
     }
 
+    private final Handler messageHandler = new Handler();
     /// Stores the individual fields of the last reported time, collecting the varous events
     /// coming from the network.
     private Calendar lastReportedTime = Calendar.getInstance();
@@ -236,20 +243,20 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
     public void requestSetRate(double rate) {
         int sf = TimeProtocol.createRate(rate) | TimeProtocol.SET_SUFFIX;
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, sf)), this);
+                TimeProtocol.createClockEvent(clock, sf)), messageHandler);
 
     }
 
     @Override
     public void requestStop() {
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, TimeProtocol.STOP_SUFFIX)), this);
+                TimeProtocol.createClockEvent(clock, TimeProtocol.STOP_SUFFIX)), messageHandler);
     }
 
     @Override
     public void requestStart() {
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, TimeProtocol.START_SUFFIX)), this);
+                TimeProtocol.createClockEvent(clock, TimeProtocol.START_SUFFIX)), messageHandler);
     }
 
     @Override
@@ -260,17 +267,17 @@ public class TimeBroadcastConsumer extends MessageDecoder implements TimeProtoco
         int year = s.get(Calendar.YEAR);
         int sf = TimeProtocol.createYear(year) | TimeProtocol.SET_SUFFIX;
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, sf)), this);
+                TimeProtocol.createClockEvent(clock, sf)), messageHandler);
         int month = s.get(Calendar.MONTH);
         int day = s.get(Calendar.DAY_OF_MONTH);
         // month is one-based for timeprotocol, but 0-based for calendar.
         sf = TimeProtocol.createMonthDay(month + 1, day) | TimeProtocol.SET_SUFFIX;
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, sf)), this);
+                TimeProtocol.createClockEvent(clock, sf)), messageHandler);
         int hrs = s.get(Calendar.HOUR_OF_DAY);
         int mins = s.get(Calendar.MINUTE);
         sf = TimeProtocol.createHourMin(hrs, mins) | TimeProtocol.SET_SUFFIX;
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
-                TimeProtocol.createClockEvent(clock, sf)), this);
+                TimeProtocol.createClockEvent(clock, sf)), messageHandler);
     }
 }
