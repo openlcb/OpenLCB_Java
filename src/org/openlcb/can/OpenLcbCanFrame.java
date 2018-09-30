@@ -331,14 +331,6 @@ public class OpenLcbCanFrame implements CanFrame {
     loadFromEid(eid);
   }
 
-  void setConsumerIdentifyRange(EventID eid, EventID mask) {
-    // does send a message, but not complete yet - RGJ 2009-06-14
-    init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ConsumerIdentifyRange.mti());
-    length=8;
-    loadFromEid(eid);
-  }
-
   boolean isIdentifyProducers() {
       return isOpenLcbMTI(MessageTypeIdentifier.IdentifyProducer.mti());
   }
@@ -346,14 +338,6 @@ public class OpenLcbCanFrame implements CanFrame {
   void setProducerIdentified(EventID eid) {
     init(nodeAlias);
     setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifiedUnknown.mti());
-    length=8;
-    loadFromEid(eid);
-  }
-
-  void setProducerIdentifyRange(EventID eid, EventID mask) {
-    // does send a message, but not complete yet - RGJ 2009-06-14
-    init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifyRange.mti());
     length=8;
     loadFromEid(eid);
   }

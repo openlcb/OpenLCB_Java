@@ -49,13 +49,13 @@ public class MessageTypeIdentifierTest extends TestCase {
         Assert.assertEquals(0x0668, MessageTypeIdentifier.ProtocolSupportReply.mti());
 
         Assert.assertEquals(0x08F4, MessageTypeIdentifier.IdentifyConsumer.mti());
-        Assert.assertEquals(0x04A4, MessageTypeIdentifier.ConsumerIdentifyRange.mti());
+        Assert.assertEquals(0x04A4, MessageTypeIdentifier.ConsumerRangeIdentified.mti());
         Assert.assertEquals(0x04C7, MessageTypeIdentifier.ConsumerIdentifiedUnknown.mti());
         Assert.assertEquals(0x04C4, MessageTypeIdentifier.ConsumerIdentifiedValid.mti());
         Assert.assertEquals(0x04C5, MessageTypeIdentifier.ConsumerIdentifiedInvalid.mti());
 
         Assert.assertEquals(0x0914, MessageTypeIdentifier.IdentifyProducer.mti());
-        Assert.assertEquals(0x0524, MessageTypeIdentifier.ProducerIdentifyRange.mti());
+        Assert.assertEquals(0x0524, MessageTypeIdentifier.ProducerRangeIdentified.mti());
         Assert.assertEquals(0x0547, MessageTypeIdentifier.ProducerIdentifiedUnknown.mti());
         Assert.assertEquals(0x0544, MessageTypeIdentifier.ProducerIdentifiedValid.mti());
         Assert.assertEquals(0x0545, MessageTypeIdentifier.ProducerIdentifiedInvalid.mti());
