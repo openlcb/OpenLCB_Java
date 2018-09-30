@@ -1,12 +1,14 @@
 package org.openlcb.protocols;
 
 import org.openlcb.Connection;
+import org.openlcb.ConsumerRangeIdentifiedMessage;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.MessageDecoder;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.ProducerConsumerEventReportMessage;
 import org.openlcb.ProducerIdentifiedMessage;
+import org.openlcb.ProducerRangeIdentifiedMessage;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -29,8 +31,31 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
         this.timeKeeper = new TimeKeeper();
         this.iface = iface;
         iface.registerMessageListener(messageHandler);
+        iface.getOutputConnection().registerStartNotification(new Connection.ConnectionListener() {
+            @Override
+            public void connectionActive(Connection c) {
+                sendStartupAction();
+            }
+        });
         lastReportedTime.set(Calendar.SECOND, 0);
         lastReportedTime.set(Calendar.MILLISECOND, 0);
+    }
+
+    private void sendStartupAction() {
+        // Creating an event range representation depending on the lowest bit of the clock ID.
+        int consumerSuffix;
+        if ((clock.getContents()[5] & 1) == 0) {
+            consumerSuffix = 0xFFFF;
+        } else {
+            consumerSuffix = 0;
+        }
+        // We are consuming all events in the range.
+        iface.getOutputConnection().put(new ConsumerRangeIdentifiedMessage(iface.getNodeId(),
+                TimeProtocol.createClockEvent(clock, consumerSuffix)), messageHandler);
+        // We are producing all events in the upper half ("SET" events).
+        int producerSuffix = 0x8000;
+        iface.getOutputConnection().put(new ProducerRangeIdentifiedMessage(iface.getNodeId(),
+                TimeProtocol.createClockEvent(clock, producerSuffix)), messageHandler);
     }
 
     /**
