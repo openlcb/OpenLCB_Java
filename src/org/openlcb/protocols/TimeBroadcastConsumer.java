@@ -63,11 +63,15 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
     private void handleTimeEvent(int d, boolean force) {
         switch (d) {
             case TimeProtocol.STOP_SUFFIX: {
+                boolean lastRunning = timeKeeper.isRunning;
                 timeKeeper.stop();
+                firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, false);
                 break;
             }
             case TimeProtocol.START_SUFFIX: {
+                boolean lastRunning = timeKeeper.isRunning;
                 timeKeeper.start();
+                firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, true);
                 break;
             }
             case TimeProtocol.DATE_ROLLOVER: {
@@ -107,12 +111,14 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
                 ir >>= (32 - 12);
                 double r = ir;
                 r /= 4;
-                timeKeeper.setRate(r);
+                updateRate(r);
                 break;
             }
             // We ignore all other nibble values.
         }
     }
+
+
 
     /// Listener for incoming messages from the interface.
     private class Handler extends MessageDecoder {
@@ -155,7 +161,7 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
         // we would be better off with a bit of skew.
         long ctime = timeKeeper.getTime();
         if ((Math.abs(ctime - newTime) > 120 * 1000) || force) {
-            timeKeeper.setTime(newTime);
+            updateTime(newTime);
         } else {
             // @todo apply skew to the time keeper.
         }
@@ -182,9 +188,21 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
             c.set(Calendar.DAY_OF_MONTH, day);
             long newTime = c.getTimeInMillis();
             if (Math.abs(newTime - ctime) > 60 * 1000) {
-                timeKeeper.setTime(newTime);
+                updateTime(newTime);
             }
         }
+    }
+
+    private void updateRate(double r) {
+        double oldRate = timeKeeper.rate;
+        timeKeeper.setRate(r);
+        firePropertyChange(TimeProtocol.PROP_RATE_UPDATE, oldRate, r);
+    }
+
+    private void updateTime(long newTime) {
+        long oldTime = timeKeeper.getTime();
+        timeKeeper.setTime(newTime);
+        firePropertyChange(TimeProtocol.PROP_TIME_UPDATE, oldTime, newTime);
     }
 
     /**
@@ -206,7 +224,7 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
             long newTime = c.getTimeInMillis();
             // Only apply year change if we are indeed away from the current.
             if (Math.abs(newTime - ctime) > 60 * 1000) {
-                timeKeeper.setTime(newTime);
+                updateTime(newTime);
             }
         }
     }

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.internal.matchers.LessOrEqual;
 import org.openlcb.InterfaceTestBase;
+import org.openlcb.MockPropertyChangeListener;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -14,6 +15,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * Created by bracz on 9/27/18.
@@ -305,6 +311,54 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         expectFrame(":X195B4333N010100000102A91B;"); // 09/27
         expectFrame(":X195B4333N010100000102911E;"); // 17:30
         expectNoFrames();
+    }
+
+    @Test
+    public void testListeners() throws Exception {
+        MockPropertyChangeListener l = new MockPropertyChangeListener();
+        // Sets up known initial state.
+        tcslave.setTimeZone(TimeZone.getTimeZone("GMT"));
+        sendFrame(":X19544444N010100000102F002;"); // start
+        sendFrame(":X19544444N0101000001024028;"); // rate = 10
+        sendFrame(":X19544444N01010000010237A1;"); // 1953
+        sendFrame(":X19544444N0101000001022c1F;"); // 12/31
+        sendFrame(":X19544444N0101000001021700;"); // 23:00
+
+
+        tcslave.addPropertyChangeListener(l);
+        assertTrue(tcslave.isRunning());
+        sendFrame(":X19544444N010100000102F002;"); // start
+        verifyNoMoreInteractions(l.m);  // duplicate update skipped.
+        reset(l.m);
+
+        sendFrame(":X19544444N010100000102F001;"); // stop
+        verify(l.m).onChange(TimeProtocol.PROP_RUN_UPDATE, false);
+        verifyNoMoreInteractions(l.m);
+        reset(l.m);
+
+        tcslave.requestStart();
+        consumeMessages();
+        expectFrame(":X195B4333N010100000102F002;");
+        expectNoFrames();
+        verify(l.m).onChange(TimeProtocol.PROP_RUN_UPDATE, true);
+        verifyNoMoreInteractions(l.m);
+        reset(l.m);
+        tcslave.requestStop();
+        expectFrame(":X195B4333N010100000102F001;");
+        expectNoFrames();
+        verify(l.m).onChange(TimeProtocol.PROP_RUN_UPDATE, false);
+        verifyNoMoreInteractions(l.m);
+        reset(l.m);
+
+        sendFrame(":X195B4444N010100000102170A;"); // 23:10
+        verify(l.m).onChange(eq(TimeProtocol.PROP_TIME_UPDATE), any());
+        verifyNoMoreInteractions(l.m);
+        reset(l.m);
+
+        sendFrame(":X19544444N0101000001024004;"); // rate = 1.0
+        verify(l.m).onChange(TimeProtocol.PROP_RATE_UPDATE, 1.0);
+        verifyNoMoreInteractions(l.m);
+        reset(l.m);
     }
 
     TimeBroadcastConsumer tcslave;

@@ -20,6 +20,12 @@ public interface TimeProtocol extends PropertyListenerSupport {
     final static NodeID ALT_CLOCK_1 = new NodeID(new byte[]{1,1,0,0,1,2});
     final static NodeID ALT_CLOCK_2 = new NodeID(new byte[]{1,1,0,0,1,3});
 
+    /// Property change notification when the time gets changed.
+    final static String PROP_TIME_UPDATE = "TimeUpdated";
+    /// Property change notification when the rate gets updated.
+    final static String PROP_RATE_UPDATE = "RateUpdated";
+    /// Property change notification when the clock gets started or stopped.
+    final static String PROP_RUN_UPDATE = "RunUpdated";
 
     final static int NIB_TIME_REPORT = 0x0;
     final static int NIB_TIME_REPORT_ALT = 0x1;
