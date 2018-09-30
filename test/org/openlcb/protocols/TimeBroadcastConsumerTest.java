@@ -311,6 +311,10 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         expectFrame(":X195B4333N010100000102A91B;"); // 09/27
         expectFrame(":X195B4333N010100000102911E;"); // 17:30
         expectNoFrames();
+
+        tcslave.requestQuery();
+        expectFrame(":X195B4333N010100000102F000;");
+        expectNoFrames();
     }
 
     @Test

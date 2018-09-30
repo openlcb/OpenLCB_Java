@@ -118,4 +118,7 @@ public interface TimeProtocol extends PropertyListenerSupport {
     /// Sets the clock to a given date and time.
     /// @param timeMsec is the time (in milliseconds since epoch).
     void requestSetTime(long timeMsec);
+
+    /// Requests the clock master to send updates about the current state of the clock.
+    void requestQuery();
 }

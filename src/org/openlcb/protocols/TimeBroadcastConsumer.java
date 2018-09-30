@@ -298,4 +298,10 @@ public class TimeBroadcastConsumer extends DefaultPropertyListenerSupport implem
         iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
                 TimeProtocol.createClockEvent(clock, sf)), messageHandler);
     }
+
+    @Override
+    public void requestQuery() {
+        iface.getOutputConnection().put(new ProducerConsumerEventReportMessage(iface.getNodeId(),
+                TimeProtocol.createClockEvent(clock, TimeProtocol.QUERY_SUFFIX)), messageHandler);
+    }
 }
