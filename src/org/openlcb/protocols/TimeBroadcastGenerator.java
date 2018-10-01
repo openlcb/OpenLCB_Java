@@ -100,7 +100,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
             switch ((d>>12) & (NIB_SET - 1)) {
                 case NIB_TIME_REPORT:
                 case NIB_TIME_REPORT_ALT: {
-                    int hrs = d >> 8;
+                    int hrs = (d >> 8) & 0x1f;
                     int min = d & 0xff;
                     // @todo do we need some synchronization here?
                     Calendar c = prepareTimeUpdate();
