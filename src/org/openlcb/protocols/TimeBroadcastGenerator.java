@@ -45,6 +45,17 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         });
     }
 
+    public void setTimeZone(TimeZone tz) {
+        timeZone = tz;
+    }
+
+    public synchronized void dispose() {
+        if (delayedSyncTask != null) {
+            delayedSyncTask.cancel();
+        }
+        iface.unRegisterMessageListener(messageHandler);
+    }
+
     private void sendStartupAction() {
         // Creating an event range representation depending on the lowest bit of the clock ID.
         int producerSuffix;
@@ -91,9 +102,12 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 case NIB_TIME_REPORT_ALT: {
                     int hrs = d >> 8;
                     int min = d & 0xff;
+                    // @todo do we need some synchronization here?
                     Calendar c = prepareTimeUpdate();
                     c.set(Calendar.HOUR_OF_DAY, hrs);
                     c.set(Calendar.MINUTE, min);
+                    c.set(Calendar.SECOND, 0);
+                    c.set(Calendar.MILLISECOND, 0);
                     updateTime(c.getTimeInMillis());
                     break;
                 }
@@ -149,7 +163,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 triggerClockSyncNow();
             }
         };
-        iface.getTimer().schedule(delayedSyncTask, System.currentTimeMillis() + RESYNC_DELAY_MSEC);
+        iface.getTimer().schedule(delayedSyncTask, RESYNC_DELAY_MSEC);
         // @todo.
     }
 
@@ -224,7 +238,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         } else {
             timeKeeper.stop();
         }
-        firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, false);
+        firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, r);
     }
 
     private void sendClockEvent(int suffix) {
@@ -280,17 +294,19 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     /// Call from the application UI. Talks to the bus and sends property listener callback too.
     @Override
     public void requestStop() {
-        //updateRunning(false);
-        sendClockEvent(TimeProtocol.STOP_SUFFIX);
-        // will do loopback and apply the change. The loopback message will cause clock sync too.
+        if (isRunning()) {
+            sendClockEvent(TimeProtocol.STOP_SUFFIX);
+            // will do loopback and apply the change. The loopback message will cause clock sync too.
+        }
     }
 
     /// Call from the application UI. Talks to the bus and sends property listener callback too.
     @Override
     public void requestStart() {
-        // updateRunning(true);
-        sendClockEvent(TimeProtocol.START_SUFFIX);
-        // will do loopback and apply the change. The loopback message will cause clock sync too.
+        if (!isRunning()) {
+            sendClockEvent(TimeProtocol.START_SUFFIX);
+            // will do loopback and apply the change. The loopback message will cause clock sync too.
+        }
     }
 
     /// Call from the application UI. Talks to the bus and sends property listener callback too.

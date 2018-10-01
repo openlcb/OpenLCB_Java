@@ -1,5 +1,6 @@
 package org.openlcb.protocols;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,11 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         expectFrame(":X194A4333N010100000102FFFF;");
         expectFrame(":X19524333N0101000001028000;");
         expectNoFrames();
+    }
+
+    @After
+    public void TearDown() {
+        tcslave.dispose();
     }
 
     @Test
