@@ -197,7 +197,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     /// Internal implementation for the current (fast) time.
     TimeKeeper timeKeeper;
     /// Timer task used for delaying a sync.
-    private TimerTask delayedSyncTask = null;
+    TimerTask delayedSyncTask = null;
     /// This is how long we wait before sending out the the re-synchronization messages. This is not final in order to write tests that run faster.
     long RESYNC_DELAY_MSEC = 3000;
 
@@ -314,6 +314,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     public void requestSetTime(long timeMsec) {
         updateTime(timeMsec);
         Calendar c = Calendar.getInstance(timeZone);
+        c.setTimeInMillis(timeMsec);
         sendClockEvent(TimeProtocol.createYear(c.get(Calendar.YEAR)));
         sendClockEvent(TimeProtocol.createMonthDay(c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH)));
         sendClockEvent(TimeProtocol.createHourMin(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE)));
@@ -327,4 +328,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         firePropertyChange(TimeProtocol.PROP_RATE_UPDATE, null, getRate());
         firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, null, isRunning());
     }
+
+    // @todo: proper handling of rollover of date
+    // @todo: implement listening to consumer identified and send out specific clock events.
 }
