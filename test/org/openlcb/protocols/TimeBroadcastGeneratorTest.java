@@ -212,13 +212,33 @@ public class TimeBroadcastGeneratorTest extends InterfaceTestBase {
         reset(l.m);
         expectFrame(":X195B4333N010100000102291B;"); // 09/27
         sendFrame(":X195B4444N010100000102911E;"); // 17:30
-        //verify(l.m).onChange(TimeProtocol.PROP_TIME_UPDATE, -513153000L * 1000L);
-        //verifyNoMoreInteractions(l.m);
+        verify(l.m).onChange(TimeProtocol.PROP_TIME_UPDATE, -513153000L * 1000L);
+        verifyNoMoreInteractions(l.m);
         reset(l.m);
         expectFrame(":X195B4333N010100000102111E;"); // 17:30
         expectNoFrames();
         assertEquals(-513153000L * 1000.0, tgmaster.getTimeInMsec() * 1.0, 1000);
         expectStateReportPending();
+    }
+
+    @Test
+    public void testMidnightRollover() throws Exception {
+        tgmaster.timeKeeper.setRate(500.0);
+        long midnight = -513129600L * 1000;
+        tgmaster.requestSetTime(midnight - 100*100);
+        expectFrame(":X195B4333N01010000010237A1;"); // 1953
+        expectFrame(":X195B4333N010100000102291B;"); // 09/27
+        expectFrame(":X195B4333N010100000102173B;"); // 23:59
+
+        Thread.sleep(50);
+        expectFrame(":X195B4333N010100000102F003;"); // date rollover
+        expectNoFrames();
+        tgmaster.requestSetRate(-512.0);
+        expectFrame(":X195B4333N0101000001024800;"); // rate = -512
+        expectNoFrames();
+        Thread.sleep(150);
+        expectFrame(":X195B4333N010100000102F003;"); // date rollover
+        expectNoFrames();
     }
 
     TimeBroadcastGenerator tgmaster;

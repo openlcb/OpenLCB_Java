@@ -16,6 +16,7 @@ import org.openlcb.ProducerRangeIdentifiedMessage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
 import java.util.TimerTask;
 
@@ -192,12 +193,16 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     private TimeZone timeZone = TimeZone.getDefault();
     /// Interface we are registered to.
     private final OlcbInterface iface;
-    /// Storesthe prefix of the event ID that represents our clock.
+    /// Stores the prefix of the event ID that represents our clock.
     private final NodeID clock;
     /// Internal implementation for the current (fast) time.
     TimeKeeper timeKeeper;
     /// Timer task used for delaying a sync.
     TimerTask delayedSyncTask = null;
+    /// Timer task used to announce midnight
+    private TimerTask midnightTask = null;
+    /// Real-time at which the current midnight task is scheduled.
+    private long midnightScheduledTime = 0;
     /// This is how long we wait before sending out the the re-synchronization messages. This is not final in order to write tests that run faster.
     long RESYNC_DELAY_MSEC = 3000;
 
@@ -218,16 +223,93 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
 
     /// Updates internal state and property change listeners. Does not talk to the bus.
     private void updateRate(double r) {
-        double oldRate = timeKeeper.rate;
-        timeKeeper.setRate(r);
+        double oldRate;
+        synchronized (this) {
+            oldRate = timeKeeper.rate;
+            timeKeeper.setRate(r);
+            if (timeKeeper.isRunning) {
+                // @todo use the anchor time the timekeeper has set as day designation? Or use
+                // the last announced time's midnight? What happens when there is a race where we
+                // get the synchronized lock, but the current set time is already after midnight
+                // that got triggered but the timer thread is waiting for the lock?
+                updateMidnightTask(newTime);
+            }
+        }
         firePropertyChange(TimeProtocol.PROP_RATE_UPDATE, oldRate, r);
+    }
+
+    /// Updates, if necessary, the scheduled timer task that ticks on date rollover.
+    /// @param currentFastTime is a fast time timestamp that is in the current day.
+    private synchronized void updateMidnightTask(long currentFastTime) {
+        // Real-time at which we want to fire the midnight task.
+        long desiredTime = 0;
+        long chosenFastMidnight = 0;
+        if (!timeKeeper.isRunning || timeKeeper.rate == 0) {
+            desiredTime = 0;
+        } else {
+            Calendar c = Calendar.getInstance(timeZone);
+            c.setTimeInMillis(currentFastTime);
+            // snaps to beginning of the day
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
+            // iterates to next day if moving forward
+            if (timeKeeper.rate > 0) {
+                // we want to round up from the current time if moving forward.
+                c.add(Calendar.DAY_OF_MONTH, 1);
+            }
+            chosenFastMidnight = c.getTimeInMillis();
+            desiredTime = timeKeeper.translateFastToRealTime(chosenFastMidnight);
+            // makes midnight rollover scheduled earlier on the timer queue than any actual
+            // time events.
+            desiredTime -= 1;
+        }
+        if (desiredTime == midnightScheduledTime) return; // no need to change.
+        if (midnightTask != null) {
+            midnightTask.cancel();
+            midnightTask = null;
+        }
+        if (desiredTime == 0) return;
+        final long chosenFastMidnight1 = chosenFastMidnight;
+        midnightTask = new TimerTask() {
+            @Override
+            public void run() {
+                announceMidnight(this, chosenFastMidnight1);
+            }
+        };
+        midnightScheduledTime = desiredTime;
+        iface.getTimer().schedule(midnightTask, new Date(midnightScheduledTime));
     }
 
     /// Updates internal state and property change listeners. Does not talk to the bus.
     private void updateTime(long newTime) {
-        long oldTime = timeKeeper.getTime();
-        timeKeeper.setTime(newTime);
+        long oldTime;
+        synchronized (this) {
+            oldTime = timeKeeper.getTime();
+            timeKeeper.setTime(newTime);
+            if (timeKeeper.isRunning) {
+                updateMidnightTask(newTime);
+            }
+        }
         firePropertyChange(TimeProtocol.PROP_TIME_UPDATE, oldTime, newTime);
+    }
+
+    private synchronized void announceMidnight(TimerTask self, long currentMidnight) {
+        // We only run if the midnight task has not been changed from us. This is the
+        // lock-protected synchronization we do to avoid outdated midnight tasks from executing.
+        if (!timeKeeper.isRunning || midnightTask != self) {
+            return;
+        }
+        sendClockEvent(TimeProtocol.DATE_ROLLOVER);
+        midnightTask = null;
+        long nextDay = currentMidnight;
+        if (timeKeeper.rate > 0) {
+            nextDay += 6 * 3600 * 1000;
+        } else {
+            nextDay -= 6 * 3600 * 1000;
+        }
+        updateMidnightTask(nextDay);
     }
 
     /// Updates internal state and property change listeners. Does not talk to the bus.
@@ -329,6 +411,6 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, null, isRunning());
     }
 
-    // @todo: proper handling of rollover of date
+    // @todo: for rollover of date: also schedule date stamp events.
     // @todo: implement listening to consumer identified and send out specific clock events.
 }

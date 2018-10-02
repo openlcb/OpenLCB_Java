@@ -60,6 +60,18 @@ class TimeKeeper {
         rate = r;
     }
 
+    /// Translates a fast time timestamp to a real time when we will reach it (or have reached it).
+    /// @param fastTime is a millisecond timestamp in the fast time that is in the future
+    /// (i.e. ahead of getTime() if rate is positive, or below it if negative).
+    /// @return -1 if the clock is stopped or rate is zero. Otherwise it is
+    /// a real time millisecond timestamp when the given fast time will be reached.
+    public long translateFastToRealTime(long fastTime) {
+        if (!isRunning || rate == 0) return -1;
+        double delta = fastTime - matchingFastTime;
+        long deltaRealTime = (long) (delta / rate);
+        return realTimeAnchor + deltaRealTime;
+    }
+
     /// true if the clock is running
     boolean isRunning = true;
     /// the real time for which we are storing the equivalent fast time. Ignored if !isRunning. Defined as msec since epoch.
