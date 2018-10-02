@@ -92,7 +92,7 @@ public interface TimeProtocol extends PropertyListenerSupport {
     static int createRate(double rate) {
         int r4 = (int) (rate * 4);
         if (r4 > 0x7ff) r4 = 0x7ff;
-        if (r4 < -512) r4 = -512;
+        if (r4 < -2048) r4 = -2048;
         return (NIB_RATE_REPORT << 12) | (r4 & 0xfff);
     }
 
