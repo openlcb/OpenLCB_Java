@@ -29,6 +29,7 @@ public abstract class InterfaceTestBase {
     protected AliasMap aliasMap = new AliasMap();
     protected boolean testWithCanFrameRendering = false;
     private boolean debugFrames = false;
+    private FakeConnection fakeConnection;
 
     @Before
     public void setUp() {
@@ -38,7 +39,8 @@ public abstract class InterfaceTestBase {
     private void expectInit() {
         NodeID id = new NodeID(new byte[]{1,2,0,0,1,1});
         aliasMap.insert(0x333, id);
-        iface = new OlcbInterface(id, new FakeConnection(outputConnectionMock));
+        fakeConnection = new FakeConnection(outputConnectionMock);
+        iface = new OlcbInterface(id, fakeConnection);
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
     }
 
@@ -47,6 +49,11 @@ public abstract class InterfaceTestBase {
         expectNoMessages();
         iface.dispose();
         iface = null;
+    }
+
+    /// Prints all messages that get sent to the mock. For debugging purposes.
+    public void printAllSentMessages() {
+        fakeConnection.debugMessages = true;
     }
 
     /** Sends one or more OpenLCB message, as represented by the given CAN frames, to the

@@ -3,6 +3,7 @@ package org.openlcb.protocols;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlcb.FakeConnection;
 import org.openlcb.InterfaceTestBase;
 import org.openlcb.MockPropertyChangeListener;
 
@@ -239,6 +240,47 @@ public class TimeBroadcastGeneratorTest extends InterfaceTestBase {
         Thread.sleep(150);
         expectFrame(":X195B4333N010100000102F003;"); // date rollover
         expectNoFrames();
+    }
+
+    @Test
+    public void testMidnightRolloverBackwards() throws Exception {
+        tgmaster.timeKeeper.setRate(-500.0);
+        long midnight = -513129600L * 1000;
+        tgmaster.requestSetTime(midnight + 100*100);
+        expectFrame(":X195B4333N01010000010237A1;"); // 1953
+        expectFrame(":X195B4333N010100000102291C;"); // 09/28
+        expectFrame(":X195B4333N0101000001020000;"); // 00:00
+
+        Thread.sleep(50);
+        expectFrame(":X195B4333N010100000102F003;"); // date rollover
+        expectNoFrames();
+        tgmaster.requestSetRate(+511.75);
+        expectFrame(":X195B4333N01010000010247FF;"); // rate = +511.75
+        expectNoFrames();
+        Thread.sleep(150);
+        expectFrame(":X195B4333N010100000102F003;"); // date rollover
+        expectNoFrames();
+    }
+
+    @Test
+    public void testMidnightRolloverAfterStart() throws Exception {
+        //printAllSentMessages();
+        tgmaster.timeKeeper.setRate(500.0);
+        long midnight = -513129600L * 1000;
+        tgmaster.requestSetTime(midnight - 100*100);
+        expectFrame(":X195B4333N01010000010237A1;"); // 1953
+        expectFrame(":X195B4333N010100000102291B;"); // 09/27
+        expectFrame(":X195B4333N010100000102173B;"); // 23:59
+        tgmaster.requestStop();
+        expectFrame(":X195B4333N010100000102F001;"); // stop
+
+        Thread.sleep(50);
+        expectNoFrames();
+        tgmaster.requestStart();
+        expectFrame(":X195B4333N010100000102F002;"); // start
+        expectNoFrames();
+        Thread.sleep(50);
+        expectFrame(":X195B4333N010100000102F003;"); // start
     }
 
     TimeBroadcastGenerator tgmaster;

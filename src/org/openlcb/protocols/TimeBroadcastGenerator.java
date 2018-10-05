@@ -36,6 +36,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     public TimeBroadcastGenerator(OlcbInterface iface, NodeID clock) {
         this.clock = clock;
         this.timeKeeper = new TimeKeeper();
+        this.fastDayLastAnnounced = timeKeeper.matchingFastTime;
         this.iface = iface;
         iface.registerMessageListener(messageHandler);
         iface.getOutputConnection().registerStartNotification(new Connection.ConnectionListener() {
@@ -203,6 +204,9 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     private TimerTask midnightTask = null;
     /// Real-time at which the current midnight task is scheduled.
     private long midnightScheduledTime = 0;
+    /// Current day (by fast time) for the purpose of midnight announcements. This changes exactly
+    /// when the midnight announcement goes out or the time jumps to a different day.
+    private long fastDayLastAnnounced;
     /// This is how long we wait before sending out the the re-synchronization messages. This is not final in order to write tests that run faster.
     long RESYNC_DELAY_MSEC = 3000;
 
@@ -232,15 +236,16 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 // the last announced time's midnight? What happens when there is a race where we
                 // get the synchronized lock, but the current set time is already after midnight
                 // that got triggered but the timer thread is waiting for the lock?
-                updateMidnightTask(newTime);
+                updateMidnightTask(0, 0);
             }
         }
         firePropertyChange(TimeProtocol.PROP_RATE_UPDATE, oldRate, r);
     }
 
     /// Updates, if necessary, the scheduled timer task that ticks on date rollover.
-    /// @param currentFastTime is a fast time timestamp that is in the current day.
-    private synchronized void updateMidnightTask(long currentFastTime) {
+    /// @param daysDelta is +1, 0 or -1 to decide how much to move the fastDayLastAnnounced
+    /// timestamp (forward a day, not move, or backwards a day).
+    private synchronized void updateMidnightTask(long unused, int daysDelta) {
         // Real-time at which we want to fire the midnight task.
         long desiredTime = 0;
         long chosenFastMidnight = 0;
@@ -248,7 +253,11 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
             desiredTime = 0;
         } else {
             Calendar c = Calendar.getInstance(timeZone);
-            c.setTimeInMillis(currentFastTime);
+            c.setTimeInMillis(fastDayLastAnnounced);
+            if (daysDelta != 0) {
+                c.add(Calendar.DAY_OF_MONTH, daysDelta);
+                fastDayLastAnnounced = c.getTimeInMillis();
+            }
             // snaps to beginning of the day
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
@@ -270,12 +279,12 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
             midnightTask.cancel();
             midnightTask = null;
         }
+        midnightScheduledTime = 0;
         if (desiredTime == 0) return;
-        final long chosenFastMidnight1 = chosenFastMidnight;
         midnightTask = new TimerTask() {
             @Override
             public void run() {
-                announceMidnight(this, chosenFastMidnight1);
+                announceMidnight(this);
             }
         };
         midnightScheduledTime = desiredTime;
@@ -289,13 +298,14 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
             oldTime = timeKeeper.getTime();
             timeKeeper.setTime(newTime);
             if (timeKeeper.isRunning) {
-                updateMidnightTask(newTime);
+                fastDayLastAnnounced = newTime;
+                updateMidnightTask(0, 0);
             }
         }
         firePropertyChange(TimeProtocol.PROP_TIME_UPDATE, oldTime, newTime);
     }
 
-    private synchronized void announceMidnight(TimerTask self, long currentMidnight) {
+    private synchronized void announceMidnight(TimerTask self) {
         // We only run if the midnight task has not been changed from us. This is the
         // lock-protected synchronization we do to avoid outdated midnight tasks from executing.
         if (!timeKeeper.isRunning || midnightTask != self) {
@@ -303,22 +313,26 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         }
         sendClockEvent(TimeProtocol.DATE_ROLLOVER);
         midnightTask = null;
-        long nextDay = currentMidnight;
+        int deltaDays = 0;
         if (timeKeeper.rate > 0) {
-            nextDay += 6 * 3600 * 1000;
+            deltaDays = 1;
         } else {
-            nextDay -= 6 * 3600 * 1000;
+            deltaDays = -1;
         }
-        updateMidnightTask(nextDay);
+        updateMidnightTask(0, deltaDays);
     }
 
     /// Updates internal state and property change listeners. Does not talk to the bus.
     private void updateRunning(boolean r) {
-        boolean lastRunning = timeKeeper.isRunning;
-        if (r) {
-            timeKeeper.start();
-        } else {
-            timeKeeper.stop();
+        boolean lastRunning;
+        synchronized(this) {
+            lastRunning = timeKeeper.isRunning;
+            if (r) {
+                timeKeeper.start();
+            } else {
+                timeKeeper.stop();
+            }
+            updateMidnightTask(0, 0);
         }
         firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, r);
     }
