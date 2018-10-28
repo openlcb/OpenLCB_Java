@@ -214,6 +214,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 timer.schedule(timerTask, timeoutMillis);
             } catch( java.lang.IllegalStateException ise) {
                 logger.log(Level.WARNING, "Timer already canceled when starting timeout for datagram {0}", message != null ? message : " == null");
+            } catch( java.util.concurrent.RejectedExecutionException ree) {
+                logger.log(Level.WARNING, "Timer rejected execution when starting timeout for datagram {0}", message != null ? message : " == null");
             }
         }
 
