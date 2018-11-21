@@ -28,9 +28,11 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public class TimeBroadcastConsumerTest extends InterfaceTestBase {
     @Before
     public void SetUp() {
+        printAllSentMessages();
         tcslave = new TimeBroadcastConsumer(iface, TimeProtocol.ALT_CLOCK_1);
         expectFrame(":X194A4333N010100000102FFFF;");
         expectFrame(":X19524333N0101000001028000;");
+        expectFrame(":X195B4333N010100000102F000;");
         expectNoFrames();
     }
 

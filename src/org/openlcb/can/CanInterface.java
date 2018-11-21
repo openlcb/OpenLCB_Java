@@ -105,7 +105,12 @@ public class CanInterface {
             }
         });
         // Waits for alias allocation to complete.
-        sema.acquireUninterruptibly();
+        try {
+            sema.acquire();
+        } catch (InterruptedException e) {
+            // if the thread was interrupted, we are trying to terminate.
+            return;
+        }
         // Acquires everybody else's alias.
         OpenLcbCanFrame ameFrame = new OpenLcbCanFrame(0);
         ameFrame.setAME(aliasWatcher.getNIDa(), null);
@@ -175,7 +180,7 @@ public class CanInterface {
            threadPool.shutdown(); // Disable new tasks from being submitted
            try {
               // Wait a while for existing tasks to terminate
-              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+              if (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) {
                  threadPool.shutdownNow(); // Cancel currently executing tasks
                  // Wait a while for tasks to respond to being cancelled
                  if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
