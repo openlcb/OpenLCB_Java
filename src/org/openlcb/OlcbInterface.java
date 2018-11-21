@@ -66,6 +66,20 @@ public class OlcbInterface {
     final static int maxThreads = 100;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
+    /**
+     * Implement this interface if you need to control the thread on which loopback messages are
+     * executed.
+     */
+    public interface SyncExecutor {
+        /**
+         * Executes a runnable on the given thread. Waits for the execution to complete before
+         * returning.
+         * @param r Runnable to execute.
+         */
+        void schedule(Runnable r) throws InterruptedException;
+    }
+
+    private SyncExecutor loopbackThread = null;
 
 
     /**
@@ -130,6 +144,25 @@ public class OlcbInterface {
                 });
            }
         });
+    }
+
+    /**
+     * Force the stack to execute all loopback messages on a given thread. Programs using the
+     * library in a single-threaded manner can cause all callbacks to execute on that thread by
+     * calling this function.
+     * @param thread Implementation to jump to the desired thread.
+     */
+    public void setLoopbackThread(SyncExecutor thread) {
+        loopbackThread = thread;
+    }
+
+    /**
+     * Schedules work on an interface-internal thread. This thread will be cancelled during the
+     * interface shutdown.
+     * @param r work to run.
+     */
+    public void runOnThreadPool(Runnable r) {
+        threadPool.execute(r);
     }
 
     /**
@@ -260,6 +293,22 @@ public class OlcbInterface {
     }
 
     /**
+     * Calls a piece of code on the loopback thread. If we are interrupted, abandons the call.
+     * @param r Stuff to run on loopback thread.
+     */
+    void runCallbackOrAbandon(Runnable r) {
+        if (loopbackThread != null) {
+            try {
+                loopbackThread.schedule(r);
+            } catch (InterruptedException e) {
+                return;
+            }
+        } else {
+            r.run();
+        }
+    }
+
+    /**
      * Performs local feedback of addressed and global messages. This class is on the critical
      * path to sending messages.
      */
@@ -272,21 +321,26 @@ public class OlcbInterface {
 
         @Override
         public void put(Message msg, Connection sender) {
-            // For addressed messages we check if the target is local or remote.
-            if (msg instanceof AddressedMessage) {
-                AddressedMessage amsg = (AddressedMessage) msg;
-                if (amsg.destNodeID.equals(nodeId)) {
-                    // Addressed to local host. Skip sending to the network.
-                    inputConnection.put(msg, sender);
-                    return;
+            runCallbackOrAbandon(new Runnable() {
+                @Override
+                public void run() {
+                    // For addressed messages we check if the target is local or remote.
+                    if (msg instanceof AddressedMessage) {
+                        AddressedMessage amsg = (AddressedMessage) msg;
+                        if (amsg.destNodeID.equals(nodeId)) {
+                            // Addressed to local host. Skip sending to the network.
+                            inputConnection.put(msg, sender);
+                            return;
+                        }
+                        // The MimicNodeStore needs to know about all messages sent.
+                        nodeStore.put(msg, sender);
+                    } else {
+                        // For global messages, we always send a copy of the message locally.
+                        inputConnection.put(msg, sender);
+                    }
+                    realOutput.put(msg, sender);
                 }
-                // The MimicNodeStore needs to know about all messages sent.
-                nodeStore.put(msg, sender);
-            } else {
-                // For global messages, we always send a copy of the message locally.
-                inputConnection.put(msg, sender);
-            }
-            realOutput.put(msg, sender);
+            });
         }
 
         @Override
