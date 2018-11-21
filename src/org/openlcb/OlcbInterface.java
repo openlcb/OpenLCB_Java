@@ -66,6 +66,20 @@ public class OlcbInterface {
     final static int maxThreads = 100;
     final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
 
+    /**
+     * Implement this interface if you need to control the thread on which loopback messages are
+     * executed.
+     */
+    public interface LoopbackThread {
+        /**
+         * Executes a runnable on the given thread. Waits for the execution to complete before
+         * returning.
+         * @param r Runnable to execute.
+         */
+        void schedule(Runnable r) throws InterruptedException;
+    }
+
+    private LoopbackThread loopbackThread = null;
 
 
     /**
@@ -130,6 +144,16 @@ public class OlcbInterface {
                 });
            }
         });
+    }
+
+    /**
+     * Force the stack to execute all loopback messages on a given thread. Programs using the
+     * library in a single-threaded manner can cause all callbacks to execute on that thread by
+     * calling this function.
+     * @param thread Implementation to jump to the desired thread.
+     */
+    public void setLoopbackThread(LoopbackThread thread) {
+        loopbackThread = thread;
     }
 
     /**
@@ -256,6 +280,22 @@ public class OlcbInterface {
             for (Connection c : listeners) {
                 c.put(msg, sender);
             }
+        }
+    }
+
+    /**
+     * Calls a piece of code on the loopback thread. If we are interrupted, abandons the call.
+     * @param r Stuff to run on loopback thread.
+     */
+    void runLoopbackOrAbandon(Runnable r) {
+        if (loopbackThread != null) {
+            try {
+                loopbackThread.schedule(r);
+            } catch (InterruptedException e) {
+                return;
+            }
+        } else {
+            r.run();
         }
     }
 
