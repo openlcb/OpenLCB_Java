@@ -16,7 +16,6 @@ import org.junit.runners.Suite;
         DatagramServiceTest.class,
         StreamTransmitterTest.class,
         StreamReceiverTest.class,
-        BlueGoldEngineTest.class,
         MemoryConfigurationServiceTest.class,
         org.openlcb.implementations.throttle.PackageTest.class,
         BitProducerConsumerTest.class,
