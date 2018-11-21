@@ -70,7 +70,7 @@ public class OlcbInterface {
      * Implement this interface if you need to control the thread on which loopback messages are
      * executed.
      */
-    public interface LoopbackThread {
+    public interface SyncExecutor {
         /**
          * Executes a runnable on the given thread. Waits for the execution to complete before
          * returning.
@@ -79,7 +79,7 @@ public class OlcbInterface {
         void schedule(Runnable r) throws InterruptedException;
     }
 
-    private LoopbackThread loopbackThread = null;
+    private SyncExecutor loopbackThread = null;
 
 
     /**
@@ -152,8 +152,17 @@ public class OlcbInterface {
      * calling this function.
      * @param thread Implementation to jump to the desired thread.
      */
-    public void setLoopbackThread(LoopbackThread thread) {
+    public void setLoopbackThread(SyncExecutor thread) {
         loopbackThread = thread;
+    }
+
+    /**
+     * Schedules work on an interface-internal thread. This thread will be cancelled during the
+     * interface shutdown.
+     * @param r work to run.
+     */
+    public void runOnThreadPool(Runnable r) {
+        threadPool.execute(r);
     }
 
     /**
@@ -287,7 +296,7 @@ public class OlcbInterface {
      * Calls a piece of code on the loopback thread. If we are interrupted, abandons the call.
      * @param r Stuff to run on loopback thread.
      */
-    void runLoopbackOrAbandon(Runnable r) {
+    void runCallbackOrAbandon(Runnable r) {
         if (loopbackThread != null) {
             try {
                 loopbackThread.schedule(r);

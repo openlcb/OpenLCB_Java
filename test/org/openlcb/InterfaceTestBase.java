@@ -10,10 +10,10 @@ import org.openlcb.can.CanFrame;
 import org.openlcb.can.GridConnect;
 import org.openlcb.can.MessageBuilder;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 import static org.mockito.Mockito.*;
 
@@ -42,6 +42,7 @@ public abstract class InterfaceTestBase {
         fakeConnection = new FakeConnection(outputConnectionMock);
         iface = new OlcbInterface(id, fakeConnection);
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
+        //enableSingleThreaded();
     }
 
     @After
@@ -49,6 +50,46 @@ public abstract class InterfaceTestBase {
         expectNoMessages();
         iface.dispose();
         iface = null;
+    }
+
+    public void enableSingleThreaded() {
+        FakeExecutionThread thread = new FakeExecutionThread();
+        iface.setLoopbackThread(thread);
+        iface.runOnThreadPool(thread);
+    }
+
+    class FakeExecutionThread implements OlcbInterface.SyncExecutor, Runnable {
+        private final BlockingQueue<QEntry> outputQueue = new
+                LinkedBlockingQueue<>();
+
+        @Override
+        public void schedule(Runnable r) throws InterruptedException {
+            QEntry q = new QEntry(r);
+            outputQueue.add(q);
+            q.sem.acquire();
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                QEntry m = null;
+                try {
+                    m = outputQueue.take();
+                    m.callback.run();
+                    m.sem.release();
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+
+        private class QEntry {
+            QEntry(Runnable r) {
+                callback = r;
+            }
+            Runnable callback;
+            Semaphore sem = new Semaphore(0);
+        }
     }
 
     /// Prints all messages that get sent to the mock. For debugging purposes.
