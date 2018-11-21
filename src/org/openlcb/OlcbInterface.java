@@ -312,21 +312,26 @@ public class OlcbInterface {
 
         @Override
         public void put(Message msg, Connection sender) {
-            // For addressed messages we check if the target is local or remote.
-            if (msg instanceof AddressedMessage) {
-                AddressedMessage amsg = (AddressedMessage) msg;
-                if (amsg.destNodeID.equals(nodeId)) {
-                    // Addressed to local host. Skip sending to the network.
-                    inputConnection.put(msg, sender);
-                    return;
+            runCallbackOrAbandon(new Runnable() {
+                @Override
+                public void run() {
+                    // For addressed messages we check if the target is local or remote.
+                    if (msg instanceof AddressedMessage) {
+                        AddressedMessage amsg = (AddressedMessage) msg;
+                        if (amsg.destNodeID.equals(nodeId)) {
+                            // Addressed to local host. Skip sending to the network.
+                            inputConnection.put(msg, sender);
+                            return;
+                        }
+                        // The MimicNodeStore needs to know about all messages sent.
+                        nodeStore.put(msg, sender);
+                    } else {
+                        // For global messages, we always send a copy of the message locally.
+                        inputConnection.put(msg, sender);
+                    }
+                    realOutput.put(msg, sender);
                 }
-                // The MimicNodeStore needs to know about all messages sent.
-                nodeStore.put(msg, sender);
-            } else {
-                // For global messages, we always send a copy of the message locally.
-                inputConnection.put(msg, sender);
-            }
-            realOutput.put(msg, sender);
+            });
         }
 
         @Override
