@@ -41,7 +41,7 @@ public class CanInterface {
     private final NodeID nodeId;
     private final NIDaAlgorithm aliasWatcher;
 
-    boolean initialized = false;
+    protected boolean initialized = false;
 
     private ThreadPoolExecutor threadPool = null;
     final static int minThreads = 10;
