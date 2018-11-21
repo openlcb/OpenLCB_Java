@@ -16,13 +16,16 @@ import java.util.List;
  */
 public class FakeConnection extends AbstractConnection {
     private final Connection mock;
-
+    public boolean debugMessages = false;
     public FakeConnection(Connection mock) {
         this.mock = mock;
     }
 
     @Override
     public synchronized void put(Message msg, Connection sender) {
+        if (debugMessages) {
+            System.err.println("Mock send: " + msg.toString());
+        }
         mock.put(msg, sender);
     }
 }

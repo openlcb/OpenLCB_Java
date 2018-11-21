@@ -220,6 +220,9 @@ public class MessageBuilder {
             case IdentifyConsumer:
                 retlist.add(new IdentifyConsumersMessage(source, getEventID(f)));
                 return retlist;
+            case ConsumerRangeIdentified:
+                retlist.add(new ConsumerRangeIdentifiedMessage(source, getEventID(f)));
+                return retlist;
             case ConsumerIdentifiedUnknown:
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f), EventState.Unknown));
                 return retlist;
@@ -231,6 +234,9 @@ public class MessageBuilder {
                 return retlist;
             case IdentifyProducer: 
                 retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
+                return retlist;
+            case ProducerRangeIdentified:
+                retlist.add(new ProducerRangeIdentifiedMessage(source, getEventID(f)));
                 return retlist;
             case ProducerIdentifiedUnknown:
                 retlist.add(new ProducerIdentifiedMessage(source, getEventID(f), EventState.Unknown));
@@ -527,6 +533,17 @@ public class MessageBuilder {
             f.loadFromEid(msg.getEventID());
             retlist.add(f);
         }
+
+        @Override
+        public void handleConsumerRangeIdentified(ConsumerRangeIdentifiedMessage msg, Connection
+                sender) {
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.ConsumerRangeIdentified.mti());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
+        }
+
         /**
          * Handle "Identify Producers" message
          */
@@ -538,6 +555,17 @@ public class MessageBuilder {
             f.loadFromEid(msg.getEventID());
             retlist.add(f);
         }
+
+        @Override
+        public void handleProducerRangeIdentified(ProducerRangeIdentifiedMessage msg, Connection
+                sender) {
+            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+            f.setOpenLcbMTI(MessageTypeIdentifier.ProducerRangeIdentified.mti());
+            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+            f.loadFromEid(msg.getEventID());
+            retlist.add(f);
+        }
+
         /**
          * Handle "Producer Identified" message
          */

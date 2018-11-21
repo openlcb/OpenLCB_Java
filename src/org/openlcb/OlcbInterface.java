@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,6 +26,8 @@ import java.util.logging.Logger;
  */
 public class OlcbInterface {
     private final static Logger log = Logger.getLogger(OlcbInterface.class.getName());
+    private final Timer timer = new Timer();
+
     /// Object for sending messages to the network.
     protected final Connection internalOutputConnection;
     /// Object we return to the customer when they ask for the output connection
@@ -127,6 +130,13 @@ public class OlcbInterface {
                 });
            }
         });
+    }
+
+    /**
+     * @return a shared Timer thread to be used by all components in this interface. Tasks scheduled on this timer are not allowed to block (as it's a shared timer thread).
+     */
+    public Timer getTimer() {
+        return timer;
     }
 
     /**
@@ -289,16 +299,18 @@ public class OlcbInterface {
      * cleanup local resources
      */
     public void dispose(){
+        // shut down shared timer's thread.
+        timer.cancel();
         // shut down the thread pool
         if(threadPool != null && !(threadPool.isShutdown())) {
            // modified from the javadoc for ExecutorService 
            threadPool.shutdown(); // Disable new tasks from being submitted
            try {
               // Wait a while for existing tasks to terminate
-              if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+              if (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS)) {
                  threadPool.shutdownNow(); // Cancel currently executing tasks
                  // Wait a while for tasks to respond to being cancelled
-                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                 if (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS))
                      log.warning("Pool did not terminate");
               }
             } catch (InterruptedException ie) {

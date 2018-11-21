@@ -41,13 +41,13 @@ public enum MessageTypeIdentifier {
         ProtocolSupportReply        ( true,  false, false, 0, 1, 19, 0, "ProtocolSupportReply"),
         
         IdentifyConsumer            ( false, true,  true,  0, 2,  7, 0, "IdentifyConsumer"),
-        ConsumerIdentifyRange       ( false, true,  false, 0, 1,  5, 0, "ConsumerIdentifyRange"),
+        ConsumerRangeIdentified     ( false, true,  false, 0, 1,  5, 0, "ConsumerRangeIdentified"),
         ConsumerIdentifiedUnknown   ( false, true,  false, 0, 1,  6, 3, "ConsumerIdentifiedUnknown"),
         ConsumerIdentifiedValid     ( false, true,  false, 0, 1,  6, 0, "ConsumerIdentifiedValid"),
         ConsumerIdentifiedInvalid   ( false, true,  false, 0, 1,  6, 1, "ConsumerIdentifiedInvalid"),
         
         IdentifyProducer            ( false, true,  true,  0, 2,  8, 0, "IdentifyProducer"),
-        ProducerIdentifyRange       ( false, true,  false, 0, 1,  9, 0, "ProducerIdentifyRange"),
+        ProducerRangeIdentified     ( false, true,  false, 0, 1,  9, 0, "ProducerRangeIdentified"),
         ProducerIdentifiedUnknown   ( false, true,  false, 0, 1, 10, 3, "ProducerIdentifiedUnknown"),
         ProducerIdentifiedValid     ( false, true,  false, 0, 1, 10, 0, "ProducerIdentifiedValid"),
         ProducerIdentifiedInvalid   ( false, true,  false, 0, 1, 10, 1, "ProducerIdentifiedInvalid"),
