@@ -32,7 +32,7 @@ public class ConsumerRangeIdentifiedMessage extends EventMessage {
 
     public String toString() {
         return super.toString()
-                +" Producer Range Identified with " + eventID.toString();
+                +" Consumer Range Identified with " + eventID.toString();
     }
     
     public int getMTI() { return MTI_PRODUCER_RANGE_IDENTIFIED; }
