@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -321,27 +322,23 @@ public class OlcbInterface {
 
         @Override
         public void put(Message msg, Connection sender) {
-            runCallbackOrAbandon(new Runnable() {
-                @Override
-                public void run() {
-                    // For addressed messages we check if the target is local or remote.
-                    if (msg instanceof AddressedMessage) {
-                        AddressedMessage amsg = (AddressedMessage) msg;
-                        if (amsg.destNodeID.equals(nodeId)) {
-                            // Addressed to local host. Skip sending to the network.
-                            inputConnection.put(msg, sender);
-                            return;
-                        }
-                        // The MimicNodeStore needs to know about all messages sent.
-                        nodeStore.put(msg, sender);
-                    } else {
-                        // For global messages, we always send a copy of the message locally.
-                        inputConnection.put(msg, sender);
-                    }
-                    realOutput.put(msg, sender);
+            // For addressed messages we check if the target is local or remote.
+            if (msg instanceof AddressedMessage) {
+                AddressedMessage amsg = (AddressedMessage) msg;
+                if (amsg.destNodeID.equals(nodeId)) {
+                    // Addressed to local host. Skip sending to the network.
+                    inputConnection.put(msg, sender);
+                    return;
                 }
-            });
+                // The MimicNodeStore needs to know about all messages sent.
+                nodeStore.put(msg, sender);
+            } else {
+                // For global messages, we always send a copy of the message locally.
+                inputConnection.put(msg, sender);
+            }
+            realOutput.put(msg, sender);
         }
+
 
         @Override
         public void registerStartNotification(ConnectionListener c) {
@@ -426,20 +423,31 @@ public class OlcbInterface {
          * Never returns.
          */
         private void run() {
+            final ArrayList<QEntry> l = new ArrayList<>(150);
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     QEntry m = outputQueue.take();
-                    try {
-                        realOutput.put(m.message, m.connection);
-                    } catch (RejectedExecutionException ex) {
-                        throw ex; // re-throw so the outer try will handle these.
-                    } catch (Throwable e) {
-                        log.warning("Exception while sending message: " + e.toString());
-                        e.printStackTrace();
-                    }
-                    synchronized(this) {
-                        pendingCount--;
-                    }
+                    l.clear();
+                    l.add(m);
+                    outputQueue.drainTo(l, 149);
+                    runCallbackOrAbandon(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (QEntry m : l) {
+                                try {
+                                    realOutput.put(m.message, m.connection);
+                                } catch (RejectedExecutionException ex) {
+                                    throw ex; // re-throw so the outer try will handle these.
+                                } catch (Throwable e) {
+                                    log.warning("Exception while sending message: " + e.toString());
+                                    e.printStackTrace();
+                                }
+                                synchronized(QueuedOutputConnection.this) {
+                                    pendingCount--;
+                                }
+                            }
+                        }
+                    });
                 } catch (InterruptedException|RejectedExecutionException e) {
                     // thread must exit when interrupted or rejected.
                     return;
