@@ -280,8 +280,9 @@ public class LoaderClientTest {
         Assert.assertTrue(messagesReceived.get(0).equals(new StreamInitiateRequestMessage(hereID,farID,16384,(byte)4,(byte)0))); // Stream negn
         messagesReceived.clear();
         // *********** note small buffersize! **********
-        xmt.put(new StreamInitiateReplyMessage(hereID,farID,6,(byte)4,(byte)6), null);
+        xmt.put(new StreamInitiateReplyMessage(farID,hereID,6,(byte)4,(byte)6), null);
     // Stream Data
+
         Assert.assertEquals("stream data", 1, messagesReceived.size());
                                         //System.out.println("Msg0: "+(messagesReceived.get(0) != null ? messagesReceived.get(0).toString() : " == null"));
         Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,(byte)6,new int[]{'a','b','c','d','e','f'})));
@@ -333,7 +334,7 @@ public class LoaderClientTest {
         Assert.assertEquals(new StreamInitiateRequestMessage(hereID, farID, 16384, (byte)4, (byte)0), messagesReceived.get(0));
         messagesReceived.clear();
         // *********** note larger buffersize! **********
-        xmt.put(new StreamInitiateReplyMessage(hereID,farID,64,(byte)4,(byte)6), null);
+        xmt.put(new StreamInitiateReplyMessage(farID,hereID,64,(byte)4,(byte)6), null);
         // Stream Data
         Assert.assertEquals("stream data", 3, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0).equals(new StreamDataSendMessage(hereID,farID,(byte)6,new int[]{'a','b','c','d','e','f','g','h','i','j'})));

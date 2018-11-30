@@ -69,6 +69,24 @@ public class ProtocolIdentificationTest  {
         
         Assert.assertTrue("supports", !p.supports(0));
     }
+
+    @Test
+    public void hasProtocol() {
+        ProtocolIdentification pi = new ProtocolIdentification(
+                new NodeID(new byte[]{2,3,3,4,5,6}),
+                new ProtocolIdentificationReplyMessage(
+                        new NodeID(new byte[]{1,3,3,4,5,6}),new NodeID(new byte[]{2,3,3,4,5,6}),
+                        0x000F00000000L));
+        Assert.assertTrue(pi.hasProtocol(ProtocolIdentification.Protocol.ConfigurationDescription));
+        Assert.assertFalse(pi.hasProtocol(ProtocolIdentification.Protocol
+                .FirmwareUpgrade));
+        Assert.assertFalse(pi.hasProtocol(ProtocolIdentification.Protocol
+                .FirmwareUpgradeActive));
+        Assert.assertFalse(pi.hasProtocol(ProtocolIdentification.Protocol
+                .Datagram));
+        Assert.assertTrue(pi.hasProtocol(ProtocolIdentification.Protocol.FunctionDescription));
+        Assert.assertTrue(pi.hasProtocol(ProtocolIdentification.Protocol.DccCommandStation));
+    }
     
     @Test
     public void testCreationFromMessage() {
