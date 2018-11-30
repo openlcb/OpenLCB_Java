@@ -99,4 +99,13 @@ public class ProtocolIdentification {
     public List<String> getProtocolNames() {
         return Protocol.decodeNames(value);
     }
+
+    /**
+     * Checks if the PIP response from the constructor claims to support the given protocol.
+     * @param protocol enum representing the protocol bit to test
+     * @return true if protocol is supported, false otherwise.
+     */
+    boolean hasProtocol(Protocol protocol) {
+        return protocol.supports(value);
+    }
 }
