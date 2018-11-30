@@ -1,15 +1,11 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class ConfigurationPortalTest extends TestCase {
+public class ConfigurationPortalTest  {
     boolean result;
     
     NodeID nodeID1 = new NodeID(new byte[]{1,2,3,4,5,6});
@@ -24,18 +20,23 @@ public class ConfigurationPortalTest extends TestCase {
     Message msg = null;
     
     ConfigurationPortal portal = new ConfigurationPortal(nodeID1, connection);
-    
+ 
+    @Before   
     public void setup() {
         msg = null;
     }
     
+    @Test
+    @Ignore("no test here")
     public void testCtor() {
-        
     }
 
+    @Test
+    @Ignore("no test here")
     public void testRequestWrite() {
     }
 
+    @Test
     public void testHandling() {
         result = false;
         Node n = new Node(){
@@ -49,23 +50,5 @@ public class ConfigurationPortalTest extends TestCase {
         n.put(m, null);
         
         Assert.assertTrue(result);
-    }
-    
-    // from here down is testing infrastructure
-    
-    public ConfigurationPortalTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ConfigurationPortalTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ConfigurationPortalTest.class);
-        return suite;
     }
 }

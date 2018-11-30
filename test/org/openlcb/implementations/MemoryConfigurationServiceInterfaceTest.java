@@ -1,11 +1,16 @@
 package org.openlcb.implementations;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.openlcb.DatagramAcknowledgedMessage;
 import org.openlcb.DatagramMessage;
 import org.openlcb.DatagramRejectedMessage;
@@ -36,12 +41,17 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
  */
 public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
-    NodeID hereID = iface.getNodeId();
-    NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
+    @Rule
+    public MockitoRule rule = MockitoJUnit.rule();
 
+    NodeID hereID;
+    NodeID farID;
+
+    @Test
     public void testCtorViaSetup() {
     }
 
+    @Test
     public void testSimpleWrite() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -63,6 +73,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testSimpleWriteError() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -84,6 +95,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testDelayedWrite() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -111,6 +123,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testDelayedWriteError() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -138,6 +151,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testManyWritesQueuesUp() {
         int space = MemoryConfigurationService.SPACE_CONFIG;
         long address = 0x12340078;
@@ -156,15 +170,15 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
                     new byte[]{(byte) i, 2}, mock);
 
             if (i > 0) {
-                assertEquals(i, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
+                Assert.assertEquals(i, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
                 MemoryConfigurationService.McsWriteMemo m = (MemoryConfigurationService
                         .McsWriteMemo) iface.getMemoryConfigurationService().queuedRequests.get
                         (0).getLast();
-                assertEquals(address + i * 256, m.address);
+               Assert.assertEquals(address + i * 256, m.address);
             }
         }
 
-        assertEquals(count - 1, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
+        Assert.assertEquals(count - 1, iface.getMemoryConfigurationService().queuedRequests.get(0).size());
 
         for (int i = 0; i < count; ++i) {
             MemoryConfigurationService.McsWriteHandler hnd = hnds.get(i);
@@ -188,6 +202,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         expectNoMessages();
     }
 
+    @Test
     public void testSimpleRead() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -215,6 +230,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testTwoSimpleReadsInSequence() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -300,7 +316,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
-    public void testReadWithTimeout() {
+    @Test
+    public void testReadWithTimeout() throws InterruptedException {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
@@ -317,6 +334,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
             System.err.println("Expect 'Never received reply' here -->");
             delay(50);
+            iface.getDatagramMeteringBuffer().waitForSendCallbacks();
             System.err.println("<--");
 
             verify(hnd).handleFailure(0x100);
@@ -345,7 +363,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     }
 
-    public void testReadWithTimeoutInterleaved() {
+    @Test
+    public void testReadWithTimeoutInterleaved() throws InterruptedException {
         int space = 0xFD;
         long address = 0x12345678;
         int length = 4;
@@ -365,6 +384,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
             System.err.println("Expect 'Never received reply' here -->");
             delay(50);
+            iface.getDatagramMeteringBuffer().waitForSendCallbacks();
             System.err.println("<--");
 
             verify(hnd).handleFailure(0x100);
@@ -377,17 +397,23 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                     0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
 
-            // datagram reply comes back
+            // This datagram reply will be misinterpreted to the 0x12345679 datagram, and a
+            // response will be waited for, but will never come.
             sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
             consumeMessages();
 
-            // datagram reply comes back
+            // Instead, that second datagram is rejected with retry-immediately error.
             sendMessage(new DatagramRejectedMessage(farID, hereID, 0x2020));
             consumeMessages();
 
+            // We need to make sure that the datagram metering buffer will not timeout when we
+            // wait for the retry timer of the memory config service to have expired.
+            iface.getDatagramMeteringBuffer().setTimeout(700);
+
             System.err.println("Expect 'unexpected response datagram' here -->");
             // now return data for first DG
-            // Response datagram comes and gets acked.
+            // Response datagram comes and gets acked, but internally it does not match the
+            // expectation on what address should be being read.
             sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
                             0x20, 0x51, 0x12, 0x34, 0x56, 0x78, 0xaa}),
                     new DatagramAcknowledgedMessage(hereID, farID));
@@ -396,18 +422,18 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
             expectNoMessages();
 
             delay(50);
-            // retry should be out now.
+            iface.getMemoryConfigurationService().waitForTimer();
+            // retry of the second request should be out now.
             expectMessageAndNoMore(new DatagramMessage(hereID, farID, new int[]{
                     0x20, 0x41, 0x12, 0x34, 0x56, 0x79, 4}));
-            sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
-            consumeMessages();
             // datagram reply comes back
             sendMessage(new DatagramAcknowledgedMessage(farID, hereID, 0x80));
             consumeMessages();
+            // and here is the actual payload being sent back by the remote node.
             sendMessageAndExpectResult(new DatagramMessage(farID, hereID, new int[]{
                             0x20, 0x51, 0x12, 0x34, 0x56, 0x79, 0xaa}),
                     new DatagramAcknowledgedMessage(hereID, farID));
-            // the now returned data will never get appropriately assigned.
+            // the now returned data will indeed get appropriately assigned.
             verify(hnd2).handleReadData(farID, space, address+1, new byte[]{(byte) 0xaa});
             verifyNoMoreInteractions(hnd2);
         }
@@ -416,6 +442,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         sendAnother(space, address+5);
     }
 
+    @Test
     public void testManyReadsInlinePrint() {
         final int space = 0xFD;
         final long address = 0x12345678;
@@ -463,6 +490,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         }
     }
 
+    @Test
     public void testManyReadsInline() {
         final int space = 0xFD;
         final long address = 0x12345678;
@@ -472,7 +500,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
                 .McsReadHandler.class, new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                throw new AssertionFailedError("Not stubbed invocation: " + invocationOnMock.toString());
+                throw new junit.framework.AssertionFailedError("Not stubbed invocation: " + invocationOnMock.toString());
             }
         });
         int count = 10;
@@ -519,6 +547,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         }
     }
 
+    @Test
     public void testSimpleReadFails() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -546,6 +575,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testSimpleReadFromSpace1() {
         int space = 0x1;
         long address = 0x12345678;
@@ -573,6 +603,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testSimpleReadFromSpaceFB() {
         int space = 0xFB;
         long address = 0x12345678;
@@ -600,6 +631,7 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd);
     }
 
+    @Test
     public void testGetSpaceId() {
         boolean debugFrames = false;
 
@@ -621,16 +653,17 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
                 parsedMessages.addAll(l);
             }
         }
-        assertEquals(1, parsedMessages.size());
-        assertTrue(parsedMessages.get(0) instanceof DatagramMessage);
+        Assert.assertEquals(1, parsedMessages.size());
+        Assert.assertTrue(parsedMessages.get(0) instanceof DatagramMessage);
         DatagramMessage dg = (DatagramMessage) parsedMessages.get(0);
-        assertEquals("20 50 12 34 56 78 FB AA", Utilities.toHexSpaceString(dg.getData()));
+        Assert.assertEquals("20 50 12 34 56 78 FB AA", Utilities.toHexSpaceString(dg.getData()));
 
-        assertEquals(0xFB, dg.getData()[6]);
+        Assert.assertEquals(0xFB, dg.getData()[6]);
 
-        assertEquals(0xFB, MemoryConfigurationService.getSpaceFromPayload(dg.getData()));
+        Assert.assertEquals(0xFB, MemoryConfigurationService.getSpaceFromPayload(dg.getData()));
     }
 
+    @Test
     public void testTwoSimpleReadsInParallel() {
         int space = 0xFD;
         long address = 0x12345678;
@@ -675,8 +708,9 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         verifyNoMoreInteractions(hnd2);
     }
 
-
-/*
+    /*
+    @Test
+    @Ignore("commented out prior to JUnit 4")
     public void testConfigMemoIsRealClass() {
         MemoryConfigurationService.McsConfigMemo m20 =
             new MemoryConfigurationService.McsConfigMemo(farID);
@@ -694,6 +728,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     }
 
+    @Test
+    @Ignore("commented out prior to JUnit 4")
     public void testGetConfig() {
         MemoryConfigurationService.McsConfigMemo memo =
             new MemoryConfigurationService.McsConfigMemo(farID) {
@@ -740,6 +776,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     }
 
+    @Test
+    @Ignore("commented out prior to JUnit 4")
     public void testAddrSpaceMemoIsRealClass() {
         MemoryConfigurationService.McsAddrSpaceMemo m20 =
             new MemoryConfigurationService.McsAddrSpaceMemo(farID,0xFD);
@@ -760,6 +798,8 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
 
     }
 
+    @Test
+    @Ignore("commented out prior to JUnit 4")
     public void testGetAddrSpace1() {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo =
@@ -811,6 +851,9 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         Assert.assertTrue(flag);
 
     }
+
+    @Test
+    @Ignore("commented out prior to JUnit 4")
     public void testGetAddrSpace2() {
         int space = 0xFD;
         MemoryConfigurationService.McsAddrSpaceMemo memo =
@@ -862,24 +905,21 @@ public class MemoryConfigurationServiceInterfaceTest extends InterfaceTestBase {
         Assert.assertTrue(flag);
 
     }
-    */
-    // from here down is testing infrastructure
-
-    public MemoryConfigurationServiceInterfaceTest(String s) {
-        super(s);
+*/
+    @Before 
+    public void setUp() {
+        super.setUp();
+        hereID = iface.getNodeId();
+        farID = new NodeID(new byte[]{1,2,3,4,5,7});
         aliasMap.insert(0x987, farID);
         testWithCanFrameRendering = true;
     }
 
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MemoryConfigurationServiceInterfaceTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
+    @After
+    public void tearDown() {
+        super.tearDown();
+        hereID = null;
+        farID = null;
     }
 
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MemoryConfigurationServiceInterfaceTest.class);
-        return suite;
-    }
 }

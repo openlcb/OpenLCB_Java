@@ -11,8 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.Logger;
 
 /**
@@ -22,6 +27,8 @@ import java.util.logging.Logger;
  */
 public class OlcbInterface {
     private final static Logger log = Logger.getLogger(OlcbInterface.class.getName());
+    private final Timer timer = new Timer();
+
     /// Object for sending messages to the network.
     protected final Connection internalOutputConnection;
     /// Object we return to the customer when they ask for the output connection
@@ -37,18 +44,45 @@ public class OlcbInterface {
 
     // Client library for SNIP, PIP etc protocols.
     private final MimicNodeStore nodeStore;
+
     // Outgoing connection wrapper for datagrams that ensures that we only send one datagram at a
     // time to one destination node.
     private final DatagramMeteringBuffer dmb;
+
     // Client (and server) for datagrams.
     private final DatagramService dcs;
+
     // Client for memory configuration requests.
     private MemoryConfigurationService mcs;
+
     // CDIs for the nodes
     private final Map<NodeID, ConfigRepresentation> nodeConfigs = new HashMap<>();
     // Event Table is a helper for user interfaces to register and retrieve user names for
     // events. By default this is null, initialized lazily when needed only.
     private EventTable eventTable = null;
+
+
+    private ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 100;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+    /**
+     * Implement this interface if you need to control the thread on which loopback messages are
+     * executed.
+     */
+    public interface SyncExecutor {
+        /**
+         * Executes a runnable on the given thread. Waits for the execution to complete before
+         * returning.
+         * @param r Runnable to execute.
+         */
+        void schedule(Runnable r) throws InterruptedException;
+    }
+
+    private SyncExecutor loopbackThread = null;
+
+
     /**
      * Creates the message-level interface.
      *
@@ -56,8 +90,30 @@ public class OlcbInterface {
      *                          initialized ready with this node ID.
      * @param outputConnection_ implements the hardware interface for sending messages to the
      *                          network. Usually this is an internal object of the CanInterface.
+     *
+     * @deprecated since OlcbLibrary version 0.18.  Use {@link #OlcbInterface(NodeID, Connection, ThreadPoolExecutor)} instead.
      */
+    @Deprecated
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_) {
+          this(nodeId_,outputConnection_, 
+               new ThreadPoolExecutor(minThreads,maxThreads,threadTimeout,
+                                      TimeUnit.SECONDS,
+                                      new LinkedBlockingQueue<Runnable>(),
+                                      new OlcbThreadFactory()));
+          threadPool.allowCoreThreadTimeOut(true);
+    }
+
+    /**
+     * Creates the message-level interface.
+     *
+     * @param nodeId_           is the node ID for the node on this interface. Will send out a node
+     *                          initialized ready with this node ID.
+     * @param outputConnection_ implements the hardware interface for sending messages to the
+     *                          network. Usually this is an internal object of the CanInterface.
+     * @param tpe ThreadPoolExecutor for the interface.
+     */
+    public OlcbInterface(NodeID nodeId_, Connection outputConnection_,ThreadPoolExecutor tpe) {
+        threadPool = tpe;
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
         this.wrappedOutputConnection = new OutputConnectionSniffer(internalOutputConnection);
@@ -66,7 +122,7 @@ public class OlcbInterface {
         inputConnection = new MessageDispatcher();
 
         nodeStore = new MimicNodeStore(getOutputConnection(), nodeId);
-        dmb = new DatagramMeteringBuffer(getOutputConnection());
+        dmb = new DatagramMeteringBuffer(getOutputConnection(),threadPool);
         dcs = new DatagramService(nodeId, dmb);
         mcs = new MemoryConfigurationService(nodeId, dcs);
         inputConnection.registerMessageListener(nodeStore);
@@ -81,14 +137,40 @@ public class OlcbInterface {
                 outputConnection.put(m, getInputConnection());
                 // Starts the output queue once we have the confirmation from the lower level that
                 // the connection is ready and we have enqueued the initialization complete message.
-                new Thread(new Runnable() {
+                threadPool.execute(new Runnable() {
                     @Override
                     public void run() {
                         queuedOutputConnection.run();
                     }
-                }, "openlcb-output-queue").start();
-            }
+                });
+           }
         });
+    }
+
+    /**
+     * Force the stack to execute all loopback messages on a given thread. Programs using the
+     * library in a single-threaded manner can cause all callbacks to execute on that thread by
+     * calling this function.
+     * @param thread Implementation to jump to the desired thread.
+     */
+    public void setLoopbackThread(SyncExecutor thread) {
+        loopbackThread = thread;
+    }
+
+    /**
+     * Schedules work on an interface-internal thread. This thread will be cancelled during the
+     * interface shutdown.
+     * @param r work to run.
+     */
+    public void runOnThreadPool(Runnable r) {
+        threadPool.execute(r);
+    }
+
+    /**
+     * @return a shared Timer thread to be used by all components in this interface. Tasks scheduled on this timer are not allowed to block (as it's a shared timer thread).
+     */
+    public Timer getTimer() {
+        return timer;
     }
 
     /**
@@ -170,6 +252,13 @@ public class OlcbInterface {
         inputConnection.unRegisterMessageListener(c);
     }
 
+    /**
+     * @return how many listeners are currently registered using registerMessageListener.
+     */
+    public int numMessageListeners() {
+        return inputConnection.numListeners();
+    }
+
     class MessageDispatcher extends AbstractConnection {
         // This is not the ideal container for add/remove, but keeping the ordering of
         // registrations is useful in ensuring that the system components receive the messages
@@ -186,6 +275,10 @@ public class OlcbInterface {
             unpendingListeners.add(c);
         }
 
+        public synchronized int numListeners() {
+            return listeners.size() + pendingListeners.size() - unpendingListeners.size();
+        }
+
         @Override
         public synchronized void put(Message msg, Connection sender) {
             if (!pendingListeners.isEmpty() || !unpendingListeners.isEmpty()) {
@@ -197,6 +290,22 @@ public class OlcbInterface {
             for (Connection c : listeners) {
                 c.put(msg, sender);
             }
+        }
+    }
+
+    /**
+     * Calls a piece of code on the loopback thread. If we are interrupted, abandons the call.
+     * @param r Stuff to run on loopback thread.
+     */
+    void runCallbackOrAbandon(Runnable r) {
+        if (loopbackThread != null) {
+            try {
+                loopbackThread.schedule(r);
+            } catch (InterruptedException e) {
+                return;
+            }
+        } else {
+            r.run();
         }
     }
 
@@ -230,11 +339,43 @@ public class OlcbInterface {
             realOutput.put(msg, sender);
         }
 
+
         @Override
         public void registerStartNotification(ConnectionListener c) {
             realOutput.registerStartNotification(c);
         }
     }
+
+    /**
+     * cleanup local resources
+     */
+    public void dispose(){
+        // shut down shared timer's thread.
+        timer.cancel();
+        // shut down the thread pool
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(100, TimeUnit.MILLISECONDS))
+                     log.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
+        }
+        threadPool = null;
+        dmb.dispose();
+        mcs.dispose();
+        nodeStore.dispose();
+    }    
 
     /**
      * This class keeps an output connection operating using an internal queue. It keeps
@@ -272,7 +413,9 @@ public class OlcbInterface {
                 }
                 try {
                     Thread.sleep(10);
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                    return;
+                }
             }
         }
 
@@ -280,20 +423,34 @@ public class OlcbInterface {
          * Never returns.
          */
         private void run() {
-            while (true) {
+            final ArrayList<QEntry> l = new ArrayList<>(150);
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     QEntry m = outputQueue.take();
-                    try {
-                        realOutput.put(m.message, m.connection);
-                    } catch (Throwable e) {
-                        log.warning("Exception while sending message: " + e.toString());
-                        e.printStackTrace();
-                    }
-                    synchronized(this) {
-                        pendingCount--;
-                    }
-                } catch (InterruptedException e) {
-                    continue;
+                    l.clear();
+                    l.add(m);
+                    outputQueue.drainTo(l, 149);
+                    runCallbackOrAbandon(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (QEntry m : l) {
+                                try {
+                                    realOutput.put(m.message, m.connection);
+                                } catch (RejectedExecutionException ex) {
+                                    throw ex; // re-throw so the outer try will handle these.
+                                } catch (Throwable e) {
+                                    log.warning("Exception while sending message: " + e.toString());
+                                    e.printStackTrace();
+                                }
+                                synchronized(QueuedOutputConnection.this) {
+                                    pendingCount--;
+                                }
+                            }
+                        }
+                    });
+                } catch (InterruptedException|RejectedExecutionException e) {
+                    // thread must exit when interrupted or rejected.
+                    return;
                 }
             }
         }

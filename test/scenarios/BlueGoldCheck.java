@@ -4,10 +4,7 @@ import org.openlcb.*;
 import org.openlcb.implementations.*;
 import org.openlcb.swing.*;
 
-//import junit.framework.Assert;
-//import junit.framework.Test;
-//import junit.framework.TestCase;
-//import junit.framework.TestSuite;
+//import org.junit.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,9 +17,8 @@ import java.util.*;
  * Not JUnit, so can be run standalone easily.
  
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class BlueGoldCheck /* extends TestCase */ {
+public class BlueGoldCheck {
     
     ScatterGather sg;
     
@@ -103,34 +99,21 @@ public class BlueGoldCheck /* extends TestCase */ {
     public void testSetup() {}
     public void tearDown() {}
         
-    // from here down is testing infrastructure
-  
-    public BlueGoldCheck(String s) {
-        //super(s);
-    }
-
     // Main entry point
     static public void main(String[] args) throws Exception {
         String[] testCaseName = {BlueGoldCheck.class.getName()};
-        //junit.textui.TestRunner.main(testCaseName);
         
         runTest();
     }
     
     static public void runTest() throws Exception {
         // run manually
-        BlueGoldCheck g = new BlueGoldCheck("standalone");
+        BlueGoldCheck g = new BlueGoldCheck();
         g.setUp();
         g.testSetup();
         g.tearDown();
         
     }
-
-    // test suite from all defined tests
-    //public static Test suite() {
-    //    TestSuite suite = new TestSuite(BlueGoldCheck.class);
-    //    return suite;
-    //}
 
     // frame starting positions
     int hPos = 500;

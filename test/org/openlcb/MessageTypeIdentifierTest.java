@@ -1,40 +1,41 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import java.util.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class MessageTypeIdentifierTest extends TestCase {
+public class MessageTypeIdentifierTest  {
 
+    @Test
     public void testCtor() {
         MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
     }
 
+    @Test
     public void testEquals() {
         MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
         MessageTypeIdentifier mti2 = MessageTypeIdentifier.InitializationComplete;
         Assert.assertEquals(mti1, mti2);
     }
 
+    @Test
     public void testNotEquals() {
         MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
         MessageTypeIdentifier mti2 = MessageTypeIdentifier.VerifyNodeIdAddressed;
         Assert.assertTrue(!mti1.equals(mti2));
     }
 
+    @Test
     public void testToString() {
         MessageTypeIdentifier mti1 = MessageTypeIdentifier.InitializationComplete;
         Assert.assertEquals("InitializationComplete", mti1.toString());
         
     }
     
+    @Test
     public void testMtiValues() {
         MessageTypeIdentifier mti;
         
@@ -49,13 +50,13 @@ public class MessageTypeIdentifierTest extends TestCase {
         Assert.assertEquals(0x0668, MessageTypeIdentifier.ProtocolSupportReply.mti());
 
         Assert.assertEquals(0x08F4, MessageTypeIdentifier.IdentifyConsumer.mti());
-        Assert.assertEquals(0x04A4, MessageTypeIdentifier.ConsumerIdentifyRange.mti());
+        Assert.assertEquals(0x04A4, MessageTypeIdentifier.ConsumerRangeIdentified.mti());
         Assert.assertEquals(0x04C7, MessageTypeIdentifier.ConsumerIdentifiedUnknown.mti());
         Assert.assertEquals(0x04C4, MessageTypeIdentifier.ConsumerIdentifiedValid.mti());
         Assert.assertEquals(0x04C5, MessageTypeIdentifier.ConsumerIdentifiedInvalid.mti());
 
         Assert.assertEquals(0x0914, MessageTypeIdentifier.IdentifyProducer.mti());
-        Assert.assertEquals(0x0524, MessageTypeIdentifier.ProducerIdentifyRange.mti());
+        Assert.assertEquals(0x0524, MessageTypeIdentifier.ProducerRangeIdentified.mti());
         Assert.assertEquals(0x0547, MessageTypeIdentifier.ProducerIdentifiedUnknown.mti());
         Assert.assertEquals(0x0544, MessageTypeIdentifier.ProducerIdentifiedValid.mti());
         Assert.assertEquals(0x0545, MessageTypeIdentifier.ProducerIdentifiedInvalid.mti());
@@ -85,6 +86,7 @@ public class MessageTypeIdentifierTest extends TestCase {
         Assert.assertEquals(0x08A8, MessageTypeIdentifier.StreamDataComplete.mti());
     }
 
+    @Test
     public void testForOverlaps() {
         ArrayList<Integer> mtis = new ArrayList<Integer>();
         for (MessageTypeIdentifier item : MessageTypeIdentifier.values()) {
@@ -95,6 +97,7 @@ public class MessageTypeIdentifierTest extends TestCase {
         }
     }
     
+    @Test
     public void testMap() {
         Assert.assertEquals(MessageTypeIdentifier.InitializationComplete, 
             MessageTypeIdentifier.get(MessageTypeIdentifier.InitializationComplete.mti()));
@@ -104,23 +107,5 @@ public class MessageTypeIdentifierTest extends TestCase {
 
         Assert.assertEquals(MessageTypeIdentifier.Datagram, 
             MessageTypeIdentifier.get(MessageTypeIdentifier.Datagram.mti()));
-    }
-    
-    // from here down is testing infrastructure
-    
-    public MessageTypeIdentifierTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MessageTypeIdentifierTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MessageTypeIdentifierTest.class);
-        return suite;
     }
 }

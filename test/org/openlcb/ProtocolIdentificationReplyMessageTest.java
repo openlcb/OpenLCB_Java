@@ -1,20 +1,17 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class ProtocolIdentificationReplyMessageTest extends TestCase {
+public class ProtocolIdentificationReplyMessageTest  {
     boolean result;
     
     NodeID nodeID1 = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID nodeID2 = new NodeID(new byte[]{0,0,0,0,0,0});
 
+    @Test
     public void testEqualsSame() {
         Message m1 = new ProtocolIdentificationReplyMessage(
                                nodeID1, nodeID2,12);
@@ -24,6 +21,7 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
         Assert.assertTrue(m1.equals(m2));
     }
 
+    @Test
     public void testNotEqualsDifferentNode() {
         Message m1 = new ProtocolIdentificationReplyMessage(
                                 nodeID1, nodeID2, 12);
@@ -34,6 +32,7 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
     }
 
 
+    @Test
     public void testNotEqualsDifferentValue() {
         Message m1 = new ProtocolIdentificationReplyMessage(
                                 nodeID1, nodeID2, 12);
@@ -44,6 +43,7 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
     }
 
 
+    @Test
     public void testHandling() {
         result = false;
         Node n = new Node(){
@@ -59,21 +59,4 @@ public class ProtocolIdentificationReplyMessageTest extends TestCase {
         Assert.assertTrue(result);
     }
     
-    // from here down is testing infrastructure
-    
-    public ProtocolIdentificationReplyMessageTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ProtocolIdentificationReplyMessageTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ProtocolIdentificationReplyMessageTest.class);
-        return suite;
-    }
 }

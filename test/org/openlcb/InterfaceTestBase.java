@@ -1,7 +1,7 @@
 package org.openlcb;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
 
 import org.mockito.ArgumentMatcher;
 import org.mockito.verification.VerificationMode;
@@ -10,10 +10,10 @@ import org.openlcb.can.CanFrame;
 import org.openlcb.can.GridConnect;
 import org.openlcb.can.MessageBuilder;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 
 import static org.mockito.Mockito.*;
 
@@ -23,33 +23,78 @@ import static org.mockito.Mockito.*;
  *
  * Created by bracz on 1/9/16.
  */
-public abstract class InterfaceTestBase extends TestCase {
+public abstract class InterfaceTestBase {
     protected Connection outputConnectionMock = mock(AbstractConnection.class);
     protected OlcbInterface iface = null;
     protected AliasMap aliasMap = new AliasMap();
     protected boolean testWithCanFrameRendering = false;
     private boolean debugFrames = false;
+    private FakeConnection fakeConnection;
 
-    public InterfaceTestBase(String s) {
-        super(s);
-        expectInit();
-    }
-
-    public InterfaceTestBase() {
+    @Before
+    public void setUp() {
         expectInit();
     }
 
     private void expectInit() {
         NodeID id = new NodeID(new byte[]{1,2,0,0,1,1});
         aliasMap.insert(0x333, id);
-        iface = new OlcbInterface(id, new FakeConnection(outputConnectionMock));
+        fakeConnection = new FakeConnection(outputConnectionMock);
+        iface = new OlcbInterface(id, fakeConnection);
         expectMessage(new InitializationCompleteMessage(iface.getNodeId()));
+        //enableSingleThreaded();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         expectNoMessages();
-        super.tearDown();
+        iface.dispose();
+        iface = null;
+    }
+
+    public void enableSingleThreaded() {
+        FakeExecutionThread thread = new FakeExecutionThread();
+        iface.setLoopbackThread(thread);
+        iface.runOnThreadPool(thread);
+    }
+
+    class FakeExecutionThread implements OlcbInterface.SyncExecutor, Runnable {
+        private final BlockingQueue<QEntry> outputQueue = new
+                LinkedBlockingQueue<>();
+
+        @Override
+        public void schedule(Runnable r) throws InterruptedException {
+            QEntry q = new QEntry(r);
+            outputQueue.add(q);
+            q.sem.acquire();
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                QEntry m = null;
+                try {
+                    m = outputQueue.take();
+                    m.callback.run();
+                    m.sem.release();
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+
+        private class QEntry {
+            QEntry(Runnable r) {
+                callback = r;
+            }
+            Runnable callback;
+            Semaphore sem = new Semaphore(0);
+        }
+    }
+
+    /// Prints all messages that get sent to the mock. For debugging purposes.
+    public void printAllSentMessages() {
+        fakeConnection.debugMessages = true;
     }
 
     /** Sends one or more OpenLCB message, as represented by the given CAN frames, to the

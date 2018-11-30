@@ -94,6 +94,14 @@ public class MessageDecoder extends AbstractConnection {
         defaultHandler(msg, sender);
     }
     /**
+     * Handle "Consumer range Identified" message
+     * @param msg       message to handle
+     * @param sender    connection where it came from
+     */
+    public void handleConsumerRangeIdentified(ConsumerRangeIdentifiedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
      * Handle "Identify Producers" message
      * @param msg       message to handle
      * @param sender    connection where it came from
@@ -107,6 +115,14 @@ public class MessageDecoder extends AbstractConnection {
      * @param sender    connection where it came from
      */
     public void handleProducerIdentified(ProducerIdentifiedMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Producer Range Identified" message
+     * @param msg       message to handle
+     * @param sender    connection where it came from
+     */
+    public void handleProducerRangeIdentified(ProducerRangeIdentifiedMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
     /**

@@ -1,19 +1,18 @@
 package tools.cansim;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 import tools.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class CanSegmentTest extends TestCase {
+public class CanSegmentTest  {
+    @Test
+    @Ignore("no test here")
     public void testStart() {
     }
 
+    @Test
     public void testSendOne() {
         CanSegment seg = new CanSegment();
         CanInterface sender = new CanInterface(){
@@ -24,11 +23,12 @@ public class CanSegmentTest extends TestCase {
         seg.add(sender);
         
         seg.send(new CanFrame(12), sender);
-        
+
     }
     
     boolean received = false;
     boolean done = false;
+    @Test
     public void testSendAndReceiveOne() {
         CanSegment seg = new CanSegment();
         CanInterface sender = new CanInterface(){
@@ -47,24 +47,5 @@ public class CanSegmentTest extends TestCase {
         seg.send(new CanFrame(12), sender);
         
         Assert.assertTrue("received frame", received);
-    }
-    
-    
-    // from here down is testing infrastructure
-    
-    public CanSegmentTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {CanSegmentTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(CanSegmentTest.class);
-        return suite;
     }
 }

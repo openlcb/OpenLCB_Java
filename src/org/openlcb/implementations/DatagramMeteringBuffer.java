@@ -4,6 +4,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openlcb.*;
@@ -31,8 +34,34 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     //final static int TIMEOUT = 700;
     final static int TIMEOUT = 3000;
     private final static Logger logger = Logger.getLogger(DatagramMeteringBuffer.class.getName());
+    private ThreadPoolExecutor threadPool = null;
+    final static int minThreads = 10;
+    final static int maxThreads = 10;
+    final static long threadTimeout = 10; // allowed idle time for threads, in seconds.
+
+    /**
+     * @param toDownstream connection object associated with the new buffer 
+     *
+     * @deprecated since OlcbLibrary version 0.18.  Use {@link #DatagramMeteringBuffer(Connection,ThreadPoolExecutor)} instead.
+     */
+    @Deprecated
+    public DatagramMeteringBuffer(Connection toDownstream ){
+          this(toDownstream,
+               new ThreadPoolExecutor(minThreads,maxThreads,
+                                      threadTimeout,TimeUnit.SECONDS,
+                                 new LinkedBlockingQueue<Runnable>(),
+                                 new OlcbThreadFactory()));
+    }
     
-    public DatagramMeteringBuffer(Connection toDownstream) {
+    /**
+     * @param toDownstream Connection object associated with the new buffer 
+     * @param tpe Thread pool in which threads associated with the buffer run.
+     */
+    public DatagramMeteringBuffer(Connection toDownstream,ThreadPoolExecutor tpe) {
+        threadPool = tpe;
+        if(timer == null){
+           timer = new Timer("OpenLCB-datagram-timer");
+        }
         this.toDownstream = toDownstream;
         datagramComplete();
         
@@ -42,6 +71,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     Connection toDownstream;
     Connection fromDownstream;
     MessageMemo currentMemo;
+    private Timer timer = null;
     int timeoutMillis = TIMEOUT;
 
     /**
@@ -55,19 +85,64 @@ public class DatagramMeteringBuffer extends MessageDecoder {
     
     BlockingQueue<MessageMemo> queue = new LinkedBlockingQueue<MessageMemo>();
     int pendingEntries = 0;
+    int threadPending = 0;
 
     public void setTimeout(int timeoutMillis) {
         this.timeoutMillis = timeoutMillis;
     }
 
+    /**
+     * Waits until all pending entries are sent or we are blocked on sending multiple requests to
+     * the same target node.
+     */
     public void waitForSendQueue() {
         while(true) {
             synchronized (this) {
-                if (pendingEntries == 0) return;
+                if (pendingEntries == 0 || threadPending == 0) {
+                    break;
+                }
             }
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+        waitForTimer();
+    }
+
+    /**
+     * Waits until all pending entries are sent and their callbacks are executed.
+     * @throws java.lang.InterruptedException when interrupted.
+     */
+    public void waitForSendCallbacks() throws InterruptedException {
+        while(true) {
+            synchronized (this) {
+                if (pendingEntries == 0 && threadPending == 1) {
+                    break;
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                throw e;
+            }
+        }
+        waitForTimer();
+    }
+
+    private void waitForTimer() {
+        final Semaphore s = new Semaphore(0);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                s.release();
+            }
+        }, 1);
+        try {
+            s.acquire();
+        } catch (InterruptedException e) {
+            return;
         }
     }
 
@@ -88,7 +163,10 @@ public class DatagramMeteringBuffer extends MessageDecoder {
 
     private void datagramComplete() {
         currentMemo = null;
-        new Thread(new Consumer(queue), "openlcb-datagram-queue").start();
+        synchronized (this) {
+            threadPending++;
+        }
+        threadPool.execute(new Consumer(queue));
     }
 
     class ReplyHandler extends AbstractConnection {
@@ -108,7 +186,8 @@ public class DatagramMeteringBuffer extends MessageDecoder {
         DatagramMessage message;
         Connection toDownstream;
         Connection toUpstream;
-        
+        TimerTask timerTask;
+
         MessageMemo(DatagramMessage msg, Connection toUpstream, Connection toDownstream) {
             message = msg;
             this.toUpstream = toUpstream;
@@ -125,25 +204,31 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             toDownstream.put(message, fromDownstream);
         }
         
-        Timer timer;
         void startTimeout() {
-            timer = new Timer();
-            TimerTask task = new TimerTask(){
+            timerTask = new TimerTask(){
                 public void run(){
                     timerExpired();
                 }
             };
-            timer.schedule(task, timeoutMillis);
+            try {
+                timer.schedule(timerTask, timeoutMillis);
+            } catch( java.lang.IllegalStateException ise) {
+                logger.log(Level.WARNING, "Timer already canceled when starting timeout for datagram {0}", message != null ? message : " == null");
+            } catch( java.util.concurrent.RejectedExecutionException ree) {
+                logger.log(Level.WARNING, "Timer rejected execution when starting timeout for datagram {0}", message != null ? message : " == null");
+            }
         }
+
         void endTimeout() {
-            if (timer != null) timer.cancel();
+            if (timerTask != null) timerTask.cancel();
             else logger.log(Level.INFO, "Found timer null for datagram {0}", message != null ? message : " == null");
         }
+
         void timerExpired() {
             // should not happen, but if it does, 
             // fabricate a permanent error and forward up
             DatagramRejectedMessage msg = new DatagramRejectedMessage(message.getDestNodeID(), message.getSourceNodeID(), 0x0100);
-            logger.log(Level.INFO, "Never received reply for datagram {0}", message != null ? message : " == null");
+            logger.log(Level.INFO, "Never received reply for datagram {0}", message);
             handleDatagramRejected(msg, null);
             // Inject message to upstream listener
             toUpstream.put(msg, toUpstream);
@@ -161,7 +246,7 @@ public class DatagramMeteringBuffer extends MessageDecoder {
                 DatagramRejectedMessage rejectedMessage = new DatagramRejectedMessage(message
                         .getDestNodeID(), message.getSourceNodeID(),
                         DatagramRejectedMessage.DATAGRAM_REJECTED_DST_REBOOT);
-                logger.log(Level.INFO, "Destination node has rebooted while waiting for datagram reply {0}", message != null ? message : " == null");
+                logger.log(Level.INFO, "Destination node has rebooted while waiting for datagram reply {0}", message);
                 handleDatagramRejected(rejectedMessage, null);
                 // Inject message to upstream listener
                 toUpstream.put(rejectedMessage, toUpstream);
@@ -203,21 +288,60 @@ public class DatagramMeteringBuffer extends MessageDecoder {
             }
         }
     }
-    
+
+    /**
+     * cleanup local resources
+     */
+    public void dispose(){
+        // shut down the thread pool
+        if(threadPool != null && !(threadPool.isShutdown())) {
+           // modified from the javadoc for ExecutorService 
+           threadPool.shutdown(); // Disable new tasks from being submitted
+           try {
+              // Wait a while for existing tasks to terminate
+              if (!threadPool.awaitTermination(10, TimeUnit.MILLISECONDS)) {
+                 threadPool.shutdownNow(); // Cancel currently executing tasks
+                 // Wait a while for tasks to respond to being cancelled
+                 if (!threadPool.awaitTermination(10, TimeUnit.SECONDS))
+                     logger.warning("Pool did not terminate");
+              }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                threadPool.shutdownNow();
+                // Preserve interrupt status
+                Thread.currentThread().interrupt();
+            }
+        }
+        threadPool = null;
+        // and cancel the timer
+        timer.cancel();
+        timer = null;
+    }    
+
+
     class Consumer implements Runnable {
         private final BlockingQueue<MessageMemo> queue;
         Consumer(BlockingQueue<MessageMemo> q) { queue = q; }
         @Override
         public void run() {
+            if(threadPool == null || threadPool.isShutdown()) {
+               // the buffer has been disposed of, so just return
+               return;
+            }
             try {
                 consume(queue.take());
                 synchronized (DatagramMeteringBuffer.this) {
                     pendingEntries--;
                 }
-            } catch (InterruptedException ex) {}
+            } catch (InterruptedException ex) {
+                // interrupted while processing, but not in a loop.
+            } finally {
+                synchronized (DatagramMeteringBuffer.this) {
+                    threadPending--;
+                }
+            }
             // and exits. Another has to be started with this item is done.
         }
         void consume(MessageMemo x) { x.sendIt(); }
-    }
-    
+    }    
 }

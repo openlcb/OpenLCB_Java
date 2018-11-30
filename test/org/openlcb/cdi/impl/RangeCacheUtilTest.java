@@ -1,8 +1,6 @@
 package org.openlcb.cdi.impl;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import java.util.List;
 import org.openlcb.cdi.impl.RangeCacheUtil.Range;
@@ -11,23 +9,30 @@ import org.openlcb.cdi.jdom.JdomCdiRepTest;
 /**
  * Created by bracz on 4/9/16.
  */
-public class RangeCacheUtilTest extends TestCase {
-
-    public void testToStringEquals() throws Exception {
+public class RangeCacheUtilTest {
+    
+    @Test
+    public void testToString() throws Exception {
         Range r1 = new Range(1,3);
-        assertEquals("Range[1,3)", r1.toString());
-        Range r2 = new Range(2, 3);
-        assertFalse(r1.equals(r2));
-        assertFalse(r2.equals(r1));
-        Range r3 = new Range(1, 4);
-        Range r4 = new Range(1, 3);
-        assertTrue(r1.equals(r4));
-        assertTrue(r4.equals(r1));
-        assertFalse(r3.equals(r4));
-        assertFalse(r4.equals(r3));
+        Assert.assertEquals("Range[1,3)", r1.toString());
     }
 
+    @Test
+    public void testToEquals() throws Exception {
+        Range r1 = new Range(1,3);
+        Range r2 = new Range(2, 3);
+        Assert.assertFalse(r1.equals(r2));
+        Assert.assertFalse(r2.equals(r1));
+        Range r3 = new Range(1, 4);
+        Range r4 = new Range(1, 3);
+        Assert.assertTrue(r1.equals(r4));
+        Assert.assertTrue(r4.equals(r1));
+        Assert.assertEquals("hashcodes equal when equal",r1.hashCode(),r4.hashCode());
+        Assert.assertFalse(r3.equals(r4));
+        Assert.assertFalse(r4.equals(r3));
+    }
 
+    @Test
     public void testGetRanges() throws Exception {
         RangeCacheUtil util = new RangeCacheUtil();
         util.addRange(10, 12);
@@ -37,19 +42,13 @@ public class RangeCacheUtilTest extends TestCase {
         util.addRange(6, 7);
         util.addRange(26, 28);
         List<Range> rng = util.getRanges();
-        assertEquals(2, rng.size());
-        assertEquals(new Range(0, 12), rng.get(0));
-        assertEquals(new Range(23, 28), rng.get(1));
+        Assert.assertEquals(2, rng.size());
+        Assert.assertEquals(new Range(0, 12), rng.get(0));
+        Assert.assertEquals(new Range(23, 28), rng.get(1));
         util.addRange(16, 20);
         rng = util.getRanges();
-        assertEquals(1, rng.size());
-        assertEquals(new Range(0, 28), rng.get(0));
+        Assert.assertEquals(1, rng.size());
+        Assert.assertEquals(new Range(0, 28), rng.get(0));
     }
 
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(RangeCacheUtilTest.class);
-
-        return suite;
-    }
 }

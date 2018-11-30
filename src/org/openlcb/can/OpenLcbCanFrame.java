@@ -1,5 +1,6 @@
 package org.openlcb.can;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.openlcb.*;
 import org.openlcb.implementations.DatagramUtils;
 
@@ -330,14 +331,6 @@ public class OpenLcbCanFrame implements CanFrame {
     loadFromEid(eid);
   }
 
-  void setConsumerIdentifyRange(EventID eid, EventID mask) {
-    // does send a message, but not complete yet - RGJ 2009-06-14
-    init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ConsumerIdentifyRange.mti());
-    length=8;
-    loadFromEid(eid);
-  }
-
   boolean isIdentifyProducers() {
       return isOpenLcbMTI(MessageTypeIdentifier.IdentifyProducer.mti());
   }
@@ -345,14 +338,6 @@ public class OpenLcbCanFrame implements CanFrame {
   void setProducerIdentified(EventID eid) {
     init(nodeAlias);
     setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifiedUnknown.mti());
-    length=8;
-    loadFromEid(eid);
-  }
-
-  void setProducerIdentifyRange(EventID eid, EventID mask) {
-    // does send a message, but not complete yet - RGJ 2009-06-14
-    init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ProducerIdentifyRange.mti());
     length=8;
     loadFromEid(eid);
   }
@@ -421,6 +406,9 @@ public class OpenLcbCanFrame implements CanFrame {
       System.arraycopy(content, 0, data, 0, content.length);
   }
 
+  @Override
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_MIGHT_BE_INFEASIBLE",
+            justification = "Because of the returns, data cannot be null when checking length.")
     public boolean equals(Object other) {
         // try to cast, else not equal
         try {
@@ -437,6 +425,13 @@ public class OpenLcbCanFrame implements CanFrame {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode(){
+       return 42; // this meets the contract of equals, which says the
+                  // hash codes must be the same when equals returns true
+                  // but will not allow good hashing of OpenLcbCanFrames
     }
     
     public String toString() {

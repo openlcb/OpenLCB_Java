@@ -9,24 +9,23 @@ import org.openlcb.messages.TractionProxyRequestMessage;
 
 import java.util.List;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2010
- * @version $Revision$
  */
-public class MessageBuilderTest extends TestCase {
-    
+public class MessageBuilderTest  {
+   
+    @Test	
     public void testCtor() {
+        Assert.assertNotNull("exists",new MessageBuilder(map));
     }
     
     /** ****************************************************
      * Tests of messages into frames
      ***************************************************** */
      
+    @Test	
     public void testInitializationCompleteMessage() {
         
         Message m = new InitializationCompleteMessage(source);
@@ -41,6 +40,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("header", toHexString(0x19100123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
+    @Test	
     public void testVerifyNodeIDNumberMessageEmpty() {
         
         Message m = new VerifyNodeIDNumberMessage(source);
@@ -55,6 +55,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("header", toHexString(0x19490123), toHexString(f0.getHeader()));
         compareContent(null, f0);
     }
+    @Test	
     public void testVerifyNodeIDNumberMessageWithContent() {
         
         Message m = new VerifyNodeIDNumberMessage(source, source);
@@ -70,6 +71,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(source.getContents(), f0);
     }
 
+    @Test	
     public void testIdentifyEventsGlobal() {
 
         Message m = new IdentifyEventsMessage(source, null);
@@ -86,6 +88,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{}, f0);
     }
 
+    @Test	
     public void testIdentifyEventsAddressed() {
         Message m = new IdentifyEventsMessage(source, destination);
         MessageBuilder b = new MessageBuilder(map);
@@ -101,6 +104,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("03 21"), f0);
     }
 
+    @Test	
     public void testVerifiedNodeIDNumberMessage() {
         
         Message m = new VerifiedNodeIDNumberMessage(source);
@@ -116,6 +120,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(source.getContents(), f0);
     }
 
+    @Test	
     public void testProducerConsumerEventReportMessage() {
         
         Message m = new ProducerConsumerEventReportMessage(source, event);
@@ -131,6 +136,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(event.getContents(), f0);
     }
 
+    @Test	
     public void testTractionControlRequestMessageSingle() {
         Message m = new TractionControlRequestMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6});
@@ -144,6 +150,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
     }
 
+    @Test	
     public void testTractionControlRequestMessageMulti() {
         Message m = new TractionControlRequestMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14});
@@ -161,6 +168,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("23 21 0d 0e"), list.get(2));
     }
 
+    @Test	
     public void testTractionControlReplyMessage() {
         Message m = new TractionControlReplyMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6});
@@ -174,6 +182,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
     }
 
+    @Test	
     public void testTractionProxyRequestMessage() {
         Message m = new TractionProxyRequestMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6});
@@ -187,6 +196,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
     }
 
+    @Test	
     public void testTractionProxyReplyMessage() {
         Message m = new TractionProxyReplyMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6});
@@ -200,6 +210,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(Utilities.bytesFromHexString("03 21 CC AA 55 04 05 06"), f0);
     }
 
+    @Test	
     public void testDatagramMessageShort() {
         int[] data = new int[]{21,22,23};
         Message m = new DatagramMessage(source, destination, data);
@@ -214,6 +225,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{21,22,23}, f0);
     }
 
+    @Test	
     public void testDatagramMessageEight() {
         int[] data = new int[]{21,22,23,24,25,26,27,28};
         Message m = new DatagramMessage(source, destination, data);
@@ -228,6 +240,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{21,22,23,24,25,26,27,28}, f0);
     }
 
+    @Test	
     public void testDatagramMessageTwoFrame() {
         int[] data = new int[]{21,22,23,24,25,26,27,28, 
                                31,32,33,34,35,36,37,38};
@@ -249,6 +262,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{31,32,33,34,35,36,37,38}, f1);
     }
 
+    @Test	
     public void testDatagramMessageNine() {
         int[] data = new int[]{21,22,23,24,25,26,27,28, 
                                31};
@@ -270,6 +284,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{31}, f1);
     }
 
+    @Test	
     public void testDatagramOKMessage() {
         Message m = new DatagramAcknowledgedMessage(source, destination, 0x0);
         MessageBuilder b = new MessageBuilder(map);
@@ -284,6 +299,7 @@ public class MessageBuilderTest extends TestCase {
         compareContent(new byte[]{0x03, 0x21}, f0);
     }
 
+    @Test	
     public void testDatagramOKMessageWithPayload() {
         Message m = new DatagramAcknowledgedMessage(source, destination, 0x80);
         MessageBuilder b = new MessageBuilder(map);
@@ -303,6 +319,7 @@ public class MessageBuilderTest extends TestCase {
      * Tests of messages into frames
      ***************************************************** */
 
+    @Test	
     public void testInitializationCompleteFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19100123);
@@ -317,6 +334,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertTrue(msg instanceof InitializationCompleteMessage);        
     }
     
+    @Test	
     public void testVerifyNodeEmptyFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19490123);
@@ -331,6 +349,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage); 
         Assert.assertEquals(new VerifyNodeIDNumberMessage(source), msg);
     }
+    @Test	
     public void testVerifyNodeContentFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19490123);
@@ -347,6 +366,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(new VerifyNodeIDNumberMessage(source, source), msg);
     }
 
+    @Test	
     public void testSingleFrameDatagram() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x1A321123);
@@ -363,6 +383,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("destination", destination, ((AddressedMessage)msg).getDestNodeID());
     }
     
+    @Test	
     public void testTwoFrameDatagram() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x1B321123);
@@ -392,6 +413,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(13,data[4]);
     }
     
+    @Test	
     public void testPipReplyFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19668071); 
@@ -409,6 +431,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertTrue(((ProtocolIdentificationReplyMessage)msg).getValue() == 0xD50000000000L);    
     }
     
+    @Test	
     public void testOptionalRejectFrame1() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19068071); 
@@ -427,6 +450,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0x5678, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
+    @Test	
     public void testOptionalRejectFrame2() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19068071); 
@@ -445,6 +469,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0x5678, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
+    @Test	
     public void testOptionalRejectFrame3() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19068071); 
@@ -463,6 +488,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
+    @Test	
     public void testBogusMti() {
         // should emit "failed to parse MTI 0x541"
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
@@ -477,6 +503,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("count", 0, list.size()); 
     }
 
+    @Test	
     public void testAccumulateSniipReply() {
         // start frame
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
@@ -523,6 +550,7 @@ public class MessageBuilderTest extends TestCase {
           
     }
 
+    @Test	
     public void testTractionControlRequestParseSingle() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x195EB123);
@@ -538,6 +566,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("payload", "12 34", Utilities.toHexSpaceString(((AddressedPayloadMessage)msg).getPayload()));
     }
 
+    @Test	
     public void testTractionProxyReplyParseMulti() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x191E8123);
@@ -571,6 +600,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("dstnode", destination, ((AddressedPayloadMessage) msg).getDestNodeID());
     }
 
+    @Test	
     public void testAliasExtraction() {
     
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
@@ -592,6 +622,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("destination", high, ((AddressedMessage)msg).getDestNodeID());
     }
 
+    @Test	
     public void testDatagramOKFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19A28123);
@@ -612,6 +643,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(0x80, dmsg.getFlags());
     }
 
+    @Test	
     public void testAddressedMessageAliasExtraction() {
     
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
@@ -635,6 +667,7 @@ public class MessageBuilderTest extends TestCase {
     }
     
     // dph Stream tests
+    @Test	
     public void testStreamInitiateRequestMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
         map.insert(0x0FFF, high);
@@ -658,6 +691,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("flags ",0,(f.getElement(4)<<8)+f.getElement(5));
         Assert.assertEquals("sourceStreamID ",4,f.getElement(6));
     }
+    @Test	
     public void testStreamInitiateReplyMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
         map.insert(0x0FFF, high);
@@ -682,7 +716,9 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("sourceStreamID ",4,f.getElement(6));
         Assert.assertEquals("destinationStreamID ",6,f.getElement(7));
     }
-/*
+
+    @Test
+    @Ignore("commented out in JUnit 3")
     public void testTwoStreamData() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x1F321123);
@@ -716,7 +752,8 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals(14,data[8]);
         Assert.assertEquals(15,data[9]);
     }
- */
+ 
+    @Test
     public void testStreamDataProceedMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
         map.insert(0x0FFF, high);
@@ -739,6 +776,7 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("destinationStreamID ",frame.getElement(3),6);
         Assert.assertEquals("flags ",(frame.getElement(4)<<8)+frame.getElement(5),0);
     }
+    @Test
     public void testStreamDataCompleteMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
         map.insert(0x0FFF, high);
@@ -762,14 +800,6 @@ public class MessageBuilderTest extends TestCase {
         Assert.assertEquals("flags ",(frame.getElement(4)<<8)+frame.getElement(5),0);
     }
     
-
-
-    // from here down is testing infrastructure
-    
-    public MessageBuilderTest(String s) {
-        super(s);
-    }
-
     String toHexString(int n) {
         return Integer.toHexString(n);
     }
@@ -790,22 +820,17 @@ public class MessageBuilderTest extends TestCase {
     NodeID destination = new NodeID(new byte[]{6,5,4,3,2,1});
     EventID event = new EventID(new byte[]{11,12,13,14,15,16,17,18});
     AliasMap map = new AliasMap();
-    
+   
+    @Before 
     public void setUp() {
         map = new AliasMap();
         map.insert(0x0123, source);
         map.insert(0x321, destination);
     }
-    
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MessageBuilderTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
 
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MessageBuilderTest.class);
-        return suite;
+    @After
+    public void tearDown(){
+        map = null;
     }
+    
 }

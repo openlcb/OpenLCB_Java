@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.cdi.impl.RangeCacheUtil.Range;
-import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
@@ -38,14 +37,14 @@ public class MemorySpaceCache {
     private long currentRangeNextOffset;
     private byte[] currentRangeData;
     private Queue<Range> rangesToLoad = new LinkedList<>();
-    private final CdiPanel.ReadWriteAccess access;
+    private final ReadWriteAccess access;
     private final String remoteNodeString; // used for error printouts
 
 
     public MemorySpaceCache(OlcbInterface connection, final NodeID remoteNode, int space) {
         final MemoryConfigurationService mcs = connection.getMemoryConfigurationService();
         this.remoteNodeString = remoteNode.toString();
-        this.access = new CdiPanel.ReadWriteAccess() {
+        this.access = new ReadWriteAccess() {
             @Override
             public void doWrite(long address, int space, byte[] data, MemoryConfigurationService
                     .McsWriteHandler handler) {
@@ -61,7 +60,7 @@ public class MemorySpaceCache {
         this.space = space;
     }
 
-    public MemorySpaceCache(CdiPanel.ReadWriteAccess access, int space) {
+    public MemorySpaceCache(ReadWriteAccess access, int space) {
         this.access = access;
         this.space = space;
         this.remoteNodeString = "(mock)";

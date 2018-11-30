@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -54,6 +55,7 @@ public class MemoryConfigurationService {
      * @param downstream Connection in the direction of the layout
      */
     public MemoryConfigurationService(NodeID here, DatagramService downstream) {
+        retryTimer = new Timer("OpenLCB Memory Configuration Service Retry Timer");
         this.here = here;
         this.downstream = downstream;   
         
@@ -184,7 +186,7 @@ public class MemoryConfigurationService {
     
     NodeID here;
     DatagramService downstream;
-    Timer retryTimer = new Timer();
+    private Timer retryTimer;
 
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);
@@ -192,6 +194,22 @@ public class MemoryConfigurationService {
 
     public void setTimeoutMillis(long t) {
         timeoutMillis = t;
+    }
+
+    /**
+     * Waits to ensure that all pending timer tasks are complete. Used for testing.
+     *
+     * @throws java.lang.InterruptedException if interrupted
+     */
+    public void waitForTimer() throws InterruptedException {
+        final Semaphore s = new Semaphore(0);
+        retryTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                s.release();
+            }
+        }, 1);
+        s.acquire();
     }
 
     private abstract static class McsRequestMemo {
@@ -932,5 +950,10 @@ public class MemoryConfigurationService {
         }
         
 
+    }
+
+
+    public void dispose(){
+       retryTimer.cancel();
     }
 }

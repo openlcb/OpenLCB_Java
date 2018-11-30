@@ -1,23 +1,21 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class SimpleNodeIdentTest extends TestCase {
+public class SimpleNodeIdentTest  {
     NodeID nid1 = new NodeID(new byte[]{1,3,3,4,5,6});
     NodeID nid2 = new NodeID(new byte[]{2,3,3,4,5,6});
-    
+ 
+    @Test   
     public void testCtor() {
         new SimpleNodeIdent(new NodeID(new byte[]{1,3,3,4,5,6}),
                             new NodeID(new byte[]{1,3,3,4,5,7}));
     }
         
+    @Test   
     public void testCreationFromMessage() {
         SimpleNodeIdent id = new SimpleNodeIdent(
             new SimpleNodeIdentInfoReplyMessage(
@@ -28,6 +26,7 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertFalse("not complete", id.contentComplete());
     }
     
+    @Test   
     public void testCreationFromTwoMessages() {
         SimpleNodeIdent id = new SimpleNodeIdent(
             new SimpleNodeIdentInfoReplyMessage(
@@ -43,6 +42,7 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertFalse("not complete", id.contentComplete());
     }
 
+    @Test   
     public void testSpannedCreationFromTwoMessages() {
         SimpleNodeIdent id = new SimpleNodeIdent(
             new SimpleNodeIdentInfoReplyMessage(
@@ -59,6 +59,7 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertFalse("not complete", id.contentComplete());
     }
 
+    @Test   
     public void testCreationWithUserPart() {
         SimpleNodeIdent id = new SimpleNodeIdent(
             new SimpleNodeIdentInfoReplyMessage(
@@ -74,6 +75,7 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertTrue("complete", id.contentComplete());
     }
 
+    @Test   
     public void testOverrunMessage() {
         SimpleNodeIdent id = new SimpleNodeIdent(
             new SimpleNodeIdentInfoReplyMessage(
@@ -95,22 +97,4 @@ public class SimpleNodeIdentTest extends TestCase {
         Assert.assertEquals("starts", id.getMfgName());
     }
 
-
-    // from here down is testing infrastructure
-    
-    public SimpleNodeIdentTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {SimpleNodeIdentTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(SimpleNodeIdentTest.class);
-        return suite;
-    }
 }

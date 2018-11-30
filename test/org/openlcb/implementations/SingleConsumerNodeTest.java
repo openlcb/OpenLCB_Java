@@ -2,16 +2,13 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class SingleConsumerNodeTest extends TestCase {
+public class SingleConsumerNodeTest {
     
     boolean result;
     
@@ -22,7 +19,8 @@ public class SingleConsumerNodeTest extends TestCase {
     EventID eventIDb = new EventID(new byte[]{1,0,0,0,0,0,2,0});
     
     java.util.ArrayList<Message> messagesReceived;
-    
+   
+    @Test 
     public void testInitialization() {
         result = false;
         messagesReceived = new java.util.ArrayList<Message>();
@@ -44,6 +42,7 @@ public class SingleConsumerNodeTest extends TestCase {
                            .equals(new ConsumerIdentifiedMessage(nodeID, eventID, EventState.Unknown)));
     }
     
+    @Test 
     public void testConsumeRight() {
         Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
@@ -60,6 +59,7 @@ public class SingleConsumerNodeTest extends TestCase {
         Assert.assertTrue(!node.getReceived());  // check reset
     }
 
+    @Test 
     public void testConsumeWrong() {
         Connection testConnection = new AbstractConnection(){
             public void put(Message msg, Connection sender) {
@@ -75,21 +75,4 @@ public class SingleConsumerNodeTest extends TestCase {
         Assert.assertTrue(!node.getReceived());
     }
     
-    // from here down is testing infrastructure
-    
-    public SingleConsumerNodeTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {SingleConsumerNodeTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(SingleConsumerNodeTest.class);
-        return suite;
-    }
 }

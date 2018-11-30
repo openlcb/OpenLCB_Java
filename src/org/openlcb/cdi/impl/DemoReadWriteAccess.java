@@ -10,14 +10,13 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
-import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
  * Helper class for various demo and test code to put in as a fake into the ConfigRepresentation constructor.
  * Created by bracz on 11/20/16.
  */
-public class DemoReadWriteAccess extends CdiPanel.ReadWriteAccess {
+public class DemoReadWriteAccess extends ReadWriteAccess {
 
     private final static Logger logger = Logger.getLogger(DemoReadWriteAccess.class.getName());
     

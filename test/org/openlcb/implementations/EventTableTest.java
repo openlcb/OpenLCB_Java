@@ -1,6 +1,6 @@
 package org.openlcb.implementations;
 
-import junit.framework.TestCase;
+import org.junit.*;
 
 import org.hamcrest.Matcher;
 import org.openlcb.EventID;
@@ -16,77 +16,78 @@ import static org.hamcrest.Matchers.*;
 /**
  * Created by bracz on 4/6/17.
  */
-public class EventTableTest extends TestCase {
+public class EventTableTest {
     EventTable tbl = new EventTable();
 
     EventID e1 = new EventID("01.02.03.04.05.06.07.08");
     EventID e2 = new EventID("01.02.03.04.05.06.07.09");
     EventID e3 = new EventID("01.02.03.04.05.06.07.0a");
 
-    public void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() {
     }
 
+    @Test
     public void testAddRemove() {
         EventTable.EventTableEntryHolder h1 = tbl.addEvent(e1, "teste1");
         EventTable.EventTableEntryHolder h2 = tbl.addEvent(e2, "teste2");
         EventTable.EventTableEntryHolder h1alt = tbl.addEvent(e1, "teste1alt");
 
         EventTable.EventInfo einfo1 = tbl.getEventInfo(e1);
-        assertTrue(einfo1 == h1.event);
-        assertTrue(einfo1 == h1alt.event);
-        assertTrue(einfo1 != h2.event);
-        assertEquals("teste1", h1.entry.getDescription());
-        assertEquals("teste2", h2.entry.getDescription());
-        assertEquals("teste1alt", h1alt.entry.getDescription());
+        Assert.assertTrue(einfo1 == h1.event);
+        Assert.assertTrue(einfo1 == h1alt.event);
+        Assert.assertTrue(einfo1 != h2.event);
+        Assert.assertEquals("teste1", h1.entry.getDescription());
+        Assert.assertEquals("teste2", h2.entry.getDescription());
+        Assert.assertEquals("teste1alt", h1alt.entry.getDescription());
         h1alt.getEntry().updateDescription("teste1altupd");
-        assertEquals("teste1altupd", h1alt.entry.getDescription());
+        Assert.assertEquals("teste1altupd", h1alt.entry.getDescription());
 
         EventTable.EventTableEntry[] elist = einfo1.getAllEntries();
-        assertEquals(2, elist.length);
-        assertTrue(elist[0].h == h1);
-        assertTrue(elist[1].h == h1alt);
+        Assert.assertEquals(2, elist.length);
+        Assert.assertTrue(elist[0].h == h1);
+        Assert.assertTrue(elist[1].h == h1alt);
 
         elist = tbl.getEventInfo(e2).getAllEntries();
-        assertEquals(1, elist.length);
-        assertTrue(elist[0].h == h2);
+        Assert.assertEquals(1, elist.length);
+        Assert.assertTrue(elist[0].h == h2);
 
         h1.release();
         elist = tbl.getEventInfo(e1).getAllEntries();
-        assertEquals(1, elist.length);
-        assertTrue(elist[0].h == h1alt);
+        Assert.assertEquals(1, elist.length);
+        Assert.assertTrue(elist[0].h == h1alt);
 
         h1alt.release();
         elist = tbl.getEventInfo(e1).getAllEntries();
-        assertEquals(0, elist.length);
+        Assert.assertEquals(0, elist.length);
     }
 
     class FakeListener implements PropertyChangeListener {
         EventTable.EventInfo newValue = null;
         @Override
         public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-            assertEquals(EventTable.UPDATED_EVENT_LIST, propertyChangeEvent.getPropertyName());
-            assertNull(propertyChangeEvent.getOldValue());
+            Assert.assertEquals(EventTable.UPDATED_EVENT_LIST, propertyChangeEvent.getPropertyName());
+            Assert.assertNull(propertyChangeEvent.getOldValue());
 
-            assertNull("duplicate listener call", newValue);
+            Assert.assertNull("duplicate listener call", newValue);
             newValue = (EventTable.EventInfo) propertyChangeEvent.getNewValue();
-            assertNotNull(newValue);
+            Assert.assertNotNull(newValue);
         }
 
         public void reset() { newValue = null; }
 
         public void verifyCall(EventTable.EventInfo expected) {
-            assertNotNull("Expected call, but did not happen.", newValue);
-            assertTrue("Incorrect newValue passed to property listener", newValue == expected);
+            Assert.assertNotNull("Expected call, but did not happen.", newValue);
+            Assert.assertTrue("Incorrect newValue passed to property listener", newValue == expected);
             reset();
         }
 
         public void verifyNoInteraction() {
-            assertNull("Expected no call, got one.", newValue);
+            Assert.assertNull("Expected no call, got one.", newValue);
         }
     }
 
+    @Test
     public void testNotify() {
         EventTable.EventInfo elist = tbl.getEventInfo(e3);
         FakeListener l = new FakeListener();
@@ -116,18 +117,19 @@ public class EventTableTest extends TestCase {
         boolean actual = false;
         if (type == MPREFIX) actual = EventTable.wordPrefixMatch(description, query);
         else if (type == MSUB) actual = EventTable.substringMatch(description, query);
-        else assertTrue("Unexpected match type " + Integer.toString(type), false);
+        else Assert.assertTrue("Unexpected match type " + Integer.toString(type), false);
         return actual;
     }
 
     private void expectMatch(int type, String description, String query) {
-        assertTrue("Query '" + query + "' Description '" + description + "': Expected match, actual not match", match(type, description, query));
+        Assert.assertTrue("Query '" + query + "' Description '" + description + "': Expected match, actual not match", match(type, description, query));
     }
 
     private void expectNotMatch(int type, String description, String query) {
-        assertFalse("Query '" + query + "' Description '" + description + "': Expected not match, actual match", match(type, description, query));
+        Assert.assertFalse("Query '" + query + "' Description '" + description + "': Expected not match, actual match", match(type, description, query));
     }
 
+    @Test
     public void testSubstringMatch() {
         expectMatch(MSUB, "", "");
         expectNotMatch(MSUB, "", "aa");
@@ -151,6 +153,7 @@ public class EventTableTest extends TestCase {
         expectMatch(MSUB, "xaba", "aba");
     }
 
+    @Test
     public void testWordPrefixMatch() {
         expectMatch(MPREFIX, "", "");
         expectNotMatch(MPREFIX, "", "aa");
@@ -173,9 +176,10 @@ public class EventTableTest extends TestCase {
         float scworse = EventTable.match(worse, query);
         String msg = String.format("Query '%s' expects '%s' match better than '%s' but scores are" +
                 " %f <= %f", query, better, worse, scbetter, scworse);
-        assertTrue(msg, scbetter > scworse);
+        Assert.assertTrue(msg, scbetter > scworse);
     }
 
+    @Test
     public void testScoring() {
         // we score higher when case sensitive match
         expectBetterMatch("TC-153", "TC-153", "tc-153");
@@ -202,6 +206,7 @@ public class EventTableTest extends TestCase {
         assertThat(String.format("For query '%s' max results %d, results are", query, max), r, equalTo(results));
     }
 
+    @Test
     public void testQuery() {
         String[] table1 = new String[]{"abc", "defa", "gh"};
         expectQueryResults(table1, "a", 5, "abc", "defa");

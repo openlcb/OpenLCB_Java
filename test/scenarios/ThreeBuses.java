@@ -3,10 +3,7 @@ package scenarios;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * Simulate three buses East, Center and West. 
@@ -17,9 +14,8 @@ import junit.framework.TestSuite;
  * </ul>
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class ThreeBuses extends TestCase {
+public class ThreeBuses {
 
     NodeID idWP1 = new NodeID(new byte[]{0,0,0,0,0,1});
     NodeID idWP2 = new NodeID(new byte[]{0,0,0,0,0,2});
@@ -58,7 +54,8 @@ public class ThreeBuses extends TestCase {
     
     Gateway gateE;
     Gateway gateW;
-    
+ 
+    @Before   
     public void setUp() {
         sgE = new ScatterGather();
         sgC = new ScatterGather();
@@ -126,12 +123,33 @@ public class ThreeBuses extends TestCase {
     protected void createGateways() {
     }
 
-    public void tearDown() {}
-    
+    @After
+    public void tearDown() {
+        sgE = null;
+        sgC = null;
+        sgW = null;
+        nodeWP1 = null;
+        nodeEP1 = null;
+        nodeWC1 = null;
+        nodeEC1 = null;
+        nodeWP2 = null;
+        nodeEP2 = null;
+        nodeWC2 = null;
+        nodeEC2 = null;
+        nodeWP3 = null;
+        nodeEP3 = null;
+        nodeWC3 = null;
+        nodeEC3 = null;
+        gateE = null;
+        gateW = null;
+    }
+   
+    @Test 
     public void testSetup() {
         // just run the setup to make sure it works
     }
     
+    @Test 
     public void testInitAll() {
         initAll();
     }
@@ -152,6 +170,7 @@ public class ThreeBuses extends TestCase {
         nodeEC3.initialize();
     }
     
+    @Test 
     public void testMessagesInOrder() {
         initAll();
         
@@ -201,21 +220,4 @@ public class ThreeBuses extends TestCase {
         Assert.assertTrue(!nodeWC3.getReceived()); 
     }
             
-    // from here down is testing infrastructure
-    
-    public ThreeBuses(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ThreeBuses.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ThreeBuses.class);
-        return suite;
-    }
 }

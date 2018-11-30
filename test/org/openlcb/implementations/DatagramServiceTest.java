@@ -2,16 +2,12 @@ package org.openlcb.implementations;
 
 import org.openlcb.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
-public class DatagramServiceTest extends TestCase {
+public class DatagramServiceTest {
     
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
@@ -19,7 +15,8 @@ public class DatagramServiceTest extends TestCase {
     java.util.ArrayList<Message> messagesReceived;
     boolean flag;
     DatagramService service;
-    
+   
+    @Before 
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         testConnection = new AbstractConnection(){
@@ -30,13 +27,20 @@ public class DatagramServiceTest extends TestCase {
         service = new DatagramService(hereID, testConnection);
         flag = false;
     }
+
+    @After
+    public void tearDown(){
+        messagesReceived = null;
+        testConnection = null;
+        service = null;
+    }    
     
-    
-    
+    @Test 
     public void testCtorViaSetup() {
+        Assert.assertNotNull("exists",service);
     }
     
-
+    @Test
     public void testRcvMemoIsRealClass() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20);
@@ -49,6 +53,7 @@ public class DatagramServiceTest extends TestCase {
         
     }
 
+    @Test
     public void testXmtMemoIsRealClass() {
         class TestMemo extends DatagramService.DatagramServiceTransmitMemo {
 
@@ -98,6 +103,7 @@ public class DatagramServiceTest extends TestCase {
         
     }
 
+    @Test
     public void testRegisterForData() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20);
@@ -105,6 +111,7 @@ public class DatagramServiceTest extends TestCase {
         service.registerForReceive(m20);        
     }
 
+    @Test
     public void testReceiveDGbeforeReg() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
@@ -127,6 +134,7 @@ public class DatagramServiceTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
     }
 
+    @Test
     public void testReceiveFirstDG() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
@@ -149,6 +157,7 @@ public class DatagramServiceTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramAcknowledgedMessage);
     }
 
+    @Test
     public void testReceiveWrongDGType() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
@@ -171,6 +180,7 @@ public class DatagramServiceTest extends TestCase {
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
     }
 
+    @Test
     public void testReceiveWrongDest() {
         DatagramService.DatagramServiceReceiveMemo m20 = 
             new DatagramService.DatagramServiceReceiveMemo(0x20){
@@ -193,6 +203,7 @@ public class DatagramServiceTest extends TestCase {
     }
 
 
+    @Test
     public void testSendOK() {
         int[] data = new int[]{1,2,3,4,5};
         DatagramService.DatagramServiceTransmitMemo memo = 
@@ -205,7 +216,7 @@ public class DatagramServiceTest extends TestCase {
                 @Override
                 public void handleFailure(int errorCode) {
                     flag = true;
-                    assertEquals("Send failed. error code is ", 0, errorCode);
+                    Assert.assertEquals("Send failed. error code is ", 0, errorCode);
                 }
             };
             
@@ -227,22 +238,4 @@ public class DatagramServiceTest extends TestCase {
         
     }
     
-    
-    // from here down is testing infrastructure
-    
-    public DatagramServiceTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {DatagramServiceTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(DatagramServiceTest.class);
-        return suite;
-    }
 }

@@ -29,11 +29,18 @@ public class MimicNodeStore extends AbstractConnection {
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
         this.node = node;
+        timer = new Timer("OpenLCB Mimic Node Store Timer");
+    }
+
+    public void dispose(){
+       // cancel the timer.
+       timer.cancel();
+       timer=null;
     }
     
     Connection connection;
     NodeID node;
-    Timer timer = new Timer();
+    private Timer timer;
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
@@ -116,7 +123,7 @@ public class MimicNodeStore extends AbstractConnection {
 
         Queue<Interaction> pendingInteractions = new ConcurrentLinkedDeque<>();
         Interaction currentInteraction = null;
-        TimerTask currentTask;
+        private TimerTask currentTask;
 
         public synchronized void startInteraction(final Interaction request) {
             if (currentInteraction == null) {
@@ -330,4 +337,5 @@ public class MimicNodeStore extends AbstractConnection {
         public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
         public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
     }
+
 }

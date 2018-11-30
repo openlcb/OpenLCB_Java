@@ -116,17 +116,19 @@ public class CdiPanel extends JPanel {
 
     public CdiPanel () {
         super();
+        tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
     }
 
     /**
      * Cleans up all property change listeners etc in preparation when closing the window.
      */
     public void release() {
-        System.out.println("Cleanup of CDI window for " + nodeName);
+        logger.log(Level.FINE, "Cleanup of CDI window for {0}",nodeName);
         for (Runnable task : cleanupTasks) {
             task.run();
         }
         cleanupTasks.clear();
+        tabColorTimer.cancel(); 
     }
 
     /**
@@ -420,7 +422,7 @@ public class CdiPanel extends JPanel {
     JButton moreButton;
     SearchPane searchPane = new SearchPane();
 
-    final Timer tabColorTimer = new Timer();
+    private Timer tabColorTimer;
     long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
     long lastColorRefreshDone = Long.MAX_VALUE; // guarded by tabColorTimer
 
@@ -511,7 +513,7 @@ public class CdiPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             Window win = SwingUtilities.getWindowAncestor(this);
             if (win == null) {
-                System.out.println("Could not add close window listener");
+                logger.log(Level.FINE, "Could not add close window listener");
                 return;
             }
             win.addWindowListener(new WindowListener() {
@@ -1065,7 +1067,7 @@ public class CdiPanel extends JPanel {
         private void textUpdated() {
             if (parent == null) return;
             String searchQuery = textField.getText();
-            System.err.println("Search for: " + searchQuery);
+            logger.log(Level.FINE, String.format("Search for: %s",searchQuery));
             boolean fresh = false;
             if (suggestMenu == null) {
                 suggestMenu = new JPopupMenu();
@@ -1074,7 +1076,8 @@ public class CdiPanel extends JPanel {
             long startTime = System.nanoTime();
             List<EventTable.EventTableEntry> results = eventTable.searchForEvent(searchQuery, 8);
             long timelen = System.nanoTime() - startTime;
-            System.out.println(String.format("Search took %.2f msec", timelen * 1.0 / 1e6));
+            logger.log(Level.FINE, String.format("Search took %.2f msec", 
+                                   timelen * 1.0 / 1e6));
             suggestMenu.removeAll();
             for (EventTable.EventTableEntry result : results) {
                 Action a = new AbstractAction(result.getDescription()) {
@@ -1101,7 +1104,7 @@ public class CdiPanel extends JPanel {
         }
 
         private void cancelSearch() {
-            System.err.println("Removing search box");
+            logger.log(Level.FINE, "Removing search box");
             if (suggestMenu != null) {
                 suggestMenu.setVisible(false);
             }
@@ -1233,7 +1236,12 @@ public class CdiPanel extends JPanel {
                 }
             };
             entry.addPropertyChangeListener(entryListener);
-            cleanupTasks.add(()->{entry.removePropertyChangeListener(entryListener);});
+            cleanupTasks.add(new Runnable() {
+                @Override
+                public void run() {
+                    entry.removePropertyChangeListener(entryListener);
+                }
+            });
             entry.fireUpdate();
 
             JButton b;
@@ -1338,6 +1346,8 @@ public class CdiPanel extends JPanel {
 
         /**
          * Updates the UI for the list of other uses of the event.
+         * 
+         * @param eventInfo from the event table.
          */
         private void updateEventDescriptionField(EventTable.EventInfo eventInfo) {
             EventTable.EventTableEntry[] elist = eventInfo.getAllEntries();
@@ -1405,7 +1415,7 @@ public class CdiPanel extends JPanel {
                         ++j;
                     }
                     if (j > i+1) {
-                        int val = Integer.valueOf(b.substring(i + 1, j));
+                        int val = Integer.parseInt(b.substring(i + 1, j));
                         ++val;
                         b.replace(i+1,j,Integer.toString(val));
                     }
@@ -1592,22 +1602,6 @@ public class CdiPanel extends JPanel {
         protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
-        }
-    }
-
-    /**
-      * Provide access to e.g. a MemoryConfig service.
-     *
-      * Default just writes output for debug
-      */
-    public static class ReadWriteAccess {
-        public void doWrite(long address, int space, byte[] data, final
-                            MemoryConfigurationService.McsWriteHandler handler) {
-            logger.log(Level.FINE, "Write to {0} in space {1}", new Object[]{address, space});
-        }
-        public void doRead(long address, int space, int length, final MemoryConfigurationService
-                .McsReadHandler handler) {
-            logger.log(Level.FINE, "Read from {0} in space {1}", new Object[]{address, space});
         }
     }
 

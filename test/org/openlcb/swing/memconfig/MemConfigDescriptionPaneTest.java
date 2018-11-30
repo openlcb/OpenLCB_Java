@@ -3,10 +3,7 @@ package org.openlcb.swing.memconfig;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 import javax.swing.*;
 /**
@@ -21,7 +18,7 @@ import javax.swing.*;
  * @author  Bob Jacobsen   Copyright 2012
  * @version $Revision: 34 $
  */
-public class MemConfigDescriptionPaneTest extends TestCase {
+public class MemConfigDescriptionPaneTest  {
 
     NodeID nidHere = new NodeID(new byte[]{0,0,0,0,0,1});
     NodeID nidThere = new NodeID(new byte[]{0,0,0,0,0,2});
@@ -39,6 +36,7 @@ public class MemConfigDescriptionPaneTest extends TestCase {
     
     MemConfigDescriptionPane pane;
     
+    @Before
     public void setUp() throws Exception {
         store = new MimicNodeStore(connection, nidHere);
         store.addNode(nidThere);
@@ -71,29 +69,16 @@ public class MemConfigDescriptionPaneTest extends TestCase {
         frame.setVisible(true);
     }
     
+    @After
     public void tearDown() {
-        //frame.setVisible(false);
-    }
-            
-    public void testSetup() {
-        
+        frame.setVisible(false);
+	frame.dispose();
+        store.dispose();
+        service.dispose();
     }
            
-    // from here down is testing infrastructure
-    
-    public MemConfigDescriptionPaneTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {MemConfigDescriptionPaneTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(MemConfigDescriptionPaneTest.class);
-        return suite;
+    @Test 
+    public void testSetup() {
+	Assert.assertNotNull("frame created",frame);
     }
 }

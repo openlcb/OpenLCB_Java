@@ -1,55 +1,64 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
-public class UtilitiesTest extends TestCase {
+public class UtilitiesTest  {
 
+    @Test
     public void testZeroString() {
         Assert.assertEquals("00", Utilities.toHexPair(0));
     }
 
+    @Test
     public void testHexAE() {
         Assert.assertEquals("AE", Utilities.toHexPair(0xAE));
     }
 
+    @Test
     public void testHex0A() {
         Assert.assertEquals("0A", Utilities.toHexPair(0xA));
     }
 
+    @Test
     public void testArray1() {
         Assert.assertEquals("0A 0B 12", Utilities.toHexSpaceString(new int[]{0x0A, 0x0B, 0x12}));
     }
 
+    @Test
     public void testArray2() {
         Assert.assertEquals("0A.0B.12", Utilities.toHexDotsString(new int[]{0x0A, 0x0B, 0x12}));
     }
 
+    @Test
     public void testSpaceByteArrayZeroLen() {
         Assert.assertEquals("", Utilities.toHexSpaceString(new int[]{}));
     }
+
+    @Test
     public void testSpaceIntArrayZeroLen() {
         Assert.assertEquals("", Utilities.toHexSpaceString(new byte[]{}));
     }
 
+    @Test
     public void testDotByteArrayZeroLen() {
         Assert.assertEquals("", Utilities.toHexDotsString(new int[]{}));
     }
+
+    @Test
     public void testDotIntArrayZeroLen() {
         Assert.assertEquals("", Utilities.toHexDotsString(new byte[]{}));
     }
 
+    @Test
     public void testToByteArray() {
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A 0B 12")));
         Assert.assertTrue(compareArrays(new byte[]{0xA, 0xB, 0x12}, Utilities.bytesFromHexString("0A.0B.12")));
     }
 
+    @Test
     public void testPackByteArray() {
         byte[] b = new byte[5];
         Utilities.HostToNetworkUint8(b, 2, 168);
@@ -76,22 +85,5 @@ public class UtilitiesTest extends TestCase {
         if (a.length != b.length) return false;
         for (int i = 0; i <a.length; i++) if (a[i]!=b[i]) return false;
         return true;
-    }
-    // from here down is testing infrastructure
-    
-    public UtilitiesTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {UtilitiesTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(UtilitiesTest.class);
-        return suite;
     }
 }

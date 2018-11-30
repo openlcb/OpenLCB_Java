@@ -61,7 +61,7 @@ public class EventID {
 
     @CheckReturnValue
     @Override
-    public boolean equals(@NonNull Object o){
+    public boolean equals(Object o){
         // try to cast, else not equal
         try {
             EventID other = (EventID) o;
@@ -73,17 +73,25 @@ public class EventID {
         }
     }  
 
+    /// Checks whether a given Event ID comes from a given Node ID's space.
+    public boolean startsWith(NodeID id) {
+        for (int i = 0; i < 6; ++i) {
+            if (contents[i] != id.contents[i]) return false;
+        }
+        return true;
+    }
+
     @CheckReturnValue
     @Override
     public int hashCode() {
-        return contents[0]<<21
-            +contents[1]<<18
-            +contents[2]<<15
-            +contents[3]<<12
-            +contents[4]<<9
-            +contents[5]<<6
-            +contents[6]<<3
-            +contents[7];
+        return (contents[0]<<21)
+            +(contents[1]<<18)
+            +(contents[2]<<15)
+            +(contents[3]<<12)
+            +(contents[4]<<9)
+            +(contents[5]<<6)
+            +(contents[6]<<3)
+            +(contents[7]);
     } 
 
     @CheckReturnValue

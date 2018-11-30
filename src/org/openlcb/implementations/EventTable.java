@@ -84,7 +84,7 @@ public class EventTable {
 
             @Override
             public int compareTo(@Nonnull SearchEntryHelper o) {
-                int scc = Float.valueOf(score).compareTo(o.score);
+                int scc = Float.compare(score,o.score);
                 if (scc != 0) return scc;
                 return -entry.description.compareTo(o.entry.description);
             }
@@ -243,7 +243,12 @@ public class EventTable {
          */
         void remove(EventTableEntryHolder h) {
             synchronized (entries) {
-                entries.removeIf((EventTableEntry e) -> e.h == h);
+                for (int i = 0; i < entries.size(); ++i) {
+                    if (entries.get(i).h == h) {
+                        entries.remove(i);
+                        --i;
+                    }
+                }
             }
             notifyUpdated();
         }

@@ -96,6 +96,13 @@ public class RangeCacheUtil {
             Range orng = (Range) o;
             return start == orng.start && end == orng.end;
         }
+    
+        @Override
+        public int hashCode(){
+           return 42; // this meets the contract of equals, which says the
+                      // hash codes must be the same when equals returns true
+                      // but will not allow good hashing of Range values
+        }
 
         @Override
         public String toString() {

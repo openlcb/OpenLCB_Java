@@ -53,7 +53,7 @@ public class NodeID {
     byte[] contents;
 
     @CheckReturnValue
-    public boolean equals(@NonNull Object o){
+    public boolean equals(Object o){
         // try to cast, else not equal
         try {
             NodeID other = (NodeID) o;

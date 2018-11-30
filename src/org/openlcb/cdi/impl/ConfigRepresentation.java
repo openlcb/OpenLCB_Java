@@ -23,7 +23,6 @@ import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
-import org.openlcb.cdi.swing.CdiPanel;
 import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
@@ -50,7 +49,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
     private final OlcbInterface connection;
     private final NodeID remoteNodeID;
-    private final CdiPanel.ReadWriteAccess mockAccess;
+    private final ReadWriteAccess mockAccess;
     private CdiRep cdiRep;
     private String state = "Uninitialized";
     private CdiContainer root = null;
@@ -72,7 +71,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         triggerFetchCdi();
     }
 
-    public ConfigRepresentation(CdiPanel.ReadWriteAccess memoryAccess, CdiRep xmlRep) {
+    public ConfigRepresentation(ReadWriteAccess memoryAccess, CdiRep xmlRep) {
         this.connection = null;
         this.remoteNodeID = null;
         this.mockAccess = memoryAccess;

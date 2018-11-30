@@ -1,21 +1,21 @@
 package org.openlcb;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  * @version $Revision$
  */
-public class ProtocolIdentificationTest extends TestCase {
+public class ProtocolIdentificationTest  {
+
+    @Test
     public void testDecode0() {
         java.util.List result = ProtocolIdentification.Protocol.decode(0x000000000000L);
         
         Assert.assertEquals("length", 0, result.size());
     }
     
+    @Test
     public void testDecode1() {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x800000000000L);
         
@@ -23,6 +23,7 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
     }
     
+    @Test
     public void testDecode2() {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x880000000000L);
         
@@ -31,6 +32,7 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 2", "Reservation", result.get(1));
     }
 
+    @Test
     public void testDecode3() {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0xF01800000000L);
         
@@ -43,6 +45,7 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 6", "CDI", result.get(5));
     }
 
+    @Test
     public void testDecode4() {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x000F00000000L);
         
@@ -53,18 +56,21 @@ public class ProtocolIdentificationTest extends TestCase {
         Assert.assertEquals("result 4", "DccCommandStation", result.get(3));
     }
 
+    @Test
     public void testSupports1() {
         ProtocolIdentification.Protocol p = ProtocolIdentification.Protocol.Datagram;
         
         Assert.assertTrue("supports", p.supports(~0));
     }
     
+    @Test
     public void testSupports2() {
         ProtocolIdentification.Protocol p = ProtocolIdentification.Protocol.Datagram;
         
         Assert.assertTrue("supports", !p.supports(0));
     }
     
+    @Test
     public void testCreationFromMessage() {
         ProtocolIdentification pi = new ProtocolIdentification(
                 new NodeID(new byte[]{2,3,3,4,5,6}),
@@ -72,23 +78,5 @@ public class ProtocolIdentificationTest extends TestCase {
                     new NodeID(new byte[]{1,3,3,4,5,6}),new NodeID(new byte[]{2,3,3,4,5,6}),
                     0x03));
         Assert.assertTrue((long)0x03 == pi.getValue());
-    }
-    
-    // from here down is testing infrastructure
-    
-    public ProtocolIdentificationTest(String s) {
-        super(s);
-    }
-
-    // Main entry point
-    static public void main(String[] args) {
-        String[] testCaseName = {ProtocolIdentificationTest.class.getName()};
-        junit.textui.TestRunner.main(testCaseName);
-    }
-
-    // test suite from all defined tests
-    public static Test suite() {
-        TestSuite suite = new TestSuite(ProtocolIdentificationTest.class);
-        return suite;
     }
 }

@@ -55,7 +55,7 @@ public class GridConnectOutput implements CanFrameListener {
     @Override
     public synchronized void send(CanFrame frame) {
         try {
-            output.write(format(frame).getBytes());
+            output.write(format(frame).getBytes("ISO-8859-1"));
             output.write('\n');
             output.flush();
         } catch (IOException e) {
