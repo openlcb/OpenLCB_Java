@@ -69,7 +69,7 @@ public class StreamTransmitter extends MessageDecoder {
         nextIndex = nextIndex+size;
         
         // send data
-        Message m = new StreamDataSendMessage(here, far, data);
+        Message m = new StreamDataSendMessage(here, far, destStreamID, data);
         connection.put(m, this);
         
         // are we done?

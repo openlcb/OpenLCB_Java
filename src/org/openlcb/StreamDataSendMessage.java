@@ -13,18 +13,17 @@ import edu.umd.cs.findbugs.annotations.*;
 @Immutable
 @ThreadSafe
 public class StreamDataSendMessage extends AddressedMessage {
-    
-//    public StreamDataSendMessage(NodeID source, NodeID dest, byte[] data,
-//                    byte destStreamID) {
-    public StreamDataSendMessage(NodeID source, NodeID dest, int[] data) {
+
+    public StreamDataSendMessage(NodeID source, NodeID dest, byte destStreamID, int[]
+            data) {
         super(source, dest);
         this.data = data;
-        //this.destStreamID = destStreamID;
+        this.destStreamID = destStreamID;
     }
         
     int[] data;
     byte destStreamID;
-    byte getDestinationStreamID() { return destStreamID; }
+    public byte getDestinationStreamID() { return destStreamID; }
     public int[] getData() { return data; }
     /**
      * Implement message-type-specific
@@ -49,7 +48,7 @@ public class StreamDataSendMessage extends AddressedMessage {
 
     public String toString() {
         StringBuilder value = new StringBuilder(super.toString());
-        value.append(" Stream: ");
+        value.append(" Stream with dst ID " + Integer.toString(destStreamID & 0xff) + ": ");
         
         int n = data.length;
         if(n>16) n=16;
