@@ -42,6 +42,8 @@ public class NodeSelector extends JPanel  {
 
         box = new JComboBox(model);
         add(box);
+        box.setPrototypeDisplayValue("01.02.03.04.05.06 - East Pershing Tower Node - Some " +
+                "Description Here");
 
         // listen for newly arrived nodes
         propertyChangeListener = new PropertyChangeListener() {
