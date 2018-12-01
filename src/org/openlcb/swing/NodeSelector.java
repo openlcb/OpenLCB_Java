@@ -15,6 +15,8 @@ import java.util.logging.Logger;
 import org.openlcb.*;
 import org.openlcb.implementations.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static org.openlcb.MimicNodeStore.ADD_PROP_NODE;
 import static org.openlcb.MimicNodeStore.CLEAR_ALL_NODES;
 import static org.openlcb.MimicNodeStore.NodeMemo.UPDATE_PROP_SIMPLE_NODE_IDENT;
@@ -136,6 +138,9 @@ public class NodeSelector extends JPanel  {
         }
 
         @Override
+        @SuppressFBWarnings(value = "EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS",
+                justification = "Purposefully attempting lookup using NodeID argument in model " +
+                        "vector.")
         public boolean equals(Object o) {
             if (o == null) return false;
             if (o instanceof ModelEntry) {
