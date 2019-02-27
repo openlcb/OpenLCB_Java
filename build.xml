@@ -29,6 +29,7 @@
     <property name="test" value="test"/>
     <property name="coveragetarget" value="./coveragereport"/>
     <property name="target" value="classes"/>
+    <property name="testreporttarget" value="restreport"/>
     <property name="jartarget" value="."/>
     <property name="doctarget" value="doc"/>
   
@@ -110,6 +111,7 @@
         <delete includeEmptyDirs="true" quiet="true">
             <fileset dir="${target}"/>
             <fileset dir="${coveragetarget}"/>
+            <fileset dir="${testreporttarget}"/>
             <file file="jacoco.exec"/>
             <file file="junit-results.xml"/>
         </delete>
@@ -161,22 +163,43 @@
     </target>
   
     <target name="run" depends="compile, tests" description="build and run test suite">
-        <java classname="AllTest"
-              fork="yes" >
-            <classpath refid="project.class.path"    />
-            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-            <sysproperty key="java.library.path" path=".:lib/"/>       
-        </java>
-    </target>
-
-    <target name="run-travis" depends="compile, javadoc, tests" description="build and run test suite">
+        <mkdir dir="${testreporttarget}"/>
         <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
             <classpath refid="project.class.path"    />
             <sysproperty key="java.security.policy" value="lib/security.policy"/> 
             <sysproperty key="java.library.path" path=".:lib/"/>       
-            <test name="AllTest" outfile="junit-results">
-                <formatter type="xml"/>
-            </test>
+            <formatter type="xml"/>
+	    <batchtest fork="yes" todir="${testreporttarget}" skipNonTests="yes" >
+	       <fileset dir="${test}">
+                   <include name="**/*Test.java" />
+                   <exclude name="**/PackageTest.java" />
+                   <exclude name="**/AllTest.java" />
+                   <exclude name="**/HeadLessTest.java" />
+	       </fileset>
+            </batchtest>
+        </junit>
+        <fail>
+            <condition>
+                <istrue value="${test.failed}" />
+            </condition>
+        </fail>
+    </target>
+
+    <target name="run-travis" depends="compile, javadoc, tests" description="build and run test suite">
+        <mkdir dir="${testreporttarget}"/>
+        <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
+            <formatter type="xml"/>
+	    <batchtest fork="yes" todir="${testreporttarget}" skipNonTests="yes" >
+	       <fileset dir="${test}">
+                   <include name="**/*Test.java" />
+                   <exclude name="**/PackageTest.java" />
+                   <exclude name="**/AllTest.java" />
+                   <exclude name="**/HeadLessTest.java" />
+	       </fileset>
+            </batchtest>
         </junit>
         <fail>
             <condition>
@@ -186,14 +209,21 @@
     </target>
 
     <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
+        <mkdir dir="${testreporttarget}"/>
         <jacoco:coverage destfile="jacoco.exec" excludes="org.slf4j.*">
             <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="withOutAndErr" fork="yes" dir="." timeout="3600000">
                 <classpath refid="project.class.path"    />
                 <sysproperty key="java.security.policy" value="lib/security.policy"/> 
                 <sysproperty key="java.library.path" path=".:lib/"/>       
-                <test name="AllTest" outfile="junit-results">
-                    <formatter type="xml"/>
-                </test>
+            <formatter type="xml"/>
+	    <batchtest fork="yes" todir="${testreporttarget}" skipNonTests="yes" >
+	       <fileset dir="${test}">
+                   <include name="**/*.java" />
+                   <exclude name="**/PackageTest.java" />
+                   <exclude name="**/AllTest.java" />
+                   <exclude name="**/HeadLessTest.java" />
+	       </fileset>
+            </batchtest>
             </junit>
         </jacoco:coverage>
         <jacoco:report>
