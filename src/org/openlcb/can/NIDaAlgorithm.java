@@ -19,7 +19,7 @@ public class NIDaAlgorithm implements CanFrameListener {
     /// Callback to invoke when the alias was successfully reserved.
     private Runnable done;
     private CanFrameListener sendInterface;
-    private Timer timer;
+    private static Timer timer;
     private TimerTask task;
     private final static Logger logger = Logger.getLogger(NIDaAlgorithm.class.getName());
 
@@ -46,7 +46,9 @@ public class NIDaAlgorithm implements CanFrameListener {
     public NIDaAlgorithm(NodeID n, CanFrameListener sendInterface) {
         this(n);
         this.sendInterface = sendInterface;
-        timer = new Timer("OpenLCB NIDaAlgorithm Timer");
+	if(timer == null ) {
+           timer = new Timer("OpenLCB NIDaAlgorithm Timer");
+	}
     }
 
     public void start(Runnable done) {
