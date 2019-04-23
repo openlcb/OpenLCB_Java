@@ -76,6 +76,7 @@ public class OlcbInterface {
          * Executes a runnable on the given thread. Waits for the execution to complete before
          * returning.
          * @param r Runnable to execute.
+	 * @throws InterruptedException if interrupted.
          */
         void schedule(Runnable r) throws InterruptedException;
     }
