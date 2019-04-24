@@ -363,6 +363,9 @@ public class LoaderClient extends MessageDecoder {
      * clean up local storage
      */
     public void dispose(){
-       timer.cancel();
+       if(timer!=null) {
+          timer.cancel();
+          timer = null;
+       }
     }
 }
