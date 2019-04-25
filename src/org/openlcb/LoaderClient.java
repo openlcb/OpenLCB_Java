@@ -54,7 +54,9 @@ public class LoaderClient extends MessageDecoder {
         connection = _connection;
         dcs = _dcs;
         mcs = _mcs;
-        timer = new Timer("OpenLCB LoaderClient Timeout Timer");
+        if(timer == null) {
+           timer = new Timer("OpenLCB LoaderClient Timeout Timer");
+        }
     }
 
     /* Protocol:
@@ -115,7 +117,7 @@ public class LoaderClient extends MessageDecoder {
         startTimeout(FREEZE_REBOOT_TIMEOUT_MSEC);
     }
 
-    private Timer timer;
+    private static Timer timer;
     private TimerTask task = null;
     private void startTimeout(int period_msec) {
         task = new TimerTask(){

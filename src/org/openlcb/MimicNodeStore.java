@@ -29,18 +29,22 @@ public class MimicNodeStore extends AbstractConnection {
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
         this.node = node;
-        timer = new Timer("OpenLCB Mimic Node Store Timer");
+        if(timer == null) {
+           timer = new Timer("OpenLCB Mimic Node Store Timer");
+        }
     }
 
     public void dispose(){
        // cancel the timer.
-       timer.cancel();
-       timer=null;
+       if(timer != null ) {
+          timer.cancel();
+          timer=null;
+       }
     }
     
     Connection connection;
     NodeID node;
-    private Timer timer;
+    private static Timer timer;
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
