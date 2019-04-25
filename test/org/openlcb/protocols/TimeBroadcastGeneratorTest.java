@@ -233,7 +233,9 @@ public class TimeBroadcastGeneratorTest extends InterfaceTestBase {
 
         Thread.sleep(50);
         expectFrame(":X195B4333N010100000102F003;"); // date rollover
-        expectNoFrames();
+        // because the clock is running, whether or not we see no 
+        // additional frames here is execution speed dependent.
+        //expectNoFrames();
         tgmaster.requestSetRate(-512.0);
         expectFrame(":X195B4333N0101000001024800;"); // rate = -512
         expectNoFrames();
@@ -278,7 +280,9 @@ public class TimeBroadcastGeneratorTest extends InterfaceTestBase {
         expectNoFrames();
         tgmaster.requestStart();
         expectFrame(":X195B4333N010100000102F002;"); // start
-        expectNoFrames();
+        // because the clock is running, whether or not we see no 
+        // additional frames here is execution speed dependent.
+        //expectNoFrames();
         Thread.sleep(50);
         expectFrame(":X195B4333N010100000102F003;"); // start
     }
