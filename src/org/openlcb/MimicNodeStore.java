@@ -41,6 +41,13 @@ public class MimicNodeStore extends AbstractConnection {
           timer=null;
        }
     }
+
+    void scheduleTask(TimerTask t,int delay){
+       if(timer == null) {
+          return; // attempt to schedule after dispose.
+       }
+       timer.schedule(t,delay);
+    }
     
     Connection connection;
     NodeID node;
@@ -150,7 +157,7 @@ public class MimicNodeStore extends AbstractConnection {
                     tryCompleteInteraction(request);
                 }
             };
-            timer.schedule(currentTask, request.deadlineMsec);
+            scheduleTask(currentTask, request.deadlineMsec);
         }
 
         public synchronized void tryCompleteInteraction(@Nullable Interaction request) {
@@ -214,7 +221,7 @@ public class MimicNodeStore extends AbstractConnection {
                         }
                         final Interaction request = this;
                         if (--numTriesLeft > 0) {
-                            timer.schedule(new TimerTask() {
+                            scheduleTask(new TimerTask() {
                                 @Override
                                 public void run() {
                                     startInteraction(request);
@@ -265,7 +272,7 @@ public class MimicNodeStore extends AbstractConnection {
                         }
                         final Interaction request = this;
                         if (--numTriesLeft > 0) {
-                            timer.schedule(new TimerTask() {
+                            scheduleTask(new TimerTask() {
                                 @Override
                                 public void run() {
                                     startInteraction(request);
