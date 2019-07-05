@@ -278,7 +278,7 @@ public class MemorySpaceCache {
         return ret;
     }
 
-    public void write(final long offset, byte[] data, final ConfigRepresentation.CdiEntry
+    public void write(final long offset, final byte[] data, final ConfigRepresentation.CdiEntry
             cdiEntry) {
         int len = data.length;
         Map.Entry<Range, byte[]> entry = getCacheForRange(offset, len);
@@ -287,22 +287,43 @@ public class MemorySpaceCache {
         }
         logger.finer("Writing to space " + space + " offset 0x" + Long.toHexString(offset) +
                 " payload length " + data.length);
-        access.doWrite(offset, space, data, new MemoryConfigurationService.McsWriteHandler() {
-                    @Override
-                    public void handleFailure(int errorCode) {
-                        logger.warning(String.format("Write failed (space %d address %d): 0x" +
-                                "%04x", space, offset, errorCode));
-                        cdiEntry.fireWriteComplete();
-                    }
 
-                    @Override
-                    public void handleSuccess() {
-                        logger.finer(String.format("Write complete (space %d address %d).",
-                                space, offset));
-                        cdiEntry.fireWriteComplete();
-                    }
+        class RepeatedWrite implements MemoryConfigurationService.McsWriteHandler {
+            int dataOffset = 0;
+
+            public void next() {
+                int len = Math.min(data.length-dataOffset, 64);
+                byte[] p;
+                if (len == data.length) {
+                    p = data;
+                } else {
+                    p = new byte[len];
+                    System.arraycopy(data, dataOffset, p, 0, len);
                 }
-        );
+                long writeAddress = offset + dataOffset;
+                dataOffset += len;
+                access.doWrite(writeAddress, space, p, this);
+            }
+
+            @Override
+            public void handleFailure(int errorCode) {
+                logger.warning(String.format("Write failed (space %d address %d): 0x" +
+                        "%04x", space, offset, errorCode));
+                cdiEntry.fireWriteComplete();
+            }
+
+            @Override
+            public void handleSuccess() {
+                logger.finer(String.format("Write complete (space %d address %d).",
+                        space, offset));
+                if (dataOffset >= data.length) {
+                    cdiEntry.fireWriteComplete();
+                } else {
+                    next();
+                }
+            }
+        }
+        new RepeatedWrite().next();
         // TODO: 4/2/16 Handle write errors and report to user somehow.
         notifyAfterWrite(offset, offset + data.length);
     }

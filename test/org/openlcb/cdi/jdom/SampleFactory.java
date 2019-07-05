@@ -154,6 +154,18 @@ public class SampleFactory {
         return root;
     }
 
+    /**
+     *
+     * @return An example configuration with a long string field.
+     */
+    public static Element getLargeStringSample() {
+        Element root = new Element("cdi");
+
+        root.addContent(new Element("segment").setAttribute("space", "13")
+                .addContent(new Element("string").setAttribute("size", "200"))
+        );
+        return root;
+    }
 
 
     // Main entry point for standalone run
