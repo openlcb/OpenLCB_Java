@@ -576,7 +576,6 @@ public class CdiPanel extends JPanel {
                 JTabbedPane tabs = tabsByKey.get(e.key);
                 if (tabs != null && tabs.getTabCount() >= e.index) {
                     if (isDirty) {
-
                         tabs.setBackgroundAt(e.index - 1, COLOR_EDITED);
                     } else {
                         tabs.setBackgroundAt(e.index - 1, null);
@@ -607,7 +606,7 @@ public class CdiPanel extends JPanel {
 
         @Override
         public void visitString(ConfigRepresentation.StringEntry e) {
-            if (foundUnique) {
+            if (foundEntry != null) {
                 foundUnique = false;
             } else {
                 foundUnique = true;
@@ -722,7 +721,7 @@ public class CdiPanel extends JPanel {
             FindDescriptorVisitor vv = new FindDescriptorVisitor();
             vv.visitContainer(e);
 
-            if (vv.foundUnique) {
+            if (vv.foundEntry != null) {
                 final JPanel tabPanel = currentPane;
                 final ConfigRepresentation.StringEntry source = vv.foundEntry;
                 final JTabbedPane parentTabs = currentTabbedPane;
