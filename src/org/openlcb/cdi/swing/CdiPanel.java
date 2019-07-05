@@ -58,6 +58,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -96,13 +97,13 @@ import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
 public class CdiPanel extends JPanel {
     private static final Logger logger = Logger.getLogger(CdiPanel.class.getName());
 
-    private static final Color COLOR_EDITED = new Color(0xffa500); // orange
+    private static final Color COLOR_EDITED = new Color(0xffd280); // orange
     private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
     private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
     private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
-    private static final Color COLOR_COPIED = new Color(0xffa500); // orange
+    private static final Color COLOR_COPIED = COLOR_EDITED; // orange
 
     /**
      * We always use the same file chooser in this class, so that the user's
@@ -575,7 +576,6 @@ public class CdiPanel extends JPanel {
                 JTabbedPane tabs = tabsByKey.get(e.key);
                 if (tabs != null && tabs.getTabCount() >= e.index) {
                     if (isDirty) {
-
                         tabs.setBackgroundAt(e.index - 1, COLOR_EDITED);
                     } else {
                         tabs.setBackgroundAt(e.index - 1, null);
@@ -606,7 +606,7 @@ public class CdiPanel extends JPanel {
 
         @Override
         public void visitString(ConfigRepresentation.StringEntry e) {
-            if (foundUnique) {
+            if (foundEntry != null) {
                 foundUnique = false;
             } else {
                 foundUnique = true;
@@ -721,7 +721,7 @@ public class CdiPanel extends JPanel {
             FindDescriptorVisitor vv = new FindDescriptorVisitor();
             vv.visitContainer(e);
 
-            if (vv.foundUnique) {
+            if (vv.foundEntry != null) {
                 final JPanel tabPanel = currentPane;
                 final ConfigRepresentation.StringEntry source = vv.foundEntry;
                 final JTabbedPane parentTabs = currentTabbedPane;
@@ -1187,7 +1187,11 @@ public class CdiPanel extends JPanel {
         protected void additionalButtons() {}
 
         protected void init() {
-            p3.add(textComponent);
+            if (textComponent instanceof JTextArea) {
+                p3.add(new JScrollPane(textComponent));
+            } else {
+                p3.add(textComponent);
+            }
             textComponent.setMaximumSize(textComponent.getPreferredSize());
             if (textComponent instanceof JTextComponent) {
                 ((JTextComponent) textComponent).getDocument().addDocumentListener(
@@ -1568,22 +1572,32 @@ public class CdiPanel extends JPanel {
     }
 
     public class StringPane extends EntryPane {
-        JTextField textField;
+        JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
 
         StringPane(ConfigRepresentation.StringEntry e) {
             super(e, "String");
             this.entry = e;
 
-            textField = new JTextField(entry.size) {
-                public java.awt.Dimension getMaximumSize() {
-                    return getPreferredSize();
-                }
-            };
-            textField = factory.handleStringValue(textField);
+            if (entry.size <= 64) {
+                JTextField jtf = new JTextField(entry.size) {
+                    public Dimension getMaximumSize() {
+                        return getPreferredSize();
+                    }
+                };
+                jtf = factory.handleStringValue(jtf);
+                textField = jtf;
+            } else {
+                // Long string. Show multi-line editor
+                JTextArea jta = new JTextArea(Math.min(40, (int)(entry.size / 60)), 80);
+                jta.setEditable(true);
+                jta.setLineWrap(true);
+                jta.setWrapStyleWord(true);
+                jta = factory.handleEditorValue(jta);
+                textField = jta;
+            }
             textComponent = textField;
-            textField.setToolTipText("String of up to "+entry.size+" characters");
-
+            textComponent.setToolTipText("String of up to "+entry.size+" characters");
             init();
         }
 
@@ -1629,6 +1643,8 @@ public class CdiPanel extends JPanel {
         public JTextField handleStringValue(JTextField value) {
             return value;
         }
-
+        public JTextArea handleEditorValue(JTextArea value) {
+            return value;
+        }
     }
 }
