@@ -683,9 +683,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         public void setValue(String value) {
             MemorySpaceCache cache = getCacheForSpace(space);
-            byte[] b = new byte[size];
             byte[] f;
             f = value.getBytes(UTF8);
+            byte[] b = new byte[Math.min(size, f.length + 1)];
             System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
             cache.write(this.origin, b, this);
         }

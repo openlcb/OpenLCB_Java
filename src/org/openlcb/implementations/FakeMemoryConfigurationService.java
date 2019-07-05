@@ -3,8 +3,11 @@ package org.openlcb.implementations;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Created by bracz on 11/9/16.
@@ -49,6 +52,14 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
         iface.injectMemoryConfigurationService(this);
     }
 
+    public class ActualWrite {
+        public int space;
+        public long address;
+        public byte[] data;
+    }
+    /// Records every write that happened through this fake.
+    public List<ActualWrite> actualWriteList = new ArrayList<>();
+
     public void addSpace(NodeID remoteNode, int space, byte[] payload, boolean writeEnabled) {
         SpaceKey k = new SpaceKey();
         k.remoteNode = remoteNode;
@@ -66,6 +77,13 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
     @Override
     public void requestWrite(NodeID dest, int space, long address, byte[] data, McsWriteHandler
             cb) {
+        // Makes a record of what is happening.
+        ActualWrite aw = new ActualWrite();
+        aw.space = space;
+        aw.address = address;
+        aw.data = data;
+        actualWriteList.add(aw);
+
         SpaceData d = findSpace(dest, space);
         if (d == null || d.payload == null) {
             cb.handleFailure(0x1000);
@@ -95,6 +113,8 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
             return;
         }
         if (address >= d.payload.length) {
+            logger.warning("Reading from space " + space + " address " + address +
+                    " but payload max is " + d.payload.length);
             cb.handleFailure(0x1001); // TODO: use proper error code
             return;
         }
@@ -106,4 +126,7 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
         System.arraycopy(d.payload, (int) address, ret, 0, count);
         cb.handleReadData(dest, space, address, ret);
     }
+
+    private static final Logger logger = Logger.getLogger(FakeMemoryConfigurationService.class.getName());
+
 }
