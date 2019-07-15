@@ -36,15 +36,20 @@ public class RangeCacheUtil {
     private static
     @Nullable
     Range mergeRange(Range current, Range next) {
-        if (next.start > current.end + RANGE_MERGE_THRESHOLD) {
+        if (next.start > current.end + RANGE_MERGE_THRESHOLD || current.nullTerminated || next.nullTerminated) {
             return null;
         }
-        return new Range(Math.min(current.start, next.start), Math.max(current.end, next.end));
+        return new Range(Math.min(current.start, next.start), Math.max(current.end, next.end),
+                false);
+    }
+
+    public synchronized void addRange(long start, long end, boolean nullTerminated) {
+        addedRanges.add(new Range(start, end, nullTerminated));
+        isSimplified = false;
     }
 
     public synchronized void addRange(long start, long end) {
-        addedRanges.add(new Range(start, end));
-        isSimplified = false;
+        addRange(start, end, false);
     }
 
     private void simplifyRanges() {
@@ -84,29 +89,30 @@ public class RangeCacheUtil {
         public final long start;
         /// Address of first byte not included in the range.
         public final long end;
+        /// If true, loading this range can be stopped at the first null byte encountered.
+        public boolean nullTerminated;
 
-        public Range(long s, long e) {
+        public Range(long s, long e, boolean nullTerminated) {
             start = s;
             end = e;
+            this.nullTerminated = nullTerminated;
         }
 
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof Range)) return false;
             Range orng = (Range) o;
-            return start == orng.start && end == orng.end;
+            return start == orng.start && end == orng.end && nullTerminated == orng.nullTerminated;
         }
     
         @Override
         public int hashCode(){
-           return 42; // this meets the contract of equals, which says the
-                      // hash codes must be the same when equals returns true
-                      // but will not allow good hashing of Range values
+           return (int)((start * 941083987) ^ (end * 920419813) ^ (nullTerminated ? 858599509 : 0));
         }
 
         @Override
         public String toString() {
-            return "Range[" + start + "," + end + ")";
+            return (nullTerminated ? "NRange[" : "Range[") + start + "," + end + ")";
         }
 
         @Override
@@ -115,6 +121,8 @@ public class RangeCacheUtil {
             if (start > another.start) return 1;
             if (end < another.end) return -1;
             if (end > another.end) return 1;
+            if (!nullTerminated && another.nullTerminated) return -1;
+            if (nullTerminated && !another.nullTerminated) return 1;
             return 0;
         }
     }

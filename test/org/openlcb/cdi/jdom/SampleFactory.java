@@ -167,6 +167,21 @@ public class SampleFactory {
         return root;
     }
 
+    /**
+     * A sample CDI where a large string variable is sandwiched by two small variables.
+     * @return Parsed XML root.
+     */
+    public static Element getLargeStringWithNeighborsSample() {
+        Element root = new Element("cdi");
+
+        root.addContent(new Element("segment").setAttribute("space", "13")
+                .addContent(new Element("int").setAttribute("size", "2"))
+                .addContent(new Element("string").setAttribute("size", "200").addContent(new Element("name").setText("longdata")))
+                .addContent(new Element("int").setAttribute("size", "2"))
+        );
+        return root;
+    }
+
 
     // Main entry point for standalone run
     static public void main(String[] args) {

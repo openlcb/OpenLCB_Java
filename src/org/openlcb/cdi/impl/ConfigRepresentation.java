@@ -151,9 +151,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                   @Override
                   public void visitLeaf(final CdiEntry e) {
                       variables.put(e.key, e);
+                      boolean nullTerminated = e.isNullTerminated();
                       MemorySpaceCache cache = getCacheForSpace(e.space);
-                      cache.addRangeToCache(e.origin, e.origin + e.size);
-                      cache.addRangeListener(e.origin, e.origin + e.size, new
+                      cache.addRangeToCache(e.origin, e.origin + e.size, nullTerminated);
+                      cache.addRangeListener(e.origin, e.origin + e.size, nullTerminated, new
                               PropertyChangeListener() {
                                   @Override
                                   public void propertyChange(PropertyChangeEvent event) {
@@ -368,6 +369,9 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         public abstract CdiRep.Item getCdiItem();
         protected void updateVisibleValue() {}
 
+        /// @return true if this range should be optimized for null termination.
+        public boolean isNullTerminated() { return false; }
+
         public void fireUpdate() {
             updateVisibleValue();
             firePropertyChange(UPDATE_ENTRY_DATA, null, null);
@@ -380,7 +384,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         /// Reads the values again from the original source.
         public void reload() {
             MemorySpaceCache cache = getCacheForSpace(space);
-            cache.reload(origin, size);
+            cache.reload(origin, size, isNullTerminated());
         }
     }
 
@@ -666,6 +670,11 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         @Override
         protected void updateVisibleValue() {
             lastVisibleValue = getValue();
+        }
+
+        @Override
+        public boolean isNullTerminated() {
+            return size > 64;
         }
 
         public String getValue() {
