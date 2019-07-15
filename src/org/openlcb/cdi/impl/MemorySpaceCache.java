@@ -83,9 +83,10 @@ public class MemorySpaceCache {
      *
      * @param start address of first byte to be cached (inclusive)
      * @param end   address of first byte after the cached region
+     * @param nullTerminated true for string ranges whose load can be stopped at the first null.
      */
-    public void addRangeToCache(long start, long end) {
-        ranges.addRange(start, end);
+    public void addRangeToCache(long start, long end, boolean nullTerminated) {
+        ranges.addRange(start, end, nullTerminated);
     }
 
     /**
@@ -97,9 +98,10 @@ public class MemorySpaceCache {
      *                 exclusive)
      * @param listener callback to invoke
      */
-    public void addRangeListener(long start, long end, PropertyChangeListener listener) {
+    public void addRangeListener(long start, long end, boolean nullTerminated,
+                                 PropertyChangeListener listener) {
         synchronized (this) {
-            Range r = new Range(start, end);
+            Range r = new Range(start, end, nullTerminated);
             ChangeEntry lt = dataChangeListeners.get(r);
             if (lt == null) {
                 lt = new ChangeEntry();
@@ -113,17 +115,21 @@ public class MemorySpaceCache {
      * Sends an data updated event to all listeners that are registered to be interested in
      * a given range. Skips those listeners that extend beyond 'end', given the assumption that
      * the data is read from the beginning of the range.
-     *
-     * @param start offset (inclusive)
+     *  @param start offset (inclusive)
      * @param end   offset (exclusive)
+     * @param hasZero true if the data payload loaded has a zero byte.
      */
-    private void notifyPartialRead(long start, long end) {
+    private void notifyPartialRead(long start, long end, boolean hasZero) {
         PropertyChangeEvent ev = null;
         for (Map.Entry<Range, ChangeEntry> e : dataChangeListeners.entrySet()) {
             if (e.getKey().start < end && e.getKey().end > start) {
                 // There is overlap
-                if (e.getKey().end <= end) {
-                    // Data is fully available
+                boolean needNotify = false;
+                if (e.getKey().end <= end) needNotify = true; // Data is fully available
+                if ((start >= e.getKey().start) && e.getKey().nullTerminated && hasZero) {
+                    needNotify = true;
+                }
+                if (needNotify) {
                     if (ev == null) ev = new PropertyChangeEvent(this, UPDATE_DATA, null, null);
                     for (PropertyChangeListener l : e.getValue().listeners) {
                         l.propertyChange(ev);
@@ -188,7 +194,7 @@ public class MemorySpaceCache {
      * Loads the nextRangeToLoad range.
      */
     private void loadRange() {
-        if (currentRangeNextOffset < 0) {
+        if (currentRangeNextOffset < 0) { // first cut in loading this range
             int len = (int)(nextRangeToLoad.end - nextRangeToLoad.start);
             // Try to check if there is an existing range covering the stuff to load.
             Map.Entry<Range, byte[]> cachedRange = getCacheForRange(nextRangeToLoad.start, len);
@@ -199,9 +205,13 @@ public class MemorySpaceCache {
             } else {
                 currentRangeData = cachedRange.getValue();
                 currentRangeNextOffset = nextRangeToLoad.start;
-                // We must make sure that the start offset is the same as the cached range,
-                // otherwise the bytes will be copied to the wrong place inside the data array.
-                nextRangeToLoad = new Range(cachedRange.getKey().start, nextRangeToLoad.end);
+                if (!nextRangeToLoad.equals(cachedRange.getKey())) {
+                    // We must make sure that the start offset is the same as the cached range,
+                    // otherwise the bytes will be copied to the wrong place inside the data array.
+                    // When finding an overlapping range, we always disable null termination.
+                    nextRangeToLoad = new Range(cachedRange.getKey().start, nextRangeToLoad.end,
+                            false);
+                }
             }
         }
         int count = (int)(nextRangeToLoad.end - currentRangeNextOffset);
@@ -240,6 +250,7 @@ public class MemorySpaceCache {
                                     " address=" + currentRangeNextOffset + " expectedspace=" +
                                     MemorySpaceCache.this.space + " expectedcount=" + fcount);
                         }
+                        boolean hasZero = false;
                         if (data.length == 0) {
                             logger.warning(String.format("Datagram read returned 0 bytes. " +
                                             "Remote node %s, space %d, address 0x%x", dest
@@ -250,17 +261,27 @@ public class MemorySpaceCache {
                             System.arraycopy(data, 0, currentRangeData, (int)
                                     (currentRangeNextOffset -
                                             nextRangeToLoad.start), data.length);
+                            for (int i = 0; i < data.length; ++i) {
+                                if (data[i] == 0) {
+                                    hasZero = true;
+                                    break;
+                                }
+                            }
                             notifyPartialRead(currentRangeNextOffset, currentRangeNextOffset + data
-                                    .length);
+                                    .length, hasZero);
                             currentRangeNextOffset += data.length;
                         }
-                        loadRange();
+                        if (hasZero && nextRangeToLoad.nullTerminated) {
+                            continueLoading();
+                        } else {
+                            loadRange();
+                        }
                     }
                 });
     }
 
     private Map.Entry<Range, byte[]> getCacheForRange(long offset, int len) {
-        Range r = new Range(offset, Integer.MAX_VALUE);
+        Range r = new Range(offset, Integer.MAX_VALUE, true);
         Map.Entry<Range, byte[]> entry = dataCache.floorEntry(r);
         if (entry == null) return null;
         if (entry.getKey().end < offset + len) {
@@ -332,9 +353,10 @@ public class MemorySpaceCache {
      * Performs a refresh of some data. Calls the data update listeners when done.
      * @param origin address of first byte in memory space to reload
      * @param size number of bytes to reload
+     * @param nullTerminated true if this reload can stop at a null byte.
      */
-    public void reload(long origin, int size) {
-        rangesToLoad.add(new Range(origin, origin + size));
+    public void reload(long origin, int size, boolean nullTerminated) {
+        rangesToLoad.add(new Range(origin, origin + size, nullTerminated));
         continueLoading();
     }
 

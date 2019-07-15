@@ -60,6 +60,14 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
     /// Records every write that happened through this fake.
     public List<ActualWrite> actualWriteList = new ArrayList<>();
 
+    public class ActualRead {
+        public int space;
+        public long address;
+        public int size;
+    }
+    /// Records every read that happened through this fake.
+    public List<ActualRead> actualReadList = new ArrayList<>();
+
     public void addSpace(NodeID remoteNode, int space, byte[] payload, boolean writeEnabled) {
         SpaceKey k = new SpaceKey();
         k.remoteNode = remoteNode;
@@ -107,6 +115,13 @@ public class FakeMemoryConfigurationService extends MemoryConfigurationService {
 
     @Override
     public void requestRead(NodeID dest, int space, long address, int len, McsReadHandler cb) {
+        // Makes a record of what is happening.
+        ActualRead ar = new ActualRead();
+        ar.space = space;
+        ar.address = address;
+        ar.size = len;
+        actualReadList.add(ar);
+
         SpaceData d = findSpace(dest, space);
         if (d == null || d.payload == null) {
             cb.handleFailure(0x1000);

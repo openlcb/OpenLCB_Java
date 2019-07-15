@@ -11,6 +11,7 @@ import org.openlcb.implementations.FakeMemoryConfigurationService;
 
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by bracz on 11/9/16.
@@ -73,9 +74,9 @@ public class ConfigRepresentationTest {
             @Override
             public void visitLeaf(ConfigRepresentation.CdiEntry e) {
                 Assert.assertTrue(o.i < readOffsets.length);
-                Assert.assertEquals(e.space,readOffsets[o.i][2]);
-                Assert.assertEquals(e.size,readOffsets[o.i][1]);
-                Assert.assertEquals(e.origin,readOffsets[o.i][0]);
+                Assert.assertEquals(e.space, readOffsets[o.i][2]);
+                Assert.assertEquals(e.size, readOffsets[o.i][1]);
+                Assert.assertEquals(e.origin, readOffsets[o.i][0]);
                 o.i++;
                 super.visitLeaf(e);
             }
@@ -98,13 +99,14 @@ public class ConfigRepresentationTest {
             ConfigRepresentation.StringEntry e = null;
         }
         final PE p = new PE();
-        rep.visit(new ConfigRepresentation.Visitor(){
+        rep.visit(new ConfigRepresentation.Visitor() {
             @Override
             public void visitString(ConfigRepresentation.StringEntry e) {
                 p.e = e;
             }
         });
         Assert.assertNotNull(p.e);
+        Assert.assertEquals("", p.e.key);
 
         p.e.setValue("abcdef");
         Assert.assertEquals(1, mcs.actualWriteList.size());
@@ -115,7 +117,7 @@ public class ConfigRepresentationTest {
 
         char[] carr = new char[151];
         for (int i = 0; i < 151; ++i) {
-            carr[i] = (char)(64 + i%10);
+            carr[i] = (char) (64 + i % 10);
         }
         String testLong = new String(carr);
         p.e.setValue(testLong);
@@ -138,7 +140,7 @@ public class ConfigRepresentationTest {
         Assert.assertEquals(64, mcs.actualWriteList.get(1).address);
         Assert.assertEquals(64, mcs.actualWriteList.get(1).data.length);
         Assert.assertArrayEquals(new byte[]{ //
-                                68, 69, 70, 71, 72, 73, // 6
+                68, 69, 70, 71, 72, 73, // 6
                 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, // 16
                 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, // 26
                 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, // 36
@@ -152,7 +154,7 @@ public class ConfigRepresentationTest {
         Assert.assertEquals(128, mcs.actualWriteList.get(2).address);
         Assert.assertEquals(24, mcs.actualWriteList.get(2).data.length);
         Assert.assertArrayEquals(new byte[]{ //
-                                                72, 73, // 2
+                72, 73, // 2
                 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, // 12
                 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, // 22
                 64, 0 // NULL termination!
@@ -190,6 +192,56 @@ public class ConfigRepresentationTest {
         Assert.assertArrayEquals(new byte[]{ //
                 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0
         }, mcs.actualWriteList.get(0).data);
+    }
+
+    @Test
+    public void testLongStringLoad() throws Exception {
+        addCdiData(SampleFactory.getLargeStringWithNeighborsSample());
+        byte[] config = new byte[1000];
+        mcs.addSpace(remoteNode, 13, config, true);
+
+        ConfigRepresentation rep = new ConfigRepresentation(iface, remoteNode);
+        ConfigRepresentation.CdiContainer cont = rep.getRoot();
+        Assert.assertNotNull(cont);
+
+        List<FakeMemoryConfigurationService.ActualRead> trail = mcs.actualReadList.subList(mcs.actualReadList.size() - 3, mcs.actualReadList.size());
+        Assert.assertEquals(trail.get(0).space, 13);
+        Assert.assertEquals(trail.get(1).space, 13);
+        Assert.assertEquals(trail.get(2).space, 13);
+        Assert.assertEquals(trail.get(0).size, 2);
+        Assert.assertEquals(trail.get(1).size, 64);
+        Assert.assertEquals(trail.get(2).size, 2);
+        Assert.assertEquals(trail.get(0).address, 0);
+        Assert.assertEquals(trail.get(1).address, 2);
+        Assert.assertEquals(trail.get(2).address, 202);
+
+        mcs.actualReadList.clear();
+
+        ConfigRepresentation.CdiEntry e = rep.getVariableForKey("seg1.longdata");
+        Assert.assertTrue(e instanceof ConfigRepresentation.StringEntry);
+        e.reload();
+        Assert.assertEquals(1, mcs.actualReadList.size());
+        trail = mcs.actualReadList;
+        Assert.assertEquals(trail.get(0).space, 13);
+        Assert.assertEquals(trail.get(0).address, 2);
+        Assert.assertEquals(trail.get(0).size, 64);
+
+        // Now save some data into the string that makes it longer.
+        for (int i = 0; i < 129; i++) {
+            config[2+i] = 64;
+        }
+        mcs.actualReadList.clear();
+        e.reload();
+        Assert.assertEquals(3, mcs.actualReadList.size());
+        Assert.assertEquals(trail.get(0).space, 13);
+        Assert.assertEquals(trail.get(0).address, 2);
+        Assert.assertEquals(trail.get(0).size, 64);
+        Assert.assertEquals(trail.get(1).space, 13);
+        Assert.assertEquals(trail.get(1).address, 66);
+        Assert.assertEquals(trail.get(1).size, 64);
+        Assert.assertEquals(trail.get(2).space, 13);
+        Assert.assertEquals(trail.get(2).address, 130);
+        Assert.assertEquals(trail.get(2).size, 64);
     }
 
     @Before
