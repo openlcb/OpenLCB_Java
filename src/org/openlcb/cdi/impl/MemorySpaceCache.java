@@ -96,6 +96,8 @@ public class MemorySpaceCache {
      * @param start    address in the space of the first monitored byte (includive)
      * @param end      address of the first byte after the monitored range (i.e. range end
      *                 exclusive)
+     * @param nullTerminated true if this listener is a string field and loading can stop at the
+     *                       first null byte.
      * @param listener callback to invoke
      */
     public void addRangeListener(long start, long end, boolean nullTerminated,
