@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
@@ -61,6 +62,7 @@ import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -72,6 +74,7 @@ import javax.swing.JTextField;
 import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
@@ -93,6 +96,7 @@ import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
  * @author  Bob Jacobsen   Copyright 2011
  * @author  Paul Bender Copyright 2016
  * @author  Balazs Racz Copyright 2016
+ * @author  Pete Cressman Copyright 2020
  */
 public class CdiPanel extends JPanel {
     private static final Logger logger = Logger.getLogger(CdiPanel.class.getName());
@@ -114,10 +118,21 @@ public class CdiPanel extends JPanel {
     private ConfigRepresentation rep;
     private EventTable eventTable = null;
     private String nodeName = "";
+    private boolean _changeMade = false;	// set true when a write is done
+    private boolean _saveNeeded = false;	// set true when a restore is done.
+    private boolean _panelChange = false;	// set true when a panel item changed.
+    private JButton _saveButton;
+    private Color COLOR_DEFAULT;
 
     public CdiPanel () {
         super();
         tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
+    }
+
+    public CdiPanel (File dir) {
+    	this();
+    	// dir is jmri.util.FileUtil.getUserFilesPath()
+    	fci.setCurrentDirectory(dir);
     }
 
     /**
@@ -129,7 +144,10 @@ public class CdiPanel extends JPanel {
             task.run();
         }
         cleanupTasks.clear();
-        tabColorTimer.cancel(); 
+        tabColorTimer.cancel();
+        JFrame f = new JFrame();
+        f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
+        f.dispose();
     }
 
     /**
@@ -152,6 +170,7 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
+        factory.handleCdiPanel(this);
 
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -174,18 +193,19 @@ public class CdiPanel extends JPanel {
         bb.addActionListener(actionEvent -> reloadAll());
         buttonBar.add(bb);
 
-        bb = new JButton("Save changed");
-        bb.setToolTipText("Writes every changed value to the hardware.");
-        bb.addActionListener(actionEvent -> saveChanged());
-        buttonBar.add(bb);
+        _saveButton = new JButton("Write All");
+        COLOR_DEFAULT = _saveButton.getBackground();
+        _saveButton.setToolTipText("Writes every changed value to the hardware.");
+        _saveButton.addActionListener(actionEvent -> saveChanged());
+        buttonBar.add(_saveButton);
 
         bb = new JButton("Backup...");
-        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Save changed\" button first.");
+        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Write All\" button first.");
         bb.addActionListener(actionEvent -> runBackup());
         buttonBar.add(bb);
 
         bb = new JButton("Restore...");
-        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save changed\" afterwards.");
+        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Write All\" afterwards.");
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
@@ -211,6 +231,8 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
+        _changeMade = false;
+        _saveButton.setEnabled(false);
     }
 
     private void createSensorCreateHelper() {
@@ -256,12 +278,8 @@ public class CdiPanel extends JPanel {
         lineHelper.add(Box.createHorizontalGlue());
         createHelper.add(lineHelper);
 
+        // titled border added by ClientAction
         factory.handleGroupPaneEnd(createHelper);
-        CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
-        cp.setExpanded(false);
-        cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height));
-        add(cp);
     }
 
     /**
@@ -314,12 +332,33 @@ public class CdiPanel extends JPanel {
         rep.reloadAll();
     }
 
-    public void saveChanged() {
+    private void saveChanged() {
         for (EntryPane entry : allEntries) {
             if (entry.isDirty()) {
                 entry.writeDisplayTextToNode();
             }
         }
+        _saveNeeded = false;
+        _saveButton.setBackground(COLOR_DEFAULT);
+        _saveButton.setEnabled(false);
+    }
+
+    private void checkForSave() {
+        for (EntryPane entry : allEntries) {
+            if (entry.isDirty()) {
+                return;	// do nothing, still dirty
+            }
+        }
+        _saveButton.setBackground(COLOR_DEFAULT);
+        _saveButton.setEnabled(false);
+    }
+
+    public void madeSensor(String uName) {
+    	_panelChange = true;
+    }
+
+    public void madeTurnout(String uName) {
+    	_panelChange = true;
     }
 
     public void runBackup() {
@@ -391,6 +430,7 @@ public class CdiPanel extends JPanel {
             }
         });
         logger.info("Config load done.");
+        _saveNeeded = true;
     }
 
     private void runReboot() {
@@ -512,47 +552,145 @@ public class CdiPanel extends JPanel {
         }
         notifyTabColorRefresh();
         SwingUtilities.invokeLater(() -> {
-            Window win = SwingUtilities.getWindowAncestor(this);
-            if (win == null) {
+            JFrame f = new JFrame();
+            f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
+            if (f == null) {
                 logger.log(Level.FINE, "Could not add close window listener");
                 return;
             }
-            win.addWindowListener(new WindowListener() {
+            f.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+            f.addWindowListener(new WindowAdapter() {
                 @Override
-                public void windowOpened(WindowEvent windowEvent) {
-                }
-
-                @Override
-                public void windowClosing(WindowEvent windowEvent) {
-                    release();
-                    runUpdateComplete();
-                }
-
-                @Override
-                public void windowClosed(WindowEvent windowEvent) {
-                }
-
-                @Override
-                public void windowIconified(WindowEvent windowEvent) {
-
-                }
-
-                @Override
-                public void windowDeiconified(WindowEvent windowEvent) {
-
-                }
-
-                @Override
-                public void windowActivated(WindowEvent windowEvent) {
-
-                }
-
-                @Override
-                public void windowDeactivated(WindowEvent windowEvent) {
-
+                public void windowClosing(WindowEvent e) {
+                    targetWindowClosingEvent(e);
                 }
             });
+            _changeMade = false;
+            _saveButton.setEnabled(false);
         });
+    }
+
+    private void targetWindowClosingEvent(WindowEvent e) {
+    	StringBuilder sb = new StringBuilder();
+    	if (_saveNeeded) {
+    		sb.append("The configuration was restored but not saved.");
+    		sb.append("\n");
+    	}
+    	boolean save = _saveNeeded;
+        for (EntryPane entry : allEntries) {
+            if (entry.isDirty()) {
+            	GetEntryNameVisitor nameGetter= new GetEntryNameVisitor(entry);
+                rep.visit(nameGetter);
+        		sb.append(nameGetter.getName());
+        		sb.append(" has not been saved.");
+        		sb.append("\n");
+        		save = true;
+            }
+        }
+    	if (_panelChange) {
+    		sb.append("The panel tables have been changed. To keep these changes, save the panel file.");
+    		sb.append("\n");
+    	}
+    	if (sb.length() > 0) {
+    		sb.append("\n");
+    		if (save) {
+        		sb.append("Do you want to save these changes?");
+    		} else {
+           		sb.append("Remember to save the panel file.");
+    		}
+            int confirm = JOptionPane.showConfirmDialog(this, sb.toString(),
+                    "Save Changes", JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            if (confirm == JOptionPane.YES_OPTION && save) {
+            	_saveButton.setBackground(COLOR_EDITED);
+                _saveButton.setEnabled(true);
+                return;
+            }
+    	}
+        if (_changeMade) {
+            runUpdateComplete();
+        }
+        release();
+    }
+
+    private class GetEntryNameVisitor extends ConfigRepresentation.Visitor {
+    	CdiRep.Item item;
+    	int segNum = 1;
+    	String segName = null;
+    	String groupName = null;
+    	String groupRepName = null;
+    	String entryName = null;
+    	String fullName = null;
+    	boolean done = false;
+    	
+    	GetEntryNameVisitor(EntryPane ep) {
+    		item = ep.item;
+    	}
+
+        @Override
+        public void visitSegment(ConfigRepresentation.SegmentEntry e) {
+        	if (!done) {
+        		groupName = null;
+        		groupRepName = null;
+            	segName = e.segment.getName();
+            	segNum++;
+                visitContainer(e);
+        	}
+        }
+
+        @Override
+        public void visitGroupRep(ConfigRepresentation.GroupRep e) {
+        	if (!done) {
+            	groupRepName = e.group.getName() + e.index;
+                visitContainer(e);
+        	}
+        }
+
+        @Override
+        public void visitGroup(ConfigRepresentation.GroupEntry e) {
+        	if (!done) {
+            	groupName = e.group.getName();
+                visitContainer(e);
+        	}
+        }
+
+        @Override
+        public void visitLeaf(ConfigRepresentation.CdiEntry e) {
+        	if (!done && item.equals(e.getCdiItem())) {
+        		entryName = e.getCdiItem().getName();
+            	StringBuilder sb = new StringBuilder();
+        		sb.append("Item \"");
+        		sb.append(entryName);
+        		sb.append("\"");
+        		if (groupRepName == null) {
+        			groupRepName = groupName;
+        		} else if (groupName != null) {
+            		sb.append(" in ");
+            		sb.append(groupName);
+        		}
+        		if (groupRepName != null) {
+        			sb.append(" of group \"");
+        			sb.append(groupRepName);
+            		sb.append("\"");
+        		}
+        		sb.append(" in segment ");
+        		if (segName == null || segName.isEmpty()) {
+            		sb.append("#");
+            		sb.append(segNum);
+        		} else {
+            		sb.append(segName);
+        		}
+        		fullName =  sb.toString();
+        		done = true;
+        	}
+        }
+
+        String getName() {
+        	if (fullName == null) {
+        		return "NotFound";
+        	}
+        	return fullName;
+        }
     }
 
     private void repack() {
@@ -590,6 +728,7 @@ public class CdiPanel extends JPanel {
                 isDirty |= v.isDirty();
             }
         });
+        checkForSave();
     }
 
     /**
@@ -692,7 +831,7 @@ public class CdiPanel extends JPanel {
             if (oldPane instanceof SegmentPane) {
                 // we make toplevel groups collapsible.
                 groupPane.setBorder(null);
-                JPanel ret = new util.CollapsiblePanel(groupPane.getName(), groupPane);
+                JPanel ret = new util.CollapsiblePanel(e.getCdiItem().getName(), groupPane);
                 // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
                 ret.setAlignmentY(Component.TOP_ALIGNMENT);
                 ret.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1153,7 +1292,7 @@ public class CdiPanel extends JPanel {
         }
     }
 
-    public abstract class EntryPane extends JPanel {
+    private abstract class EntryPane extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
@@ -1273,7 +1412,7 @@ public class CdiPanel extends JPanel {
         }
 
         void updateColor() {
-            if (entry.lastVisibleValue == null) {
+            if (entry.lastVisibleValue == null || entry.lastVisibleValue.isEmpty()) {
                 textComponent.setBackground(COLOR_UNFILLED);
                 return;
             }
@@ -1282,9 +1421,11 @@ public class CdiPanel extends JPanel {
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
                 dirty = false;
+                EventQueue.invokeLater(() -> checkForSave());
             } else {
                 textComponent.setBackground(COLOR_EDITED);
                 dirty = true;
+                _saveButton.setEnabled(true);
             }
             if (oldDirty != dirty) {
                 notifyTabColorRefresh();
@@ -1307,7 +1448,7 @@ public class CdiPanel extends JPanel {
         String getDisplayText();
     }
 
-    public class EventIdPane extends EntryPane {
+    private class EventIdPane extends EntryPane {
         private final ConfigRepresentation.EventEntry entry;
         JFormattedTextField textField;
         JLabel eventNamesLabel = null;
@@ -1450,6 +1591,8 @@ public class CdiPanel extends JPanel {
             byte[] contents = org.openlcb.Utilities.bytesFromHexString((String) textField
                     .getText());
             entry.setValue(new EventID(contents));
+            _changeMade = true;
+            checkForSave();
         }
 
         @Override
@@ -1506,7 +1649,7 @@ public class CdiPanel extends JPanel {
     }
 
 
-    public class IntPane extends EntryPane {
+    private class IntPane extends EntryPane {
         JTextField textField = null;
         JComboBox box = null;
         CdiRep.Map map = null;
@@ -1554,6 +1697,8 @@ public class CdiPanel extends JPanel {
                 value = Long.parseLong(key);
             }
             entry.setValue(value);
+            _changeMade = true;
+            checkForSave();
         }
 
         @Override
@@ -1571,7 +1716,7 @@ public class CdiPanel extends JPanel {
         }
     }
 
-    public class StringPane extends EntryPane {
+    private class StringPane extends EntryPane {
         JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
 
@@ -1604,6 +1749,8 @@ public class CdiPanel extends JPanel {
         @Override
         protected void writeDisplayTextToNode() {
             entry.setValue(textField.getText());
+            _changeMade = true;
+            checkForSave();
         }
 
         @Override
@@ -1625,6 +1772,9 @@ public class CdiPanel extends JPanel {
      * Default behavior is to do nothing
      */
     public static class GuiItemFactory {
+    	public void handleCdiPanel(CdiPanel m) {
+    		return;
+    	}
         public JButton handleReadButton(JButton button) {
             return button;
         }

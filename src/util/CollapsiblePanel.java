@@ -25,7 +25,7 @@ public class CollapsiblePanel extends JPanel {
 		public HeaderPanel(String text) {
 			addMouseListener(this);
 			text_ = text;
-			font = new Font("sans-serif", Font.PLAIN, 12);
+			font = new Font("sans-serif", Font.BOLD, 12);
 			// setRequestFocusEnabled(true);
 			setPreferredSize(new Dimension(200, 20));
 			int w = getWidth();
