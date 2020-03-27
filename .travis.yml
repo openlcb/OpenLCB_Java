@@ -6,7 +6,7 @@ addons:
     - graphviz
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 before_script:
   # setup a display on linux ( the sleep gives xvfb some time to start )
