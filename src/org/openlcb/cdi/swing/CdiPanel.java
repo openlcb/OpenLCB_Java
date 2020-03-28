@@ -367,11 +367,7 @@ public class CdiPanel extends JPanel {
         // First select a file to save to.
         fci.setDialogTitle("Save configuration backup file");
         fci.rescanCurrentDirectory();
-        if (nodeName.isEmpty()) {
-            fci.setSelectedFile(new File("configLcb." + rep.getRemoteNodeAsString() + ".txt"));
-        } else {
-            fci.setSelectedFile(new File("configLcb." + nodeName + ".txt"));
-        }
+        fci.setSelectedFile(new File("configLcb." + rep.getRemoteNodeAsString() + ".txt"));
         int retVal = fci.showSaveDialog(null);
         if (retVal != JFileChooser.APPROVE_OPTION || fci.getSelectedFile() == null) {
             return;
@@ -397,11 +393,7 @@ public class CdiPanel extends JPanel {
         // First select a file to save to.
         fci.setDialogTitle("Open configuration restore file");
         fci.rescanCurrentDirectory();
-        if (nodeName.isEmpty()) {
-            fci.setSelectedFile(new File("configLcb." + rep.getRemoteNodeAsString() + ".txt"));
-        } else {
-            fci.setSelectedFile(new File("configLcb." + nodeName + ".txt"));
-        }
+        fci.setSelectedFile(new File("configLcb." + rep.getRemoteNodeAsString() + ".txt"));
         int retVal = fci.showOpenDialog(null);
         if (retVal != JFileChooser.APPROVE_OPTION) {
             return;
