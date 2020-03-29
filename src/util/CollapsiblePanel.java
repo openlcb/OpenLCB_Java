@@ -1,23 +1,39 @@
 // from http://www.coderanch.com/t/341737/GUI/java/Expand-Collapse-Panels
+
 package util;
 
-import javax.swing.*;
-import javax.imageio.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineMetrics;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.font.*;
-import java.awt.image.*;
-import java.io.*;
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 public class CollapsiblePanel extends JPanel {
-
-	private boolean selected;
+	/** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = -7507196157581324501L;
+    
+    private boolean selected;
 	JPanel contentPanel_;
 	HeaderPanel headerPanel_;
 
 	private class HeaderPanel extends JPanel implements MouseListener {
-		String text_;
+		/** Comment for <code>serialVersionUID</code>. */
+        private static final long serialVersionUID = 3553276313551309624L;
+        
+        String text_;
 		Font font;
 		BufferedImage open, closed;
 		final int OFFSET = 30, PAD = 5;
@@ -28,8 +44,6 @@ public class CollapsiblePanel extends JPanel {
 			font = new Font("sans-serif", Font.PLAIN, 12);
 			// setRequestFocusEnabled(true);
 			setPreferredSize(new Dimension(200, 20));
-			int w = getWidth();
-			int h = getHeight();
 
 			try {
 				closed = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Forward24.gif"));
@@ -37,20 +51,22 @@ public class CollapsiblePanel extends JPanel {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 
-		protected void paintComponent(Graphics g) {
+		@Override
+        protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
+			
 			Graphics2D g2 = (Graphics2D) g;
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 					RenderingHints.VALUE_ANTIALIAS_ON);
 			int h = getHeight();
-			if (selected)
-				g2.drawImage(open, PAD, 0, h, h, this);
-			else
-				g2.drawImage(closed, PAD, 0, h, h, this);
-                         // Uncomment once you have your own images
+			if (selected) {
+                g2.drawImage(open, PAD, 0, h, h, this);
+            } else {
+                g2.drawImage(closed, PAD, 0, h, h, this);
+            }
+            // Uncomment once you have your own images
 			g2.setFont(font);
 			FontRenderContext frc = g2.getFontRenderContext();
 			LineMetrics lm = font.getLineMetrics(text_, frc);
@@ -60,32 +76,33 @@ public class CollapsiblePanel extends JPanel {
 			g2.drawString(text_, x, y);
 		}
 
-		public void mouseClicked(MouseEvent e) {
+		@Override
+        public void mouseClicked(MouseEvent e) {
 			toggleSelection();
 		}
 
-		public void mouseEntered(MouseEvent e) {
-		}
+		@Override
+        public void mouseEntered(MouseEvent e) { }
 
-		public void mouseExited(MouseEvent e) {
-		}
+		@Override
+        public void mouseExited(MouseEvent e) { }
 
-		public void mousePressed(MouseEvent e) {
-		}
+		@Override
+        public void mousePressed(MouseEvent e) { }
 
-		public void mouseReleased(MouseEvent e) {
-		}
-
+		@Override
+        public void mouseReleased(MouseEvent e) { }
 	}
 
 	public CollapsiblePanel(String text, JPanel panel) {
 		super(new GridBagLayout());
+		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(1, 3, 0, 3);
 		gbc.weightx = 1.0;
-		gbc.fill = gbc.HORIZONTAL;
-		gbc.gridwidth = gbc.REMAINDER;
-		gbc.anchor = gbc.FIRST_LINE_START;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.anchor = GridBagConstraints.FIRST_LINE_START;
 
 		selected = true;
 		headerPanel_ = new HeaderPanel(text == null ? "" : text);
