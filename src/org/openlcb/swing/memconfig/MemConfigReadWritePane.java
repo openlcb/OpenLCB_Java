@@ -2,13 +2,19 @@
 
 package org.openlcb.swing.memconfig;
 
-import javax.swing.*;
-import javax.swing.text.*;
-import java.beans.PropertyChangeListener;
 import java.awt.FlowLayout;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
  * Provide read/write access to a node
@@ -16,13 +22,16 @@ import org.openlcb.implementations.*;
  * @author	Bob Jacobsen   Copyright (C) 2012
  * @version	$Revision$
  */
-public class MemConfigReadWritePane extends JPanel  {
+public class MemConfigReadWritePane extends JPanel {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = -6666836889862724299L;
     
     NodeID node;
     MimicNodeStore store;
     MemoryConfigurationService service;
 
-    public MemConfigReadWritePane(NodeID node, MimicNodeStore store, MemoryConfigurationService service) {
+    public MemConfigReadWritePane(NodeID node, MimicNodeStore store,
+            MemoryConfigurationService service) {
         this.node = node;
         this.store = store;
         this.service = service;
@@ -42,7 +51,8 @@ public class MemConfigReadWritePane extends JPanel  {
     JTextField writeDataField = new JTextField(80);
     JTextField configNumberField = new JTextField("40");
     JTextField configAddressField = new JTextField("000000");
-    JComboBox addrSpace = new JComboBox(new String[]{"CDI", "All", "Config", "None"});
+    JComboBox<String> addrSpace = new JComboBox<String>(
+            new String[] {"CDI", "All", "Config", "None"});
 
     /**
      * To be invoked after Swing component installation is complete,
@@ -60,6 +70,7 @@ public class MemConfigReadWritePane extends JPanel  {
         
         JButton b = new JButton("Read");
         b.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
                     public void actionPerformed(java.awt.event.ActionEvent e) {
                          readPerformed();
                     }
@@ -67,6 +78,7 @@ public class MemConfigReadWritePane extends JPanel  {
         p.add(b); 
         b = new JButton("Write");
         b.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
                     public void actionPerformed(java.awt.event.ActionEvent e) {
                          writePerformed();
                     }
@@ -80,12 +92,14 @@ public class MemConfigReadWritePane extends JPanel  {
         int space = 0xFF - addrSpace.getSelectedIndex();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         int length = Integer.parseInt(configNumberField.getText());
-        service.requestRead(node, space, addr, length, new MemoryConfigurationService.McsReadHandler() {
+        service.requestRead(node, space, addr, length,
+                new MemoryConfigurationService.McsReadHandler() {
             @Override
             public void handleFailure ( int code){
                 readDataField.setText("Failed: 0x" + Integer.toHexString(code));
             }
 
+            @Override
             public void handleReadData (NodeID dest,int space, long address, byte[] data){
                 readDataField.setText(org.openlcb.Utilities.toHexSpaceString(data));
             }
@@ -96,17 +110,17 @@ public class MemConfigReadWritePane extends JPanel  {
         int space = 0xFF - addrSpace.getSelectedIndex();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         byte[] content = org.openlcb.Utilities.bytesFromHexString(writeDataField.getText());
-        service.requestWrite(node, space, addr, content, new MemoryConfigurationService.McsWriteHandler() {
-                    @Override
-                    public void handleFailure(int errorCode) {
-                        readDataField.setText("Write failed: 0x" + Integer.toHexString(errorCode));
-                    }
+        service.requestWrite(node, space, addr, content,
+                new MemoryConfigurationService.McsWriteHandler() {
+            @Override
+            public void handleFailure(int errorCode) {
+                readDataField.setText("Write failed: 0x" + Integer.toHexString(errorCode));
+            }
 
-                    @Override
-                    public void handleSuccess() {
-                        // ignore
-                    }
-                });
+            @Override
+            public void handleSuccess() {
+                // ignore
+            }
+        });
     }
-    
 }

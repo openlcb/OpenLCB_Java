@@ -2,24 +2,26 @@
 
 package org.openlcb.swing;
 
-import javax.swing.*;
-import javax.swing.text.*;
+import static org.openlcb.MimicNodeStore.ADD_PROP_NODE;
+import static org.openlcb.MimicNodeStore.CLEAR_ALL_NODES;
+import static org.openlcb.MimicNodeStore.NodeMemo.UPDATE_PROP_SIMPLE_NODE_IDENT;
 
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.awt.Dimension;
 import java.util.logging.Logger;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.SimpleNodeIdent;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static org.openlcb.MimicNodeStore.ADD_PROP_NODE;
-import static org.openlcb.MimicNodeStore.CLEAR_ALL_NODES;
-import static org.openlcb.MimicNodeStore.NodeMemo.UPDATE_PROP_SIMPLE_NODE_IDENT;
 
 /**
  * Java Swing component to select a node, populated
@@ -29,9 +31,12 @@ import static org.openlcb.MimicNodeStore.NodeMemo.UPDATE_PROP_SIMPLE_NODE_IDENT;
  * @version	$Revision$
  */
 public class NodeSelector extends JPanel  {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 1714640844679691939L;
+    
     private final PropertyChangeListener propertyChangeListener;
     MimicNodeStore store;
-    JComboBox box;
+    JComboBox<ModelEntry> box;
     private DefaultComboBoxModel<ModelEntry> model = new DefaultComboBoxModel<ModelEntry>();
     private boolean seenLight = false;
 
@@ -40,13 +45,15 @@ public class NodeSelector extends JPanel  {
 
         this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
-        box = new JComboBox(model);
+        box = new JComboBox<ModelEntry>(model);
         add(box);
-        box.setPrototypeDisplayValue("01.02.03.04.05.06 - East Pershing Tower Node - Some " +
-                "Description Here");
+        box.setPrototypeDisplayValue(new ModelEntry("01.02.03.04.05.06"
+                + " - East Pershing Tower Node"
+                + " - Some Description Here"));
 
         // listen for newly arrived nodes
         propertyChangeListener = new PropertyChangeListener() {
+            @Override
             public void propertyChange(PropertyChangeEvent e) {
                 if (e.getPropertyName().equals(ADD_PROP_NODE)) {
                     MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e
@@ -78,7 +85,7 @@ public class NodeSelector extends JPanel  {
         });
     }
 
-    private class ModelEntry implements Comparable<ModelEntry>, PropertyChangeListener {
+    protected class ModelEntry implements Comparable<ModelEntry>, PropertyChangeListener {
         final MimicNodeStore.NodeMemo nodeMemo;
         String description = "";
 
@@ -87,6 +94,16 @@ public class NodeSelector extends JPanel  {
             //log.finest("registering listener for " + memo.getNodeID() + " " + memo.toString());
             memo.addPropertyChangeListener(this);
             updateDescription();
+        }
+
+        /**
+         * Constructor for prototype display value
+         * 
+         * @param description prototype display value
+         */
+        private ModelEntry(String description) {
+            this.nodeMemo = null;
+            this.description = description;
         }
 
         public NodeID getNodeID() {
@@ -98,33 +115,38 @@ public class NodeSelector extends JPanel  {
             StringBuilder sb = new StringBuilder();
             sb.append(nodeMemo.getNodeID().toString());
             int count = 0;
-            if (count < 2) count += addToDescription(ident.getUserName(), sb);
-            if (count < 2) count += addToDescription(ident.getUserDesc(), sb);
-            if (count < 2) count += addToDescription(ident.getMfgName() + ident.getModelName(),
-                    sb);
-            if (count < 2) count += addToDescription(ident.getSoftwareVersion(), sb);
+            if (count < 2) {
+                count += addToDescription(ident.getUserName(), sb);
+            }
+            if (count < 2) {
+                count += addToDescription(ident.getUserDesc(), sb);
+            }
+            if (count < 2) {
+                count += addToDescription(ident.getMfgName() + ident.getModelName(),
+                        sb);
+            }
+            if (count < 2) {
+                count += addToDescription(ident.getSoftwareVersion(), sb);
+            }
             String newDescription = sb.toString();
             if (!description.equals(newDescription)) {
                 description = newDescription;
                 // update combo box model.
                 updateComboBoxModelEntry(this);
             }
-
         }
 
         private int addToDescription(String s, StringBuilder sb) {
-            if (s.isEmpty()) return 0;
+            if (s.isEmpty()) {
+                return 0;
+            }
             sb.append(" - ");
             sb.append(s);
             return 1;
         }
 
         private long reorder(long n) {
-            if (n < 0) {
-                return Long.MAX_VALUE - n;
-            } else {
-                return Long.MIN_VALUE + n;
-            }
+            return (n < 0) ? Long.MAX_VALUE - n : Long.MIN_VALUE + n;
         }
 
         @Override
@@ -144,7 +166,9 @@ public class NodeSelector extends JPanel  {
                 justification = "Purposefully attempting lookup using NodeID argument in model " +
                         "vector.")
         public boolean equals(Object o) {
-            if (o == null) return false;
+            if (o == null) {
+                return false;
+            }
             if (o instanceof ModelEntry) {
                 return getNodeID().equals(((ModelEntry) o).getNodeID());
             }
@@ -172,7 +196,9 @@ public class NodeSelector extends JPanel  {
     // entry to the model, forcing a refresh of the box.
     private void updateComboBoxModelEntry(ModelEntry modelEntry) {
         int idx = model.getIndexOf(modelEntry.getNodeID());
-        if (idx < 0) return;
+        if (idx < 0) {
+            return;
+        }
         ModelEntry last = model.getElementAt(idx);
         if (last != modelEntry) {
             // not the same object -- we're talking about an abandoned entry.
@@ -213,8 +239,8 @@ public class NodeSelector extends JPanel  {
     }
 
     public NodeID getSelectedItem() {
-        return ((ModelEntry)box.getSelectedItem()).getNodeID();
+        return ((ModelEntry) box.getSelectedItem()).getNodeID();
     }
 
-    private final static Logger log = Logger.getLogger(NodeSelector.class.getName());
+    private static final Logger log = Logger.getLogger(NodeSelector.class.getName());
 }

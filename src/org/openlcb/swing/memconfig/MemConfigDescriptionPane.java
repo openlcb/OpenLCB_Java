@@ -4,9 +4,18 @@ package org.openlcb.swing.memconfig;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
-import org.openlcb.*;
-import org.openlcb.implementations.*;
+
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.Utilities;
+import org.openlcb.implementations.MemoryConfigurationService;
 
 /**
  * Display the node's memory configuration capabilities
@@ -14,9 +23,13 @@ import org.openlcb.implementations.*;
  * @author	Bob Jacobsen   Copyright (C) 2012
  * @version	$Revision$
  */
-public class MemConfigDescriptionPane extends JPanel  {
+public class MemConfigDescriptionPane extends JPanel {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 8566678220280469687L;
+
+    private final static Logger logger = Logger.getLogger(
+            MemConfigDescriptionPane.class.getName());
     
-    private final static Logger logger = Logger.getLogger(MemConfigDescriptionPane.class.getName());
     NodeID node;
     MimicNodeStore store;
     MemoryConfigurationService service;
@@ -25,7 +38,8 @@ public class MemConfigDescriptionPane extends JPanel  {
     JLabel highSpaceLabel = new JLabel("       ");
     JLabel lowSpaceLabel = new JLabel("       ");
     
-    public MemConfigDescriptionPane(NodeID node, MimicNodeStore store, MemoryConfigurationService service) {
+    public MemConfigDescriptionPane(NodeID node, MimicNodeStore store,
+            MemoryConfigurationService service) {
         this.node = node;
         this.store = store;
         this.service = service;
@@ -60,6 +74,7 @@ public class MemConfigDescriptionPane extends JPanel  {
                     commandLabel.setText("Failed: 0x" + Integer.toHexString(code));
                 }
 
+                @Override
                 public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) {
                     // fill window from values
                     commandLabel.setText("0x"+Utilities.toHexPair(commands>>8)+Utilities.toHexPair(commands));
@@ -72,7 +87,6 @@ public class MemConfigDescriptionPane extends JPanel  {
                 }
             };
         service.request(memo);
-
     }
     
     void readSpace(NodeID dest, final int highSpace, final int lowSpace) {
@@ -80,11 +94,14 @@ public class MemConfigDescriptionPane extends JPanel  {
             // done, no further reads
             // force a layout
             revalidate();
-            if (getTopLevelAncestor() instanceof JFrame) ((JFrame)getTopLevelAncestor()).pack();
+            if (getTopLevelAncestor() instanceof JFrame) {
+                ((JFrame)getTopLevelAncestor()).pack();
+            }
             return;
         }
         MemoryConfigurationService.McsAddrSpaceMemo memo = 
             new MemoryConfigurationService.McsAddrSpaceMemo(node, highSpace) {
+                @Override
                 public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
                     // new line with values
                     JPanel p = new JPanel();
@@ -98,5 +115,4 @@ public class MemConfigDescriptionPane extends JPanel  {
             };
         service.request(memo);        
     }
-    
 }
