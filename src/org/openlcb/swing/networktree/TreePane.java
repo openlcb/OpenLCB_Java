@@ -2,12 +2,6 @@
 
 package org.openlcb.swing.networktree;
 
-import org.openlcb.Connection;
-import org.openlcb.MimicNodeStore;
-import org.openlcb.NodeID;
-import org.openlcb.SimpleNodeIdent;
-import org.openlcb.VerifyNodeIDNumberMessage;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Window;
@@ -19,7 +13,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -39,6 +32,12 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.openlcb.Connection;
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.SimpleNodeIdent;
+import org.openlcb.VerifyNodeIDNumberMessage;
+
 /**
  * Pane for monitoring an entire OpenLCB network as a logical tree
  *<p>
@@ -47,11 +46,8 @@ import javax.swing.tree.TreeSelectionModel;
  * @version	$Revision$
  */
 public class TreePane extends JPanel  {
-
-    public TreePane() {
-	    super();
-            timer = new Timer("OpenLCB Tree Pane Timer");
-    }
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = -5584629209112478729L;
 
     public enum SortOrder {
         BY_NODE_ID,
@@ -99,8 +95,14 @@ public class TreePane extends JPanel  {
         }
     };
 
-    public void initComponents(MimicNodeStore store, final Connection connection, 
-                                final NodeID node, final NodeTreeRep.SelectionKeyLoader loader) {
+    public TreePane() {
+        super();
+        
+        timer = new Timer("OpenLCB Tree Pane Timer");
+    }
+
+    public void initComponents(MimicNodeStore store, final Connection connection,
+            final NodeID node, final NodeTreeRep.SelectionKeyLoader loader) {
         this.store = store;
 
         setPreferredSize(new Dimension(500, 700));
@@ -150,6 +152,7 @@ public class TreePane extends JPanel  {
         // listen for newly arrived nodes
         store.addPropertyChangeListener(
             new PropertyChangeListener(){
+            @Override
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
                 if (e.getPropertyName().equals(MimicNodeStore.ADD_PROP_NODE)) {
                     MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
@@ -183,12 +186,15 @@ public class TreePane extends JPanel  {
 
         // kick off a listen when connection ready
         Connection.ConnectionListener cl = new Connection.ConnectionListener(){
+            @Override
             public void connectionActive(Connection c) {
                 // load the alias field
                 connection.put(new VerifyNodeIDNumberMessage(node), null);
             }
         };
-        if (connection != null) connection.registerStartNotification(cl);
+        if (connection != null) {
+            connection.registerStartNotification(cl);
+        }
 
         SwingUtilities.invokeLater(() -> {
             Window win = SwingUtilities.getWindowAncestor(this);
@@ -198,8 +204,7 @@ public class TreePane extends JPanel  {
             }
             win.addWindowListener(new WindowListener() {
                 @Override
-                public void windowOpened(WindowEvent windowEvent) {
-                }
+                public void windowOpened(WindowEvent windowEvent) { }
 
                 @Override
                 public void windowClosing(WindowEvent windowEvent) {
@@ -207,34 +212,28 @@ public class TreePane extends JPanel  {
                 }
 
                 @Override
-                public void windowClosed(WindowEvent windowEvent) {
-                }
+                public void windowClosed(WindowEvent windowEvent) { }
 
                 @Override
-                public void windowIconified(WindowEvent windowEvent) {
-
-                }
+                public void windowIconified(WindowEvent windowEvent) { }
 
                 @Override
-                public void windowDeiconified(WindowEvent windowEvent) {
-
-                }
+                public void windowDeiconified(WindowEvent windowEvent) { }
 
                 @Override
-                public void windowActivated(WindowEvent windowEvent) {
-
-                }
+                public void windowActivated(WindowEvent windowEvent) { }
 
                 @Override
-                public void windowDeactivated(WindowEvent windowEvent) {
-
-                }
+                public void windowDeactivated(WindowEvent windowEvent) { }
             });
         });
     }
 
     private JMenuItem createSortMenuEntry(String text, final SortOrder order) {
         AbstractAction action = new AbstractAction(text) {
+            /** Comment for <code>serialVersionUID</code>. */
+            private static final long serialVersionUID = -5448869191407809481L;
+
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 setSortOrder(order);
@@ -255,7 +254,9 @@ public class TreePane extends JPanel  {
             Comparator<NodeTreeRep> s = getSorter();
             int i = 0;
             while (i < nodes.getChildCount() &&
-                    s.compare((NodeTreeRep) nodes.getChildAt(i), n) < 0) ++i;
+                    s.compare((NodeTreeRep) nodes.getChildAt(i), n) < 0) {
+                ++i;
+            }
             treeModel.insertNodeInto(n, nodes, i);
         }
     }
@@ -266,7 +267,9 @@ public class TreePane extends JPanel  {
      * @param order new order.
      */
     public void setSortOrder(SortOrder order) {
-        if (sortOrder == order) return;
+        if (sortOrder == order) {
+            return;
+        }
         sortOrder = order;
         SwingUtilities.invokeLater(() -> resortTree());
     }
@@ -309,7 +312,9 @@ public class TreePane extends JPanel  {
 
         private String findCompareKey(MimicNodeStore.NodeMemo memo) {
             SimpleNodeIdent ident = memo.getSimpleNodeIdent();
-            if (ident == null) return null;
+            if (ident == null) {
+                return null;
+            }
             String s = null, t = null;
             switch (sortOrder) {
                 case BY_NODE_ID:
@@ -327,9 +332,15 @@ public class TreePane extends JPanel  {
                     t = ident.getModelName();
                     break;
             }
-            if (s == null) s = "";
-            if (t == null) t = "";
-            if (s.isEmpty() && t.isEmpty()) return null;
+            if (s == null) {
+                s = "";
+            }
+            if (t == null) {
+                t = "";
+            }
+            if (s.isEmpty() && t.isEmpty()) {
+                return null;
+            }
             return s + "\0" + t;
         }
 
@@ -365,5 +376,4 @@ public class TreePane extends JPanel  {
     public void release() {
         timer.cancel(); 
     }
-
 }

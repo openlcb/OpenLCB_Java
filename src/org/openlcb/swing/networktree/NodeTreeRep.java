@@ -2,16 +2,16 @@
 
 package org.openlcb.swing.networktree;
 
-import org.openlcb.MimicNodeStore;
-import org.openlcb.NodeID;
-import org.openlcb.ProtocolIdentification;
-import org.openlcb.SimpleNodeIdent;
-
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.ProtocolIdentification;
+import org.openlcb.SimpleNodeIdent;
 
 /**
  * Represent a single node for the tree display
@@ -21,7 +21,9 @@ import javax.swing.tree.DefaultTreeModel;
  * @version	$Revision$
  */
 public class NodeTreeRep extends DefaultMutableTreeNode  {
-
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 9205221269108293489L;
+    
     MimicNodeStore.NodeMemo memo;
     MimicNodeStore store;
     DefaultTreeModel treeModel;
@@ -34,6 +36,7 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         
     public NodeTreeRep(MimicNodeStore.NodeMemo memo, MimicNodeStore store, DefaultTreeModel treeModel, SelectionKeyLoader loader) {
 	    super("Node");
+	    
 	    this.memo = memo;
 	    this.store = store;
 	    this.treeModel = treeModel;
@@ -42,10 +45,9 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
     
     void initConnections() {
         // listen for more info arriving
-        memo.addPropertyChangeListener(
-            new PropertyChangeListener(){
+        memo.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
             public void propertyChange(java.beans.PropertyChangeEvent e) { 
-
                 if (e.getPropertyName().equals("updateProtocol")) {
                     updateProtocolIdent((ProtocolIdentification)e.getNewValue());                
                 }
@@ -55,24 +57,25 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                 if (e.getPropertyName().equals("updateConsumers")) {
                     getTreeModel().insertNodeInto(newNode("Supported Consumers"), getThis(),
                                  getThis().getChildCount());
-                
                 }
                 if (e.getPropertyName().equals("updateProducers")) {
                     getTreeModel().insertNodeInto(newNode("Supported Producers"), getThis(),
                                  getThis().getChildCount());
-                
                 }
             }
         });
         
         // see if protocol info already present
         ProtocolIdentification pip = store.getProtocolIdentification(memo.getNodeID());
-        if (pip != null) updateProtocolIdent(pip);  // otherwise, will be notified later
+        if (pip != null) {
+            updateProtocolIdent(pip);  // otherwise, will be notified later
+        }
 
         // see if simple ID info already present
         SimpleNodeIdent snii = store.getSimpleNodeIdent(memo.getNodeID());
-        if (snii != null) updateSimpleNodeIdent(snii);  // otherwise, will be notified later
-
+        if (snii != null) {
+            updateSimpleNodeIdent(snii);  // otherwise, will be notified later
+        }
     }
     
     DefaultMutableTreeNode newNode(String name, SelectionKey key) {
@@ -97,13 +100,20 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         NUM_NODES("");
 
         public final String name;
-        InfoNodes(String n) { name = n; }
+        
+        InfoNodes(String n) {
+            name = n;
+        }
     }
-    DefaultMutableTreeNode simpleInfoNodes[] = new DefaultMutableTreeNode[InfoNodes.NUM_NODES.ordinal()];
+    
+    DefaultMutableTreeNode simpleInfoNodes[] =
+            new DefaultMutableTreeNode[InfoNodes.NUM_NODES.ordinal()];
 
     void updateSimpleInfoNode(InfoNodes node, String value) {
         int num = node.ordinal();
-        if (value == null || value.trim().length() == 0) return;
+        if (value == null || value.trim().length() == 0) {
+            return;
+        }
         String name = node.name + ": " + value;
         if (simpleInfoNodes[num] == null) {
             simpleInfoNodes[num] = newNode(name);
@@ -131,7 +141,9 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
         }
         n = e.getUserDesc().trim();
         if (!n.isEmpty()) {
-            if (b.length() > 0) b.append(" - ");
+            if (b.length() > 0) {
+                b.append(" - ");
+            }
             b.append(n);
         }
         String newDesc = b.toString();
@@ -165,21 +177,26 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
                     case ConfigurationDescription:
                         node = newNode(p.getName(), loader.cdiKey(p.getName(), memo.getNodeID()));
                         if (openConfigNode == null) {
-                            openConfigNode = newNode(null, loader.cdiKey("Open Configuration dialog", memo.getNodeID()));
+                            openConfigNode = newNode(null,
+                                    loader.cdiKey("Open Configuration dialog", memo.getNodeID()));
                             getTreeModel().insertNodeInto(openConfigNode, getThis(), 0);
                         }
                         break;
                     case ProtocolIdentification:
-                        node = newNode(p.getName(), loader.pipKey(p.getName(), memo.getNodeID()));
+                        node = newNode(p.getName(),
+                                loader.pipKey(p.getName(), memo.getNodeID()));
                         break;
                     case Datagram:
-                        node = newNode(p.getName(), loader.datagramKey(p.getName(), memo.getNodeID()));
+                        node = newNode(p.getName(),
+                                loader.datagramKey(p.getName(), memo.getNodeID()));
                         break;
                     case Configuration:
-                        node = newNode(p.getName(), loader.configurationKey(p.getName(), memo.getNodeID()));
+                        node = newNode(p.getName(),
+                                loader.configurationKey(p.getName(), memo.getNodeID()));
                         break;
                     case SimpleNodeID:
-                        node = newNode(p.getName(), loader.sniiKey(p.getName(), memo.getNodeID()));
+                        node = newNode(p.getName(),
+                                loader.sniiKey(p.getName(), memo.getNodeID()));
                         break;
                     default:
                         node = newNode(p.getName());
@@ -198,14 +215,18 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
      * Provides the node label in the tree.
      * Currently implemented as toString name of underling nodeID.
      */
+    @Override
     public String toString() {
-        if (nodeDescription.isEmpty()) {
-            return memo.getNodeID().toString();
-        } else {
-            return memo.getNodeID().toString() + " - " + nodeDescription;
+        StringBuilder sb = new StringBuilder();
+        sb.append(memo.getNodeID().toString());
+
+        if (!nodeDescription.isEmpty()) {
+            sb.append(" - ");
+            sb.append(nodeDescription);
         }
+        
+        return sb.toString();
     }
-	
 	
 	/**
 	 * When a JTree node is selected, it's user object
@@ -213,44 +234,53 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
 	 *
 	 * Inherit from this to modify.
 	 */
-	static public class SelectionKey {
-	    public SelectionKey(String name, NodeID node) { this.name = name; this.node = node; }
+	public static class SelectionKey {
 	    protected String name;
 	    protected NodeID node;
 	    
-	    /**
+        public SelectionKey(String name, NodeID node) {
+            this.name = name; this.node = node;
+        }
+
+        /**
 	     * Override here to change behavior when 
 	     * treenode is selected.
+	     * 
          * @param rep    the node selected by the user
          */
 	    public void select(DefaultMutableTreeNode rep) {
-	        // System.out.println("Selected: "+rep+" for "+name+" on "+node);
+	        // System.out.println("Selected: " + rep + " for " + name + " on " + node);
 	    }
-	    public String toString() {
+	    
+	    @Override
+        public String toString() {
 	        return name;
 	    }
 	}
 	
 	/**
-	* Invoked for various protocols to load the
-	* selection key object
-	*/
-	static public class SelectionKeyLoader {
+     * Invoked for various protocols to load the
+     * selection key object
+     */
+	public static class SelectionKeyLoader {
 	    public SelectionKey pipKey(String name, NodeID node) {
 	        return new SelectionKey(name, node);
 	    }
+	    
 	    public SelectionKey sniiKey(String name, NodeID node) {
 	        return new SelectionKey(name, node);
 	    }
+	    
 	    public SelectionKey datagramKey(String name, NodeID node) {
 	        return new SelectionKey(name, node);
 	    }
+	    
 	    public SelectionKey configurationKey(String name, NodeID node) {
 	        return new SelectionKey(name, node);
 	    }
+	    
 	    public SelectionKey cdiKey(String name, NodeID node) {
 	        return new SelectionKey(name, node);
 	    }
 	}
-
 }
