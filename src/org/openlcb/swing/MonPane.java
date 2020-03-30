@@ -3,6 +3,7 @@
 package org.openlcb.swing;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -10,6 +11,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Logger;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -19,8 +21,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.text.*;
-import org.openlcb.*;
+import javax.swing.SwingUtilities;
+import javax.swing.text.BadLocationException;
+
+import org.openlcb.AbstractConnection;
+import org.openlcb.Connection;
+import org.openlcb.Message;
 
 /**
  * Pane for monitoring communications.
@@ -31,7 +37,9 @@ import org.openlcb.*;
  * @version	$Revision$
  */
 public class MonPane extends JPanel  {
-
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 6326460063811241070L;
+    
     // member declarations
     protected JButton clearButton = new JButton();
     protected JToggleButton freezeButton = new JToggleButton();
@@ -45,12 +53,12 @@ public class MonPane extends JPanel  {
     protected JTextField entryField = new JTextField();
     protected JButton enterButton = new JButton();
 
-    javax.swing.JFileChooser logFileChooser;
+    JFileChooser logFileChooser;
 
     // for locking
     MonPane self;
 
-    private final static Logger logger = Logger.getLogger(MonPane.class.getName());
+    private static final Logger logger = Logger.getLogger(MonPane.class.getName());
     
     public MonPane() {
 	    super();
@@ -132,27 +140,32 @@ public class MonPane extends JPanel  {
 
         // connect actions to buttons
         clearButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     clearButtonActionPerformed(e);
                 }
             });
         startLogButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     startLogButtonActionPerformed(e);
                 }
             });
         stopLogButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     stopLogButtonActionPerformed(e);
                 }
             });
         openFileChooserButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     openFileChooserButtonActionPerformed(e);
                 }
             });
 
         enterButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     enterButtonActionPerformed(e);
                 }
@@ -185,45 +198,42 @@ public class MonPane extends JPanel  {
         StringBuffer sb = new StringBuffer(120);
 
         // display the timestamp if requested
-        if ( timeCheckBox.isSelected() ) {
+        if (timeCheckBox.isSelected()) {
             sb.append(df.format(new Date())).append( ": " ) ;
         }
 
         // display the raw data if requested
-        if ( rawCheckBox.isSelected() ) {
+        if (rawCheckBox.isSelected()) {
             sb.append( '[' ).append(raw).append( "]  " );
         }
 
         // display decoded data
         sb.append(line);
-		synchronized( self )
-		{
+		synchronized(self) {
 			linesBuffer.append( sb.toString() );
 		}
 
         // if not frozen, display it in the Swing thread
         if (!freezeButton.isSelected()) {
             Runnable r = new Runnable() {
+                @Override
                 public void run() {
-					synchronized( self )
-					{
+					synchronized(self) {
 						monTextPane.append( linesBuffer.toString() );
 						int LineCount = monTextPane.getLineCount() ;
-						if( LineCount > MAX_LINES )
-						{
+						if (LineCount > MAX_LINES) {
 							LineCount -= MAX_LINES ;
 							try {
 								int offset = monTextPane.getLineStartOffset(LineCount);
 								monTextPane.getDocument().remove(0, offset ) ;
-							}
-							catch (BadLocationException ex) {
+							} catch (BadLocationException ex) {
 							}
 						}
 						linesBuffer.setLength(0) ;
 					}
                 }
             };
-            javax.swing.SwingUtilities.invokeLater(r);
+            SwingUtilities.invokeLater(r);
         }
 
         // if requested, log to a file.
@@ -234,11 +244,12 @@ public class MonPane extends JPanel  {
                 int i = 0;
                 int lim = sb.length();
                 StringBuffer out = new StringBuffer(sb.length()+10);  // arbitrary guess at space
-                for ( i = 0; i<lim; i++) {
-                    if (sb.charAt(i) == '\n')
+                for (i = 0; i<lim; i++) {
+                    if (sb.charAt(i) == '\n') {
                         out.append(newline);
-                    else
+                    } else {
                         out.append(sb.charAt(i));
+                    }
                 }
                 logLine = new String(out);
             }
@@ -248,30 +259,31 @@ public class MonPane extends JPanel  {
 
     String newline = System.getProperty("line.separator");
 
-    public synchronized void clearButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public synchronized void clearButtonActionPerformed(ActionEvent e) {
         // clear the monitoring history
-		synchronized( linesBuffer )
-		{
+		synchronized(linesBuffer) {
 			linesBuffer.setLength(0);
 			monTextPane.setText("");
 		}
     }
 
-    public synchronized void startLogButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public synchronized void startLogButtonActionPerformed(ActionEvent e) {
         // start logging by creating the stream
         if ( logStream==null) {  // successive clicks don't restart the file
             // start logging
             try {
                 setFileChooser();
-                if  (logFileChooser != null)
-                    logStream = new PrintStream (new FileOutputStream(logFileChooser.getSelectedFile()),true,"ISO-8859-1");
+                if  (logFileChooser != null) {
+                    logStream = new PrintStream(new FileOutputStream(
+                            logFileChooser.getSelectedFile()),true,"ISO-8859-1");
+                }
             } catch (Exception ex) {
                 logger.severe("exception "+ex);
             }
         }
     }
 
-    public synchronized void stopLogButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public synchronized void stopLogButtonActionPerformed(ActionEvent e) {
         // stop logging by removing the stream
         if (logStream!=null) {
             logStream.flush();
@@ -280,10 +292,11 @@ public class MonPane extends JPanel  {
         logStream = null;
     }
 
-    public void openFileChooserButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public void openFileChooserButtonActionPerformed(ActionEvent e) {
         setFileChooser();
-        if  (logFileChooser == null)
+        if  (logFileChooser == null) {
             return;
+        }
         // start at current file, show dialog
         int retVal = logFileChooser.showSaveDialog(this);
 
@@ -293,11 +306,13 @@ public class MonPane extends JPanel  {
             stopLogButtonActionPerformed(e);  // stop before changing file
             //File file = logFileChooser.getSelectedFile();
             // if we were currently logging, start the new file
-            if (loggingNow) startLogButtonActionPerformed(e);
+            if (loggingNow) {
+                startLogButtonActionPerformed(e);
+            }
         }
     }
     
-    public void enterButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public void enterButtonActionPerformed(ActionEvent e) {
         nextLine(entryField.getText()+"\n", "");
     }
     
@@ -311,23 +326,25 @@ public class MonPane extends JPanel  {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
 
 	StringBuffer linesBuffer = new StringBuffer();
-	static private int MAX_LINES = 500 ;
+	private static int MAX_LINES = 500 ;
 	
-	public Connection getConnection(){ return new InputLink(); }
+	public Connection getConnection() {
+	    return new InputLink();
+	}
 	
-	/** Captive class to capture data.
+	/**
+	 * Captive class to capture data.
 	 * <p>
 	 * Not a node by itself, this just listens to a Connection.
 	 * <p>
 	 * This implementation doesn't distinguish the source of a message, but it could.
 	 */
 	class InputLink extends AbstractConnection {
-	    public InputLink() {
-	    }
+	    public InputLink() { }
 	    
-	    public void put(Message msg, Connection sender) {
+	    @Override
+        public void put(Message msg, Connection sender) {
 	        nextLine(msg.toString()+"\n", "");
 	    }
 	}
-	
 }

@@ -2,13 +2,19 @@
 
 package org.openlcb.swing;
 
-import java.io.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
-import javax.swing.text.*;
 
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
+import javax.swing.TransferHandler;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.MaskFormatter;
 
 /**
  * Text field for entry of forced-valid EventID string.
@@ -20,24 +26,28 @@ import javax.swing.text.*;
  * @version	$Revision$
  */
 public class EventIdTextField extends JFormattedTextField  {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 44833863963351863L;
 
     private final static Logger logger = Logger.getLogger(EventIdTextField.class.getName());
 
-    static public JFormattedTextField getEventIdTextField() {
-        JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
+    public static JFormattedTextField getEventIdTextField() {
+        JFormattedTextField retval = new JFormattedTextField(
+                createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
 
         // Let's size the event ID fields for the longest event ID in pixels.
         retval.setValue("DD.DD.DD.DD.DD.DD.DD.DD");
         retval.setPreferredSize(retval.getPreferredSize());
         retval.setValue("00.00.00.00.00.00.00.00");
-        retval.setToolTipText("EventID as eight-byte dotted-hex string, e.g. 01.02.0A.AB.34.56.78.00");
+        retval.setToolTipText("EventID as eight-byte dotted-hex string, "
+                + "e.g. 01.02.0A.AB.34.56.78.00");
         retval.setDragEnabled(true);
         retval.setTransferHandler(new CustomTransferHandler());
         
         return retval;
     }
     
-	static private MaskFormatter createFormatter(String s) {
+    private static MaskFormatter createFormatter(String s) {
         MaskFormatter formatter = null;
         try {
             formatter = new MaskFormatter(s);
@@ -47,34 +57,40 @@ public class EventIdTextField extends JFormattedTextField  {
         return formatter;
     }
 
-static class CustomTransferHandler extends TransferHandler {
+    static class CustomTransferHandler extends TransferHandler {
+        /** Comment for <code>serialVersionUID</code>. */
+        private static final long serialVersionUID = 3749257357774177433L;
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return COPY_OR_MOVE;
+        }
     
-    public int getSourceActions(JComponent c) {
-        return COPY_OR_MOVE;
-    }
-
-    public Transferable createTransferable(JComponent c) {
-        return new StringSelection(((JTextComponent) c).getSelectedText());
-    }
-
-    public void exportDone(JComponent c, Transferable t, int action) {
-    }
-
-    public boolean canImport(TransferSupport ts) {
-        return ts.getComponent() instanceof JTextComponent;
-    }
-
-    public boolean importData(TransferSupport ts) {
-        try {
-            ((JTextComponent) ts.getComponent())
-                .setText((String) ts
-                         .getTransferable()
-                         .getTransferData(DataFlavor.stringFlavor));
-            return true;
-        } catch(UnsupportedFlavorException e) {
-            return false;
-        } catch(IOException e) {
-            return false;
+        @Override
+        public Transferable createTransferable(JComponent c) {
+            return new StringSelection(((JTextComponent) c).getSelectedText());
+        }
+    
+        @Override
+        public void exportDone(JComponent c, Transferable t, int action) { }
+    
+        @Override
+        public boolean canImport(TransferSupport ts) {
+            return ts.getComponent() instanceof JTextComponent;
+        }
+    
+        @Override
+        public boolean importData(TransferSupport ts) {
+            try {
+                ((JTextComponent) ts.getComponent()).setText(
+                        (String) ts.getTransferable()
+                        .getTransferData(DataFlavor.stringFlavor));
+                return true;
+            } catch(UnsupportedFlavorException e) {
+                return false;
+            } catch(IOException e) {
+                return false;
+            }
         }
     }
-}}
+}

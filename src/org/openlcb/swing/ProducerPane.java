@@ -2,12 +2,18 @@
 
 package org.openlcb.swing;
 
+import java.awt.event.ActionEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
 
-import org.openlcb.*;
-import org.openlcb.implementations.*;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import org.openlcb.AbstractConnection;
+import org.openlcb.Connection;
+import org.openlcb.Message;
+import org.openlcb.implementations.SingleProducerNode;
 
 /**
  * Pane provides simple GUI for producer: A button.
@@ -15,16 +21,21 @@ import org.openlcb.implementations.*;
  * @author	Bob Jacobsen   Copyright (C) 2009
  * @version	$Revision$
  */
-public class ProducerPane extends JPanel  {
+public class ProducerPane extends JPanel {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 3746472517189015417L;
 
-    private final static Logger logger = Logger.getLogger(ProducerPane.class.getName());
+    private static final Logger logger = Logger.getLogger(ProducerPane.class.getName());
 
     public ProducerPane(String name, SingleProducerNode node) {
         this.node = node;
 
         this.name = name;
-        if (name != null) sendButton.setText(name);
-        else sendButton.setText(node.getEventID().toString());
+        if (name != null) {
+            sendButton.setText(name);
+        } else {
+            sendButton.setText(node.getEventID().toString());
+        }
 
         sendButton.setVisible(true);
         sendButton.setToolTipText("Click to fire event");
@@ -36,16 +47,20 @@ public class ProducerPane extends JPanel  {
 
         // connect actions to buttons
         sendButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    sendButtonActionPerformed(e);
-                }
-            });
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                sendButtonActionPerformed(e);
+            }
+        });
 
         // listen to node for eventID change
         node.addPropertyChangeListener(new java.beans.PropertyChangeListener(){
+            @Override
             public void propertyChange(java.beans.PropertyChangeEvent e) {
                 if (e.getPropertyName().equals("EventID")) {
-                    if (ProducerPane.this.name == null) sendButton.setText(e.getNewValue().toString());
+                    if (ProducerPane.this.name == null) {
+                        sendButton.setText(e.getNewValue().toString());
+                    }
                     logger.log(Level.FINE, "new {0}", e.getNewValue());
                 }
             }
@@ -56,24 +71,25 @@ public class ProducerPane extends JPanel  {
     protected JButton sendButton = new JButton();
     protected SingleProducerNode node;
     
-    public synchronized void sendButtonActionPerformed(java.awt.event.ActionEvent e) {
+    public synchronized void sendButtonActionPerformed(ActionEvent e) {
         node.send();
     }
 	
-	public Connection getConnection(){ return new InputLink(); }
+	public Connection getConnection(){
+	    return new InputLink();
+	}
 	
-	/** Captive class to capture data.
+	/**
+	 * Captive class to capture data.
 	 * <p>
 	 * Not a node by itself, this just listens to a Connection.
 	 * <p>
 	 * This implementation doesn't distinguish the source of a message, but it could.
 	 */
 	class InputLink extends AbstractConnection {
-	    public InputLink() {
-	    }
+	    public InputLink() { }
 	    
-	    public void put(Message msg, Connection sender) {
-	    }
+	    @Override
+        public void put(Message msg, Connection sender) { }
 	}
-	
 }
