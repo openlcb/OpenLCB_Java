@@ -166,9 +166,6 @@ public class NodeSelector extends JPanel  {
                 justification = "Purposefully attempting lookup using NodeID argument in model " +
                         "vector.")
         public boolean equals(Object o) {
-            if (o == null) {
-                return false;
-            }
             if (o instanceof ModelEntry) {
                 return getNodeID().equals(((ModelEntry) o).getNodeID());
             }
@@ -176,6 +173,11 @@ public class NodeSelector extends JPanel  {
                 return getNodeID().equals(o);
             }
             return false;
+        }
+        
+        @Override
+        public int hashCode() {
+            return getNodeID().hashCode();
         }
 
         @Override
