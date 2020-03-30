@@ -1,4 +1,5 @@
 # build artifacts
+*.jar
 classes
 target
 doc
