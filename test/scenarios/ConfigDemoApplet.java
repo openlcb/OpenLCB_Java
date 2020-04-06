@@ -5,7 +5,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import javax.swing.*;
+
+import javax.swing.BoxLayout;
+import javax.swing.JApplet;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.cdi.impl.DemoReadWriteAccess;
@@ -18,7 +24,9 @@ import org.openlcb.cdi.swing.CdiPanel;
  * @version $Revision$
  */
 public class ConfigDemoApplet extends JApplet {
-    
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = 8760789187658487429L;
+
     public ConfigDemoApplet() {}
     
     /**
@@ -50,7 +58,8 @@ public class ConfigDemoApplet extends JApplet {
         f.setTitle("Configuration Demonstration");
         CdiPanel m = new CdiPanel();
 
-        ConfigRepresentation rep = new ConfigRepresentation(new DemoReadWriteAccess(), new org.openlcb.cdi.jdom.JdomCdiRep(
+        new ConfigRepresentation(
+                new DemoReadWriteAccess(), new org.openlcb.cdi.jdom.JdomCdiRep(
                 org.openlcb.cdi.jdom.SampleFactory.getBasicSample()
         ));
 
@@ -62,7 +71,6 @@ public class ConfigDemoApplet extends JApplet {
         f.pack();
         f.setVisible(true);
     }
-    
 
     // frame starting positions
     int hPos = 500;
@@ -92,14 +100,14 @@ public class ConfigDemoApplet extends JApplet {
     }
     
     // For running as a JUnit test
-    static public void runTest() {
+    public static void runTest() {
         ConfigDemoApplet app = new ConfigDemoApplet();
         app.start();
         app.startDemo();
     }
+    
     // Main entry point for standalone run
-    static public void main(String[] args) {
+    public static void main(String[] args) {
         runTest();
     }
-
 }

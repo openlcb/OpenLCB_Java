@@ -1,18 +1,22 @@
 package org.openlcb;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class EventIDTest {
-
+    @SuppressFBWarnings
     @Test
     public void testNullArg() {
         try {
-            new EventID((byte[])null);
-        } catch (IllegalArgumentException e) { return; }
+            new EventID((byte[]) null);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
         Assert.fail("Should have thrown exception");
     }
 
@@ -20,7 +24,9 @@ public class EventIDTest {
     public void testTooLongArg() {
         try {
             new EventID(new byte[]{1,2,3,4,5,6,7,8,9});
-        } catch (IllegalArgumentException e) { return; }
+        } catch (IllegalArgumentException e) {
+            return;
+        }
         Assert.fail("Should have thrown exception");
     }
 
@@ -28,13 +34,16 @@ public class EventIDTest {
     public void testTooShortArg() {
         try {
             new EventID(new byte[]{1,2,3,4,5,6,7});
-        } catch (IllegalArgumentException e) { return; }
+        } catch (IllegalArgumentException e) {
+            return;
+        }
         Assert.fail("Should have thrown exception");
     }
     
     @Test
     public void testOKLengthArg() {
-        new EventID(new byte[]{1,2,3,4,5,6,7,8});
+        EventID e = new EventID(new byte[]{1,2,3,4,5,6,7,8});
+        Assert.assertNotNull(e);
     }
     
     @Test
@@ -50,7 +59,6 @@ public class EventIDTest {
         EventID e1 = new EventID("1.2.3.4.5.6.7.8");
         EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e2));
-        
     }
 
     @Test
@@ -58,7 +66,6 @@ public class EventIDTest {
         EventID e1 = new EventID("1 2 3 4 5 6 7 8");
         EventID e2 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e2));
-        
     }
 
     @Test
@@ -108,6 +115,7 @@ public class EventIDTest {
         Assert.assertTrue(!e1.equals(e2));
     }
 
+    @SuppressFBWarnings
     @Test
     public void testNodesAreNotEvents() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});

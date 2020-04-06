@@ -1,12 +1,12 @@
 package org.openlcb;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
  */
 public class UtilitiesTest  {
-
     @Test
     public void testZeroString() {
         Assert.assertEquals("00", Utilities.toHexPair(0));
@@ -81,9 +81,20 @@ public class UtilitiesTest  {
     }
 
     boolean compareArrays(byte[] a, byte[]b) {
-        if (a == null && b == null) return true;
-        if (a.length != b.length) return false;
-        for (int i = 0; i <a.length; i++) if (a[i]!=b[i]) return false;
-        return true;
+        if ((a == null) && (b == null)) {
+            return true;
+        }
+        if ((a != null) && (b != null)) {
+            if (a.length != b.length) {
+                return false;
+            }
+            for (int i = 0; i <a.length; i++) {
+                if (a[i]!=b[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

@@ -1,14 +1,17 @@
 package org.openlcb.protocols;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Created by bracz on 9/27/18.
  */
 public class TimeKeeperTest {
     public static class FakeTimeKeeper extends TimeKeeper {
+        @SuppressFBWarnings
         @Override
         protected long currentTimeMillis() {
             return overrideTime;

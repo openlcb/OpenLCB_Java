@@ -1,7 +1,5 @@
 package org.openlcb;
 
-// For annotations
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
@@ -14,13 +12,11 @@ import net.jcip.annotations.ThreadSafe;
  * pattern to do message specific-processing in e.g. a node implementation.
  *
  * @author  Bob Jacobsen   Copyright 2009, 2010
- * @version $Revision$
  * @see MessageDecoder
  */
 @Immutable
 @ThreadSafe
 abstract public class AddressedMessage extends Message {
-
     public AddressedMessage(NodeID source, NodeID dest) {
         super(source);
         destNodeID = dest;
@@ -29,28 +25,32 @@ abstract public class AddressedMessage extends Message {
     // cannot create without sourceID, destID
     protected AddressedMessage() {}
     
-    @SuppressWarnings("JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS")
     NodeID destNodeID;
     
     public NodeID getDestNodeID() { return destNodeID; }
          
-     /**
-      * To be equal, messages have to have the
-      * same type and content
-      */
+    /**
+     * To be equal, messages have to have the same type and content
+     */
     @Override
-     public boolean equals(Object o) {
-        if (o == null) return false;
-        if (! (o instanceof AddressedMessage))
+    public boolean equals(Object o) {
+        if (o == null) {
             return false;
+        }
+        if (! (o instanceof AddressedMessage)) {
+            return false;
+        }
         AddressedMessage msg = (AddressedMessage) o;
-        if (!this.getDestNodeID().equals(msg.getDestNodeID()))
+        if (!this.getDestNodeID().equals(msg.getDestNodeID())) {
             return false;
-        else return super.equals(o);
-     }
+        }
+        return super.equals(o);
+    }
 
-     @Override
-     public int hashCode() { return super.hashCode()+getDestNodeID().hashCode(); }
+    @Override
+    public int hashCode() {
+        return super.hashCode()+getDestNodeID().hashCode();
+    }
 
     @Override
     public String toString() {

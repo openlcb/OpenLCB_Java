@@ -1,19 +1,26 @@
 package org.openlcb.swing.networktree;
 
+import java.awt.GraphicsEnvironment;
+import java.util.Collection;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import java.awt.GraphicsEnvironment;
-import org.openlcb.*;
-import java.util.Collection;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
+import org.openlcb.AbstractConnection;
+import org.openlcb.Connection;
+import org.openlcb.EventID;
+import org.openlcb.EventState;
+import org.openlcb.Message;
+import org.openlcb.MimicNodeStore;
+import org.openlcb.NodeID;
+import org.openlcb.ProducerIdentifiedMessage;
 
 /**
- *
  * @author Paul Bender Copyright (C) 2017	
  */
 public class NodeTreeRepTest {
@@ -23,11 +30,11 @@ public class NodeTreeRepTest {
         Assume.assumeFalse(GraphicsEnvironment.isHeadless());
         MimicNodeStore store = null;
         NodeID nid1 = new NodeID(new byte[]{1,3,3,4,5,6});
-        NodeID nid2 = new NodeID(new byte[]{2,3,3,4,5,6});
     
         ProducerIdentifiedMessage pim1 = new ProducerIdentifiedMessage(nid1, 
                                          new EventID(new byte[]{1,0,0,0,0,0,1,0}), EventState.Unknown);
         Connection connection = new AbstractConnection() {
+            @Override
             public void put(Message msg, Connection sender) {
             }
         };
@@ -38,8 +45,10 @@ public class NodeTreeRepTest {
         DefaultMutableTreeNode nodes = new DefaultMutableTreeNode("OpenLCB Network");
         DefaultTreeModel treeModel = new DefaultTreeModel(nodes);
         NodeTreeRep.SelectionKeyLoader loader = new NodeTreeRep.SelectionKeyLoader() {
+                    @Override
                     public NodeTreeRep.SelectionKey cdiKey(String name, NodeID node) {
                         return new NodeTreeRep.SelectionKey(name, node) {
+                            @Override
                             public void select(DefaultMutableTreeNode rep) {
                                 System.out.println("Making special fuss over: "+rep+" for "+name+" on "+node);
                             }
@@ -60,5 +69,4 @@ public class NodeTreeRepTest {
     @After
     public void tearDown() {
     }
-
 }

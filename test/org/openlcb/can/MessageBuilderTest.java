@@ -1,15 +1,37 @@
 package org.openlcb.can;
 
-import org.openlcb.*;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.openlcb.AddressedMessage;
+import org.openlcb.AddressedPayloadMessage;
+import org.openlcb.DatagramAcknowledgedMessage;
+import org.openlcb.DatagramMessage;
+import org.openlcb.EventID;
+import org.openlcb.IdentifyEventsMessage;
+import org.openlcb.InitializationCompleteMessage;
+import org.openlcb.Message;
+import org.openlcb.NodeID;
+import org.openlcb.OptionalIntRejectedMessage;
+import org.openlcb.ProducerConsumerEventReportMessage;
+import org.openlcb.ProtocolIdentificationReplyMessage;
+import org.openlcb.SimpleNodeIdentInfoReplyMessage;
+import org.openlcb.StreamDataCompleteMessage;
+import org.openlcb.StreamDataProceedMessage;
+import org.openlcb.StreamInitiateReplyMessage;
+import org.openlcb.StreamInitiateRequestMessage;
+import org.openlcb.Utilities;
+import org.openlcb.VerifiedNodeIDNumberMessage;
+import org.openlcb.VerifyNodeIDNumberMessage;
 import org.openlcb.implementations.DatagramUtils;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 import org.openlcb.messages.TractionProxyReplyMessage;
 import org.openlcb.messages.TractionProxyRequestMessage;
-
-import java.util.List;
-
-import org.junit.*;
 
 /**
  * @author  Bob Jacobsen   Copyright 2010
@@ -27,7 +49,6 @@ public class MessageBuilderTest  {
      
     @Test	
     public void testInitializationCompleteMessage() {
-        
         Message m = new InitializationCompleteMessage(source);
         MessageBuilder b = new MessageBuilder(map);
         
@@ -40,9 +61,9 @@ public class MessageBuilderTest  {
         Assert.assertEquals("header", toHexString(0x19100123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
     }
+    
     @Test	
     public void testVerifyNodeIDNumberMessageEmpty() {
-        
         Message m = new VerifyNodeIDNumberMessage(source);
         MessageBuilder b = new MessageBuilder(map);
         
@@ -55,9 +76,9 @@ public class MessageBuilderTest  {
         Assert.assertEquals("header", toHexString(0x19490123), toHexString(f0.getHeader()));
         compareContent(null, f0);
     }
+    
     @Test	
     public void testVerifyNodeIDNumberMessageWithContent() {
-        
         Message m = new VerifyNodeIDNumberMessage(source, source);
         MessageBuilder b = new MessageBuilder(map);
         
@@ -73,7 +94,6 @@ public class MessageBuilderTest  {
 
     @Test	
     public void testIdentifyEventsGlobal() {
-
         Message m = new IdentifyEventsMessage(source, null);
         MessageBuilder b = new MessageBuilder(map);
 
@@ -106,7 +126,6 @@ public class MessageBuilderTest  {
 
     @Test	
     public void testVerifiedNodeIDNumberMessage() {
-        
         Message m = new VerifiedNodeIDNumberMessage(source);
         MessageBuilder b = new MessageBuilder(map);
         
@@ -122,7 +141,6 @@ public class MessageBuilderTest  {
 
     @Test	
     public void testProducerConsumerEventReportMessage() {
-        
         Message m = new ProducerConsumerEventReportMessage(source, event);
         MessageBuilder b = new MessageBuilder(map);
         
@@ -159,7 +177,6 @@ public class MessageBuilderTest  {
         List<OpenLcbCanFrame> list = b.processMessage(m);
 
         Assert.assertEquals("count", 3, list.size());
-        CanFrame f0 = list.get(0);
         Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(0).getHeader()));
         Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(1).getHeader()));
         Assert.assertEquals("header", toHexString(0x195EB123), toHexString(list.get(2).getHeader()));
@@ -264,8 +281,7 @@ public class MessageBuilderTest  {
 
     @Test	
     public void testDatagramMessageNine() {
-        int[] data = new int[]{21,22,23,24,25,26,27,28, 
-                               31};
+        int[] data = new int[]{21,22,23,24,25,26,27,28,31};
                                
         Message m = new DatagramMessage(source, destination, data);
         MessageBuilder b = new MessageBuilder(map);
@@ -314,7 +330,6 @@ public class MessageBuilderTest  {
         compareContent(new byte[]{0x03, 0x21, (byte)0x80}, f0);
     }
 
-
     /** ****************************************************
      * Tests of messages into frames
      ***************************************************** */
@@ -349,6 +364,7 @@ public class MessageBuilderTest  {
         Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage); 
         Assert.assertEquals(new VerifyNodeIDNumberMessage(source), msg);
     }
+    
     @Test	
     public void testVerifyNodeContentFrame() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
@@ -446,7 +462,7 @@ public class MessageBuilderTest  {
         
         Assert.assertTrue(msg instanceof OptionalIntRejectedMessage);  
         
-        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getMti());    
+        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getRejectMTI());    
         Assert.assertEquals(0x5678, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
@@ -465,7 +481,7 @@ public class MessageBuilderTest  {
         
         Assert.assertTrue(msg instanceof OptionalIntRejectedMessage);  
         
-        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getMti());    
+        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getRejectMTI());    
         Assert.assertEquals(0x5678, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
@@ -484,7 +500,7 @@ public class MessageBuilderTest  {
         
         Assert.assertTrue(msg instanceof OptionalIntRejectedMessage);  
         
-        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getMti());    
+        Assert.assertEquals(0x1234, ((OptionalIntRejectedMessage)msg).getRejectMTI());    
         Assert.assertEquals(0, ((OptionalIntRejectedMessage)msg).getCode());    
     }
     
@@ -546,8 +562,6 @@ public class MessageBuilderTest  {
         Assert.assertEquals(2, ((SimpleNodeIdentInfoReplyMessage)msg).getData().length);    
         Assert.assertEquals(0x12, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[0]);    
         Assert.assertEquals(0x34, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[1]);    
-        
-          
     }
 
     @Test	
@@ -645,7 +659,6 @@ public class MessageBuilderTest  {
 
     @Test	
     public void testAddressedMessageAliasExtraction() {
-    
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
         map.insert(0x0FFF, high);
         
@@ -691,6 +704,7 @@ public class MessageBuilderTest  {
         Assert.assertEquals("flags ",0,(f.getElement(4)<<8)+f.getElement(5));
         Assert.assertEquals("sourceStreamID ",4,f.getElement(6));
     }
+    
     @Test	
     public void testStreamInitiateReplyMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
@@ -776,6 +790,7 @@ public class MessageBuilderTest  {
         Assert.assertEquals("destinationStreamID ",frame.getElement(3),6);
         Assert.assertEquals("flags ",(frame.getElement(4)<<8)+frame.getElement(5),0);
     }
+    
     @Test
     public void testStreamDataCompleteMessage() {
         NodeID high = new NodeID(new byte[]{11,12,13,14,15,16});
@@ -805,9 +820,9 @@ public class MessageBuilderTest  {
     }
     
     void compareContent(byte[] data, CanFrame f) {
-        if (data == null) 
+        if (data == null) {
             Assert.assertEquals("no data", 0, f.getNumDataElements());
-        else {
+        } else {
             Assert.assertEquals("data length", data.length, f.getNumDataElements());
             for (int i=0; i<data.length; i++) {
                 Assert.assertEquals("data byte "+i, DatagramUtils.byteToInt(data[i]),f.getElement
@@ -832,5 +847,4 @@ public class MessageBuilderTest  {
     public void tearDown(){
         map = null;
     }
-    
 }

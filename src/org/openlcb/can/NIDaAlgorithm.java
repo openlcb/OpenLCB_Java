@@ -3,7 +3,8 @@ package org.openlcb.can;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-import org.openlcb.*;
+
+import org.openlcb.NodeID;
 
 /**
  * Implementation of Node ID Alias assignment computation.
@@ -12,10 +13,8 @@ import org.openlcb.*;
  * It also requires subclassing to provide a timer function.
  * 
  * @author  Bob Jacobsen   Copyright 2009, 2010
- * @version $Revision$
  */
 public class NIDaAlgorithm implements CanFrameListener {
-
     /// Callback to invoke when the alias was successfully reserved.
     private Runnable done;
     private CanFrameListener sendInterface;
@@ -25,16 +24,16 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     private synchronized void scheduleTimer(long delay) {
         task = new TimerTask() {
-        @Override
-        public void run() {
-            timerExpired();
-        }
+            @Override
+            public void run() {
+                timerExpired();
+            }
         };
+
         try {
            timer.schedule(task, delay);
         } catch (IllegalStateException | NullPointerException ise){
-           // the timer was canceled, dispose occured before
-           // the task was scheduled.
+           // the timer was canceled, dispose occurred before the task was scheduled.
         }
     }
 
@@ -45,10 +44,14 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public NIDaAlgorithm(NodeID n, CanFrameListener sendInterface) {
         this(n);
+        
         this.sendInterface = sendInterface;
-	if(timer == null ) {
-           timer = new Timer("OpenLCB NIDaAlgorithm Timer");
-	}
+        
+        synchronized(NIDaAlgorithm.class) {
+            if (timer == null ) {
+                timer = new Timer("OpenLCB NIDaAlgorithm Timer");
+            }
+        }
     }
 
     public void start(Runnable done) {
@@ -58,10 +61,10 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public OpenLcbCanFrame nextFrame() {
         OpenLcbCanFrame f;
-        if (index<4) {
+        if (index < 4) {
             f = new OpenLcbCanFrame(nida.getNIDa());
             long id = nid.toLong();
-            int varfield = (int)((id >> ((3-index) * 12)) & 0xfff);
+            int varfield = (int)((id >> ((3 - index) * 12)) & 0xfff);
             logger.fine(String.format("Sending CID frame, id %x, varfield %x", id, varfield));
             f.setCIM(index, varfield, nida.getNIDa());
         } else if (index == 4) {
@@ -76,15 +79,21 @@ public class NIDaAlgorithm implements CanFrameListener {
         return f;
     }
     
-    public int getNIDa() { return nida.getNIDa(); }
+    public int getNIDa() {
+        return nida.getNIDa();
+    }
 
     public void processFrame(OpenLcbCanFrame f) {
-        if (f == null) return; // as a convenience, ignore
+        if (f == null) {
+            return; // as a convenience, ignore
+        }
 
         // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
         //                    +" vs our "+Integer.toHexString(nida.getNIDa()));
 
-        if (f.getSourceAlias() != nida.getNIDa()) return;  // not us
+        if (f.getSourceAlias() != nida.getNIDa()) {
+            return;  // not us
+        }
         if (f.isCIM() && complete) {
             // CIM with our alias: send RIM
             index = 4;
@@ -103,7 +112,9 @@ public class NIDaAlgorithm implements CanFrameListener {
     }
 
     protected void cancelTimer() {
-        if (timer == null) return; // Probably running from a unit test.
+        if (timer == null) {
+            return; // Probably running from a unit test.
+        }
         if (task == null || task.cancel()) {
             // Task was not yet run.
             scheduleTimer(0);
@@ -137,10 +148,13 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public void dispose(){
        cancelTimer();  // dispose of the timer task
-       timer.cancel();
-       timer = null;
+       
+       synchronized(NIDaAlgorithm.class) {
+           timer.cancel();
+           timer = null;
+       }
+       
        done = null;
        complete = true;
     }
-
 }
