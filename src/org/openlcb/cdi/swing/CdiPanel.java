@@ -145,9 +145,6 @@ public class CdiPanel extends JPanel {
         }
         cleanupTasks.clear();
         tabColorTimer.cancel();
-        JFrame f = new JFrame();
-        f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
-        f.dispose();
     }
 
     /**
@@ -192,19 +189,19 @@ public class CdiPanel extends JPanel {
         bb.addActionListener(actionEvent -> reloadAll());
         buttonBar.add(bb);
 
-        _saveButton = new JButton("Write All");
+        _saveButton = new JButton("Save Changes");
         COLOR_DEFAULT = _saveButton.getBackground();
         _saveButton.setToolTipText("Writes every changed value to the hardware.");
         _saveButton.addActionListener(actionEvent -> saveChanged());
         buttonBar.add(_saveButton);
 
         bb = new JButton("Backup...");
-        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Write All\" button first.");
+        bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Save Changes\" button first.");
         bb.addActionListener(actionEvent -> runBackup());
         buttonBar.add(bb);
 
         bb = new JButton("Restore...");
-        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Write All\" afterwards.");
+        bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save Changes\" afterwards.");
         bb.addActionListener(actionEvent -> runRestore());
         buttonBar.add(bb);
 
@@ -243,7 +240,7 @@ public class CdiPanel extends JPanel {
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
         // titled border comes from some else. Not here.
-        //lineHelper.setBorder(BorderFactory.createTitledBorder("User name"));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("User name"));
         JTextField textField = new JTextField(32) {
             public java.awt.Dimension getMaximumSize() {
                 return getPreferredSize();
@@ -258,7 +255,7 @@ public class CdiPanel extends JPanel {
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
         // titled border comes from some else. Not here.
-        //lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
         JFormattedTextField activeTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
         activeTextField.setMaximumSize(activeTextField.getPreferredSize());
@@ -271,7 +268,7 @@ public class CdiPanel extends JPanel {
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
         // titled border comes from some else. Not here.
-        //lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
+        lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
         JFormattedTextField inactiveTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
         inactiveTextField.setMaximumSize(inactiveTextField.getPreferredSize());
@@ -282,6 +279,12 @@ public class CdiPanel extends JPanel {
 
         // titled border added by ClientAction
         factory.handleGroupPaneEnd(createHelper);
+        // Titled border created, not CollapsiblePanel 
+        CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
+        cp.setExpanded(false); 
+        cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2)); 
+        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height)); 
+        add(cp);
     }
 
     /**
@@ -613,6 +616,9 @@ public class CdiPanel extends JPanel {
             runUpdateComplete();
         }
         release();
+        JFrame f = new JFrame();
+        f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
+        f.dispose();
     }
 
     private class GetEntryNameVisitor extends ConfigRepresentation.Visitor {
@@ -1413,7 +1419,7 @@ public class CdiPanel extends JPanel {
         }
 
         void updateColor() {
-            if (entry.lastVisibleValue == null || entry.lastVisibleValue.isEmpty()) {
+            if (entry.lastVisibleValue == null) {
                 textComponent.setBackground(COLOR_UNFILLED);
                 return;
             }
@@ -1422,7 +1428,7 @@ public class CdiPanel extends JPanel {
             if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
                 dirty = false;
-                EventQueue.invokeLater(() -> checkForSave());
+//                EventQueue.invokeLater(() -> checkForSave());
             } else {
                 textComponent.setBackground(COLOR_EDITED);
                 dirty = true;
