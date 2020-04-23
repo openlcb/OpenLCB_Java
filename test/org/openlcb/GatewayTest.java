@@ -13,14 +13,14 @@ public class GatewayTest {
 
     @Test    
     public void testCtor() {
-        getGateway();
+        Assert.assertNotNull(getGateway());
     }
 
     @Test    
     public void testGet() {
         g = getGateway();
-        g.getEastConnection();
-        g.getWestConnection();
+        Assert.assertNotNull(g.getEastConnection());
+        Assert.assertNotNull(g.getWestConnection());
     }
     
     protected boolean resultE;
