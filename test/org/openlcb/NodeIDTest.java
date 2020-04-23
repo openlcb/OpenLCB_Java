@@ -9,7 +9,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * @author  Bob Jacobsen   Copyright 2009
  */
 public class NodeIDTest {
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION",
+            justification="Null passed for non null parameter")
     @Test
     public void testNullArg() {
         try {
@@ -44,7 +45,8 @@ public class NodeIDTest {
         Assert.assertNotNull(e);
     }
     
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION",
+            justification="Null passed for non null parameter")
     @Test
     public void testNullStringArg() {
         try {
@@ -125,7 +127,8 @@ public class NodeIDTest {
         Assert.assertTrue(!e1.equals(e2));
     }
 
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="EC_UNRELATED_TYPES",
+            justification="Call to equals with unrelated types")
     @Test
     public void testNodesAreNotEvents() {
         NodeID e1 = new NodeID(new byte[]{1,2,3,4,5,6});

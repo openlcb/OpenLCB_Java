@@ -22,7 +22,8 @@ public class OptionalIntRejectedMessage extends AddressedPayloadMessage {
     int mti;
     int code;
     
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="NM_VERY_CONFUSING",
+            justification="Very confusing to have methods getMti() and getMTI()")
     @Deprecated
     public int getMti() {
         return mti;

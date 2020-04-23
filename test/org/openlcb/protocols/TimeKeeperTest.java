@@ -11,7 +11,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  */
 public class TimeKeeperTest {
     public static class FakeTimeKeeper extends TimeKeeper {
-        @SuppressFBWarnings
+        @SuppressFBWarnings(value="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR",
+                justification="Method does not get called in constructor of superclass")
         @Override
         protected long currentTimeMillis() {
             return overrideTime;

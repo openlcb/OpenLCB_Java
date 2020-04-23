@@ -9,7 +9,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * @author  Bob Jacobsen   Copyright 2009
  */
 public class EventIDTest {
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION",
+            justification="Null passed for non null parameter")
     @Test
     public void testNullArg() {
         try {
@@ -115,7 +116,8 @@ public class EventIDTest {
         Assert.assertTrue(!e1.equals(e2));
     }
 
-    @SuppressFBWarnings
+    @SuppressFBWarnings(value="EC_UNRELATED_TYPES",
+            justification="Call to equals with unrelated types")
     @Test
     public void testNodesAreNotEvents() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
