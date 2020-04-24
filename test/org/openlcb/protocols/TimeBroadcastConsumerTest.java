@@ -1,33 +1,36 @@
 package org.openlcb.protocols;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.internal.matchers.LessOrEqual;
-import org.openlcb.InterfaceTestBase;
-import org.openlcb.MockPropertyChangeListener;
-
-import java.util.Calendar;
-import java.util.TimeZone;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.openlcb.InterfaceTestBase;
+import org.openlcb.MockPropertyChangeListener;
+
 /**
  * Created by bracz on 9/27/18.
  */
 public class TimeBroadcastConsumerTest extends InterfaceTestBase {
+    @Override
     @Before
-    public void SetUp() {
+    public void setUp() {
+        super.setUp();
+        
         printAllSentMessages();
         tcslave = new TimeBroadcastConsumer(iface, TimeProtocol.ALT_CLOCK_1);
         expectFrame(":X194A4333N010100000102FFFF;");
@@ -36,9 +39,12 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         expectNoFrames();
     }
 
+    @Override
     @After
-    public void TearDown() {
+    public void tearDown() {
         tcslave.dispose();
+        
+        super.tearDown();
     }
 
     @Test
@@ -196,13 +202,13 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         assertEquals((double)expected,  (double)tcslave.timeKeeper.getTime(), 1);
         // Try time rollback after midnight has been passed
         tk.overrideTime += 2 * 60 * 1000 / 10;
-        assertEquals((double)expected + 120e3,  (double)tcslave.timeKeeper.getTime(), 1);
+        assertEquals(expected + 120e3,  tcslave.timeKeeper.getTime(), 1);
         sendFrame(":X195B4444N010100000102173b;"); // 23:59
         assertEquals((double)expected,  (double)tcslave.timeKeeper.getTime(), 1);
 
         sendFrame(":X195B4444N010100000102F003;"); // date rollover
         sendFrame(":X195B4444N0101000001020001;"); // 00:01
-        assertEquals((double)midnight + 60e3,  (double)tcslave.timeKeeper.getTime(), 1);
+        assertEquals(midnight + 60e3,  tcslave.timeKeeper.getTime(), 1);
         tk.overrideTime += 3000; // 3 real seconds later
 
         long t1 = tcslave.timeKeeper.getTime();
@@ -230,7 +236,7 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         // Now we get the 00:01 but without the date rollover event.
         sendFrame(":X195B4444N0101000001020001;"); // 00:01
         // and end up one day before
-        assertEquals((double)midnight + 60e3 - 86400e3,  (double)tcslave.timeKeeper.getTime(),
+        assertEquals(midnight + 60e3 - 86400e3,  tcslave.timeKeeper.getTime(),
                 250);
 
         long t1 = tcslave.timeKeeper.getTime();
@@ -238,11 +244,10 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         sendFrame(":X195B4444N010100000102291C;"); // 09/28 but now it isn't a noop.
         long t2 = tcslave.timeKeeper.getTime();
 
-        assertEquals((double)midnight + 60e3,  (double)t2,
+        assertEquals(midnight + 60e3,  t2,
                 1);
         // Time jumped forward about a day.
-        assertEquals((double)86400e3,  (double)t2-t1,
-                60e3);
+        assertEquals(86400e3,  (double)t2-t1, 60e3);
     }
 
     @Test
@@ -267,7 +272,7 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
         sendFrame(":X195B4444N010100000102F003;"); // date rollover
         sendFrame(":X195B4444N0101000001020001;"); // 00:01
 
-        assertEquals((double)expected + 60e3,  (double)tcslave.timeKeeper.getTime(), 1);
+        assertEquals(expected + 60e3,  tcslave.timeKeeper.getTime(), 1);
 
         tk.overrideTime += 3000;
         long t1 = tcslave.timeKeeper.getTime();
@@ -295,7 +300,7 @@ public class TimeBroadcastConsumerTest extends InterfaceTestBase {
 
         sendFrame(":X195B4444N010100000102F003;"); // date rollover
         sendFrame(":X195B4444N010100000102173b;"); // 23:59
-        assertEquals((double)midnight - 60e3,  (double)tcslave.timeKeeper.getTime(), 1);
+        assertEquals(midnight - 60e3,  tcslave.timeKeeper.getTime(), 1);
     }
 
     @Test

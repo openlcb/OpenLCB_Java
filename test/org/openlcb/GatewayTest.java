@@ -1,27 +1,26 @@
 package org.openlcb;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class GatewayTest {
-
     protected Gateway getGateway() {
         return new Gateway();
     }
 
     @Test    
     public void testCtor() {
-        getGateway();
+        Assert.assertNotNull(getGateway());
     }
 
     @Test    
     public void testGet() {
         g = getGateway();
-        Connection cE = g.getEastConnection();
-        Connection cW = g.getWestConnection();
+        Assert.assertNotNull(g.getEastConnection());
+        Assert.assertNotNull(g.getWestConnection());
     }
     
     protected boolean resultE;
@@ -33,9 +32,11 @@ public class GatewayTest {
     protected Connection cW;
     
     abstract class TestListener extends AbstractConnection {
+        @Override
         public void put(Message m, Connection n) {
             setResult();
         }
+        
         abstract void setResult();
     }
 
@@ -44,9 +45,11 @@ public class GatewayTest {
         resultE = false;
         resultW = false;
         tE = new TestListener() {
+            @Override
             void setResult() { resultE = true;}
         };
         tW = new TestListener() {
+            @Override
             void setResult() { resultW = true;}
         };
         g.registerWest(tW);
@@ -59,7 +62,8 @@ public class GatewayTest {
     public void testEastToWest() {
         buildGateway();
         Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
-            {public int getMTI() {return 0; }};
+            {@Override
+            public int getMTI() {return 0; }};
 
         cE.put(m, tE);
         
@@ -77,7 +81,8 @@ public class GatewayTest {
     public void testWestToEast() {
         buildGateway();
         Message m = new Message(new NodeID(new byte[]{1,2,3,4,5,6}))
-            {public int getMTI() {return 0; }};
+            {@Override
+            public int getMTI() {return 0; }};
 
         cW.put(m, tW);
         
@@ -90,5 +95,4 @@ public class GatewayTest {
         resultE = false;
         resultW = false;
     }
-        
 }
