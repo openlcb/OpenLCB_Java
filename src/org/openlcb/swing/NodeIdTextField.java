@@ -4,9 +4,9 @@ package org.openlcb.swing;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.*;
-import javax.swing.text.*;
 
+import javax.swing.JFormattedTextField;
+import javax.swing.text.MaskFormatter;
 
 /**
  * Text field for entry of forced-valid NodeID string.
@@ -18,10 +18,12 @@ import javax.swing.text.*;
  * @version	$Revision$
  */
 public class NodeIdTextField extends JFormattedTextField  {
+    /** Comment for <code>serialVersionUID</code>. */
+    private static final long serialVersionUID = -2449245636268993230L;
 
-    private final static Logger logger = Logger.getLogger(NodeIdTextField.class.getName());
+    private static final Logger logger = Logger.getLogger(NodeIdTextField.class.getName());
 
-    static public JFormattedTextField getNodeIdTextField() {
+    public static JFormattedTextField getNodeIdTextField() {
         JFormattedTextField retval = new JFormattedTextField(createFormatter("HH.HH.HH.HH.HH.HH"));
         
         retval.setValue("00.00.00.00.00.00");
@@ -32,7 +34,7 @@ public class NodeIdTextField extends JFormattedTextField  {
         return retval;
     }
     
-	static private MaskFormatter createFormatter(String s) {
+    private static MaskFormatter createFormatter(String s) {
         MaskFormatter formatter = null;
         try {
             formatter = new MaskFormatter(s);
@@ -41,5 +43,4 @@ public class NodeIdTextField extends JFormattedTextField  {
         }
         return formatter;
     }
-
 }

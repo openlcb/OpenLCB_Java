@@ -1,13 +1,18 @@
 package scenarios;
 
-import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 /**
  * Simple interface to select which scenario to run
  *
  * @author  Bob Jacobsen   Copyright 2010
- * @version $Revision$
  */
 public class ScenarioRunner  {
 
@@ -26,19 +31,25 @@ public class ScenarioRunner  {
         JButton b;
         b = new JButton("Configuration Tool Demo");
         b.addActionListener(new ActionListener(){
+            @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    scenarios.ConfigDemoApplet.main((String[])null);
-                } catch (Exception ex) {ex.printStackTrace();}
+                    scenarios.ConfigDemoApplet.main(new String[] {});
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         p.add(b);
         b = new JButton("Blue/Gold Configuration Demo");
         b.addActionListener(new ActionListener(){
+            @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    scenarios.BlueGoldCheck.main((String[])null);
-                } catch (Exception ex) {ex.printStackTrace();}
+                    scenarios.BlueGoldCheck.main(new String[] {});
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         p.add(b);
