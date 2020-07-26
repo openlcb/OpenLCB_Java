@@ -16,7 +16,7 @@ jobs:
       - name: Build with Maven
         env:
           DISPLAY: ":99.0"
-        run: xvfb-run --auto-servernum mvn -B package --file pom.xml
+        run: xvfb-run --auto-servernum mvn -B package jacoco:report coveralls:report --file pom.xml
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
