@@ -1,0 +1,17 @@
+name: Hold Your Horses
+on:
+  pull_request:
+    types: [ opened, synchronize ]
+  schedule:
+    - cron: '* * * * *'
+
+jobs:
+  wait:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hold Your Horses
+        uses: mheap/github-action-hold-your-horses@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          duration: 'PT12H'
