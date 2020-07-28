@@ -2,15 +2,12 @@
 
 ## Prerequisites
 
-* You need to have an account on https://oss.sonatype.org that is allowed to upload OpenLCB releases.
 * You need to have a git checkout of the OpenLCB_Java repository. This may be a
   fork or you need to have write access to the repository.
-* You need to be able to compile java using the ant build toolchain.
+* You need to be able to compile java using the maven build toolchain.
 * You need to have a git checkout of JMRI, presumably from a fork.
 * For the JMRI update you need to have the maven tool installed. (For me maven2
   did not work, had to use maven: ```apt-get install maven```)
-* The maven ```settings.xml``` file needs to be configured to authenticate with the ossrh server as described here http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication
-* You must have a GPG key to sign the release.
 
 ## Release OpenLCB
 
@@ -29,35 +26,37 @@
    Edit the following files and bump the "library" / "package" minor version number:
      * manifest and edit the `Package-Version` to bump last number
      * src/org/openlcb/Version.java and bump `libMod`.
+     * update the version in the maven 'pom.xml' file by running
+  ```
+  mvn versions:set -DnewVersion=0.7.14
+  ```
   
-4. recompile JARs
+4. verify the build completes 
 
-  ```ant jars```
-
-5. run tests to check that you updated everything
-
-  ```ant run```
+  ```
+  mvn clean verify
+  ```
 
   and observe that no errors are reported (at least in the VerionTest).
 
 6. Commit everything and push to github
 
-  commit the four files: manifest, Version.java and the two jars. Push your
+  commit the three files: manifest, Version.java and pom.xml. Push your
   branch to github and create a pull request. Mark in the commit that you are
   increasing the version number.
 
-  Example commit:
-  https://github.com/openlcb/OpenLCB_Java/commit/a15a782b30e982d91a039dac797f2f7daaaaca53
-  Another example:
-  https://github.com/openlcb/OpenLCB_Java/commit/80793002a217d6f3cc2f188a532525d875652e0f
+7. Create a pull request to OpenLCB/master 
 
-7. Publish to Maven Central
-
-  ```
-  mvn versions:set -DnewVersion=0.7.14
-  mvn clean
-  mvn deploy -P release
-  ```
+   Create a new pull request on github targeted at OpenLCB/master.  Once the CI builds
+   complete, create merge the pull request.
+   
+8. Create a new release on GitHub
+   
+   Navigate to the OpenLCB_Java repository on github.
+   Create a release as described in the [github documentation](https://docs.github.com/en/github/administering-a-repository/managing-releases-in-a-repository#creating-a-release)
+   setting the release name and tag to 'release-version' ('release-0.7.14', for example).
+   
+   Once the release is created, a github action will run to publish the release to Maven Central.  
 
 ## Update JMRI for new OpenLCB
 
