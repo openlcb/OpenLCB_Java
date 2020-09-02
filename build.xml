@@ -44,13 +44,11 @@
         <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
-        <pathelement location="lib/jdom-2.0.5.jar" />
-        <pathelement location="lib/jdom.jar" />
+        <pathelement location="lib/jdom2-2.0.6.jar" />
         <pathelement location="lib/jlfgr-1_0.jar" />
-        <pathelement location="lib/annotations.jar" /> <!-- only needed for compile -->
+        <pathelement location="lib/jcip-annotations-1.0.jar" /> <!-- only needed for compile -->
         <pathelement location="lib/jsr305.jar" /> <!-- only needed for compile -->
-        <pathelement location="lib/spotbugs-annotations-3.1.2.jar" /> <!-- only needed for compile -->
-        <pathelement location="/System/Library/Java" /> <!-- MacOS X -->
+        <pathelement location="lib/spotbugs-annotations-4.1.2.jar" /> <!-- only needed for compile -->
         <pathelement location="${target}/" />  <!-- last to check for name collisions -->
     </path>
 
