@@ -1,6 +1,7 @@
 package org.openlcb.cdi.impl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;

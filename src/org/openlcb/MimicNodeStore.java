@@ -1,5 +1,6 @@
 package org.openlcb;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Collection;
@@ -10,8 +11,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.Nullable;
 
 /**
  * Store containing mimic proxies for nodes on external connections

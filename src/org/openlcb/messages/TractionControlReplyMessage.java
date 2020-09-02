@@ -1,7 +1,7 @@
 package org.openlcb.messages;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 import org.openlcb.AddressedPayloadMessage;
