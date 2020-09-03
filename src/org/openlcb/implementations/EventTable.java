@@ -1,5 +1,6 @@
 package org.openlcb.implementations;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
 
@@ -8,9 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
-
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * EventTable keeps an in-memory representation of all currently known event IDs on the bus. It
@@ -38,7 +37,7 @@ public class EventTable {
      * @return the descriptor structure matching the given Event ID.
      */
     public
-    @Nonnull
+    @NonNull
     EventInfo getEventInfo(EventID event) {
         synchronized (entries) {
             long key = event.toLong();
@@ -83,7 +82,7 @@ public class EventTable {
             }
 
             @Override
-            public int compareTo(@Nonnull SearchEntryHelper o) {
+            public int compareTo(@NonNull SearchEntryHelper o) {
                 int scc = Float.compare(score,o.score);
                 if (scc != 0) return scc;
                 return -entry.description.compareTo(o.entry.description);

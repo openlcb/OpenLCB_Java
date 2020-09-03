@@ -1,5 +1,6 @@
 package org.openlcb.cdi.cmd;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -7,12 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
 import org.openlcb.can.impl.OlcbConnection;
 import org.openlcb.cdi.impl.ConfigRepresentation;
-
 /**
  * Created by bracz on 4/9/16.
  */
@@ -25,7 +24,7 @@ public class RestoreConfig {
         void onError(String error);
     }
 
-    public static void parseConfigFromFile(@Nonnull String filePath, @Nonnull ConfigCallback callback) {
+    public static void parseConfigFromFile(@NonNull String filePath, @NonNull ConfigCallback callback) {
         BufferedReader inFile = null;
         try {
             inFile = Files.newBufferedReader(Paths.get(filePath), Charset.forName("UTF-8"));
