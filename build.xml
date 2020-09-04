@@ -183,29 +183,6 @@
         </fail>
     </target>
 
-    <target name="run-travis" depends="compile, javadoc, tests" description="build and run test suite">
-        <mkdir dir="${testreporttarget}"/>
-        <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
-            <classpath refid="project.class.path"    />
-            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
-            <sysproperty key="java.library.path" path=".:lib/"/>       
-            <formatter type="xml"/>
-	    <batchtest fork="yes" todir="${testreporttarget}" skipNonTests="yes" >
-	       <fileset dir="${test}">
-                   <include name="**/*Test.java" />
-                   <exclude name="**/PackageTest.java" />
-                   <exclude name="**/AllTest.java" />
-                   <exclude name="**/HeadLessTest.java" />
-	       </fileset>
-            </batchtest>
-        </junit>
-        <fail>
-            <condition>
-                <istrue value="${test.failed}" />
-            </condition>
-        </fail>
-    </target>
-
     <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">
         <mkdir dir="${testreporttarget}"/>
         <jacoco:coverage destfile="jacoco.exec" excludes="org.slf4j.*">
@@ -388,12 +365,6 @@
              basedir="${target}"
              manifest="manifest" 
              compress="true" />   <!-- compress="true" is default -->
-    </target>
-    
-    <target name="travis-ci-tests" > <!-- tests used on travis CI -->
-        <antcall target="compile" />
-        <antcall target="run-travis" />
-        <antcall target="javadoc-uml" />
     </target>
 
 </project>
