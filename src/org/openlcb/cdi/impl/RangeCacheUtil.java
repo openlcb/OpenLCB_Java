@@ -1,9 +1,9 @@
 package org.openlcb.cdi.impl;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /**
  * Helper class to get a sequence of ranges and merges them into larger chunks to read from the

@@ -1,5 +1,6 @@
 package org.openlcb.cdi.swing;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.openlcb.EventID;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
@@ -50,7 +51,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nonnull;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -1447,11 +1447,11 @@ public class CdiPanel extends JPanel {
         protected abstract void writeDisplayTextToNode();
 
         // Take the latest entry (or "") from the Cdi entry and write it to the text box.
-        protected abstract void updateDisplayText(@Nonnull String value);
+        protected abstract void updateDisplayText(@NonNull String value);
 
         // returns the currently displayed value ("" if none).
         protected abstract
-        @Nonnull
+        @NonNull
         String getDisplayText();
     }
 
@@ -1603,11 +1603,11 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        protected void updateDisplayText(@Nonnull String value) {
+        protected void updateDisplayText(@NonNull String value) {
             textField.setText(value);
         }
 
-        @Nonnull
+        @NonNull
         @Override
         protected String getDisplayText() {
             String s = textField.getText();
@@ -1709,12 +1709,12 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        protected void updateDisplayText(@Nonnull String value) {
+        protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
             if (box != null) box.setSelectedItem(value);
         }
 
-        @Nonnull
+        @NonNull
         @Override
         protected String getDisplayText() {
             String s = (box == null) ? (String) textField.getText()
@@ -1761,11 +1761,11 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
-        protected void updateDisplayText(@Nonnull String value) {
+        protected void updateDisplayText(@NonNull String value) {
             textField.setText(value);
         }
 
-        @Nonnull
+        @NonNull
         @Override
         protected String getDisplayText() {
             String s = textField.getText();

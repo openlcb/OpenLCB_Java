@@ -1,14 +1,21 @@
 package org.openlcb.implementations;
 
-import org.openlcb.*;
-
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.openlcb.AbstractConnection;
+import org.openlcb.Connection;
+import org.openlcb.DatagramAcknowledgedMessage;
+import org.openlcb.DatagramMessage;
+import org.openlcb.DatagramRejectedMessage;
+import org.openlcb.Message;
+import org.openlcb.NodeID;
 
 /**
  * @author  Bob Jacobsen   Copyright 2012
  */
 public class DatagramServiceTest {
-    
     NodeID hereID = new NodeID(new byte[]{1,2,3,4,5,6});
     NodeID farID = new NodeID(new byte[]{1,2,3,4,5,7});
     Connection testConnection;
@@ -20,6 +27,7 @@ public class DatagramServiceTest {
     public void setUp() {
         messagesReceived = new java.util.ArrayList<Message>();
         testConnection = new AbstractConnection(){
+            @Override
             public void put(Message msg, Connection sender) {
                 messagesReceived.add(msg);
             }
@@ -50,13 +58,11 @@ public class DatagramServiceTest {
         Assert.assertTrue(m20.equals(m20));
         Assert.assertTrue(!m20.equals(null));
         Assert.assertTrue(!m20.equals(m21));
-        
     }
 
     @Test
     public void testXmtMemoIsRealClass() {
         class TestMemo extends DatagramService.DatagramServiceTransmitMemo {
-
             public TestMemo(NodeID dest, int[] data) {
                 super(dest, data);
             }
@@ -99,8 +105,6 @@ public class DatagramServiceTest {
         Assert.assertTrue(!m22.equals(m23));
         Assert.assertTrue(!m22.equals(m24));
         Assert.assertTrue(!m23.equals(m24));
-        
-        
     }
 
     @Test
@@ -113,15 +117,6 @@ public class DatagramServiceTest {
 
     @Test
     public void testReceiveDGbeforeReg() {
-        DatagramService.DatagramServiceReceiveMemo m20 = 
-            new DatagramService.DatagramServiceReceiveMemo(0x20){
-                @Override
-                public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
-                    flag = true;
-                    service.acceptData(0); 
-                }
-            };
-        
         Message m = new DatagramMessage(farID, hereID, new int[]{0x020});
       
         Assert.assertEquals(0,messagesReceived.size());
@@ -235,7 +230,5 @@ public class DatagramServiceTest {
         Assert.assertTrue(flag);
 
         Assert.assertEquals("1st messages", 0, messagesReceived.size());
-        
     }
-    
 }

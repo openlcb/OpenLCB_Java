@@ -1,11 +1,11 @@
 package org.openlcb.implementations.throttle;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.openlcb.Connection;
 import org.openlcb.Message;
 import org.openlcb.MessageDecoder;

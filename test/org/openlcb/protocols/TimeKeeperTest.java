@@ -1,14 +1,18 @@
 package org.openlcb.protocols;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Created by bracz on 9/27/18.
  */
 public class TimeKeeperTest {
     public static class FakeTimeKeeper extends TimeKeeper {
+        @SuppressFBWarnings(value="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR",
+                justification="Method does not get called in constructor of superclass")
         @Override
         protected long currentTimeMillis() {
             return overrideTime;

@@ -4,6 +4,9 @@ classes
 target
 doc
 
+# ant requirements
+!/lib/*.jar
+
 # bash autocompletion artifacts
 /.ant-targets-build.xml
 /nbproject/private/

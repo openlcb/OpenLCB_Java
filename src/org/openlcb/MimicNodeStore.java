@@ -1,8 +1,10 @@
 package org.openlcb;
 
-import java.util.HashMap;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.Collection;
-
+import java.util.HashMap;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -10,53 +12,69 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Nullable;
-
 /**
  * Store containing mimic proxies for nodes on external connections
  * <p>
  * Provides a Connection for incoming Messages.
  *
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision$
  */
 public class MimicNodeStore extends AbstractConnection {
-
     public static final String ADD_PROP_NODE = "AddNode";
     public static final String CLEAR_ALL_NODES = "ClearAllNodes";
     private final static Logger logger = Logger.getLogger(MimicNodeStore.class.getName());
+    
+    private static class MimicNodeStoreTimer {
+        private Timer timer;
+        
+        private synchronized void init() {
+            if (timer == null) {
+                // only initialize timer if it is not initialized or has been canceled before
+                timer = new Timer("OpenLCB Mimic Node Store Timer");
+            }
+        }
+
+        private synchronized void schedule(final TimerTask t, final int delay) {
+            if (timer != null) {
+                // only schedule task if timer is initialized and not canceled
+                timer.schedule(t,delay);
+            }
+        }
+        
+        private synchronized void cancel() {
+            if (timer != null ) {
+                // only cancel time if it is initialized and not canceled
+                timer.cancel();
+                timer = null;
+            }
+        }
+    }
 
     public MimicNodeStore(Connection connection, NodeID node) {
         this.connection = connection;
         this.node = node;
-        if(timer == null) {
-           timer = new Timer("OpenLCB Mimic Node Store Timer");
-        }
+        
+        timer.init();
     }
 
-    public void dispose(){
-       // cancel the timer.
-       if(timer != null ) {
-          timer.cancel();
-          timer=null;
-       }
+    public void dispose() {
+        // cancel the timer.
+        timer.cancel();
     }
 
-    void scheduleTask(TimerTask t,int delay){
-       if(timer == null) {
-          return; // attempt to schedule after dispose.
-       }
-       timer.schedule(t,delay);
+    void scheduleTask(TimerTask t, int delay) {
+        timer.schedule(t,delay);
     }
     
     Connection connection;
     NodeID node;
-    private static Timer timer;
+    private static MimicNodeStoreTimer timer = new MimicNodeStoreTimer();
     
     public Collection<NodeMemo> getNodeMemos() {
         return map.values();
     } 
     
+    @Override
     public void put(Message msg, Connection sender) {
         NodeMemo memo = addNode(msg.getSourceNodeID());
         // check for necessary updates in specific node
@@ -84,13 +102,16 @@ public class MimicNodeStore extends AbstractConnection {
     
     /**
      * If node not present, initiate process to find it.
-     * @param id    remote node ID to find
-     * @return NodeMemo already known, but note you have to
-     * register listeners before calling in any case
+     * 
+     * @param id remote node ID to find
+     * @return NodeMemo already known, but note you have to register listeners before calling
+     *         in any case
      */
     public NodeMemo findNode(NodeID id) {
         NodeMemo memo = map.get(id);
-        if (memo != null) return memo;
+        if (memo != null) {
+            return memo;
+        }
         
         // create and send targeted request
         connection.put(new VerifyNodeIDNumberMessage(node, id), null);
@@ -99,34 +120,34 @@ public class MimicNodeStore extends AbstractConnection {
     
     public SimpleNodeIdent getSimpleNodeIdent(NodeID dest) {
         NodeMemo memo = map.get(dest);
-        if (memo == null) {
-            return null;
-        } else {
-            return memo.getSimpleNodeIdent();
-        }
+        return (memo == null) ? null : memo.getSimpleNodeIdent();
     }
     
     public ProtocolIdentification getProtocolIdentification(NodeID dest) {
         NodeMemo memo = map.get(dest);
-        if (memo == null) {
-            return null;
-        } else {
-            return memo.getProtocolIdentification();
-        }
+        return (memo == null) ? null : memo.getProtocolIdentification();
     }
     
     HashMap<NodeID, NodeMemo> map = new java.util.HashMap<NodeID, NodeMemo>();
 
-    java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
-    public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
-    public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
+    PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    
+    public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
+        pcs.addPropertyChangeListener(l);
+    }
+    
+    public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
+        pcs.removePropertyChangeListener(l);
+    }
 
     public class NodeMemo extends MessageDecoder {
         public static final String UPDATE_PROP_SIMPLE_NODE_IDENT = "updateSimpleNodeIdent";
         public static final String UPDATE_PROP_PROTOCOL = "updateProtocol";
         NodeID id;
         
-        public NodeMemo(NodeID id) { this.id = id; }
+        public NodeMemo(NodeID id) {
+            this.id = id;
+        }
         
         public NodeID getNodeID() {
             return id;
@@ -148,6 +169,7 @@ public class MimicNodeStore extends AbstractConnection {
             if (request == null) {
                 return;
             }
+            
             currentInteraction = request;
             request.sendRequest(connection);
             currentTask = new TimerTask() {
@@ -161,11 +183,15 @@ public class MimicNodeStore extends AbstractConnection {
         }
 
         public synchronized void tryCompleteInteraction(@Nullable Interaction request) {
-            if (request == null) return;
+            if (request == null) {
+                return;
+            }
             synchronized (request) {
                 request.isComplete = true;
             }
-            if (currentInteraction != request) return;
+            if (currentInteraction != request) {
+                return;
+            }
             completeInteraction(request);
         }
 
@@ -188,13 +214,16 @@ public class MimicNodeStore extends AbstractConnection {
 
         ProtocolIdentification pIdent = null;
         Interaction pipInteraction = null;
+        
+        @Override
         public void handleProtocolIdentificationReply(ProtocolIdentificationReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
             pIdent = new ProtocolIdentification(node, msg);
             pcs.firePropertyChange(UPDATE_PROP_PROTOCOL, null, pIdent);
             tryCompleteInteraction(pipInteraction);
             pipInteraction = null;
-        }  
+        }
+        
         public ProtocolIdentification getProtocolIdentification() {
             if (pIdent == null) {
                 if (id == null) {
@@ -217,7 +246,9 @@ public class MimicNodeStore extends AbstractConnection {
                     @Override
                     void onTimeout() {
                         synchronized (this) {
-                            if (isComplete) return;
+                            if (isComplete) {
+                                return;
+                            }
                         }
                         final Interaction request = this;
                         if (--numTriesLeft > 0) {
@@ -237,18 +268,23 @@ public class MimicNodeStore extends AbstractConnection {
 
         SimpleNodeIdent pSimpleNode = null;
         Interaction snipInteraction = null;
-        public void handleSimpleNodeIdentInfoReply(SimpleNodeIdentInfoReplyMessage msg, Connection sender){
+        
+        @Override
+        public void handleSimpleNodeIdentInfoReply(
+                SimpleNodeIdentInfoReplyMessage msg, Connection sender){
             // accept assumes from mimic'd node
-            if (pSimpleNode == null) 
+            if (pSimpleNode == null) {
                 pSimpleNode = new SimpleNodeIdent(msg);
-            else
+            } else {
                 pSimpleNode.addMsg(msg);
+            }
             if (pSimpleNode.contentComplete()) {
                 tryCompleteInteraction(snipInteraction);
                 snipInteraction = null;
             }
             pcs.firePropertyChange(UPDATE_PROP_SIMPLE_NODE_IDENT, null, pSimpleNode);
         }  
+        
         public SimpleNodeIdent getSimpleNodeIdent() {
             if (pSimpleNode == null) {
                 pSimpleNode = new SimpleNodeIdent(node, id);
@@ -268,7 +304,9 @@ public class MimicNodeStore extends AbstractConnection {
                     @Override
                     void onTimeout() {
                         synchronized (this) {
-                            if (isComplete) return;
+                            if (isComplete) {
+                                return;
+                            }
                         }
                         final Interaction request = this;
                         if (--numTriesLeft > 0) {
@@ -286,32 +324,47 @@ public class MimicNodeStore extends AbstractConnection {
             return pSimpleNode;
         }
 
+        @Override
         public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
-            if (msg.getMti() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
+            if (msg.getRejectMTI() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
-                if ( (msg.getCode() & 0x1000 ) == 0) {
+                if ((msg.getCode() & 0x1000) == 0) {
                     // not a temporary error, assume a permanent error
-                    logger.log(Level.SEVERE, "Permanent error geting Simple Node Info for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
+                    String logmsg = "Permanent error geting Simple Node Info "
+                            + "for node {0} code 0x{1}";
+                    Object[] logparam = new Object[] {
+                                msg.getSourceNodeID(),
+                                Integer.toHexString(msg.getCode()).toUpperCase()
+                            };
+                    logger.log(Level.SEVERE, logmsg, logparam);
                     return;
                 }
                 // have to resend the SNII request
-                connection.put(new SimpleNodeIdentInfoRequestMessage(node, msg.getSourceNodeID()), null);
+                connection.put(new SimpleNodeIdentInfoRequestMessage(
+                        node, msg.getSourceNodeID()), null);
             }
-            if (msg.getMti() == MessageTypeIdentifier.ProtocolSupportInquiry.mti()) {
+            if (msg.getRejectMTI() == MessageTypeIdentifier.ProtocolSupportInquiry.mti()) {
                 // check for temporary error
-                if ( (msg.getCode() & 0x1000 ) == 0) {
+                if ((msg.getCode() & 0x1000) == 0) {
                     // not a temporary error, assume a permanent error
-                    logger.log(Level.SEVERE, "Permanent error geting Protocol Identification information for node {0} code 0x{1}", new Object[]{msg.getSourceNodeID(), Integer.toHexString(msg.getCode()).toUpperCase()});
+                    String logmsg = "Permanent error geting Protocol Identification information "
+                            + "for node {0} code 0x{1}";
+                    Object[] logparam = new Object[] {
+                                msg.getSourceNodeID(),
+                                Integer.toHexString(msg.getCode()).toUpperCase()
+                            };
+                    logger.log(Level.SEVERE, logmsg, logparam);
                     return;
                 }
                 // have to resend the PIP request
-                connection.put(new ProtocolIdentificationRequestMessage(node, msg.getSourceNodeID
-                        ()), null);
+                connection.put(new ProtocolIdentificationRequestMessage(
+                        node, msg.getSourceNodeID()), null);
             }
         }
 
         @Override
-        public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender) {
+        public void handleInitializationComplete(
+                InitializationCompleteMessage msg, Connection sender) {
             if (!msg.getSourceNodeID().equals(id)) {
                 return;
             }
@@ -344,9 +397,14 @@ public class MimicNodeStore extends AbstractConnection {
             }
         }
 
-        java.beans.PropertyChangeSupport pcs = new java.beans.PropertyChangeSupport(this);
-        public synchronized void addPropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.addPropertyChangeListener(l);}
-        public synchronized void removePropertyChangeListener(java.beans.PropertyChangeListener l) {pcs.removePropertyChangeListener(l);}
+        PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+        
+        public synchronized void addPropertyChangeListener(PropertyChangeListener l) {
+            pcs.addPropertyChangeListener(l);
+        }
+        
+        public synchronized void removePropertyChangeListener(PropertyChangeListener l) {
+            pcs.removePropertyChangeListener(l);
+        }
     }
-
 }

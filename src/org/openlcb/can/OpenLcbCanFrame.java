@@ -1,10 +1,9 @@
 package org.openlcb.can;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.openlcb.*;
 import org.openlcb.implementations.DatagramUtils;
-
-import javax.annotation.Nullable;
 
 /**
  * Carry and work with a CAN frame in OpenLCB format.
