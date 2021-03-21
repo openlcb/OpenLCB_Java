@@ -1630,7 +1630,7 @@ public class CdiPanel extends JPanel {
                     .getText());
             entry.setValue(new EventID(contents));
             _changeMade = true;
-            checkForSave();
+            notifyTabColorRefresh();
         }
 
         @Override
@@ -1736,7 +1736,7 @@ public class CdiPanel extends JPanel {
             }
             entry.setValue(value);
             _changeMade = true;
-            checkForSave();
+            notifyTabColorRefresh();
         }
 
         @Override
@@ -1788,7 +1788,7 @@ public class CdiPanel extends JPanel {
         protected void writeDisplayTextToNode() {
             entry.setValue(textField.getText());
             _changeMade = true;
-            checkForSave();
+            notifyTabColorRefresh();
         }
 
         @Override
