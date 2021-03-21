@@ -111,7 +111,7 @@ public class CdiPanel extends JPanel {
     private ConfigRepresentation rep;
     private EventTable eventTable = null;
     private String nodeName = "";
-    private boolean _changeMade = false;    // set true when a write is done
+    private boolean _changeMade = false;    // set true when a write is done to the hardware.
     private boolean _unsavedRestore = false;    // set true when a restore is done.
     private boolean _panelChange = false;   // set true when a panel item changed.
     private JButton _saveButton;
@@ -218,7 +218,7 @@ public class CdiPanel extends JPanel {
         add(buttonBar);
 
         _changeMade = false;
-        _saveButton.setEnabled(false);
+        setSaveClean();
 
         synchronized(rep) {
             if (rep.getRoot() != null) {
@@ -343,14 +343,12 @@ public class CdiPanel extends JPanel {
     private void checkForSave() {
         for (EntryPane entry : allEntries) {
             if (entry.isDirty()) {
-                _saveButton.setBackground(COLOR_EDITED);
-                _saveButton.setEnabled(true);
+                setSaveDirty();
                 return;   // do nothing, still dirty
             }
         }
         _unsavedRestore = false;
-        _saveButton.setBackground(COLOR_DEFAULT);
-        _saveButton.setEnabled(false);
+        setSaveClean();
     }
 
     /**
@@ -563,6 +561,7 @@ public class CdiPanel extends JPanel {
         synchronized (tabColorTimer) {
             lastColorRefreshDone = 0;
         }
+        setSaveClean();
         notifyTabColorRefresh();
         SwingUtilities.invokeLater(() -> {
             JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
@@ -578,8 +577,6 @@ public class CdiPanel extends JPanel {
                     targetWindowClosingEvent(e);
                 }
             });
-            _changeMade = false;
-            _saveButton.setEnabled(false);
         });
     }
 
@@ -633,6 +630,26 @@ public class CdiPanel extends JPanel {
         release();
         JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
         f.dispose();
+    }
+
+    /**
+     * Updates the save changes button to mark the dialog dirty.
+     */
+    private void setSaveDirty() {
+        SwingUtilities.invokeLater(() -> {
+            _saveButton.setBackground(COLOR_EDITED);
+            _saveButton.setEnabled(true);
+        });
+    }
+
+    /**
+     * Updates the Save Changes button to mark the dialog clean.
+     */
+    private void setSaveClean() {
+        SwingUtilities.invokeLater(() -> {
+            _saveButton.setBackground(COLOR_DEFAULT);
+            _saveButton.setEnabled(false);
+        });
     }
 
     private class GetEntryNameVisitor extends ConfigRepresentation.Visitor {
@@ -1446,7 +1463,7 @@ public class CdiPanel extends JPanel {
             } else {
                 textComponent.setBackground(COLOR_EDITED);
                 dirty = true;
-                _saveButton.setEnabled(true);
+                setSaveDirty();
             }
             if (oldDirty != dirty) {
                 notifyTabColorRefresh();
