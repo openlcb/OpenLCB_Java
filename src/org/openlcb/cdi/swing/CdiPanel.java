@@ -870,7 +870,7 @@ public class CdiPanel extends JPanel {
             if (oldPane instanceof SegmentPane) {
                 // we make toplevel groups collapsible.
                 groupPane.setBorder(null);
-                JPanel ret = new util.CollapsiblePanel(e.getCdiItem().getName(), groupPane);
+                JPanel ret = new util.CollapsiblePanel(groupPane.getName(), groupPane);
                 // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
                 ret.setAlignmentY(Component.TOP_ALIGNMENT);
                 ret.setAlignmentX(Component.LEFT_ALIGNMENT);
