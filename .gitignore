@@ -3,6 +3,7 @@
 classes
 target
 doc
+restreport
 
 # ant requirements
 !/lib/*.jar
