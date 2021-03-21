@@ -7,7 +7,6 @@ import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.cmd.RestoreConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.EventTable;
-import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.swing.EventIdTextField;
 
 import java.awt.AWTException;
@@ -31,11 +30,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,7 +55,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -71,14 +66,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
-import javax.swing.text.Utilities;
 
 import util.CollapsiblePanel;
 
@@ -119,7 +112,7 @@ public class CdiPanel extends JPanel {
     private EventTable eventTable = null;
     private String nodeName = "";
     private boolean _changeMade = false;    // set true when a write is done
-    private boolean _saveNeeded = false;    // set true when a restore is done.
+    private boolean _unsavedRestore = false;    // set true when a restore is done.
     private boolean _panelChange = false;   // set true when a panel item changed.
     private JButton _saveButton;
     private Color COLOR_DEFAULT;
@@ -129,6 +122,10 @@ public class CdiPanel extends JPanel {
         tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
     }
 
+    /**
+     *
+     * @param dir the current directory where backup and restore dialogs will open.
+     */
     public CdiPanel (File dir) {
         this();
         // dir is jmri.util.FileUtil.getUserFilesPath()
@@ -220,6 +217,9 @@ public class CdiPanel extends JPanel {
 
         add(buttonBar);
 
+        _changeMade = false;
+        _saveButton.setEnabled(false);
+
         synchronized(rep) {
             if (rep.getRoot() != null) {
                 displayCdi();
@@ -227,8 +227,6 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
-        _changeMade = false;
-        _saveButton.setEnabled(false);
     }
 
     private void createSensorCreateHelper() {
@@ -239,7 +237,6 @@ public class CdiPanel extends JPanel {
         JPanel lineHelper = new JPanel();
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
-        // titled border comes from some else. Not here.
         lineHelper.setBorder(BorderFactory.createTitledBorder("User name"));
         JTextField textField = new JTextField(32) {
             public java.awt.Dimension getMaximumSize() {
@@ -254,7 +251,6 @@ public class CdiPanel extends JPanel {
         lineHelper = new JPanel();
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
-        // titled border comes from some else. Not here.
         lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
         JFormattedTextField activeTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
@@ -267,7 +263,6 @@ public class CdiPanel extends JPanel {
         lineHelper = new JPanel();
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
-        // titled border comes from some else. Not here.
         lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
         JFormattedTextField inactiveTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
@@ -277,9 +272,8 @@ public class CdiPanel extends JPanel {
         lineHelper.add(Box.createHorizontalGlue());
         createHelper.add(lineHelper);
 
-        // titled border added by ClientAction
+        // Calls into JMRI to add the Create Sensor and Create Turnout buttons.
         factory.handleGroupPaneEnd(createHelper);
-        // Titled border created, not CollapsiblePanel 
         CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
         cp.setExpanded(false); 
         cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2)); 
@@ -343,25 +337,34 @@ public class CdiPanel extends JPanel {
                 entry.writeDisplayTextToNode();
             }
         }
-        _saveNeeded = false;
-        _saveButton.setBackground(COLOR_DEFAULT);
-        _saveButton.setEnabled(false);
+        checkForSave();
     }
 
     private void checkForSave() {
         for (EntryPane entry : allEntries) {
             if (entry.isDirty()) {
+                _saveButton.setBackground(COLOR_EDITED);
+                _saveButton.setEnabled(true);
                 return;   // do nothing, still dirty
             }
         }
+        _unsavedRestore = false;
         _saveButton.setBackground(COLOR_DEFAULT);
         _saveButton.setEnabled(false);
     }
 
+    /**
+     * Triggers a warning at the close of this dialog that the panel file needs to be saved in JMRI.
+     * @param uName unused.
+     */
     public void madeSensor(String uName) {
         _panelChange = true;
     }
 
+    /**
+     * Triggers a warning at the close of this dialog that the panel file needs to be saved in JMRI.
+     * @param uName unused.
+     */
     public void madeTurnout(String uName) {
         _panelChange = true;
     }
@@ -435,7 +438,7 @@ public class CdiPanel extends JPanel {
             }
         });
         logger.info("Config load done.");
-        _saveNeeded = true;
+        _unsavedRestore = true;
     }
 
     private void runReboot() {
@@ -443,7 +446,12 @@ public class CdiPanel extends JPanel {
     }
 
     private void runUpdateComplete() {
-        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA8});
+        try {
+            rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[]{0x20, 0xA8});
+        } catch (NullPointerException e) {
+            // Ignore nullptr, this happens during tests when a mock object does not have a
+            // connection.
+        }
     }
 
     GuiItemFactory factory;
@@ -557,12 +565,12 @@ public class CdiPanel extends JPanel {
         }
         notifyTabColorRefresh();
         SwingUtilities.invokeLater(() -> {
-            JFrame f = new JFrame();
-            f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
+            JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
             if (f == null) {
                 logger.log(Level.FINE, "Could not add close window listener");
                 return;
             }
+            // The frame gets disposed in the closing event handler.
             f.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             f.addWindowListener(new WindowAdapter() {
                 @Override
@@ -577,47 +585,53 @@ public class CdiPanel extends JPanel {
 
     private void targetWindowClosingEvent(WindowEvent e) {
         StringBuilder sb = new StringBuilder();
-        if (_saveNeeded) {
+        if (_unsavedRestore) {
             sb.append("The configuration was restored but not saved.");
             sb.append("\n");
         }
-        boolean save = _saveNeeded;
+        boolean save = _unsavedRestore;
+        int num_dirty = 0;
+        final int MAX_DIRTY_TO_SHOW = 10;
         for (EntryPane entry : allEntries) {
             if (entry.isDirty()) {
-                GetEntryNameVisitor nameGetter= new GetEntryNameVisitor(entry);
-                rep.visit(nameGetter);
-                sb.append(nameGetter.getName());
-                sb.append(" has not been saved.");
-                sb.append("\n");
+                if (++num_dirty <= MAX_DIRTY_TO_SHOW) {
+                    GetEntryNameVisitor nameGetter = new GetEntryNameVisitor(entry);
+                    rep.visit(nameGetter);
+                    sb.append(nameGetter.getName());
+                    sb.append(" has not been saved.");
+                    sb.append("\n");
+                }
                 save = true;
             }
+        }
+        if (num_dirty > MAX_DIRTY_TO_SHOW) {
+            sb.append(num_dirty - MAX_DIRTY_TO_SHOW);
+            sb.append(" additional entries have not been saved.");
+            sb.append("\n");
         }
         if (_panelChange) {
             sb.append("The panel tables have been changed. To keep these changes, save the panel file.");
             sb.append("\n");
         }
-        if (sb.length() > 0) {
-            sb.append("\n");
-            if (save) {
-                sb.append("Do you want to save these changes?");
-            } else {
-                sb.append("Remember to save the panel file.");
-            }
-            int confirm = JOptionPane.showConfirmDialog(this, sb.toString(),
-                    "Save Changes", JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-            if (confirm == JOptionPane.YES_OPTION && save) {
-                _saveButton.setBackground(COLOR_EDITED);
-                _saveButton.setEnabled(true);
+        if (num_dirty > 0) {
+            sb.append("\nPress Cancel to go back and save these changes.");
+            Object[] options = { "Discard changes", "Cancel" };
+            int confirm = JOptionPane.showOptionDialog(this, sb.toString(),
+                    "Unsaved changes", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[1]);
+            if (confirm != 0) {
                 return;
             }
+        } else if (_panelChange) {
+            JOptionPane.showMessageDialog(this, sb.toString(),
+                    "Tables are changed",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
         if (_changeMade) {
             runUpdateComplete();
         }
         release();
-        JFrame f = new JFrame();
-        f = (JFrame)SwingUtilities.getAncestorOfClass(f.getClass(), this);
+        JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
         f.dispose();
     }
 
