@@ -15,6 +15,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -120,6 +121,7 @@ public class CdiPanel extends JPanel {
     public CdiPanel () {
         super();
         tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
+        setForeground(getBackground().darker());
     }
 
     /**
@@ -275,8 +277,9 @@ public class CdiPanel extends JPanel {
         // Calls into JMRI to add the Create Sensor and Create Turnout buttons.
         factory.handleGroupPaneEnd(createHelper);
         CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
+        cp.setBackground(getForeground());
         cp.setExpanded(false); 
-        cp.setBorder(BorderFactory.createEmptyBorder(2,2,2,2)); 
+        cp.setBorder(BorderFactory.createMatteBorder(10,0,10,0, getForeground()));
         //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height)); 
         add(cp);
     }
@@ -845,6 +848,7 @@ public class CdiPanel extends JPanel {
             // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
+            ret.setBorder(BorderFactory.createMatteBorder(10,0,0,0, getForeground()));
             contentPanel.add(ret);
             EventQueue.invokeLater(() -> repack());
         }
@@ -1110,7 +1114,7 @@ public class CdiPanel extends JPanel {
             }
         };
         area.setAlignmentX(Component.LEFT_ALIGNMENT);
-        area.setFont(UIManager.getFont("Label.font"));
+        area.setFont(UIManager.getFont("TextArea.font"));
         area.setEditable(false);
         area.setOpaque(false);
         area.setWrapStyleWord(true);
@@ -1506,6 +1510,7 @@ public class CdiPanel extends JPanel {
 
             if (eventTable != null) {
                 eventNamesLabel = new JLabel();
+                eventNamesLabel.setFont(UIManager.getFont("TextArea.font"));
                 eventNamesLabel.setVisible(false);
                 eventListUpdateListener = new PropertyChangeListener() {
                     @Override
