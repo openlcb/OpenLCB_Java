@@ -19,7 +19,7 @@ public class VerifyNodeIDNumberMessage extends Message {
     
     public VerifyNodeIDNumberMessage(NodeID source) {
         super(source);
-        this. content = null;
+        this.content = null;
     }
 
     public VerifyNodeIDNumberMessage(NodeID source, NodeID content) {

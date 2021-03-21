@@ -6,7 +6,8 @@ import org.openlcb.EventID;
 import org.openlcb.EventMessage;
 import org.openlcb.EventState;
 import org.openlcb.IdentifyConsumersMessage;
-import org.openlcb.IdentifyEventsMessage;
+import org.openlcb.IdentifyEventsGlobalMessage;
+import org.openlcb.IdentifyEventsAddressedMessage;
 import org.openlcb.IdentifyProducersMessage;
 import org.openlcb.MessageDecoder;
 import org.openlcb.OlcbInterface;
@@ -245,10 +246,16 @@ public class BitProducerConsumer extends MessageDecoder {
     }
 
     @Override
-    public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender) {
+    public void handleIdentifyEventsAddressed(IdentifyEventsAddressedMessage msg,
+                                              Connection sender) {
         if (msg.getDestNodeID().equals(iface.getNodeId())) {
             sendIdentifiedMessages(false);
         }
+    }
+
+    @Override
+    public void handleIdentifyEventsGlobal(IdentifyEventsGlobalMessage msg, Connection sender) {
+        sendIdentifiedMessages(false);
     }
 
     private void setValueFromNetwork(boolean isOn) {

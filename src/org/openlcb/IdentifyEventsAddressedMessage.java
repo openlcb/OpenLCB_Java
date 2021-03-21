@@ -12,9 +12,9 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class IdentifyEventsMessage extends AddressedMessage {
+public class IdentifyEventsAddressedMessage extends AddressedMessage {
     
-    public IdentifyEventsMessage(NodeID source, NodeID dest) {
+    public IdentifyEventsAddressedMessage(NodeID source, NodeID dest) {
         super(source, dest);
     }
         
@@ -27,7 +27,7 @@ public class IdentifyEventsMessage extends AddressedMessage {
      */
      @Override
      public void applyTo(MessageDecoder decoder, Connection sender) {
-        decoder.handleIdentifyEvents(this, sender);
+        decoder.handleIdentifyEventsAddressed(this, sender);
      }
     public String toString() {
         return super.toString()

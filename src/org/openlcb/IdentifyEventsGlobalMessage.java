@@ -1,8 +1,9 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
 
 /**
  * Identify Events message implementation
@@ -12,10 +13,10 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class IdentifyEventsMessage extends AddressedMessage {
-    
-    public IdentifyEventsMessage(NodeID source, NodeID dest) {
-        super(source, dest);
+public class IdentifyEventsGlobalMessage extends Message {
+
+    public IdentifyEventsGlobalMessage(NodeID source) {
+        super(source);
     }
         
     /**
@@ -27,7 +28,7 @@ public class IdentifyEventsMessage extends AddressedMessage {
      */
      @Override
      public void applyTo(MessageDecoder decoder, Connection sender) {
-        decoder.handleIdentifyEvents(this, sender);
+        decoder.handleIdentifyEventsGlobal(this, sender);
      }
     public String toString() {
         return super.toString()
