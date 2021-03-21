@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
+import javax.swing.border.MatteBorder;
 
 public class CollapsiblePanel extends JPanel {
 	/** Comment for <code>serialVersionUID</code>. */
@@ -41,10 +43,10 @@ public class CollapsiblePanel extends JPanel {
 		public HeaderPanel(String text) {
 			addMouseListener(this);
 			text_ = text;
-			font = new Font("sans-serif", Font.BOLD, 12);
+			font = UIManager.getFont("Label.font").deriveFont(Font.BOLD);
 			// setRequestFocusEnabled(true);
 			setPreferredSize(new Dimension(200, 20));
-
+			setMinimumSize(new Dimension(0, 32));
 			try {
 				closed = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Forward24.gif"));
 				open = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Down24.gif"));
@@ -98,7 +100,6 @@ public class CollapsiblePanel extends JPanel {
 		super(new GridBagLayout());
 		
 		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(1, 3, 0, 3);
 		gbc.weightx = 1.0;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -107,8 +108,8 @@ public class CollapsiblePanel extends JPanel {
 		selected = true;
 		headerPanel_ = new HeaderPanel(text == null ? "" : text);
 
-		setBackground(new Color(200, 200, 220));
 		contentPanel_ = panel;
+		contentPanel_.setBorder(new MatteBorder(0,20,0,0,contentPanel_.getBackground()));
 
 		add(headerPanel_, gbc);
 		add(contentPanel_, gbc);
