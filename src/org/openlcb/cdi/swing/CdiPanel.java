@@ -27,6 +27,8 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -67,6 +69,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
@@ -118,11 +121,13 @@ public class CdiPanel extends JPanel {
     private JButton _saveButton;
     private Color COLOR_DEFAULT;
     private List<util.CollapsiblePanel> segmentPanels = new ArrayList<>();
+    private final Color COLOR_BACKGROUND;
 
     public CdiPanel () {
         super();
         tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
-        setForeground(getBackground().darker());
+        COLOR_BACKGROUND = getBackground().darker();
+        setForeground(COLOR_BACKGROUND);
     }
 
     /**
@@ -177,8 +182,11 @@ public class CdiPanel extends JPanel {
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         add(scrollPane);
+
+        //add(Box.createVerticalGlue());
         //add(contentPanel);
 
         buttonBar = new JPanel();
@@ -231,6 +239,15 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent componentEvent) {
+                int w = getSize().width - 4;
+                segmentPanels.forEach(p->p.setMaximumWidth(w));
+                super.componentResized(componentEvent);
+            }
+        });
     }
 
     private void createSensorCreateHelper() {

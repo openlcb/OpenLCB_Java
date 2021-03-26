@@ -30,6 +30,8 @@ public class CollapsiblePanel extends JPanel {
     private boolean selected;
 	JPanel contentPanel_;
 	HeaderPanel headerPanel_;
+	// The width given by the parent which we should try to set as a maximum width for the layout.
+	private int setWidth_ = Integer.MAX_VALUE;
 
 	private class HeaderPanel extends JPanel implements MouseListener {
 		/** Comment for <code>serialVersionUID</code>. */
@@ -45,8 +47,8 @@ public class CollapsiblePanel extends JPanel {
 			text_ = text;
 			font = UIManager.getFont("Label.font").deriveFont(Font.BOLD);
 			// setRequestFocusEnabled(true);
-			setPreferredSize(new Dimension(200, 20));
-			setMinimumSize(new Dimension(0, 32));
+			setPreferredSize(new Dimension(200, 24));
+			setMinimumSize(new Dimension(0, 24));
 			try {
 				closed = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Forward24.gif"));
 				open = ImageIO.read(getClass().getResourceAsStream("/toolbarButtonGraphics/navigation/Down24.gif"));
@@ -131,10 +133,15 @@ public class CollapsiblePanel extends JPanel {
         }
     }
 
+    public void setMaximumWidth(int w) {
+		setWidth_ = w;
+		invalidate();
+	}
+
 	@Override
 	public Dimension getMaximumSize() {
 		Dimension d = super.getPreferredSize();
-		d.width = Integer.MAX_VALUE;
+		d.width = setWidth_;
 		return d;
 	}
 }
