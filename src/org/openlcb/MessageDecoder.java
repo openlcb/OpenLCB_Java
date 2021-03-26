@@ -130,9 +130,20 @@ public class MessageDecoder extends AbstractConnection {
      * @param msg       message to handle
      * @param sender    connection where it came from
      */
-    public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
+    public void handleIdentifyEventsAddressed(IdentifyEventsAddressedMessage msg,
+                                              Connection sender){
         defaultHandler(msg, sender);
     }
+
+    /**
+     * Handle "Identify Event Global" message
+     * @param msg message to handle
+     * @param sender connection where it came from
+     */
+    public void handleIdentifyEventsGlobal(IdentifyEventsGlobalMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
     /**
      * Handle "Learn Event" message
      * @param msg       message to handle
@@ -281,4 +292,5 @@ public class MessageDecoder extends AbstractConnection {
     public void handleTractionProxyReply(TractionProxyReplyMessage msg, Connection sender) {
         defaultHandler(msg, sender);
     }
+
 }

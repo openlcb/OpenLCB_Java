@@ -251,7 +251,10 @@ public class MessageBuilder {
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
                 return retlist;
             case IdentifyEventsAddressed:
-                retlist.add(new IdentifyEventsMessage(source, dest));
+                retlist.add(new IdentifyEventsAddressedMessage(source, dest));
+                return retlist;
+            case IdentifyEventsGlobal:
+                retlist.add(new IdentifyEventsGlobalMessage(source));
                 return retlist;
             case LearnEvent: 
                 retlist.add(new LearnEventMessage(source, getEventID(f)));
@@ -583,10 +586,11 @@ public class MessageBuilder {
             retlist.add(f);
         }
         /**
-         * Handle "Identify Event" message
+         * Handle "Identify Event (Addressed)" message
          */
         @Override
-        public void handleIdentifyEvents(IdentifyEventsMessage msg, Connection sender){
+        public void handleIdentifyEventsAddressed(IdentifyEventsAddressedMessage msg,
+                                                  Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             if (msg.getDestNodeID() != null) {
                 f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsAddressed.mti());
@@ -597,6 +601,17 @@ public class MessageBuilder {
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
+
+        /**
+         * Handle "Identify Event (Global)" message
+         */
+        @Override
+        public void handleIdentifyEventsGlobal(IdentifyEventsGlobalMessage msg, Connection sender) {
+            OpenLcbCanFrame f = new OpenLcbCanFrame(map.getAlias(msg.getSourceNodeID()));
+            f.setOpenLcbMTI(MessageTypeIdentifier.IdentifyEventsGlobal.mti());
+            retlist.add(f);
+        }
+
         /**
          * Handle "Learn Event" message
          */
