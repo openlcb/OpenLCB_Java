@@ -243,8 +243,7 @@ public class CdiPanel extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent componentEvent) {
-                int w = getSize().width - 4;
-                segmentPanels.forEach(p->p.setMaximumWidth(w));
+                updateWidth();
                 super.componentResized(componentEvent);
             }
         });
