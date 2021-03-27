@@ -760,6 +760,12 @@ public class CdiPanel extends JPanel {
         if (win != null) win.pack();
     }
 
+    private void updateWidth() {
+        int w = getSize().width - 4;
+        // Delays updating the segment width until the rendering of the panels is complete.
+        runNowOrLater(()->{ segmentPanels.forEach(p->p.setMaximumWidth(w)); });
+    }
+
     private void performTabColorRefresh(long requestTick) {
         synchronized (tabColorTimer) {
             if (lastColorRefreshDone >= requestTick) return; // nothing to do
