@@ -11,6 +11,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.FontRenderContext;
@@ -19,6 +23,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.border.MatteBorder;
@@ -33,7 +38,7 @@ public class CollapsiblePanel extends JPanel {
 	// The width given by the parent which we should try to set as a maximum width for the layout.
 	private int setWidth_ = Integer.MAX_VALUE;
 
-	private class HeaderPanel extends JPanel implements MouseListener {
+	private class HeaderPanel extends JPanel implements MouseListener, FocusListener, KeyListener {
 		/** Comment for <code>serialVersionUID</code>. */
         private static final long serialVersionUID = 3553276313551309624L;
         
@@ -44,9 +49,12 @@ public class CollapsiblePanel extends JPanel {
 
 		public HeaderPanel(String text) {
 			addMouseListener(this);
+			addKeyListener(this);
 			text_ = text;
+			getAccessibleContext().setAccessibleName(text);
 			font = UIManager.getFont("Label.font").deriveFont(Font.BOLD);
-			// setRequestFocusEnabled(true);
+			setFocusable(true);
+			addFocusListener(this);
 			setPreferredSize(new Dimension(200, 24));
 			setMinimumSize(new Dimension(0, 24));
 			try {
@@ -82,6 +90,7 @@ public class CollapsiblePanel extends JPanel {
 
 		@Override
         public void mouseClicked(MouseEvent e) {
+			requestFocus();
 			toggleSelection();
 		}
 
@@ -96,6 +105,32 @@ public class CollapsiblePanel extends JPanel {
 
 		@Override
         public void mouseReleased(MouseEvent e) { }
+
+		@Override
+		public void focusGained(FocusEvent focusEvent) {
+			setBorder(BorderFactory.createDashedBorder(Color.BLACK));
+		}
+
+		@Override
+		public void focusLost(FocusEvent focusEvent) {
+			setBorder(BorderFactory.createEmptyBorder());
+		}
+
+		@Override
+		public void keyTyped(KeyEvent keyEvent) {
+		}
+
+		@Override
+		public void keyPressed(KeyEvent keyEvent) {
+			int c = keyEvent.getKeyCode();
+			if (c == KeyEvent.VK_SPACE || c==KeyEvent.VK_ENTER) {
+				toggleSelection();
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent keyEvent) {
+		}
 	}
 
 	public CollapsiblePanel(String text, JPanel panel) {
