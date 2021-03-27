@@ -27,6 +27,8 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -67,6 +69,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
@@ -117,11 +120,14 @@ public class CdiPanel extends JPanel {
     private boolean _panelChange = false;   // set true when a panel item changed.
     private JButton _saveButton;
     private Color COLOR_DEFAULT;
+    private List<util.CollapsiblePanel> segmentPanels = new ArrayList<>();
+    private final Color COLOR_BACKGROUND;
 
     public CdiPanel () {
         super();
         tabColorTimer = new Timer("OpenLCB CDI Reader Tab Color Timer");
-        setForeground(getBackground().darker());
+        COLOR_BACKGROUND = getBackground().darker();
+        setForeground(COLOR_BACKGROUND);
     }
 
     /**
@@ -170,15 +176,15 @@ public class CdiPanel extends JPanel {
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        contentPanel.setBackground(COLOR_BACKGROUND);
 
         scrollPane = new JScrollPane(contentPanel);
         Dimension minScrollerDim = new Dimension(800, 12);
         scrollPane.setMinimumSize(minScrollerDim);
         scrollPane.getVerticalScrollBar().setUnitIncrement(30);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         add(scrollPane);
-        //add(contentPanel);
 
         buttonBar = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -217,6 +223,7 @@ public class CdiPanel extends JPanel {
 
         createSensorCreateHelper();
 
+        buttonBar.setMaximumSize(buttonBar.getMinimumSize());
         add(buttonBar);
 
         _changeMade = false;
@@ -229,6 +236,14 @@ public class CdiPanel extends JPanel {
                 displayLoadingProgress();
             }
         }
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent componentEvent) {
+                updateWidth();
+                super.componentResized(componentEvent);
+            }
+        });
     }
 
     private void createSensorCreateHelper() {
@@ -581,6 +596,7 @@ public class CdiPanel extends JPanel {
                 }
             });
         });
+        segmentPanels.forEach(p -> p.setExpanded(false));
     }
 
     private void targetWindowClosingEvent(WindowEvent e) {
@@ -740,6 +756,12 @@ public class CdiPanel extends JPanel {
         if (win != null) win.pack();
     }
 
+    private void updateWidth() {
+        int w = getSize().width - 4;
+        // Delays updating the segment width until the rendering of the panels is complete.
+        runNowOrLater(()->{ segmentPanels.forEach(p->p.setMaximumWidth(w)); });
+    }
+
     private void performTabColorRefresh(long requestTick) {
         synchronized (tabColorTimer) {
             if (lastColorRefreshDone >= requestTick) return; // nothing to do
@@ -844,13 +866,13 @@ public class CdiPanel extends JPanel {
             super.visitSegment(e);
 
             String name = "Segment" + (e.getName() != null ? (": " + e.getName()) : "");
-            JPanel ret = new util.CollapsiblePanel(name, currentPane);
+            util.CollapsiblePanel ret = new util.CollapsiblePanel(name, currentPane);
+            segmentPanels.add(ret);
             // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
             ret.setAlignmentY(Component.TOP_ALIGNMENT);
             ret.setAlignmentX(Component.LEFT_ALIGNMENT);
             ret.setBorder(BorderFactory.createMatteBorder(10,0,0,0, getForeground()));
             contentPanel.add(ret);
-            EventQueue.invokeLater(() -> repack());
         }
 
         @Override
@@ -1054,7 +1076,8 @@ public class CdiPanel extends JPanel {
             p.add(p2);
         }
 
-        JPanel ret = new util.CollapsiblePanel("Identification", p);
+        util.CollapsiblePanel ret = new util.CollapsiblePanel("Identification", p);
+        segmentPanels.add(ret);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
         ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
