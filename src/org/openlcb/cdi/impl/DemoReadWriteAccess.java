@@ -1,7 +1,5 @@
 package org.openlcb.cdi.impl;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,9 +11,6 @@ import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.openlcb.implementations.MemoryConfigurationService;
-
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 
 /**
  * Helper class for various demo and test code to put in as a fake into the ConfigRepresentation constructor.
@@ -35,18 +30,10 @@ public class DemoReadWriteAccess extends ReadWriteAccess {
     public void doRead(long address, int space, int length, MemoryConfigurationService.McsReadHandler handler) {
         byte[] resp = new byte[length];
         for (int i = 0; i < resp.length; ++i) {
-            resp[i] = 0;//(byte)(((address + i) % 91) + 32);
+            resp[i] = (byte)(((address + i) % 91) + 32);
         }
-        Timer t = new Timer(40, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                handler.handleReadData(null, space, address, resp);
-                logger.log(Level.ALL, "read {0} {1}", new Object[]{address, space});
-                System.out.println(address);
-            }
-        });
-        t.setRepeats(false);
-        t.start();
+        handler.handleReadData(null, space, address, resp);
+        logger.log(Level.INFO, "read {0} {1}", new Object[]{address, space});
     }
 
     static public ConfigRepresentation demoRepFromSample(Element root) {
