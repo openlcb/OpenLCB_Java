@@ -136,7 +136,9 @@ public class TreePaneTest  {
         Assert.assertEquals("00.00.00.00.00.02 - hello - desc", pane.nodes.getChildAt(1).toString());
     }
 
-    private void addNodeWithSnii(NodeID node, String manufacturer, String model, String userName, String userDesc) {
+    private void addNodeWithSnii(NodeID node, String manufacturer, String model, String userName,
+                                 String userDesc) throws InterruptedException,
+            InvocationTargetException {
         List<Byte> dt = new ArrayList<>();
         dt.add((byte)1);
         for (Byte b : manufacturer.getBytes()) {
@@ -159,13 +161,15 @@ public class TreePaneTest  {
         }
         dt.add((byte)0);
 
-        store.put(new ProducerIdentifiedMessage(node, eventA, EventState.Unknown), null);
-        store.put(new ProtocolIdentificationReplyMessage(node, nid1, 0xF01800000000L), null);
+        SwingUtilities.invokeAndWait(()->{
+            store.put(new ProducerIdentifiedMessage(node, eventA, EventState.Unknown), null);
+            store.put(new ProtocolIdentificationReplyMessage(node, nid1, 0xF01800000000L), null);
 
-        byte[] ba = new byte[dt.size()];
-        for (int i = 0; i < dt.size(); ++i) ba[i] = dt.get(i);
-        Message msg = new SimpleNodeIdentInfoReplyMessage(node, nid1, ba);
-        store.put(msg, null);
+            byte[] ba = new byte[dt.size()];
+            for (int i = 0; i < dt.size(); ++i) ba[i] = dt.get(i);
+            Message msg = new SimpleNodeIdentInfoReplyMessage(node, nid1, ba);
+            store.put(msg, null);
+        });
     }
 
     @Test    
@@ -187,7 +191,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testAddNodeWithSnii() {
+    public void testAddNodeWithSnii() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid5, "manuf42", "model55", "username92", "userdesc93");
         MimicNodeStore.NodeMemo memo = store.findNode(nid5);
         Assert.assertNotNull(memo);
@@ -198,7 +202,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder() {
+    public void testSortOrder() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid2, "3", "2", "2", "4");
         addNodeWithSnii(nid5, "1", "4", "3", "2");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
@@ -210,7 +214,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder2() {
+    public void testSortOrder2() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid4, "xxx", "ppp", "bbb", "ccc");
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
@@ -222,7 +226,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder3() {
+    public void testSortOrder3() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
         MimicNodeStore.NodeMemo memo5 = store.findNode(nid5);
@@ -234,7 +238,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder4() {
+    public void testSortOrder4() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid3, "xxx", "qqq", "bbb", "ccd");
         addNodeWithSnii(nid4, "xxx", "qqq", "bbb", "ccd");
         addNodeWithSnii(nid5, "xxx", "qqq", "bbb", "ccc");
@@ -247,7 +251,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder5() {
+    public void testSortOrder5() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid3, "", "", "", "");
         addNodeWithSnii(nid4, "", "", "", "");
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
@@ -256,7 +260,7 @@ public class TreePaneTest  {
     }
 
     @Test    
-    public void testSortOrder6() {
+    public void testSortOrder6() throws InvocationTargetException, InterruptedException {
         addNodeWithSnii(nid3, "", "", "", "");
         addNodeWithSnii(nid4, "abcd", "", "", "");
         MimicNodeStore.NodeMemo memo4 = store.findNode(nid4);
@@ -293,8 +297,10 @@ public class TreePaneTest  {
         Assert.assertEquals(nid2.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
         Assert.assertEquals(nid3.toString(), pane.nodes.getChildAt(2).toString().substring(0, 17));
 
+
         addNodeWithSnii(nid5, "xxx", "pqq", "bbb", "ccc");
-        Thread.sleep(200);
+        // There is a 100 msec timer in the pane to re-sort the nodes.
+        Thread.sleep(300);
 
         Assert.assertEquals(nid4.toString(), pane.nodes.getChildAt(0).toString().substring(0, 17));
         Assert.assertEquals(nid5.toString(), pane.nodes.getChildAt(1).toString().substring(0, 17));
