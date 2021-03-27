@@ -186,9 +186,6 @@ public class CdiPanel extends JPanel {
 
         add(scrollPane);
 
-        //add(Box.createVerticalGlue());
-        //add(contentPanel);
-
         buttonBar = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonBar.setLayout(new FlowLayout());
