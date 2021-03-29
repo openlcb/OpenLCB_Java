@@ -57,6 +57,7 @@ public class TimeBroadcastGeneratorTest extends InterfaceTestBase {
         expectStateReportPending();
     }
 
+    /// Waits for already expired timers to complete running.
     private void waitForTimerThread() {
         class Holder {
             boolean b = false;

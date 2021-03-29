@@ -1,6 +1,7 @@
 package org.openlcb.protocols;
 
 import org.openlcb.Connection;
+import org.openlcb.ConsumerIdentifiedMessage;
 import org.openlcb.ConsumerRangeIdentifiedMessage;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
@@ -17,8 +18,11 @@ import org.openlcb.ProducerRangeIdentifiedMessage;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
+import java.util.TreeSet;
 
 import static org.openlcb.MessageTypeIdentifier.ConsumerRangeIdentified;
 import static org.openlcb.MessageTypeIdentifier.ProducerConsumerEventReport;
@@ -142,6 +146,26 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 triggerClockSyncIn3Sec();
             }
         }
+
+        @Override
+        public void handleConsumerIdentified(ConsumerIdentifiedMessage msg, Connection sender) {
+            int d = TimeProtocol.decodeClock(msg.getEventID(), clock);
+            if (d < 0 || ((d & TimeProtocol.SET_SUFFIX) != 0)) {
+                // not for us or not setting.
+                return;
+            }
+            switch (d>>12) {
+                case NIB_TIME_REPORT:
+                case NIB_TIME_REPORT_ALT: {
+                    int hrs = (d >> 8) & 0x1f;
+                    int min = d & 0xff;
+                    if (requestedMinutes.add(hrs * 60 + min)) {
+                        triggerClockSyncIn3Sec();
+                    }
+                }
+                default:
+            }
+        }
     }
 
     /// Helper function for processing the time changed notifications.
@@ -170,8 +194,7 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     }
 
     private void triggerClockSyncNow() {
-        Calendar c = Calendar.getInstance(timeZone);
-        c.setTimeInMillis(getTimeInMsec());
+        Calendar c = prepareTimeUpdate();
         if (isRunning()) {
             sendClockEvent(START_SUFFIX, ProducerIdentifiedValid);
         } else {
@@ -187,6 +210,95 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
         sendClockEvent(TimeProtocol.createMonthDay(month, day), ProducerIdentifiedValid);
         sendClockEvent(TimeProtocol.createHourMin(hour, min), ProducerIdentifiedValid);
 
+        scheduleNextMinute(true);
+    }
+
+    /**
+     * Creates and schedules the timer task to announce the next minute that needs announcing.
+     * @param forceNext if true, the next fast time minute will be announced. If false, the next
+     *                  minute to be announced will come from the registered consumers.
+     */
+    private void scheduleNextMinute(boolean forceNext) {
+        Calendar c = prepareTimeUpdate();
+        c.set(Calendar.MILLISECOND, 0);
+        int currentHour = c.get(Calendar.HOUR_OF_DAY);
+        int currentMin = c.get(Calendar.MINUTE);
+        int currentMinute = currentHour * 60 + currentMin;
+        System.out.println(String.format("Current minute %d %02x%02x", currentMinute,
+                currentHour, currentMin));
+        int desiredMinute = -1;
+        int dateRollover = 0; // or 1 or -1 if the day needs to be changed.
+        if (isRunning()) {
+            if (forceNext) {
+                desiredMinute = currentMinute;
+                if (getRate() > 0) {
+                    desiredMinute++;
+                }
+                if (desiredMinute >= 24*60) {
+                    desiredMinute = 0;
+                }
+            } else if (requestedMinutes.isEmpty()) {
+                desiredMinute = -1;
+            } else if (getRate() > 0){
+                Integer nextVal = requestedMinutes.higher(currentMinute);
+                if (nextVal == null) {
+                    nextVal = requestedMinutes.first();
+                    dateRollover = 1;
+                }
+                desiredMinute = nextVal;
+            } else {
+                Integer nextVal = requestedMinutes.lower(currentMinute);
+                if (nextVal == null) {
+                    nextVal = requestedMinutes.last();
+                    dateRollover = -1;
+                }
+                desiredMinute = nextVal;
+            }
+        }
+        if (desiredMinute == minuteNumber) {
+            return;
+        }
+        if (desiredMinute < 0) {
+            if (minuteTask != null) {
+                minuteTask.cancel();
+                minuteTask = null;
+            }
+            minuteNumber = desiredMinute;
+            return;
+        }
+        c.add(Calendar.DATE, dateRollover);
+        c.set(Calendar.HOUR_OF_DAY, desiredMinute / 60);
+        c.set(Calendar.MINUTE, desiredMinute % 60);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        minuteNumber = desiredMinute;
+        long fastMillis = c.getTimeInMillis();
+        /// Real-time at which the minuteTask is scheduled.
+        long minuteScheduledTime = timeKeeper.translateFastToRealTime(fastMillis);
+        minuteTask = new TimerTask() {
+            @Override
+            public void run() {
+                sendNextMinute(this);
+            }
+        };
+        iface.getTimer().schedule(minuteTask, new Date(minuteScheduledTime));
+    }
+
+    /// Callback from the timer to send the next requested minute event to the bus.
+    private void sendNextMinute(TimerTask self) {
+        if(minuteTask != self) {
+            // outdated timer execution
+            return;
+        }
+        minuteTask = null;
+        int num = -1;
+        synchronized (this) {
+            num = minuteNumber;
+            minuteNumber = -1;
+            if (!isRunning() || num < 0) return;
+        }
+        sendClockEvent(TimeProtocol.createHourMin(num / 60, num % 60));
+        scheduleNextMinute(false);
     }
 
     private final Handler messageHandler = new Handler();
@@ -204,6 +316,13 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     private TimerTask midnightTask = null;
     /// Real-time at which the current midnight task is scheduled.
     private long midnightScheduledTime = 0;
+    /// Announces the next minute that is needed by the network.
+    private TimerTask minuteTask = null;
+    /// Which minute is the next one to be announced. -1 if no minute task is scheduled, else 0
+    // to 1439 (24*60 - 1).
+    private int minuteNumber = -1;
+    private NavigableSet<Integer> requestedMinutes = new TreeSet<>();
+
     /// Current day (by fast time) for the purpose of midnight announcements. This changes exactly
     /// when the midnight announcement goes out or the time jumps to a different day.
     private long fastDayLastAnnounced;
@@ -294,6 +413,11 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
     /// Updates internal state and property change listeners. Does not talk to the bus.
     private void updateTime(long newTime) {
         long oldTime;
+        if (minuteTask != null) {
+            minuteTask.cancel();
+            minuteTask = null;
+            minuteNumber = -1;
+        }
         synchronized (this) {
             oldTime = timeKeeper.getTime();
             timeKeeper.setTime(newTime);
@@ -302,6 +426,8 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 updateMidnightTask(0, 0);
             }
         }
+
+        scheduleNextMinute(false);
         firePropertyChange(TimeProtocol.PROP_TIME_UPDATE, oldTime, newTime);
     }
 
@@ -333,6 +459,11 @@ public class TimeBroadcastGenerator extends DefaultPropertyListenerSupport imple
                 timeKeeper.stop();
             }
             updateMidnightTask(0, 0);
+            if (minuteTask != null) {
+                minuteTask.cancel();
+                minuteTask = null;
+                minuteNumber = -1;
+            }
         }
         firePropertyChange(TimeProtocol.PROP_RUN_UPDATE, lastRunning, r);
     }
