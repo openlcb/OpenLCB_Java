@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 import org.openlcb.can.AliasMap;
 import org.openlcb.can.CanFrame;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.*;
  * Created by bracz on 1/9/16.
  */
 public abstract class InterfaceTestBase {
-    protected Connection outputConnectionMock = mock(AbstractConnection.class);
+    protected Connection outputConnectionMock = spy(new PrintConnection());
     protected OlcbInterface iface = null;
     protected AliasMap aliasMap = new AliasMap();
     protected boolean testWithCanFrameRendering = false;
@@ -50,6 +51,13 @@ public abstract class InterfaceTestBase {
         expectNoMessages();
         iface.dispose();
         iface = null;
+    }
+
+    private class PrintConnection extends AbstractConnection {
+        @Override
+        public void put(Message msg, Connection sender) {
+            System.out.println("S: " + msg.toString());
+        }
     }
 
     public void enableSingleThreaded() {
