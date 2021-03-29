@@ -27,7 +27,8 @@ import java.util.logging.Logger;
  */
 public class OlcbInterface {
     private final static Logger log = Logger.getLogger(OlcbInterface.class.getName());
-    private final Timer timer = new Timer();
+    private TimerInterface timer;
+    private final TimerReal timerReal;
 
     /// Object for sending messages to the network.
     protected final Connection internalOutputConnection;
@@ -114,6 +115,9 @@ public class OlcbInterface {
      * @param tpe ThreadPoolExecutor for the interface.
      */
     public OlcbInterface(NodeID nodeId_, Connection outputConnection_,ThreadPoolExecutor tpe) {
+        timerReal = new TimerReal("OpenLCB connection timer");
+        timer = timerReal;
+
         threadPool = tpe;
         nodeId = nodeId_;
         this.internalOutputConnection = outputConnection_;
@@ -170,8 +174,16 @@ public class OlcbInterface {
     /**
      * @return a shared Timer thread to be used by all components in this interface. Tasks scheduled on this timer are not allowed to block (as it's a shared timer thread).
      */
-    public Timer getTimer() {
+    public TimerInterface getTimer() {
         return timer;
+    }
+
+    /**
+     * Overrides the timer implementation. Used for unit testing.
+     * @param timer the new timer implementation.
+     */
+    public void setTimer(TimerInterface timer) {
+        this.timer = timer;
     }
 
     /**
@@ -352,7 +364,8 @@ public class OlcbInterface {
      */
     public void dispose(){
         // shut down shared timer's thread.
-        timer.cancel();
+        timerReal.getTimer().cancel();
+        timer.dispose(); // in case it was overridden.
         // shut down the thread pool
         if(threadPool != null && !(threadPool.isShutdown())) {
            // modified from the javadoc for ExecutorService 
