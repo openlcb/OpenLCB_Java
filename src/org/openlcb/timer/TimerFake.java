@@ -67,7 +67,7 @@ public class TimerFake implements TimerInterface {
                 }
                 head = taskQueue.peek();
                 long diff = head.scheduledExecutionTime - currentTime();
-                if (diff < 0) {
+                if (diff <= 0) {
                     // head of queue is in the past
                     taskQueue.poll();
                 } else {
@@ -94,9 +94,16 @@ public class TimerFake implements TimerInterface {
     }
 
     /// Call this function when an injected fake clock is updated.
-    public synchronized void clockUpdated() {
-        // wakes up sleepers
-        notifyAll();
+    public void clockUpdated() {
+        synchronized(this) {
+            // wakes up sleeping thread
+            notifyAll();
+        }
+        flush();
+    }
+
+    /// Waits for all past / expired tasks to be completed.
+    public void flush() {
         while (true) {
             synchronized (this) {
                 if (threadState != ThreadState.STARTED) {
@@ -134,6 +141,7 @@ public class TimerFake implements TimerInterface {
         if (threadState == ThreadState.STARTED) {
             threadState = ThreadState.CANCEL;
         }
+        notifyAll();
         while (threadState != ThreadState.STOPPED) {
             try {
                 wait();
