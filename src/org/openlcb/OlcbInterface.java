@@ -6,13 +6,13 @@ import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
 import org.openlcb.protocols.VerifyNodeIdHandler;
+import org.openlcb.timer.TimerInterface;
+import org.openlcb.timer.TimerReal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
