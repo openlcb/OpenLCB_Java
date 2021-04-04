@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
@@ -113,8 +114,12 @@ public class TreePane extends JPanel  {
 
         treeModel = new DefaultTreeModel(nodes);
         tree = new JTree(treeModel);
-        tree.setEditable(true);
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);  
+        tree.setEditable(false);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.setEnabled(true);
+        tree.setRequestFocusEnabled(true);
+        tree.setFocusable(true);
+        tree.setToggleClickCount(1);
         JScrollPane treeView = new JScrollPane(tree);
         add(treeView);
 
@@ -202,29 +207,11 @@ public class TreePane extends JPanel  {
                 System.out.println("Could not add close window listener");
                 return;
             }
-            win.addWindowListener(new WindowListener() {
-                @Override
-                public void windowOpened(WindowEvent windowEvent) { }
-
+            win.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent windowEvent) {
                     release();
                 }
-
-                @Override
-                public void windowClosed(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowIconified(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowDeiconified(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowActivated(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowDeactivated(WindowEvent windowEvent) { }
             });
         });
     }
@@ -279,7 +266,7 @@ public class TreePane extends JPanel  {
             @Override
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
                 listener.valueChanged(treeSelectionEvent);
-                tree.getSelectionModel().clearSelection();
+                //tree.getSelectionModel().clearSelection();
             }
         });
     }
@@ -374,6 +361,7 @@ public class TreePane extends JPanel  {
      * Cleans up all property change listeners etc in preparation when closing the window.
      */
     public void release() {
-        timer.cancel(); 
+        new Exception().printStackTrace();
+        timer.cancel();
     }
 }
