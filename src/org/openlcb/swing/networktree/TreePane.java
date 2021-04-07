@@ -7,6 +7,11 @@ import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
@@ -59,6 +64,7 @@ public class TreePane extends JPanel  {
     MimicNodeStore store;
     DefaultMutableTreeNode nodes;
     DefaultTreeModel treeModel;
+    TreeSelectionListener clientListener;
     
     MimicNodeStore getStore() { return store; }
     DefaultTreeModel getTreeModel() { return treeModel; }
@@ -113,8 +119,53 @@ public class TreePane extends JPanel  {
 
         treeModel = new DefaultTreeModel(nodes);
         tree = new JTree(treeModel);
-        tree.setEditable(true);
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);  
+        tree.setEditable(false);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.setEnabled(true);
+        tree.setRequestFocusEnabled(true);
+        tree.setFocusable(true);
+        tree.setToggleClickCount(1);
+        tree.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent keyEvent) {
+                if (keyEvent.getKeyCode() == KeyEvent.VK_SPACE ||
+                    keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                    TreePath path = tree.getSelectionPath();
+                    if (path == null) {
+                        return;
+                    }
+                    if (treeModel.getChildCount(path.getLastPathComponent()) > 0) {
+                        // This is an internal node. Toggles collapse/expand.
+                        if (tree.isExpanded(path)) {
+                            tree.collapsePath(path);
+                        } else {
+                            tree.expandPath(path);
+                        }
+                    } else {
+                        // This is a leaf node. Fires selection listener.
+                        TreeSelectionEvent event = new TreeSelectionEvent(tree, path, true, path,
+                                path);
+                        clientListener.valueChanged(event);
+                    }
+                }
+            }
+        });
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                TreePath path = tree.getPathForLocation(mouseEvent.getX(), mouseEvent.getY());
+                if (path == null) {
+                    return;
+                }
+                if (mouseEvent.getButton() != MouseEvent.BUTTON1 ||
+                    mouseEvent.getClickCount() != 1) {
+                    return;
+                }
+                TreeSelectionEvent event = new TreeSelectionEvent(tree, path, true, path,
+                        path);
+                clientListener.valueChanged(event);
+            }
+        });
         JScrollPane treeView = new JScrollPane(tree);
         add(treeView);
 
@@ -161,6 +212,7 @@ public class TreePane extends JPanel  {
                         addNewHardwareNode(n);
                         n.initConnections();
                         memo.addPropertyChangeListener(resortListener);
+                        tree.expandPath(new TreePath(nodes.getPath()));
                     }
                 } else if (e.getPropertyName().equals(MimicNodeStore.CLEAR_ALL_NODES)) {
                     synchronized (nodes) {
@@ -202,29 +254,11 @@ public class TreePane extends JPanel  {
                 System.out.println("Could not add close window listener");
                 return;
             }
-            win.addWindowListener(new WindowListener() {
-                @Override
-                public void windowOpened(WindowEvent windowEvent) { }
-
+            win.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent windowEvent) {
                     release();
                 }
-
-                @Override
-                public void windowClosed(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowIconified(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowDeiconified(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowActivated(WindowEvent windowEvent) { }
-
-                @Override
-                public void windowDeactivated(WindowEvent windowEvent) { }
             });
         });
     }
@@ -275,13 +309,7 @@ public class TreePane extends JPanel  {
     }
 
     public void addTreeSelectionListener(final TreeSelectionListener listener) {
-        tree.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-                listener.valueChanged(treeSelectionEvent);
-                tree.getSelectionModel().clearSelection();
-            }
-        });
+        clientListener = listener;
     }
 
     private void resortTree() {
@@ -374,6 +402,6 @@ public class TreePane extends JPanel  {
      * Cleans up all property change listeners etc in preparation when closing the window.
      */
     public void release() {
-        timer.cancel(); 
+        timer.cancel();
     }
 }
