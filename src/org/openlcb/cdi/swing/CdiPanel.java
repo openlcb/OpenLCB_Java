@@ -29,6 +29,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -69,6 +71,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -121,7 +124,9 @@ public class CdiPanel extends JPanel {
     private JButton _saveButton;
     private Color COLOR_DEFAULT;
     private List<util.CollapsiblePanel> segmentPanels = new ArrayList<>();
+    private List<util.CollapsiblePanel> navPanels = new ArrayList<>();
     private final Color COLOR_BACKGROUND;
+    private CollapsiblePanel sensorHelperPanel;
 
     public CdiPanel () {
         super();
@@ -291,12 +296,12 @@ public class CdiPanel extends JPanel {
 
         // Calls into JMRI to add the Create Sensor and Create Turnout buttons.
         factory.handleGroupPaneEnd(createHelper);
-        CollapsiblePanel cp = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
-        cp.setBackground(getForeground());
-        cp.setExpanded(false); 
-        cp.setBorder(BorderFactory.createMatteBorder(10,0,10,0, getForeground()));
+        sensorHelperPanel = new CollapsiblePanel("Sensor/Turnout creation", createHelper);
+        sensorHelperPanel.setBackground(getForeground());
+        sensorHelperPanel.setExpanded(false);
+        sensorHelperPanel.setBorder(BorderFactory.createMatteBorder(10,0,10,0, getForeground()));
         //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height)); 
-        add(cp);
+        add(sensorHelperPanel);
     }
 
     /**
@@ -561,6 +566,7 @@ public class CdiPanel extends JPanel {
             @Override
             public void run() {
                 rep.visit(new RendererVisitor());
+                addNavigationActions(sensorHelperPanel);
                 EventQueue.invokeLater(() -> displayComplete());
             }
         }, "openlcb-cdi-render").start();
@@ -863,16 +869,18 @@ public class CdiPanel extends JPanel {
         @Override
         public void visitSegment(ConfigRepresentation.SegmentEntry e) {
             currentPane = new SegmentPane(e);
-            super.visitSegment(e);
 
             String name = "Segment" + (e.getName() != null ? (": " + e.getName()) : "");
-            util.CollapsiblePanel ret = new util.CollapsiblePanel(name, currentPane);
-            segmentPanels.add(ret);
-            // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
-            ret.setAlignmentY(Component.TOP_ALIGNMENT);
-            ret.setAlignmentX(Component.LEFT_ALIGNMENT);
-            ret.setBorder(BorderFactory.createMatteBorder(10,0,0,0, getForeground()));
-            contentPanel.add(ret);
+            util.CollapsiblePanel cPanel = new util.CollapsiblePanel(name, currentPane);
+            segmentPanels.add(cPanel);
+            addNavigationActions(cPanel);
+            // cPanel.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
+            cPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+            cPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            cPanel.setBorder(BorderFactory.createMatteBorder(10,0,0,0, getForeground()));
+
+            super.visitSegment(e);
+            contentPanel.add(cPanel);
         }
 
         @Override
@@ -897,11 +905,12 @@ public class CdiPanel extends JPanel {
                 if (oldPane instanceof SegmentPane) {
                     // we make toplevel groups collapsible.
                     groupPane.setBorder(null);
-                    JPanel ret = new util.CollapsiblePanel(groupPane.getName(), groupPane);
-                    // ret.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
-                    ret.setAlignmentY(Component.TOP_ALIGNMENT);
-                    ret.setAlignmentX(Component.LEFT_ALIGNMENT);
-                    oldPane.add(ret);
+                    CollapsiblePanel cPanel = new CollapsiblePanel(groupPane.getName(), groupPane);
+                    // cPanel.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
+                    cPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+                    cPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    oldPane.add(cPanel);
+                    addNavigationActions(cPanel);
                 } else {
                     oldPane.add(groupPane);
                 }
@@ -1013,6 +1022,61 @@ public class CdiPanel extends JPanel {
         r.run();
     }
 
+    /// Goes backwards to the previous (collapsible) segment.
+    private void navigateUp(util.CollapsiblePanel current) {
+        int index = navPanels.indexOf(current);
+        if (index < 0) return;
+        while (--index >= 0) {
+            if (navPanels.get(index).isShowing()) {
+                navPanels.get(index).getHeader().requestFocusInWindow();
+                return;
+            }
+        }
+        /// @TODO should the focus navigation wrap around?
+    }
+
+    /// Goes forwards to the next (collapsible) segment.
+    private void navigateDown(util.CollapsiblePanel current) {
+        int index = navPanels.indexOf(current);
+        if (index < 0) return;
+        while (++index < navPanels.size()) {
+            if (navPanels.get(index).isShowing()) {
+                navPanels.get(index).getHeader().requestFocusInWindow();
+                return;
+            }
+        }
+        /// @TODO should the focus navigation wrap around?
+    }
+
+    private void addNavigationActions(util.CollapsiblePanel cPanel) {
+        navPanels.add(cPanel);
+        cPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("shift F6"), "focusCurrentSegment");
+        cPanel.getActionMap().put("focusCurrentSegment", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println("child s+F6");
+                cPanel.getHeader().requestFocusInWindow();
+            }
+        });
+        cPanel.getHeader().getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("shift F6"),
+                "focusPreviousSegment");
+        cPanel.getHeader().getActionMap().put("focusPreviousSegment", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println("current s+F6");
+                navigateUp(cPanel);
+            }
+        });
+        cPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("F6"), "focusNextSegment");
+        cPanel.getActionMap().put("focusNextSegment", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println("F6");
+                navigateDown(cPanel);
+            }
+        });
+
+    }
 
     void createLoadingPane() {
         JPanel p = new JPanel();
@@ -1078,6 +1142,7 @@ public class CdiPanel extends JPanel {
 
         util.CollapsiblePanel ret = new util.CollapsiblePanel("Identification", p);
         segmentPanels.add(ret);
+        addNavigationActions(ret);
         ret.setAlignmentY(Component.TOP_ALIGNMENT);
         ret.setAlignmentX(Component.LEFT_ALIGNMENT);
         return ret;
