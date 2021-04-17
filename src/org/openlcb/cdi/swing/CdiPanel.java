@@ -15,7 +15,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -29,8 +28,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
@@ -127,6 +124,10 @@ public class CdiPanel extends JPanel {
     private List<util.CollapsiblePanel> navPanels = new ArrayList<>();
     private final Color COLOR_BACKGROUND;
     private CollapsiblePanel sensorHelperPanel;
+    /// Panel at the bottom of the window with command buttons.
+    //private JPanel bottomPanel;
+    /// To get focus to the bottom panel, this component needs to be activated.
+    private JComponent bottomPanelHead;
 
     public CdiPanel () {
         super();
@@ -191,29 +192,31 @@ public class CdiPanel extends JPanel {
 
         add(scrollPane);
 
-        buttonBar = new JPanel();
+        bottomPanel = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        buttonBar.setLayout(new FlowLayout());
+        bottomPanel.setLayout(new FlowLayout());
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
         bb.addActionListener(actionEvent -> reloadAll());
-        buttonBar.add(bb);
+        bottomPanelHead = bb;
+        bottomPanel.add(bb);
+        addNavigationHelper(null, bottomPanel, bb);
 
         _saveButton = new JButton("Save Changes");
         COLOR_DEFAULT = _saveButton.getBackground();
         _saveButton.setToolTipText("Writes every changed value to the hardware.");
         _saveButton.addActionListener(actionEvent -> saveChanged());
-        buttonBar.add(_saveButton);
+        bottomPanel.add(_saveButton);
 
         bb = new JButton("Backup...");
         bb.setToolTipText("Creates a file on your computer with all saved settings from this node. Use the \"Save Changes\" button first.");
         bb.addActionListener(actionEvent -> runBackup());
-        buttonBar.add(bb);
+        bottomPanel.add(bb);
 
         bb = new JButton("Restore...");
         bb.setToolTipText("Loads a file with backed-up settings. Does not change the hardware settings, so use \"Save Changes\" afterwards.");
         bb.addActionListener(actionEvent -> runRestore());
-        buttonBar.add(bb);
+        bottomPanel.add(bb);
 
         if (rep.getConnection() != null && rep.getRemoteNodeID() != null) {
             bb = new JButton("Reboot");
@@ -228,8 +231,8 @@ public class CdiPanel extends JPanel {
 
         createSensorCreateHelper();
 
-        buttonBar.setMaximumSize(buttonBar.getMinimumSize());
-        add(buttonBar);
+        bottomPanel.setMaximumSize(bottomPanel.getMinimumSize());
+        add(bottomPanel);
 
         _changeMade = false;
         setSaveClean();
@@ -318,7 +321,7 @@ public class CdiPanel extends JPanel {
         if (c instanceof JButton) {
             addButtonToMoreFunctions((JButton)c);
         } else {
-            buttonBar.add(c);
+            bottomPanel.add(c);
         }
     }
 
@@ -332,7 +335,7 @@ public class CdiPanel extends JPanel {
                     showMoreFunctionsMenu();
                 }
             });
-            buttonBar.add(moreButton);
+            bottomPanel.add(moreButton);
         }
         Action a = new AbstractAction(b.getText()) {
             @Override
@@ -492,7 +495,7 @@ public class CdiPanel extends JPanel {
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
     JPanel contentPanel;
-    JPanel buttonBar;
+    JPanel bottomPanel;
     JPopupMenu moreMenu = new JPopupMenu();
     JButton moreButton;
     SearchPane searchPane = new SearchPane();
@@ -1025,57 +1028,73 @@ public class CdiPanel extends JPanel {
     /// Goes backwards to the previous (collapsible) segment.
     private void navigateUp(util.CollapsiblePanel current) {
         int index = navPanels.indexOf(current);
-        if (index < 0) return;
+        if (index < 0) {
+            // start from bottom
+            index = navPanels.size();
+        }
         while (--index >= 0) {
             if (navPanels.get(index).isShowing()) {
                 navPanels.get(index).getHeader().requestFocusInWindow();
                 return;
             }
         }
-        /// @TODO should the focus navigation wrap around?
+        bottomPanelHead.requestFocusInWindow();
     }
 
     /// Goes forwards to the next (collapsible) segment.
     private void navigateDown(util.CollapsiblePanel current) {
         int index = navPanels.indexOf(current);
-        if (index < 0) return;
+        if (index < 0) {
+            // start from top
+            index = -1;
+        }
         while (++index < navPanels.size()) {
             if (navPanels.get(index).isShowing()) {
                 navPanels.get(index).getHeader().requestFocusInWindow();
                 return;
             }
         }
-        /// @TODO should the focus navigation wrap around?
+        bottomPanelHead.requestFocusInWindow();
     }
 
     private void addNavigationActions(util.CollapsiblePanel cPanel) {
         navPanels.add(cPanel);
-        cPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("shift F6"), "focusCurrentSegment");
-        cPanel.getActionMap().put("focusCurrentSegment", new AbstractAction() {
+        addNavigationHelper(cPanel, cPanel, cPanel.getHeader());
+    }
+
+    /**
+     * Adds handling of F6/ shift-F6 to a given panel.
+     * @param navigationKey Reference from which to go up/down in the navPanels array.
+     * @param panel JPanel that is the root of the set of components that form tis navigation step
+     * @param header What is the first component in this panel that should receive focus
+     */
+    private void addNavigationHelper(CollapsiblePanel navigationKey, JPanel panel,
+                                     JComponent header) {
+        panel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("shift F6"), "focusCurrentSegment");
+        panel.getActionMap().put("focusCurrentSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("child s+F6");
-                cPanel.getHeader().requestFocusInWindow();
+                header.requestFocusInWindow();
             }
         });
-        cPanel.getHeader().getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("shift F6"),
+        header.getInputMap(WHEN_FOCUSED).put(KeyStroke.getKeyStroke("shift F6"),
                 "focusPreviousSegment");
-        cPanel.getHeader().getActionMap().put("focusPreviousSegment", new AbstractAction() {
+        header.getActionMap().put("focusPreviousSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("current s+F6");
-                navigateUp(cPanel);
+                navigateUp(navigationKey);
             }
         });
-        cPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("F6"), "focusNextSegment");
-        cPanel.getActionMap().put("focusNextSegment", new AbstractAction() {
+        panel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("F6"), "focusNextSegment");
+        panel.getActionMap().put("focusNextSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("F6");
-                navigateDown(cPanel);
+                navigateDown(navigationKey);
             }
         });
-
     }
 
     void createLoadingPane() {
