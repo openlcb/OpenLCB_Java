@@ -8,6 +8,8 @@ import org.openlcb.cdi.cmd.RestoreConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.swing.EventIdTextField;
+import org.openlcb.ProducerConsumerEventReportMessage;
+import org.openlcb.*;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -1640,6 +1642,20 @@ public class CdiPanel extends JPanel {
         @Override
         protected void additionalButtons() {
             final JTextField tf = textField;
+
+            /// DPH add Send-button
+            JButton bb = factory.handleProduceButton(new JButton("Send"));
+            bb.setToolTipText("Click to fire this event.");
+            bb.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    NodeID node = rep.getConnection().getNodeId();
+                    EventID ev = new EventID(org.openlcb.Utilities.bytesFromHexString((String)textField.getText()));
+                    rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), null);
+                }
+            });
+            p3.add(bb);            
+            
             p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
             p3.add(Box.createHorizontalStrut(5));
@@ -1845,6 +1861,10 @@ public class CdiPanel extends JPanel {
         }
         public JButton handleWriteButton(JButton button) {
             return button;
+        }
+        /// DPH add send button
+        public JButton handleProduceButton(JButton button) {
+           return button;
         }
         public void handleGroupPaneStart(JPanel pane) {
             return;
