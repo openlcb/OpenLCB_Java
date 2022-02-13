@@ -9,7 +9,10 @@ import org.openlcb.Connection;
 import org.openlcb.MessageDecoder;
 import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
 import org.openlcb.implementations.throttle.Float16;
+import static org.openlcb.messages.TractionControlRequestMessage.speedToDebugString;
+import static org.openlcb.messages.TractionControlRequestMessage.consistFlagsToDebugString;
 
 /**
  * Traction Control Reply message implementation.
@@ -21,6 +24,8 @@ import org.openlcb.implementations.throttle.Float16;
 public class TractionControlReplyMessage extends AddressedPayloadMessage {
     private final static Logger logger = Logger.getLogger(TractionControlReplyMessage.class.getName());
     public final static byte CMD_GET_SPEED = TractionControlRequestMessage.CMD_GET_SPEED;
+    public final static int GET_SPEED_FLAG_ESTOP = 0x01;
+
     public final static byte CMD_GET_FN = TractionControlRequestMessage.CMD_GET_FN;
 
     public final static byte CMD_CONTROLLER = TractionControlRequestMessage.CMD_CONTROLLER;
@@ -30,6 +35,7 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
 
     public final static byte CMD_MGMT = TractionControlRequestMessage.CMD_MGMT;
     public final static byte SUBCMD_MGMT_RESERVE = TractionControlRequestMessage.SUBCMD_MGMT_RESERVE;
+    public final static byte SUBCMD_MGMT_HEARTBEAT = 0x03;
 
     public final static byte CMD_CONSIST = TractionControlRequestMessage.CMD_CONSIST;
     public final static byte SUBCMD_CONSIST_ATTACH = TractionControlRequestMessage.SUBCMD_CONSIST_ATTACH;
@@ -104,6 +110,26 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
         return retval;
     }
 
+    /**
+     * Extract the consisted train's node ID from the consist attach/detach response.
+     * @return the consisted train's node ID.
+     */
+    @Nullable
+    public NodeID getConsistAttachNodeID() {
+        if (payload.length < 8) return null;
+        byte[] id = new byte[6];
+        System.arraycopy(payload, 2, id, 0, 6);
+        return new NodeID(id);
+    }
+
+    /**
+     * Extract the consistattach/detach response code
+     * @return a 16-bit openlcb error code, 0 for success.
+     */
+    public int getConsistAttachCode() {
+        return Utilities.NetworkToHostUint16(payload, 8);
+    }
+
     /** @return the length of the consist list.
      * Valid only for consist query reply message
      */
@@ -154,5 +180,147 @@ public class TractionControlReplyMessage extends AddressedPayloadMessage {
     @Override
     public MessageTypeIdentifier getEMTI() {
         return MessageTypeIdentifier.TractionControlReply;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder p = new StringBuilder(getSourceNodeID().toString());
+        p.append(" - ");
+        p.append(getDestNodeID());
+        p.append(" ");
+        p.append(getEMTI().toString());
+        p.append(" ");
+        try {
+            switch (getCmd()) {
+                case CMD_GET_SPEED: {
+                    p.append("speed reply ");
+                    p.append(speedToDebugString(getSetSpeed()));
+                    if ((payload.length >= 4) && ((payload[3] & GET_SPEED_FLAG_ESTOP) != 0)) {
+                        p.append(" estop");
+                    }
+                    if (payload.length >= 6) {
+                        p.append(" commanded speed ");
+                        p.append(speedToDebugString(getCommandedSpeed()));
+                    }
+                    if (payload.length >= 8) {
+                        p.append(" actual speed ");
+                        p.append(speedToDebugString(getActualSpeed()));
+                    }
+                    break;
+                }
+                case CMD_GET_FN: {
+                    int fn = Utilities.NetworkToHostUint24(payload, 1);
+                    int val = Utilities.NetworkToHostUint16(payload, 4);
+                    p.append(String.format("fn %d is %d", fn, val));
+                    break;
+                }
+                case CMD_CONTROLLER: {
+                    switch(getSubCmd()) {
+                        case SUBCMD_CONTROLLER_ASSIGN: {
+                            p.append("controller assign");
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags == 0) {
+                                p.append(" OK");
+                            } else {
+                                p.append(String.format(" fail 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_QUERY: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("controller is ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_CHANGE: {
+                            p.append("change controller reply");
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if (flags == 0) {
+                                p.append(" OK");
+                            } else {
+                                p.append(String.format(" reject 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_CONSIST: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_CONSIST_ATTACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 2);
+                            p.append("listener attach ");
+                            p.append(new NodeID(nid).toString());
+                            int code = Utilities.NetworkToHostUint16(payload, 8);
+                            p.append(String.format(" result 0x%04x", code));
+                            break;
+                        }
+                        case SUBCMD_CONSIST_DETACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 2);
+                            p.append("listener detach ");
+                            p.append(new NodeID(nid).toString());
+                            int code = Utilities.NetworkToHostUint16(payload, 8);
+                            p.append(String.format(" result 0x%04x", code));
+                            break;
+                        }
+                        case SUBCMD_CONSIST_QUERY: {
+                            p.append("listener is");
+                            int count = Utilities.NetworkToHostUint8(payload, 2);
+                            p.append(String.format(" count %d", payload[2] & 0xff));
+                            if (payload.length >= 4) {
+                                p.append(String.format(" index %d", payload[3] & 0xff));
+                            }
+                            if ((payload.length >= 5) && (payload[4] != 0)) {
+                                p.append(" flags ");
+                                p.append(consistFlagsToDebugString(payload[4]));
+                            }
+                            if (payload.length >= 11) {
+                                p.append(" is ");
+                                p.append(new NodeID(Utilities.NetworkToHostUint48(payload, 5)).toString());
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_MGMT: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_MGMT_RESERVE: {
+                            p.append("reserve reply");
+                            if (payload[2] == 0) {
+                                p.append(" OK");
+                            } else {
+                                p.append(String.format(" error 0x%02x", payload[2] & 0xff));
+                            }
+                            break;
+                        }
+                        case SUBCMD_MGMT_HEARTBEAT: {
+                            p.append("heartbeat request");
+                            if (payload.length >= 3) {
+                                p.append(String.format(" in %d seconds", payload[2] & 0xff));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                default:
+                    return super.toString();
+            }
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return super.toString();
+        }
+        return p.toString();
     }
 }
