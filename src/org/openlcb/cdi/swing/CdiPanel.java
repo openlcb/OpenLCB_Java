@@ -1074,7 +1074,6 @@ public class CdiPanel extends JPanel {
         panel.getActionMap().put("focusCurrentSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                System.out.println("child s+F6");
                 header.requestFocusInWindow();
             }
         });
@@ -1083,7 +1082,6 @@ public class CdiPanel extends JPanel {
         header.getActionMap().put("focusPreviousSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                System.out.println("current s+F6");
                 navigateUp(navigationKey);
             }
         });
@@ -1091,7 +1089,6 @@ public class CdiPanel extends JPanel {
         panel.getActionMap().put("focusNextSegment", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                System.out.println("F6");
                 navigateDown(navigationKey);
             }
         });
