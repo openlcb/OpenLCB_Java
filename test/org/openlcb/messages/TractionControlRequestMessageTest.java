@@ -96,13 +96,50 @@ public class TractionControlRequestMessageTest  {
 
     @Test
     public void testAssignController() throws Exception {
-        TractionControlRequestMessage msg = TractionControlRequestMessage.createAssignController
-                (src,
-                dst);
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createAssignController(
+                src, dst);
         byte[] payload = msg.getPayload();
         Assert.assertEquals("20 01 00 06 05 05 04 04 03", Utilities.toHexSpaceString(payload));
         Assert.assertEquals(src, msg.getSourceNodeID());
         Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "assign controller 06.05.05.04.04.03", msg.toString());
+    }
+
+    @Test
+    public void testReleaseController() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createReleaseController(
+                src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("20 02 00 06 05 05 04 04 03", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "release controller 06.05.05.04.04.03", msg.toString());
+    }
+
+    @Test
+    public void testQueryController() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createQueryController(
+                src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("20 03", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "query controller", msg.toString());
+    }
+
+    @Test
+    public void testNotifyControllerChange() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createControllerChangeNotify(
+                src, dst, new NodeID(0x090099112233L));
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("20 04 00 09 00 99 11 22 33", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "notify controller change to 09.00.99.11.22.33", msg.toString());
     }
 
 }

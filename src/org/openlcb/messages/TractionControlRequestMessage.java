@@ -42,9 +42,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static int CONSIST_FLAG_FN0 = 0x04;
     public final static int CONSIST_FLAG_FNN = 0x08;
 
-    public final static byte CMD_MGMT = 0x20;
+    public final static byte CMD_MGMT = 0x40;
     public final static byte SUBCMD_MGMT_RESERVE = 1;
     public final static byte SUBCMD_MGMT_RELEASE = 2;
+    public final static byte SUBCMD_MGMT_NOOP = 3;
 
     /// 1 scale mph in meters per second for the getspeed/setspeed commands
     public final static double MPH = 0.44704;
@@ -213,6 +214,49 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
                     p.append(String.format("get fn %d", fn));
                     break;
                 }
+                case CMD_CONTROLLER: {
+                    switch(getSubCmd()) {
+                        case SUBCMD_CONTROLLER_ASSIGN: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("assign controller ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_RELEASE: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("release controller ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_QUERY: {
+                            p.append("query controller");
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_CHANGE: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("notify controller change to ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                default:
+                    return super.toString();
             }
 
         } catch (ArrayIndexOutOfBoundsException e) {
