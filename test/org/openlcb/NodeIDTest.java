@@ -78,7 +78,15 @@ public class NodeIDTest {
         NodeID e = new NodeID("1.2.3.4.5.6");
         Assert.assertNotNull(e);
     }
-    
+
+    @Test
+    public void testLongArg() {
+        NodeID e = new NodeID(0x998877FFEEDDL);
+        Assert.assertNotNull(e);
+        Assert.assertEquals(0x998877FFEEDDL, e.toLong());
+        Assert.assertEquals("99.88.77.FF.EE.DD", e.toString());
+    }
+
     @Test
     public void testEqualsSame() {
         NodeID e1 = new NodeID(new byte[]{1,2,3,4,5,6});
