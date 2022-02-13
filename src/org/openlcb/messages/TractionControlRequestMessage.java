@@ -3,11 +3,13 @@ package org.openlcb.messages;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
+import org.openlcb.AddressedMessage;
 import org.openlcb.AddressedPayloadMessage;
 import org.openlcb.Connection;
 import org.openlcb.MessageDecoder;
 import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
 import org.openlcb.implementations.throttle.Float16;
 
 /**
@@ -44,6 +46,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static byte SUBCMD_MGMT_RESERVE = 1;
     public final static byte SUBCMD_MGMT_RELEASE = 2;
 
+    /// 1 scale mph in meters per second for the getspeed/setspeed commands
+    public final static double MPH = 0.44704;
+    /// 1 scale km/h in meters per second for the getspeed/setspeed commands
+    public final static double KMH = 0.277778;
 
     public TractionControlRequestMessage(NodeID source, NodeID dest, byte[] payload) {
         super(source, dest, payload);
@@ -63,6 +69,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
 
         byte[] payload = new byte[]{CMD_SET_SPEED, sp.getByte1(), sp.getByte2()};
         return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    public static TractionControlRequestMessage createSetEstop(NodeID source, NodeID dest) {
+        return new TractionControlRequestMessage(source, dest, new byte[]{CMD_ESTOP});
     }
 
     public static TractionControlRequestMessage createGetSpeed(NodeID source, NodeID dest) {
@@ -159,4 +169,57 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public MessageTypeIdentifier getEMTI() {
         return MessageTypeIdentifier.TractionControlRequest;
     }
+
+    /// Converts a wire format speed value to a user visible string to be used for debug printouts.
+    public static String speedToDebugString(Float16 sp) {
+        StringBuilder p = new StringBuilder();
+        if (sp.isPositive()) p.append('F'); else p.append('R');
+        p.append(" ");
+        double dsp = Math.abs(sp.getFloat());
+        double mph = dsp / MPH;
+        p.append(String.format("%.0f mph", mph));
+        return p.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder p = new StringBuilder(getSourceNodeID().toString());
+        p.append(" - ");
+        p.append(getDestNodeID());
+        p.append(" ");
+        p.append(getEMTI().toString());
+        p.append(" ");
+        try {
+            switch (getCmd()) {
+                case CMD_SET_SPEED: {
+                    p.append("set speed ");
+                    p.append(speedToDebugString(getSpeed()));
+                    break;
+                }
+                case CMD_GET_SPEED:
+                    p.append("get speed");
+                    break;
+                case CMD_ESTOP:
+                    p.append("set estop");
+                    break;
+                case CMD_SET_FN: {
+                    int fn = Utilities.NetworkToHostUint24(payload, 1);
+                    int val = Utilities.NetworkToHostUint16(payload, 4);
+                    p.append(String.format("set fn %d to %d", fn, val));
+                    break;
+                }
+                case CMD_GET_FN: {
+                    int fn = Utilities.NetworkToHostUint24(payload, 1);
+                    p.append(String.format("get fn %d", fn));
+                    break;
+                }
+            }
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return super.toString();
+        }
+        return p.toString();
+    }
+
+
 }
