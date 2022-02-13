@@ -142,4 +142,86 @@ public class TractionControlRequestMessageTest  {
                 "notify controller change to 09.00.99.11.22.33", msg.toString());
     }
 
+    @Test
+    public void testConsistAttach() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createConsistAttach(
+                src, dst, new NodeID(0x090099112233L),
+                TractionControlRequestMessage.CONSIST_FLAG_HIDE | TractionControlRequestMessage.CONSIST_FLAG_FN0);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("30 01 84 09 00 99 11 22 33", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "listener attach 09.00.99.11.22.33 flags link-f0,hide", msg.toString());
+    }
+
+    @Test
+    public void testConsistDetach() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createConsistDetach(
+                src, dst, new NodeID(0x090099112233L));
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("30 02 00 09 00 99 11 22 33", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "listener detach 09.00.99.11.22.33", msg.toString());
+    }
+
+    @Test
+    public void testConsistLengthQuery() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createConsistLengthQuery(
+                src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("30 03", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "listener query", msg.toString());
+    }
+
+    @Test
+    public void testConsistIndexQuery() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createConsistIndexQuery(
+                src, dst,4);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("30 03 04", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "listener query index 4", msg.toString());
+    }
+
+    @Test
+    public void testMgmtReserve() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createReserve(src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("40 01", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "management reserve", msg.toString());
+    }
+
+    @Test
+    public void testMgmtRelease() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createRelease(src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("40 02", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "management release", msg.toString());
+    }
+
+    @Test
+    public void testMgmtNoop() throws Exception {
+        TractionControlRequestMessage msg = TractionControlRequestMessage.createNoop(src, dst);
+        byte[] payload = msg.getPayload();
+        Assert.assertEquals("40 03", Utilities.toHexSpaceString(payload));
+        Assert.assertEquals(src, msg.getSourceNodeID());
+        Assert.assertEquals(dst, msg.getDestNodeID());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "noop/heartbeat", msg.toString());
+    }
+
 }

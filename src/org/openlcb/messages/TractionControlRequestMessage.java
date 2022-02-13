@@ -38,9 +38,11 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static byte SUBCMD_CONSIST_ATTACH = 1;
     public final static byte SUBCMD_CONSIST_DETACH = 2;
     public final static byte SUBCMD_CONSIST_QUERY = 3;
+    public final static int CONSIST_FLAG_ALIAS = 0x01;
     public final static int CONSIST_FLAG_REVERSE = 0x02;
     public final static int CONSIST_FLAG_FN0 = 0x04;
     public final static int CONSIST_FLAG_FNN = 0x08;
+    public final static int CONSIST_FLAG_HIDE = 0x80;
 
     public final static byte CMD_MGMT = 0x40;
     public final static byte SUBCMD_MGMT_RESERVE = 1;
@@ -147,6 +149,24 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
+    /// Lock/Reserve message
+    public static TractionControlRequestMessage createReserve(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_RESERVE};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Unlock/Release message
+    public static TractionControlRequestMessage createRelease(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_RELEASE};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Noop message (used for heartbeat request).
+    public static TractionControlRequestMessage createNoop(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_NOOP};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
     public byte getCmd() throws ArrayIndexOutOfBoundsException {
         return payload[0];
     }
@@ -180,6 +200,30 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         double mph = dsp / MPH;
         p.append(String.format("%.0f mph", mph));
         return p.toString();
+    }
+
+    /// Converts the wire format of a listener attach flag byte to a user readable debug string.
+    public static String consistFlagsToDebugString(int flags) {
+        StringBuilder b = new StringBuilder();
+        if ((flags & CONSIST_FLAG_ALIAS) != 0){
+            b.append("alias,");
+        }
+        if ((flags & CONSIST_FLAG_REVERSE) != 0){
+            b.append("reverse,");
+        }
+        if ((flags & CONSIST_FLAG_FN0) != 0){
+            b.append("link-f0,");
+        }
+        if ((flags & CONSIST_FLAG_FNN) != 0){
+            b.append("link-f*,");
+        }
+        if ((flags & CONSIST_FLAG_HIDE) != 0){
+            b.append("hide,");
+        }
+        if (b.length() > 0) {
+            b.deleteCharAt(b.length() - 1);
+        }
+        return b.toString();
     }
 
     @Override
@@ -248,6 +292,60 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
                             if(flags != 0) {
                                 p.append(String.format(" flags 0x%02x", flags));
                             }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_CONSIST: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_CONSIST_ATTACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            p.append("listener attach ");
+                            p.append(new NodeID(nid).toString());
+                            if(flags != 0) {
+                                p.append(" flags ");
+                                p.append(consistFlagsToDebugString(flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONSIST_DETACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            p.append("listener detach ");
+                            p.append(new NodeID(nid).toString());
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONSIST_QUERY: {
+                            p.append("listener query");
+                            if (payload.length > 2) {
+                                p.append(String.format(" index %d", payload[2] & 0xff));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_MGMT: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_MGMT_RESERVE: {
+                            p.append("management reserve");
+                            break;
+                        }
+                        case SUBCMD_MGMT_RELEASE: {
+                            p.append("management release");
+                            break;
+                        }
+                        case SUBCMD_MGMT_NOOP: {
+                            p.append("noop/heartbeat");
                             break;
                         }
                         default:
