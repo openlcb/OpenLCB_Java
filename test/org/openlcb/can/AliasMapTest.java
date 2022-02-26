@@ -51,5 +51,34 @@ public class AliasMapTest  {
         Assert.assertEquals("get Alias", -1, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
         Assert.assertEquals("get NodeID", new NodeID(), map.getNodeID(0));
     }
-    
+
+    @Test
+    public void testWatcher() {
+        AliasMap map = new AliasMap();
+
+        NodeID nid = new NodeID(new byte[]{1,2,3,4,5,6});
+        int a = 432;
+
+        final boolean[] found = {false};
+        map.addWatcher(new AliasMap.Watcher() {
+            @Override
+            public void aliasAdded(NodeID id, int alias) {
+                found[0] = true;
+                Assert.assertEquals(nid, id);
+                Assert.assertEquals(a, alias);
+            }
+        });
+
+        map.insert(a, nid);
+        Assert.assertTrue(found[0]);
+
+        found[0] = false;
+
+        OpenLcbCanFrame f = new OpenLcbCanFrame(a);
+        f.setInitializationComplete(a, nid);
+        map.processFrame(f);
+
+        Assert.assertTrue(found[0]);
+    }
+
 }
