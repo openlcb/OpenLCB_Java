@@ -150,6 +150,9 @@ public class CanInterface {
             aliasWatcher.send(frame);
             aliasMap.processFrame(new OpenLcbCanFrame(frame));
             List<Message> l = messageBuilder.processFrame(frame);
+            if (messageBuilder.foundUnblockedMessage()) {
+                olcbInterface.getOutputConnection().put(messageBuilder.getTriggerMessage(), null);
+            }
             if (l == null) return;
             for (Message m : l) {
                 olcbInterface.getInputConnection().put(m, null);
