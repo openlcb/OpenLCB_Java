@@ -3,6 +3,7 @@ package org.openlcb.can;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openlcb.*;
@@ -23,7 +24,7 @@ import org.openlcb.messages.TractionProxyRequestMessage;
  * @author  Bob Jacobsen   Copyright 2010
  * @version $Revision$
  */
-public class MessageBuilder {
+public class MessageBuilder implements AliasMap.Watcher {
 
     private final static Logger logger = Logger.getLogger(MessageBuilder.class.getName());
     /**
@@ -33,10 +34,66 @@ public class MessageBuilder {
      */
     public MessageBuilder(AliasMap map) {
         this.map = map;
+        map.addWatcher(this);
     }
 
     AliasMap map;
-    
+
+
+    private static class BlockedMessage {
+        BlockedMessage(Message m) {
+            message = m;
+        }
+        /// Addressed message that was sent earlier.
+        Message message;
+        /// When this message was sent.
+        long timestampMsec;
+
+        /// Notifies that this message is now sent. This is not used yet; will be necessary to
+        // implement a linked list sorted by timestamp.
+        void release() {}
+    }
+
+    /// Stores addressed messages where we don't know the destination alias to.
+    private final Map<NodeID, List<BlockedMessage> > blockedMessages = new HashMap<>();
+
+    /// Stores addressed messages that we recently got the destination alias.
+    private List<Message> unblockedMessages = new ArrayList<>();
+
+    /// This value is atomically set to true if we found new unblocked messages. Can be reset by
+    // a call to foundUnblockedMessage.
+    private boolean haveUnblockedMessages = false;
+
+    /// Callback from the alias map when a new alias is inserted. This is used to determine if we
+    // are holding on to some messages that are unsent due to missing destination alias.
+    @Override
+    public void aliasAdded(NodeID id, int alias) {
+        if (alias <= 0) {
+            // Ignores invalid aliases.
+            return;
+        }
+        synchronized (blockedMessages) {
+            List<BlockedMessage> l = blockedMessages.get(id);
+            if (l == null) {
+                return;
+            }
+            for (BlockedMessage bm: l) {
+                unblockedMessages.add(bm.message);
+                haveUnblockedMessages = true;
+            }
+            l.clear();
+        }
+    }
+
+    /// @return true exactly once after we found some unblocked messages.
+    boolean foundUnblockedMessage() {
+        synchronized (blockedMessages) {
+            boolean ret = haveUnblockedMessages;
+            haveUnblockedMessages = false;
+            return ret;
+        }
+    }
+
     /** 
      * Accept a frame, and convert to 
      * a standard OpenLCB Message object.
@@ -427,18 +484,98 @@ public class MessageBuilder {
      * @return CAN frames (one or more) representing that message
      */
     public List<OpenLcbCanFrame> processMessage(Message msg) {
+        // Checks and flushes unblocked messages first.
+        List<Message> pending = null;
+        synchronized (blockedMessages) {
+            if (!unblockedMessages.isEmpty()) {
+                pending = unblockedMessages;
+                unblockedMessages = new ArrayList<>();
+            }
+        }
+        List<OpenLcbCanFrame> r = null;
+        if (pending != null) {
+            r = new ArrayList<>();
+            for (Message m : pending) {
+                FrameBuilder f = new FrameBuilder();
+                r.addAll(f.convert(m));
+            }
+        }
 
+        // Processes the new message.
         FrameBuilder f = new FrameBuilder();
-        return f.convert(msg);
+        if (r == null) {
+            return f.convert(msg);
+        } else {
+            r.addAll(f.convert(msg));
+            return r;
+        }
     }
-    
+
+    /// @return a message that can be enqueued but does not turn into any outgoing frame. The
+    // interface can use this message to wake up its internal threads when we detected that
+    // blocked messages need to be sent out.
+    public Message getTriggerMessage() {
+        return new NullMessage();
+    }
+
+    /// Message that we can enqueue to wake up the outgoing frame builder.
+    private class NullMessage extends Message {
+        @Override
+        public int getMTI() {
+            return 0;
+        }
+    };
+
     private class FrameBuilder extends org.openlcb.MessageDecoder {
+        /**
+         * Verifies that we know the destination alias for an addressed message. If it is not
+         * known, then generates a lookup frame, and enqueues the message for a later send.
+         * @param m message to send.
+         * @return true if this message can be sent. False if this message was enqueued for a
+         * later send instead.
+         */
+        private boolean checkForDestinationAndQueue(Message m) {
+            if (!(m instanceof AddressedMessage)) {
+                // not addressed -> send immediately
+                return true;
+            }
+            AddressedMessage am = (AddressedMessage)m;
+            if (map.getAlias(am.getDestNodeID()) > 0) {
+                // Have destination alias -> send immediately
+                return true;
+            }
+            // We don't know the destination alias.
+
+            // Sends a node id verify message.
+            VerifyNodeIDNumberMessage om = new VerifyNodeIDNumberMessage(m.getSourceNodeID(),
+                    ((AddressedMessage) m).getDestNodeID());
+            handleVerifyNodeIDNumber(om, null);
+
+            // Enqueues the outgoing message.
+            synchronized (blockedMessages) {
+                List<BlockedMessage> bl = blockedMessages.get(am.getDestNodeID());
+                if (bl == null) {
+                    bl = new ArrayList<>();
+                    blockedMessages.put(am.getDestNodeID(), bl);
+                }
+
+                bl.add(new BlockedMessage(m));
+            }
+
+            // Tells the caller to skip sending this message now.
+            return false;
+        }
+
         /**
          * Catches messages that are not explicitly 
          * handled and throws an error
          */
         @Override
         protected void defaultHandler(Message msg, Connection sender) {
+            if (msg instanceof NullMessage) {
+                // This should not turn into any outgoing frames.
+                return;
+            }
             if (msg instanceof AddressedPayloadMessage) {
                 handleAddressedPayloadMessage((AddressedPayloadMessage)msg, sender);
             } else {
@@ -458,6 +595,9 @@ public class MessageBuilder {
         }
 
         private void handleAddressedPayloadMessage(AddressedPayloadMessage msg, Connection sender) {
+            if (!checkForDestinationAndQueue(msg)) {
+                return;
+            }
             byte[] payload = msg.getPayload();
             if (payload == null) {
                 payload = new byte[0];
@@ -625,6 +765,9 @@ public class MessageBuilder {
          */
         @Override
         public void handleDatagram(DatagramMessage msg, Connection sender){
+            if (!checkForDestinationAndQueue(msg)) {
+                return;
+            }
             // must loop over data to send 8 byte chunks
             int remains = msg.getData().length;
             int j = 0;
@@ -652,7 +795,9 @@ public class MessageBuilder {
          */
         @Override
         public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
-            // dph
+            if (!checkForDestinationAndQueue(msg)) {
+                return;
+            }
             // must loop over data to send 8 byte chunks
             int remains = msg.getData().length;
             int j = 0;
