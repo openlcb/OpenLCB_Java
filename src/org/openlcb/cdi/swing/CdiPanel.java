@@ -519,6 +519,7 @@ public class CdiPanel extends JPanel {
 
     private void addLoadingListener() {
         synchronized(rep) {
+            if (loadingListener != null) return;
             loadingListener = new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent event) {
@@ -545,9 +546,12 @@ public class CdiPanel extends JPanel {
     }
 
     private void displayLoadingProgress() {
-        if (loadingPanel == null) createLoadingPane();
-        contentPanel.add(loadingPanel);
+        if (loadingPanel == null) {
+            createLoadingPane();
+            contentPanel.add(loadingPanel);
+        }
         addLoadingListener();
+        loadingPanel.setVisible(true);
     }
 
     private void displayCdi() {
