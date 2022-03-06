@@ -26,12 +26,14 @@ public class Float16Test {
     public void testZeroAsBits() {
         f = new Float16(0.0f);
         Assert.assertEquals("zero", 0, f.getInt());
+        Assert.assertTrue(f.isPositive());
     }
     
     @Test 
     public void testNegZeroAsBits() {
         f = new Float16(0.0, false);
         Assert.assertEquals("neg zero", 0x8000, f.getInt());
+        Assert.assertFalse(f.isPositive());
     }
     
     @Test 
@@ -44,12 +46,14 @@ public class Float16Test {
     public void testTwoAsBits() {
         f = new Float16(2.0f);
         Assert.assertEquals("two", 0x4000, f.getInt());
+        Assert.assertTrue(f.isPositive());
     }
     
     @Test 
     public void testNegTwoAsBits() {
         f = new Float16(-2.0f);
         Assert.assertEquals("-two", 0xC000, f.getInt());
+        Assert.assertFalse(f.isPositive());
     }
     
     @Test 

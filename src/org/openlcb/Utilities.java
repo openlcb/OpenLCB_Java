@@ -128,7 +128,7 @@ public class Utilities {
     }
 
     static public int NetworkToHostUint8(byte[] arr, int offset) {
-        if (arr == null || arr.length < offset) {
+        if (arr == null || arr.length <= offset) {
             return 0;
         }
         int r = arr[offset];
@@ -141,7 +141,7 @@ public class Utilities {
     }
 
     static public int NetworkToHostUint16(byte[] arr, int offset) {
-        if (arr == null || arr.length < (offset+1)) {
+        if (arr == null || arr.length <= (offset+1)) {
             return 0;
         }
         return ((((int)arr[offset]) & 0xff) << 8) |
@@ -153,8 +153,23 @@ public class Utilities {
         arr[offset+1] = (byte) (value & 0xff);
     }
 
+    static public int NetworkToHostUint24(byte[] arr, int offset) {
+        if (arr == null || arr.length <= (offset+2)) {
+            return 0;
+        }
+        return (((((int)arr[offset]) & 0xff) << 16) |
+                ((((int)arr[offset+1]) & 0xff) << 8) |
+                (((int)arr[offset+2]) & 0xff));
+    }
+
+    static public void HostToNetworkUint24(byte[] arr, int offset, int value) {
+        arr[offset] = (byte) ((value >> 16) & 0xff);
+        arr[offset+1] = (byte) ((value >> 8) & 0xff);
+        arr[offset+2] = (byte) (value & 0xff);
+    }
+
     static public long NetworkToHostUint32(byte[] arr, int offset) {
-        if (arr == null || arr.length < (offset+3)) {
+        if (arr == null || arr.length <= (offset+3)) {
             return 0;
         }
         long ret = 0;
@@ -176,7 +191,7 @@ public class Utilities {
     }
 
     static public long NetworkToHostUint48(byte[] arr, int offset) {
-        if (arr == null || arr.length < (offset+5)) {
+        if (arr == null || arr.length <= (offset+5)) {
             return 0;
         }
         long ret = 0;

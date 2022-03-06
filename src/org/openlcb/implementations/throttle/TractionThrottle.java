@@ -48,9 +48,14 @@ public class TractionThrottle extends MessageDecoder {
         @Override
         public void update(Float t) {
             if (!enabled) return;
-
-            Message m = TractionControlRequestMessage.createSetSpeed(iface.getNodeId(),
-                    trainNode.getNodeId(), Math.copySign(1.0, t) >= 0, t);
+            Message m;
+            if (Float.isNaN(t)) {
+                m = TractionControlRequestMessage.createSetEstop(iface.getNodeId(),
+                        trainNode.getNodeId());
+            } else {
+                m = TractionControlRequestMessage.createSetSpeed(iface.getNodeId(),
+                        trainNode.getNodeId(), Math.copySign(1.0, t) >= 0, t);
+            }
             iface.getOutputConnection().put(m, TractionThrottle.this);
 
         }
