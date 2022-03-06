@@ -44,10 +44,15 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static int CONSIST_FLAG_FNN = 0x08;
     public final static int CONSIST_FLAG_HIDE = 0x80;
 
+    public final static int CONSIST_FLAG_LISTENERS =
+            CONSIST_FLAG_HIDE | CONSIST_FLAG_FN0 | CONSIST_FLAG_FNN;
+
     public final static byte CMD_MGMT = 0x40;
     public final static byte SUBCMD_MGMT_RESERVE = 1;
     public final static byte SUBCMD_MGMT_RELEASE = 2;
     public final static byte SUBCMD_MGMT_NOOP = 3;
+
+    public final static byte CMD_LISTENER_FORWARD = (byte)0x80;
 
     /// 1 scale mph in meters per second for the getspeed/setspeed commands
     public final static double MPH = 0.44704;
@@ -168,7 +173,18 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     }
 
     public byte getCmd() throws ArrayIndexOutOfBoundsException {
-        return payload[0];
+        int p = payload[0] & 0xff;
+        // Removes the consist listener forward flag.
+        return (byte)(p & 0x7F);
+    }
+
+    /**
+     * Checks if this message is forwarded as part of the consist listener protocol.
+     * @return true if this message is a forwarded traciton request, false if this is an original
+     * (operator-initiated) command.
+     */
+    public boolean isListenerMessage() {
+        return (payload[0] & CMD_LISTENER_FORWARD) != 0;
     }
 
     // Valid for messages that contain a subcommand.
@@ -179,6 +195,26 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     // Valid for SetSpeed message
     public Float16 getSpeed() throws ArrayIndexOutOfBoundsException {
         return new Float16((((int)payload[1]) << 8) | (payload[2] & 0xff));
+    }
+
+    // Valid only for get function request
+    public int getFnNumber() {
+        int retval = 0;
+        retval = payload[1] & 0xff;
+        retval <<= 8;
+        retval |= (payload[2] & 0xff);
+        retval <<= 8;
+        retval |= (payload[3] & 0xff);
+        return retval;
+    }
+
+    // Valid only for get function request
+    public int getFnVal() {
+        int retval = 0;
+        retval = payload[4] & 0xff;
+        retval <<= 8;
+        retval |= (payload[5] & 0xff);
+        return retval;
     }
 
     @Override
@@ -234,6 +270,9 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         p.append(" ");
         p.append(getEMTI().toString());
         p.append(" ");
+        if (isListenerMessage()) {
+            p.append("[listener] ");
+        }
         try {
             switch (getCmd()) {
                 case CMD_SET_SPEED: {
