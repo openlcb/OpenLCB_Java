@@ -244,7 +244,7 @@ public class TractionThrottle extends MessageDecoder {
     private synchronized FunctionInfo getFunctionInfo(int fn) {
         FunctionInfo v = functions.get(fn);
         if (v == null) {
-            logger.warning("Creating function " + fn);
+            logger.fine("Creating function " + fn);
             v = new FunctionInfo(fn);
             functions.put(fn, v);
             if (!pendingAssign) {
@@ -284,7 +284,7 @@ public class TractionThrottle extends MessageDecoder {
             if (msg.getCmd() == TractionControlReplyMessage.CMD_GET_FN) {
                 int fn = msg.getFnNumber();
                 int val = msg.getFnVal();
-                logger.warning("Function response: train function " + fn + " value " + val);
+                logger.fine("Function response: train function " + fn + " value " + val);
                 getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
                 return;
             }
@@ -353,7 +353,7 @@ public class TractionThrottle extends MessageDecoder {
             if (msg.getCmd() == TractionControlRequestMessage.CMD_SET_FN) {
                 int fn = msg.getFnNumber();
                 int val = msg.getFnVal();
-                logger.warning("Function request: train function " + fn + " value " + val);
+                logger.fine("Function request: train function " + fn + " value " + val);
                 getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
                 return;
             }
@@ -370,7 +370,7 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     private void setStatus(String status) {
-        logger.warning("Throttle status: " + status);
+        logger.fine("Throttle status: " + status);
         String oldStatus = this.status;
         this.status = status;
         firePropertyChange(UPDATE_PROP_STATUS, oldStatus, this.status);
