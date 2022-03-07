@@ -56,7 +56,7 @@ public class Float16 {
             }
         }
         
-        int ch =  ((int)(d*1024.))&0x3FF;
+        int ch =  ((int)(d*1024. + 0.5))&0x3FF;
         if ((((int)(d*1024.))&0x400) != 0x400) logger.log(Level.WARNING, "normalization failed with d={0} exp={1}", new Object[]{d, exp});
         int bits = ch | (exp<<10);
         if (!positive) bits = bits | 0x8000;
@@ -92,5 +92,10 @@ public class Float16 {
         int sign = ( (byte1 & 0x80) !=0 ) ? -1 : +1;
         return (float)(((double)ch)/1024.0*(Math.pow(2, exp)))*sign;
     }
-    
+
+    /// @return true if this is a positive number (meaning forward speed), false if it is
+    /// negative (reverse speed).
+    public boolean isPositive() {
+        return (byte1 & 0x80) == 0;
+    }
 }

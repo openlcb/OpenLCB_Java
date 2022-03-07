@@ -50,6 +50,13 @@ public class NodeID {
             this.contents[i] = contents[i];
     }
 
+    @CheckReturnValue
+    public NodeID(long value) {
+        byte[] c = new byte[BYTECOUNT];
+        Utilities.HostToNetworkUint48(c, 0, value);
+        contents = c;
+    }
+
     byte[] contents;
 
     @CheckReturnValue

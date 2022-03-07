@@ -3,11 +3,13 @@ package org.openlcb.messages;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
+import org.openlcb.AddressedMessage;
 import org.openlcb.AddressedPayloadMessage;
 import org.openlcb.Connection;
 import org.openlcb.MessageDecoder;
 import org.openlcb.MessageTypeIdentifier;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
 import org.openlcb.implementations.throttle.Float16;
 
 /**
@@ -36,14 +38,21 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     public final static byte SUBCMD_CONSIST_ATTACH = 1;
     public final static byte SUBCMD_CONSIST_DETACH = 2;
     public final static byte SUBCMD_CONSIST_QUERY = 3;
+    public final static int CONSIST_FLAG_ALIAS = 0x01;
     public final static int CONSIST_FLAG_REVERSE = 0x02;
     public final static int CONSIST_FLAG_FN0 = 0x04;
     public final static int CONSIST_FLAG_FNN = 0x08;
+    public final static int CONSIST_FLAG_HIDE = 0x80;
 
-    public final static byte CMD_MGMT = 0x20;
+    public final static byte CMD_MGMT = 0x40;
     public final static byte SUBCMD_MGMT_RESERVE = 1;
     public final static byte SUBCMD_MGMT_RELEASE = 2;
+    public final static byte SUBCMD_MGMT_NOOP = 3;
 
+    /// 1 scale mph in meters per second for the getspeed/setspeed commands
+    public final static double MPH = 0.44704;
+    /// 1 scale km/h in meters per second for the getspeed/setspeed commands
+    public final static double KMH = 0.277778;
 
     public TractionControlRequestMessage(NodeID source, NodeID dest, byte[] payload) {
         super(source, dest, payload);
@@ -63,6 +72,10 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
 
         byte[] payload = new byte[]{CMD_SET_SPEED, sp.getByte1(), sp.getByte2()};
         return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    public static TractionControlRequestMessage createSetEstop(NodeID source, NodeID dest) {
+        return new TractionControlRequestMessage(source, dest, new byte[]{CMD_ESTOP});
     }
 
     public static TractionControlRequestMessage createGetSpeed(NodeID source, NodeID dest) {
@@ -136,6 +149,24 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
         return new TractionControlRequestMessage(source, dest, payload);
     }
 
+    /// Lock/Reserve message
+    public static TractionControlRequestMessage createReserve(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_RESERVE};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Unlock/Release message
+    public static TractionControlRequestMessage createRelease(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_RELEASE};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
+    /// Noop message (used for heartbeat request).
+    public static TractionControlRequestMessage createNoop(NodeID source, NodeID dest) {
+        byte[] payload = new byte[]{CMD_MGMT, SUBCMD_MGMT_NOOP};
+        return new TractionControlRequestMessage(source, dest, payload);
+    }
+
     public byte getCmd() throws ArrayIndexOutOfBoundsException {
         return payload[0];
     }
@@ -158,5 +189,177 @@ public class TractionControlRequestMessage extends AddressedPayloadMessage {
     @Override
     public MessageTypeIdentifier getEMTI() {
         return MessageTypeIdentifier.TractionControlRequest;
+    }
+
+    /// Converts a wire format speed value to a user visible string to be used for debug printouts.
+    public static String speedToDebugString(Float16 sp) {
+        StringBuilder p = new StringBuilder();
+        if (sp.isPositive()) p.append('F'); else p.append('R');
+        p.append(" ");
+        double dsp = Math.abs(sp.getFloat());
+        double mph = dsp / MPH;
+        p.append(String.format("%.0f mph", mph));
+        return p.toString();
+    }
+
+    /// Converts the wire format of a listener attach flag byte to a user readable debug string.
+    public static String consistFlagsToDebugString(int flags) {
+        StringBuilder b = new StringBuilder();
+        if ((flags & CONSIST_FLAG_ALIAS) != 0){
+            b.append("alias,");
+        }
+        if ((flags & CONSIST_FLAG_REVERSE) != 0){
+            b.append("reverse,");
+        }
+        if ((flags & CONSIST_FLAG_FN0) != 0){
+            b.append("link-f0,");
+        }
+        if ((flags & CONSIST_FLAG_FNN) != 0){
+            b.append("link-f*,");
+        }
+        if ((flags & CONSIST_FLAG_HIDE) != 0){
+            b.append("hide,");
+        }
+        if (b.length() > 0) {
+            b.deleteCharAt(b.length() - 1);
+        }
+        return b.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder p = new StringBuilder(getSourceNodeID().toString());
+        p.append(" - ");
+        p.append(getDestNodeID());
+        p.append(" ");
+        p.append(getEMTI().toString());
+        p.append(" ");
+        try {
+            switch (getCmd()) {
+                case CMD_SET_SPEED: {
+                    p.append("set speed ");
+                    p.append(speedToDebugString(getSpeed()));
+                    break;
+                }
+                case CMD_GET_SPEED:
+                    p.append("get speed");
+                    break;
+                case CMD_ESTOP:
+                    p.append("set estop");
+                    break;
+                case CMD_SET_FN: {
+                    int fn = Utilities.NetworkToHostUint24(payload, 1);
+                    int val = Utilities.NetworkToHostUint16(payload, 4);
+                    p.append(String.format("set fn %d to %d", fn, val));
+                    break;
+                }
+                case CMD_GET_FN: {
+                    int fn = Utilities.NetworkToHostUint24(payload, 1);
+                    p.append(String.format("get fn %d", fn));
+                    break;
+                }
+                case CMD_CONTROLLER: {
+                    switch(getSubCmd()) {
+                        case SUBCMD_CONTROLLER_ASSIGN: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("assign controller ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_RELEASE: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("release controller ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_QUERY: {
+                            p.append("query controller");
+                            break;
+                        }
+                        case SUBCMD_CONTROLLER_CHANGE: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            p.append("notify controller change to ");
+                            p.append(new NodeID(nid).toString());
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_CONSIST: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_CONSIST_ATTACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            p.append("listener attach ");
+                            p.append(new NodeID(nid).toString());
+                            if(flags != 0) {
+                                p.append(" flags ");
+                                p.append(consistFlagsToDebugString(flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONSIST_DETACH: {
+                            long nid = Utilities.NetworkToHostUint48(payload, 3);
+                            int flags = Utilities.NetworkToHostUint8(payload, 2);
+                            p.append("listener detach ");
+                            p.append(new NodeID(nid).toString());
+                            if(flags != 0) {
+                                p.append(String.format(" flags 0x%02x", flags));
+                            }
+                            break;
+                        }
+                        case SUBCMD_CONSIST_QUERY: {
+                            p.append("listener query");
+                            if (payload.length > 2) {
+                                p.append(String.format(" index %d", payload[2] & 0xff));
+                            }
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                case CMD_MGMT: {
+                    switch (getSubCmd()) {
+                        case SUBCMD_MGMT_RESERVE: {
+                            p.append("management reserve");
+                            break;
+                        }
+                        case SUBCMD_MGMT_RELEASE: {
+                            p.append("management release");
+                            break;
+                        }
+                        case SUBCMD_MGMT_NOOP: {
+                            p.append("noop/heartbeat");
+                            break;
+                        }
+                        default:
+                            return super.toString();
+                    }
+                    break;
+                }
+                default:
+                    return super.toString();
+            }
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return super.toString();
+        }
+        return p.toString();
     }
 }

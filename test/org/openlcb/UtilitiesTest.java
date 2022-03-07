@@ -64,9 +64,15 @@ public class UtilitiesTest  {
         Utilities.HostToNetworkUint8(b, 2, 168);
         Assert.assertEquals("00 00 A8 00 00", Utilities.toHexSpaceString(b));
         Assert.assertEquals(168, Utilities.NetworkToHostUint8(b, 2));
+
         Utilities.HostToNetworkUint16(b, 1, 43766);
         Assert.assertEquals("00 AA F6 00 00", Utilities.toHexSpaceString(b));
         Assert.assertEquals(43766, Utilities.NetworkToHostUint16(b, 1));
+
+        Utilities.HostToNetworkUint24(b, 1, 12298956);
+        Assert.assertEquals("00 BB AA CC 00", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(12298956, Utilities.NetworkToHostUint24(b, 1));
+
         Utilities.HostToNetworkUint32(b, 1, 17);
         Assert.assertEquals("00 00 00 00 11", Utilities.toHexSpaceString(b));
         Assert.assertEquals(17, Utilities.NetworkToHostUint32(b, 1));
@@ -78,6 +84,17 @@ public class UtilitiesTest  {
         Utilities.HostToNetworkUint48(b, 0, 0x0501010118DAL);
         Assert.assertEquals("05 01 01 01 18 DA", Utilities.toHexSpaceString(b));
         Assert.assertEquals(0x0501010118DAL, Utilities.NetworkToHostUint48(b, 0));
+
+        Utilities.HostToNetworkUint48(b, 0, 0xDDEEFFAABBCCL);
+        Assert.assertEquals("DD EE FF AA BB CC", Utilities.toHexSpaceString(b));
+        Assert.assertEquals(0xDDEEFFAABBCCL, Utilities.NetworkToHostUint48(b, 0));
+
+        // These have their offfset out of bounds.
+        Assert.assertEquals(0, Utilities.NetworkToHostUint48(b, 1));
+        Assert.assertEquals(0, Utilities.NetworkToHostUint32(b, 3));
+        Assert.assertEquals(0, Utilities.NetworkToHostUint24(b, 4));
+        Assert.assertEquals(0, Utilities.NetworkToHostUint16(b, 5));
+        Assert.assertEquals(0, Utilities.NetworkToHostUint8(b, 6));
     }
 
     boolean compareArrays(byte[] a, byte[]b) {

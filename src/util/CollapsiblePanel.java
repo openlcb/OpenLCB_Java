@@ -153,6 +153,10 @@ public class CollapsiblePanel extends JPanel {
 		contentPanel_.setVisible(selected);
 	}
 
+	public JPanel getHeader() {
+		return headerPanel_;
+	}
+
 	public void toggleSelection() {
 		selected = !selected;
 		contentPanel_.setVisible(selected);
