@@ -16,6 +16,8 @@ import org.openlcb.implementations.VersionedValueListener;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
 
+import static org.openlcb.messages.TractionControlRequestMessage.CONSIST_FLAG_LISTENERS;
+
 /**
  * Traction protocol based implementation of the throttle. This differs from
  * {@link org.openlcb.implementations.throttle.ThrottleImplementation} in that
@@ -106,7 +108,11 @@ public class TractionThrottle extends MessageDecoder {
      */
     public void release() {
         if (!assigned) return;
-        Message m = TractionControlRequestMessage.createReleaseController(iface.getNodeId(),
+        Message m = TractionControlRequestMessage.createConsistDetach(iface.getNodeId(),
+                trainNode.getNodeId(),iface.getNodeId());
+        iface.getOutputConnection().put(m, this);
+
+        m = TractionControlRequestMessage.createReleaseController(iface.getNodeId(),
                 trainNode.getNodeId());
         iface.getOutputConnection().put(m, this);
         assigned = false;
@@ -130,12 +136,29 @@ public class TractionThrottle extends MessageDecoder {
         iface.getOutputConnection().put(m, this);
     }
 
+    /**
+     * Invoked when the controller assign reply message arrives from the train node with a
+     * successful result.
+     */
     private void assignComplete() {
         assigned = true;
         setStatus("Enabled.");
         setEnabled(true);
         // Refreshes functions and other settings after getting the definite promise from the node.
         refresh();
+        Message m = TractionControlRequestMessage.createConsistAttach(iface.getNodeId(),
+                trainNode.getNodeId(),iface.getNodeId(),CONSIST_FLAG_LISTENERS);
+        iface.getOutputConnection().put(m, this);
+    }
+
+    /** Invoked when a heartbeat request message comes from the train node.
+     *  Sends back a noop traction request.
+     * @param msg heartbeat request message
+     */
+    private void handleHeartbeatMessage(TractionControlReplyMessage msg) {
+        Message m = TractionControlRequestMessage.createNoop(iface.getNodeId(),
+                trainNode.getNodeId());
+        iface.getOutputConnection().put(m, this);
     }
 
     /**
@@ -221,7 +244,7 @@ public class TractionThrottle extends MessageDecoder {
     private synchronized FunctionInfo getFunctionInfo(int fn) {
         FunctionInfo v = functions.get(fn);
         if (v == null) {
-            logger.warning("Creating function " + fn);
+            logger.fine("Creating function " + fn);
             v = new FunctionInfo(fn);
             functions.put(fn, v);
             if (!pendingAssign) {
@@ -261,7 +284,7 @@ public class TractionThrottle extends MessageDecoder {
             if (msg.getCmd() == TractionControlReplyMessage.CMD_GET_FN) {
                 int fn = msg.getFnNumber();
                 int val = msg.getFnVal();
-                logger.warning("Function response: train function " + fn + " value " + val);
+                logger.fine("Function response: train function " + fn + " value " + val);
                 getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
                 return;
             }
@@ -300,12 +323,46 @@ public class TractionThrottle extends MessageDecoder {
                 queryConsist();
                 return;
             }
+            if (msg.getCmd() == TractionControlReplyMessage.CMD_MGMT &&
+                    msg.getSubCmd() == TractionControlReplyMessage.SUBCMD_MGMT_HEARTBEAT) {
+                handleHeartbeatMessage(msg);
+                return;
+            }
         } catch (ArrayIndexOutOfBoundsException e) {
             // Invalid message.
             logger.warning("Invalid traction message " +msg.toString());
             return;
         }
-        logger.info("Unhandled traction message " +msg.toString());
+        logger.info("Unhandled traction response message " +msg.toString());
+    }
+
+    @Override
+    public void handleTractionControlRequest(TractionControlRequestMessage msg, Connection sender) {
+        if (trainNode == null) return;
+        if (!msg.getSourceNodeID().equals(trainNode.getNodeId())) return;
+        if (!msg.getDestNodeID().equals(iface.getNodeId())) return;
+        try {
+            if (msg.getCmd() == TractionControlRequestMessage.CMD_SET_SPEED) {
+                speedUpdater.setFromOwner(msg.getSpeed().getFloat());
+                return;
+            }
+            if (msg.getCmd() == TractionControlRequestMessage.CMD_ESTOP) {
+                speedUpdater.setFromOwner(Float.NaN);
+                return;
+            }
+            if (msg.getCmd() == TractionControlRequestMessage.CMD_SET_FN) {
+                int fn = msg.getFnNumber();
+                int val = msg.getFnVal();
+                logger.fine("Function request: train function " + fn + " value " + val);
+                getFunctionInfo(fn).fnUpdater.setFromOwner(val != 0);
+                return;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // Invalid message.
+            logger.warning("Invalid traction message " +msg.toString());
+            return;
+        }
+        logger.info("Unhandled traction request message (to listener) " +msg.toString());
     }
 
     public String getStatus() {
@@ -313,7 +370,7 @@ public class TractionThrottle extends MessageDecoder {
     }
 
     private void setStatus(String status) {
-        logger.warning("Throttle status: " + status);
+        logger.fine("Throttle status: " + status);
         String oldStatus = this.status;
         this.status = status;
         firePropertyChange(UPDATE_PROP_STATUS, oldStatus, this.status);

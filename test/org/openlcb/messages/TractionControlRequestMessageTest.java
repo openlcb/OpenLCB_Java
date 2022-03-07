@@ -32,21 +32,49 @@ public class TractionControlRequestMessageTest  {
         Assert.assertEquals("00 45 D0", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set speed F 13 mph", msg.toString());
+        Assert.assertEquals(13 * MPH, msg.getSpeed().getFloat(), 1e-2);
 
         msg = TractionControlRequestMessage.createSetSpeed(src, dst, false, 13 * MPH);
         Assert.assertEquals("00 C5 D0", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set speed R 13 mph", msg.toString());
+        Assert.assertEquals(-13 * MPH, msg.getSpeed().getFloat(), 1e-2);
 
         msg = TractionControlRequestMessage.createSetSpeed(src, dst, true, 126 * MPH);
         Assert.assertEquals("00 53 0A", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set speed F 126 mph", msg.toString());
+        Assert.assertEquals(126 * MPH, msg.getSpeed().getFloat(), 1e-1);
 
         msg = TractionControlRequestMessage.createSetSpeed(src, dst, false, 126 * MPH);
         Assert.assertEquals("00 D3 0A", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set speed R 126 mph", msg.toString());
+        Assert.assertEquals(-126 * MPH, msg.getSpeed().getFloat(), 1e-1);
+    }
+
+    @Test public void testListenerReply() throws Exception {
+        TractionControlRequestMessage msg = new TractionControlRequestMessage(src, dst,
+                Utilities.bytesFromHexString("80C5D0"));
+        Assert.assertEquals(TractionControlRequestMessage.CMD_SET_SPEED, msg.getCmd());
+        Assert.assertEquals(-13 * MPH, msg.getSpeed().getFloat(), 1e-2);
+        Assert.assertEquals(true,  msg.isListenerMessage());
+
+        msg = new TractionControlRequestMessage(src, dst,
+                Utilities.bytesFromHexString("81 BB AA 99 DD BA"));
+        Assert.assertEquals(TractionControlRequestMessage.CMD_SET_FN, msg.getCmd());
+        Assert.assertEquals(12298905, msg.getFnNumber());
+        Assert.assertEquals(56762, msg.getFnVal());
+        Assert.assertEquals(true,  msg.isListenerMessage());
+        Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
+                "[listener] set fn 12298905 to 56762", msg.toString());
+
+        msg = new TractionControlRequestMessage(src, dst,
+                Utilities.bytesFromHexString("01 BB AA 99 DD BA"));
+        Assert.assertEquals(TractionControlRequestMessage.CMD_SET_FN, msg.getCmd());
+        Assert.assertEquals(12298905, msg.getFnNumber());
+        Assert.assertEquals(56762, msg.getFnVal());
+        Assert.assertEquals(false,  msg.isListenerMessage());
     }
 
     @Test
@@ -72,12 +100,16 @@ public class TractionControlRequestMessageTest  {
         Assert.assertEquals("01 00 00 0B 00 01", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set fn 11 to 1", msg.toString());
+        Assert.assertEquals(11, msg.getFnNumber());
+        Assert.assertEquals(1, msg.getFnVal());
 
         msg = TractionControlRequestMessage.createSetFn(src, dst,
                 12298905, 56762);
         Assert.assertEquals("01 BB AA 99 DD BA", Utilities.toHexSpaceString(msg.getPayload()));
         Assert.assertEquals("06.05.05.04.04.03 - 02.02.02.04.04.04 TractionControlRequest " +
                 "set fn 12298905 to 56762", msg.toString());
+        Assert.assertEquals(12298905, msg.getFnNumber());
+        Assert.assertEquals(56762, msg.getFnVal());
     }
 
     @Test
