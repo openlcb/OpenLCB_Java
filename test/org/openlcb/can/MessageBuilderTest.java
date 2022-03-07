@@ -403,8 +403,60 @@ public class MessageBuilderTest  {
         testDecoding(m, list);
     }
 
+    @Test
+    public void testNullMessage() {
+        MessageBuilder b = new MessageBuilder(map);
+        Message m = b.getTriggerMessage();
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+        // No output from Trigger Message.
+        Assert.assertEquals("count", 0, list.size());
+    }
+
+    @Test
+    public void testDelayedMessage() {
+        MessageBuilder b = new MessageBuilder(map);
+
+        NodeID unknownDst = new NodeID(new byte[]{2,2,2,2,2,2});
+        Message m = new DatagramAcknowledgedMessage(source, unknownDst, 42);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // Instead of the datagram OK message we get a verify node ID message.
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("verify", toHexString(0x19490123), toHexString(f0.getHeader()));
+        compareContent(unknownDst.getContents(), f0);
+
+        Assert.assertFalse(b.foundUnblockedMessage());
+
+        // Now the verify node id comes back.
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x555);
+        frame.setInitializationComplete(0x575, unknownDst);
+
+        b.processFrame(frame);
+        map.processFrame(frame);
+
+        Assert.assertTrue(b.foundUnblockedMessage());
+
+        // Now sending any message will output the pending message.
+        Message mm = new IdentifyEventsGlobalMessage(source);
+        list = b.processMessage(mm);
+
+        Assert.assertEquals("count", 2, list.size());
+        f0 = list.get(0);
+        Assert.assertEquals("datagram-ack-header", toHexString(0x19A28123),
+                toHexString(f0.getHeader()));
+        compareContent(new byte[]{0x05, 0x75, 42}, f0);
+
+        CanFrame f1 = list.get(1);
+        Assert.assertEquals("header", toHexString(0x19970123), toHexString(f1.getHeader()));
+        Assert.assertEquals("payload", 0, f1.getNumDataElements());
+        compareContent(new byte[]{}, f1);
+    }
+
     /** ****************************************************
-     * Tests of messages into frames
+     * Tests of frames into messages
      ***************************************************** */
 
     @Test	

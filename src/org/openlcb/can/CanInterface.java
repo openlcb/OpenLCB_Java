@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 /**
  * CanInterface collects all objects necessary to operate a standards-compliant node that connects
- * via CAN-bus.
+ * via CAN-bus. It creates the OlcbInterface internally.
  *
  * Created by bracz on 12/27/15.
  */
@@ -64,7 +64,7 @@ public class CanInterface {
         this.nodeId = interfaceId;
 
         // Creates high-level OpenLCB interface.
-        olcbInterface = new OlcbInterface(nodeId, frameRenderer,threadPool);
+        olcbInterface = new OlcbInterface(nodeId, frameRenderer, threadPool);
 
         // Creates CAN-level OpenLCB objects.
         aliasMap = new AliasMap();
@@ -150,6 +150,9 @@ public class CanInterface {
             aliasWatcher.send(frame);
             aliasMap.processFrame(new OpenLcbCanFrame(frame));
             List<Message> l = messageBuilder.processFrame(frame);
+            if (messageBuilder.foundUnblockedMessage()) {
+                olcbInterface.getOutputConnection().put(messageBuilder.getTriggerMessage(), null);
+            }
             if (l == null) return;
             for (Message m : l) {
                 olcbInterface.getInputConnection().put(m, null);
