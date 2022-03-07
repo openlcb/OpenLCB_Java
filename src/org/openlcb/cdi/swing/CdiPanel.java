@@ -2,12 +2,14 @@ package org.openlcb.cdi.swing;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.openlcb.EventID;
+import org.openlcb.NodeID;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.cmd.RestoreConfig;
 import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.swing.EventIdTextField;
+import org.openlcb.ProducerConsumerEventReportMessage;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -350,6 +352,7 @@ public class CdiPanel extends JPanel {
         moreMenu.show(moreButton, 0, moreButton.getHeight());
     }
 
+
     /**
      * Refreshes all memory variable entries directly from the hardware node.
      */
@@ -495,6 +498,7 @@ public class CdiPanel extends JPanel {
     boolean loadingIsPacked = false;
     JScrollPane scrollPane;
     JPanel contentPanel;
+
     JPanel bottomPanel;
     JPopupMenu moreMenu = new JPopupMenu();
     JButton moreButton;
@@ -1611,6 +1615,9 @@ public class CdiPanel extends JPanel {
         // the current key. value: the user name coming from the respective string valued field.
         Map<String, String> parentVisibleKeys = new TreeMap<>(Collections.reverseOrder());
 
+        JPopupMenu eventidMoreMenu = new JPopupMenu();
+        JButton eventidMoreButton;
+
         EventIdPane(ConfigRepresentation.EventEntry e) {
             super(e, "EventID");
             entry = e;
@@ -1724,7 +1731,31 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void additionalButtons() {
+
             final JTextField tf = textField;
+  
+            JButton bb = factory.handleProduceButton(new JButton("Trigger"));
+            bb.setToolTipText("Click to fire this event.");
+            bb.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    NodeID node = rep.getConnection().getNodeId();
+                    EventID ev = new EventID(org.openlcb.Utilities.bytesFromHexString((String)textField.getText()));
+                    rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), rep.getConnection().getOutputConnection());
+                }
+            });   
+            addButtonToEventidMoreFunctions(bb);
+
+            JButton bAS = factory.handleProduceButton(new JButton("Make Sensor"));
+            bAS.setToolTipText("Add a JMRI sensor with the Event ID.");
+            bAS.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) { 
+                    factory.makeSensor(textField.getText(), getEventName());
+                }
+            }); 
+            addButtonToEventidMoreFunctions(bAS);        
+
             p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
             p3.add(Box.createHorizontalStrut(5));
@@ -1737,6 +1768,32 @@ public class CdiPanel extends JPanel {
             });
             p3.add(b);
             p3.add(Box.createHorizontalStrut(5));
+        }
+
+        private void addButtonToEventidMoreFunctions(final JButton b) {
+            if (eventidMoreButton == null) {
+                eventidMoreButton = new JButton("More...");
+                eventidMoreButton.setToolTipText("Additional actions you can do with this Event ID");
+                eventidMoreButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        showEventidMoreFunctionsMenu();
+                    }
+                });
+                p3.add(eventidMoreButton);
+            }
+            Action a = new AbstractAction(b.getText()) {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    b.doClick();
+                }
+            };
+            eventidMoreMenu.add(a);
+            
+        }
+
+        private void showEventidMoreFunctionsMenu() {
+            eventidMoreMenu.show(eventidMoreButton, 0, eventidMoreButton.getHeight());
         }
 
         @Override
@@ -1930,6 +1987,15 @@ public class CdiPanel extends JPanel {
         }
         public JButton handleWriteButton(JButton button) {
             return button;
+        }
+        public JButton handleEventidMoreButton(JButton button) {
+            return button;
+         } 
+        public JButton handleProduceButton(JButton button) {
+           return button;
+        }
+        public void makeSensor(String ev, String mdesc) {
+            return;
         }
         public void handleGroupPaneStart(JPanel pane) {
             return;
