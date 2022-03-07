@@ -2,6 +2,7 @@ package org.openlcb.cdi.swing;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.openlcb.EventID;
+import org.openlcb.NodeID;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.cmd.RestoreConfig;
@@ -9,7 +10,6 @@ import org.openlcb.cdi.impl.ConfigRepresentation;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.swing.EventIdTextField;
 import org.openlcb.ProducerConsumerEventReportMessage;
-import org.openlcb.*;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -1656,13 +1656,13 @@ public class CdiPanel extends JPanel {
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     NodeID node = rep.getConnection().getNodeId();
                     EventID ev = new EventID(org.openlcb.Utilities.bytesFromHexString((String)textField.getText()));
-                    rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), null);
+                    rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), rep.getConnection().getOutputConnection());
                 }
             });   
             addButtonToEventidMoreFunctions(bb);
 
             JButton bAS = factory.handleProduceButton(new JButton("Make Sensor"));
-            bAS.setToolTipText("Add a JMRI sensor with the eventid.");
+            bAS.setToolTipText("Add a JMRI sensor with the Event ID.");
             bAS.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) { 
@@ -1688,7 +1688,7 @@ public class CdiPanel extends JPanel {
         private void addButtonToEventidMoreFunctions(final JButton b) {
             if (eventidMoreButton == null) {
                 eventidMoreButton = new JButton("More...");
-                eventidMoreButton.setToolTipText("Additional actions you can do with this eventid.");
+                eventidMoreButton.setToolTipText("Additional actions you can do with this Event ID");
                 eventidMoreButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {
