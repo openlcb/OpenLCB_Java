@@ -147,8 +147,8 @@ public class DatagramService extends MessageDecoder {
     }
     
     @Immutable
-    @ThreadSafe    
-    static protected class DatagramServiceReceiveMemo {
+    @ThreadSafe
+    static public class DatagramServiceReceiveMemo {
         public DatagramServiceReceiveMemo(int type) {
             this.type = type;
         }
