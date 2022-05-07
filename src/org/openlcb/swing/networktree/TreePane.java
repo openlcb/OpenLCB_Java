@@ -226,6 +226,10 @@ public class TreePane extends JPanel  {
 
         // add nodes that exist now
         for (MimicNodeStore.NodeMemo memo : store.getNodeMemos() ) {
+            if (memo.getNodeID() == null) {
+                // This is an invalid entry.
+                continue;
+            }
             if (!memo.getNodeID().equals(nullNode)) {
                 NodeTreeRep n = new NodeTreeRep(memo, store, treeModel, loader);
                 addNewHardwareNode(n);
