@@ -76,6 +76,12 @@ public class MimicNodeStore extends AbstractConnection {
     
     @Override
     public void put(Message msg, Connection sender) {
+        if (msg.getSourceNodeID() == null) {
+            // We don't really know where this message came from; this is usually due to the
+            // alias map not knowing about an alias. We cannot add this node now, because null
+            // keys are problematic in the node store.
+            return;
+        }
         NodeMemo memo = addNode(msg.getSourceNodeID());
         // check for necessary updates in specific node
         memo.put(msg, sender);
