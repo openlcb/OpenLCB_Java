@@ -21,6 +21,7 @@ public class DatagramServiceTest {
     Connection testConnection;
     java.util.ArrayList<Message> messagesReceived;
     boolean flag;
+    boolean flag21 = false;
     DatagramService service;
    
     @Before 
@@ -173,6 +174,76 @@ public class DatagramServiceTest {
         
         Assert.assertEquals(1,messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
+    }
+
+    @Test
+    public void testReceiveMultiRegister() {
+        DatagramService.DatagramServiceReceiveMemo m20 =
+                new DatagramService.DatagramServiceReceiveMemo(0x20){
+                    @Override
+                    public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
+                        flag = true;
+                        service.acceptData(0);
+                    }
+                };
+
+        service.registerForReceive(m20);
+
+        Message m = new DatagramMessage(farID, hereID, new int[]{0x21});
+
+        Assert.assertTrue(!flag);
+        service.put(m, null);
+        Assert.assertTrue(!flag);
+
+        Assert.assertEquals(1,messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
+        messagesReceived.clear();
+
+        DatagramService.DatagramServiceReceiveMemo m21 =
+                new DatagramService.DatagramServiceReceiveMemo(0x21){
+                    @Override
+                    public void handleData(NodeID n, int[] data, DatagramService.ReplyMemo service) {
+                        flag21 = true;
+                        service.acceptData(0);
+                    }
+                };
+
+        service.registerForReceive(m21);
+
+        m = new DatagramMessage(farID, hereID, new int[]{0x20});
+
+        Assert.assertFalse(flag);
+        service.put(m, null);
+        Assert.assertTrue(flag);
+
+        Assert.assertEquals(1,messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramAcknowledgedMessage);
+        messagesReceived.clear();
+
+        flag = false;
+
+        m = new DatagramMessage(farID, hereID, new int[]{0x21});
+
+        Assert.assertFalse(flag21);
+        service.put(m, null);
+        Assert.assertTrue(flag21);
+        Assert.assertFalse(flag);
+
+        Assert.assertEquals(1,messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramAcknowledgedMessage);
+        messagesReceived.clear();
+
+        flag = flag21 = false;
+
+        service.unRegisterForReceive(m21);
+
+        m = new DatagramMessage(farID, hereID, new int[]{0x21});
+        service.put(m, null);
+        Assert.assertFalse(flag21);
+        Assert.assertFalse(flag);
+        Assert.assertEquals(1,messagesReceived.size());
+        Assert.assertTrue(messagesReceived.get(0) instanceof DatagramRejectedMessage);
+        messagesReceived.clear();
     }
 
     @Test
