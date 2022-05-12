@@ -1,5 +1,7 @@
 package org.openlcb.implementations;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
@@ -41,19 +43,29 @@ public class DatagramService extends MessageDecoder {
     public DatagramService(NodeID here, Connection downstream) {
         this.here = here;
         this.downstream = downstream;
-        
+
     }
 
     public static final int FLAG_REPLY_PENDING = 0x80;
-    static final int DEFAULT_ERROR_CODE = 0x1000;
+    /// Default error code (permanent error).
+    public static final int DEFAULT_ERROR_CODE = 0x1000;
+    /// Error code for "Invalid arguments, payload too short".
+    public static final int ERROR_TOO_SHORT = 0x1081;
+    /// Error code for "Unimplemented, unsupported datagram type".
+    public static final int ERROR_UNSUPPORTED_DATAGRAM_TYPE = 0x1042;
+
+    /// Use this value to datagram reply memory to accept the datagram with indicating that a reply datagram will come.
+    public static final int ACCEPT_REPLY_PENDING = (FLAG_REPLY_PENDING << 16);
     NodeID here;
     Connection downstream;
+    final Map<Integer, DatagramServiceReceiveMemo> receivers = new HashMap<>();
 
     /**
      * Send data to layout
-     * @param memo    datagram to send
+     *
+     * @param memo datagram to send
      */
-    public void sendData(DatagramServiceTransmitMemo memo){
+    public void sendData(DatagramServiceTransmitMemo memo) {
         if (xmtMemo != null) {
             logger.log(Level.SEVERE, "Overriding datagram transmit memo. old {0} new {1}", new Object[]{xmtMemo, memo}); //log
         }
@@ -64,16 +76,19 @@ public class DatagramService extends MessageDecoder {
 
     /**
      * Send data to layout
-     * @param dest    target node ID
-     * @param data    datagram payload
+     *
+     * @param dest target node ID
+     * @param data datagram payload
      */
-    public void sendData(NodeID dest, int[] data){
+    public void sendData(NodeID dest, int[] data) {
         DatagramServiceTransmitMemo memo = new DatagramServiceTransmitMemo(dest, data) {
             @Override
-            public void handleSuccess(int flags) {}
+            public void handleSuccess(int flags) {
+            }
 
             @Override
-            public void handleFailure(int errorCode) {}
+            public void handleFailure(int errorCode) {
+            }
         };
         xmtMemo = memo;
         Message m = new DatagramMessage(here, memo.dest, memo.data);
@@ -84,30 +99,35 @@ public class DatagramService extends MessageDecoder {
      * Handle "Datagram" message from layout
      */
     @Override
-    public void handleDatagram(DatagramMessage msg, Connection sender){
+    public void handleDatagram(DatagramMessage msg, Connection sender) {
         // ignore if not for here
         if (!msg.getDestNodeID().equals(here)) return;
-        
+
         // forward
-        int retval = DEFAULT_ERROR_CODE;
         ReplyMemo replyMemo = new ReplyMemo(msg, downstream, here, this);
         if (msg.getData() == null) {
             new Exception("Unexpected null content of datagram").printStackTrace();
+            replyMemo.acceptData(DEFAULT_ERROR_CODE);
+            return;
         }
-        if (msg.getData() != null && msg.getData().length == 0) {
+        if (msg.getData().length == 0) {
             new Exception("Unexpected zero length content of datagram").printStackTrace();
+            replyMemo.acceptData(ERROR_TOO_SHORT);
+            return;
         }
-        if (rcvMemo != null && msg.getData()!=null && msg.getData().length > 0 && rcvMemo.type == msg.getData()[0]) {
-            rcvMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
-            // check that client replied
-            if (! replyMemo.hasReplied())
-                logger.log(Level.SEVERE, "No internal reply received to datagram with contents {0}", Utilities.toHexDotsString(msg.getData())); //log
-        } else {
-            // reject
-            replyMemo.acceptData(retval);
+        int t = msg.getData()[0] & 0xff;
+        DatagramServiceReceiveMemo receiveMemo = receivers.get(t);
+        if (receiveMemo == null) {
+            replyMemo.acceptData(ERROR_UNSUPPORTED_DATAGRAM_TYPE);
+            return;
         }
-        
+        receiveMemo.handleData(msg.getSourceNodeID(), msg.getData(), replyMemo);
+        // check that client replied
+        if (!replyMemo.hasReplied()) {
+            logger.log(Level.SEVERE, "No internal reply received to datagram with contents {0}", Utilities.toHexDotsString(msg.getData())); //log
+        }
     }
+
 
     /**
      * Handle negative datagram reply message from layout
@@ -134,21 +154,35 @@ public class DatagramService extends MessageDecoder {
         }
     }
 
-    DatagramServiceReceiveMemo rcvMemo;
     DatagramServiceTransmitMemo xmtMemo;
     
     /**
      * Accept request to notify for a particular
      * type of datagram
-     * @param memo    datgram listener
+     * @param memo    datagram listener
      */
-    public void registerForReceive(DatagramServiceReceiveMemo memo) {
-        this.rcvMemo = memo;
+    public synchronized void registerForReceive(DatagramServiceReceiveMemo memo) {
+        receivers.put(memo.type, memo);
     }
-    
+
+    /**
+     * Stops accepting request to notify for a particular
+     * type of datagram
+     * @param memo    datagram listener that was previously registered
+     */
+    public synchronized void unRegisterForReceive(DatagramServiceReceiveMemo memo) {
+        DatagramServiceReceiveMemo old = receivers.get(memo.type);
+        if (old == memo) {
+            receivers.remove(memo.type);
+        } else {
+            logger.log(Level.SEVERE, "Unregistering a datagram listener that is not registered for type {0}", Integer.toString(memo.type)); //log
+            new Exception("Unexpected unregister for datagram listener").printStackTrace();
+        }
+    }
+
     @Immutable
-    @ThreadSafe    
-    static protected class DatagramServiceReceiveMemo {
+    @ThreadSafe
+    static public class DatagramServiceReceiveMemo {
         public DatagramServiceReceiveMemo(int type) {
             this.type = type;
         }
@@ -199,32 +233,36 @@ public class DatagramService extends MessageDecoder {
     }
     
     @Immutable
-    static protected class ReplyMemo {
+    static public class ReplyMemo {
         DatagramMessage msg;
         Connection downstream;
         NodeID here;
         DatagramService service;
         boolean replied = false;
-        
-        protected ReplyMemo (DatagramMessage msg, Connection downstream, NodeID here, DatagramService service) {
+
+        protected ReplyMemo(DatagramMessage msg, Connection downstream, NodeID here, DatagramService service) {
             this.msg = msg;
             this.downstream = downstream;
             this.here = here;
             this.service = service;
         }
+
         /**
          * called to indicate whether the datagram was accepted or not
-         * @param resultCode 0 for OK, non-zero for error reply
+         *
+         * @param resultCode 0 for OK, non-zero 16-bit LSB value for error reply;
+         *                   ACCEPT_REPLY_PENDING for indicating that a response datagram will be sent.
          */
         public void acceptData(int resultCode) {
             replied = true;
-            if (resultCode  == 0) {
+            if ((resultCode & 0xFFFF) == 0) {
                 // accept
-                Message m = new DatagramAcknowledgedMessage(here, msg.getSourceNodeID());
+                int flags = (resultCode >> 16) & 0xFF;
+                Message m = new DatagramAcknowledgedMessage(here, msg.getSourceNodeID(), flags);
                 downstream.put(m, service);
             } else {
                 // reject
-                Message m = new DatagramRejectedMessage(here, msg.getSourceNodeID(), resultCode);
+                Message m = new DatagramRejectedMessage(here, msg.getSourceNodeID(), resultCode & 0xFFFF);
                 downstream.put(m, service);
             }
 
