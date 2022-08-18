@@ -20,7 +20,7 @@ import org.openlcb.messages.TractionProxyRequestMessage;
  * In general, the connection is one-to-one, but
  * sometimes (datagram expansion) more than one frame will be
  * created.
- * 
+ *
  * @author  Bob Jacobsen   Copyright 2010
  * @version $Revision$
  */
@@ -94,12 +94,12 @@ public class MessageBuilder implements AliasMap.Watcher {
         }
     }
 
-    /** 
-     * Accept a frame, and convert to 
+    /**
+     * Accept a frame, and convert to
      * a standard OpenLCB Message object.
      *
      * The returned Message is fully initialized
-     * with content, and the original frame can 
+     * with content, and the original frame can
      * be dropped.
      *
      * The List is always returned, even if empty.
@@ -109,7 +109,7 @@ public class MessageBuilder implements AliasMap.Watcher {
     public List<Message> processFrame(CanFrame f) {
         // check for special cases first
         if ( (f.getHeader() & 0x08000000) != 0x08000000 ) return null;  // not OpenLCB frame
-        
+
         // break into types
         int format = ( f.getHeader() & 0x07000000 ) >> 24;
 
@@ -134,15 +134,15 @@ public class MessageBuilder implements AliasMap.Watcher {
                 return null;
         }
     }
-    
+
     HashMap<NodeID, List<Integer>> datagramData = new HashMap<NodeID, List<Integer>>();
     // dph
     HashMap<NodeID, List<Integer>> streamData = new HashMap<NodeID, List<Integer>>();
-    
+
     int getSourceID(CanFrame f) { return f.getHeader()&0x00000FFF; }
     int getMTI(CanFrame f) { return ( f.getHeader() & 0x00FFF000 ) >> 12; }
     EventID getEventID(CanFrame f) { return new EventID(f.getData()); }
-    
+
     List<Message> processFormat0(CanFrame f) {
         // reserved
         return null;
@@ -153,33 +153,33 @@ public class MessageBuilder implements AliasMap.Watcher {
         NodeID source;
         NodeID dest;
         byte[] data;
-        
+
         public AccumulationMemo(long header, NodeID source, NodeID dest, byte[] data) {
             this.header = header;
             this.source = source;
             this.dest = dest;
             this.data = data;
         }
-        
+
         public boolean equals(Object obj) {
             if (! (obj instanceof AccumulationMemo) )
                     return false;
-            
+
             AccumulationMemo other = (AccumulationMemo)obj;
             if (header != other.header) return false;
             if ( ! source.equals(other.source)) return false;
             if ( ! dest.equals(other.dest)) return false;
             return true;
         }
-        
+
         // data varies in length, not considered.
         public int hashCode() {
             return (int)(header+dest.hashCode()+source.hashCode());
         }
     }
-    
+
     HashMap<Integer, AccumulationMemo> accumulations = new HashMap<Integer, AccumulationMemo>();
-    
+
     List<Message> processFormat1(CanFrame f) {
         // MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
@@ -191,7 +191,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         byte[] content = null;
 
         if ( ((mti&0x008) != 0) && (f.getNumDataElements() >= 2) ) {
-            // addressed message 
+            // addressed message
             dest = map.getNodeID( ( (f.getElement(0) << 8) + (f.getElement(1) & 0xff) ) & 0xFFF );
             AccumulationMemo mnew = new AccumulationMemo(f.getHeader(), source, dest, data);
             // is header already in map?
@@ -211,7 +211,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             if ( (f.getElement(0) & 0x10 ) != 0) {
                 // no, accumulate
                 return retlist; // which is null right now
-            } 
+            }
             // we're going to continue processing with the accumulated data
             data = mold.data;
             accumulations.remove(f.getHeader());
@@ -219,7 +219,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             content = new byte[data.length-2];
             System.arraycopy(data, 2, content, 0, content.length);
         }
-        
+
         MessageTypeIdentifier value = MessageTypeIdentifier.get(mti);
         if (value == null) {
             // something bad happened
@@ -228,9 +228,9 @@ public class MessageBuilder implements AliasMap.Watcher {
             logger.log(Level.SEVERE, " failed to parse MTI 0x{0}", mtiString);
             return retlist;  // nothing in it from this
         }
-        
+
         switch (value) {
-            case InitializationComplete: 
+            case InitializationComplete:
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
             case VerifyNodeIdGlobal:
@@ -242,7 +242,7 @@ public class MessageBuilder implements AliasMap.Watcher {
                     retlist.add(new VerifyNodeIDNumberMessage(source));
                 }
                 return retlist;
-            case VerifiedNodeId: 
+            case VerifiedNodeId:
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
 
@@ -251,15 +251,17 @@ public class MessageBuilder implements AliasMap.Watcher {
                     int d3 = data.length >= 4 ? f.getElement(3) : 0;
                     int d4 = data.length >= 5 ? f.getElement(4) : 0;
                     int d5 = data.length >= 6 ? f.getElement(5) : 0;
-                    int retmti = ((d2&0xff)<<8) | (d3&0xff);
-                    int code = ((d4&0xff)<<8) | (d5&0xff);;
+
+                    int code = ((d2&0xff)<<8) | (d3&0xff);
+                    int retmti = ((d4&0xff)<<8) | (d5&0xff);;
+
                     retlist.add(new OptionalIntRejectedMessage(source, dest,retmti,code));
                     return retlist;
                 }
-            case ProtocolSupportInquiry: 
+            case ProtocolSupportInquiry:
                 retlist.add(new ProtocolIdentificationRequestMessage(source, dest));
                 return retlist;
-            case ProtocolSupportReply: 
+            case ProtocolSupportReply:
                 retlist.add(new ProtocolIdentificationReplyMessage(source, dest, f.dataAsLong()));
                 return retlist;
             case TractionControlRequest:
@@ -289,7 +291,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             case ConsumerIdentifiedInvalid:
                 retlist.add(new ConsumerIdentifiedMessage(source, getEventID(f), EventState.Invalid));
                 return retlist;
-            case IdentifyProducer: 
+            case IdentifyProducer:
                 retlist.add(new IdentifyProducersMessage(source, getEventID(f)));
                 return retlist;
             case ProducerRangeIdentified:
@@ -304,7 +306,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             case ProducerIdentifiedInvalid:
                 retlist.add(new ProducerIdentifiedMessage(source, getEventID(f), EventState.Invalid));
                 return retlist;
-            case ProducerConsumerEventReport: 
+            case ProducerConsumerEventReport:
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
                 return retlist;
             case IdentifyEventsAddressed:
@@ -313,11 +315,11 @@ public class MessageBuilder implements AliasMap.Watcher {
             case IdentifyEventsGlobal:
                 retlist.add(new IdentifyEventsGlobalMessage(source));
                 return retlist;
-            case LearnEvent: 
+            case LearnEvent:
                 retlist.add(new LearnEventMessage(source, getEventID(f)));
                 return retlist;
 
-            case SimpleNodeIdentInfoRequest: 
+            case SimpleNodeIdentInfoRequest:
                 retlist.add(new SimpleNodeIdentInfoRequestMessage(source, dest));
                 return retlist;
             case SimpleNodeIdentInfoReply:
@@ -331,7 +333,7 @@ public class MessageBuilder implements AliasMap.Watcher {
                     retlist.add(new DatagramAcknowledgedMessage(source, dest));
                 }
                 return retlist;
-            case DatagramRejected: 
+            case DatagramRejected:
                 retlist.add(new DatagramRejectedMessage(source,dest,(int)f.dataAsLong()));
                 return retlist;
          // dph: add all stream messages reply and proceed.
@@ -350,7 +352,7 @@ public class MessageBuilder implements AliasMap.Watcher {
                 retlist.add(new StreamDataCompleteMessage(source,dest,content.length > 2 ?
                         content[2] : -1, content.length > 3 ? content[3] : -1));
                 return retlist;
-                
+
             default:
                 logger.warning(String.format(" received unhandled MTI 0x%03X: %s", mti, value.toString()));
                 return null;
@@ -369,9 +371,9 @@ public class MessageBuilder implements AliasMap.Watcher {
         for (int i = 0; i < f.getNumDataElements(); i++) {
             list.add(f.getElement(i));
         }
-        
+
         // done, forward
-        
+
         int[] data = new int[list.size()];
         for (int i=0; i<list.size(); i++) {
             data[i] = list.get(i);
@@ -420,9 +422,9 @@ public class MessageBuilder implements AliasMap.Watcher {
         for (int i = 0; i < f.getNumDataElements(); i++) {
             list.add(f.getElement(i));
         }
-        
+
         datagramData.put(source, null); // not accumulating any more
-        
+
         int[] data = new int[list.size()];
         for (int i=0; i<list.size(); i++) {
             data[i] = list.get(i);
@@ -469,14 +471,14 @@ public class MessageBuilder implements AliasMap.Watcher {
         // @todo the list variable needs to be saved into the streamData map, otherwise we lose
         // the accumulated bytes.
     }
-        
 
-    /** 
-     * Accept an OpenLCB Message, and convert to 
+
+    /**
+     * Accept an OpenLCB Message, and convert to
      * a standard frame object.
      *
      * The returned frame(s) are fully initialized
-     * with content, and the original frame can 
+     * with content, and the original frame can
      * be dropped.
      *
      * The List is always returned, and should never be empty.
@@ -567,7 +569,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         }
 
         /**
-         * Catches messages that are not explicitly 
+         * Catches messages that are not explicitly
          * handled and throws an error
          */
         @Override
@@ -582,15 +584,15 @@ public class MessageBuilder implements AliasMap.Watcher {
                 throw new java.lang.NoSuchMethodError("no handler for Message: " + msg.toString());
             }
         }
-        
+
         List<OpenLcbCanFrame> retlist;
-        
+
         List<OpenLcbCanFrame> convert(Message msg) {
             retlist = new java.util.ArrayList<OpenLcbCanFrame>();
-            
+
             // Uses the double dispatch mechanism built into Message
             put(msg, null);  // no Connection needed
-            
+
             return retlist;
         }
 
@@ -644,7 +646,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setVerifyNID(msg.getSourceNodeID());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            if (msg.getContent() != null) 
+            if (msg.getContent() != null)
                 f.setData(msg.getContent().getContents());
             retlist.add(f);
         }
@@ -779,12 +781,12 @@ public class MessageBuilder implements AliasMap.Watcher {
                 for (int i = 0; i<size; i++) {
                     data[i] = msg.getData()[j++];
                 }
-                
+
                 OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
                 f.setDatagram(data, map.getAlias(msg.getDestNodeID()), first, remains <= 8);
                 f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
                 retlist.add(f);
-                
+
                 remains = remains - size;
                 first = false;
             } while (remains > 0);
@@ -809,11 +811,11 @@ public class MessageBuilder implements AliasMap.Watcher {
                 for (int i = 0; i<size; i++) {
                     data[i+1] = (byte)msg.getData()[j++];
                 }
-                
+
                 OpenLcbCanFrame f = new OpenLcbCanFrame(map.getAlias(msg.getSourceNodeID()));
                 f.setStream(data, map.getAlias(msg.getDestNodeID()));
                 retlist.add(f);
-                
+
                 remains = remains - size;
             } while (remains > 0);
         }
