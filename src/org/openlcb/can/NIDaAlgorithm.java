@@ -8,10 +8,10 @@ import org.openlcb.NodeID;
 
 /**
  * Implementation of Node ID Alias assignment computation.
- * Provides and processes frames, but other code must move them 
+ * Provides and processes frames, but other code must move them
  * to and from the actual interface.
  * It also requires subclassing to provide a timer function.
- * 
+ *
  * @author  Bob Jacobsen   Copyright 2009, 2010
  */
 public class NIDaAlgorithm implements CanFrameListener {
@@ -44,9 +44,9 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public NIDaAlgorithm(NodeID n, CanFrameListener sendInterface) {
         this(n);
-        
+
         this.sendInterface = sendInterface;
-        
+
         synchronized(NIDaAlgorithm.class) {
             if (timer == null ) {
                 timer = new Timer("OpenLCB NIDaAlgorithm Timer");
@@ -78,7 +78,7 @@ public class NIDaAlgorithm implements CanFrameListener {
         index++;
         return f;
     }
-    
+
     public int getNIDa() {
         return nida.getNIDa();
     }
@@ -86,6 +86,13 @@ public class NIDaAlgorithm implements CanFrameListener {
     public void processFrame(OpenLcbCanFrame f) {
         if (f == null) {
             return; // as a convenience, ignore
+        }
+
+        if (f.isAliasMapDefinition()) {
+            // AME, reply with AMD
+            f = new OpenLcbCanFrame(nida.getNIDa());
+            f.setAMD(nida.getNIDa(), nid);
+            sendInterface.send(f);
         }
 
         // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
@@ -106,7 +113,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             cancelTimer();
         }
     }
-    
+
     public boolean isComplete() {
         return complete;
     }
@@ -120,7 +127,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             scheduleTimer(0);
         }
     }
-    
+
     protected void timerExpired() {
         if (index == 0) {
             while (index < 4) {
@@ -135,7 +142,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             }
         }
     }
-    
+
     int index = 0;
     NodeID nid;
     NIDa nida;
@@ -148,12 +155,12 @@ public class NIDaAlgorithm implements CanFrameListener {
 
     public void dispose(){
        cancelTimer();  // dispose of the timer task
-       
+
        synchronized(NIDaAlgorithm.class) {
            timer.cancel();
            timer = null;
        }
-       
+
        done = null;
        complete = true;
     }
