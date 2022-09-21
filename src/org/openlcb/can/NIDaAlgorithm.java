@@ -83,16 +83,29 @@ public class NIDaAlgorithm implements CanFrameListener {
         return nida.getNIDa();
     }
 
+    /**
+     * @return True of frame matches current NodeID
+     */
+    boolean compareDataAndNodeID(OpenLcbCanFrame f) {
+        // TODO: check for empty data or matching NodeID
+        return new NodeID(f.getData()).equals(nid);
+    }
+
     public void processFrame(OpenLcbCanFrame f) {
         if (f == null) {
             return; // as a convenience, ignore
         }
 
-        if (f.isAliasMapDefinition()) {
-            // AME, reply with AMD
-            f = new OpenLcbCanFrame(nida.getNIDa());
-            f.setAMD(nida.getNIDa(), nid);
-            sendInterface.send(f);
+        if (f.isAliasMapEnquiry()) {
+            // complete == true is (mostly) Permitted state
+            if (complete) {
+                if (f.data.length == 0 || compareDataAndNodeID(f)) {
+                    // AME for us, reply with AMD
+                    f = new OpenLcbCanFrame(nida.getNIDa());
+                    f.setAMD(nida.getNIDa(), nid);
+                    sendInterface.send(f);
+                }
+            }
         }
 
         // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
@@ -144,7 +157,10 @@ public class NIDaAlgorithm implements CanFrameListener {
     }
 
     int index = 0;
+
+    // NodeID of this node (node for which alias algorithm running)
     NodeID nid;
+
     NIDa nida;
     boolean complete = false;
 
