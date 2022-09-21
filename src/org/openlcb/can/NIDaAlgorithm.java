@@ -84,7 +84,7 @@ public class NIDaAlgorithm implements CanFrameListener {
     }
 
     /**
-     * @return True of frame matches current NodeID
+     * @return True if frame matches current NodeID
      */
     boolean compareDataAndNodeID(OpenLcbCanFrame f) {
         // TODO: check for empty data or matching NodeID
