@@ -37,17 +37,17 @@ public class OpenLcbCanFrame implements CanFrame {
     int id;  // 29 bit header
     int length;
     byte[] data = new byte[8];
-    
+
     int nodeAlias;
 
     public int getHeader() { return id; }
     public void setHeader(int id) { this.id = id; }
-    
-    public byte[] getData() { 
+
+    public byte[] getData() {
         // return a copy of appropriate length
         byte[] copy = new byte[length];
         System.arraycopy(data,0,copy,0,length);
-        return copy; 
+        return copy;
     }
     public void setData(byte[] b) { data = b; length = b.length;}
     public long bodyAsLong() {
@@ -65,22 +65,22 @@ public class OpenLcbCanFrame implements CanFrame {
         return retval;
     }
     public boolean isExtended() { return true; }
-    
+
     public boolean isRtr() { return false; }
-    
+
     public int getNumDataElements() { return length; }
     public int getElement(int n) { return DatagramUtils.byteToInt(data[n]); }
 
     // bit 1
     static final int MASK_FRAME_TYPE = 0x08000000;
-    
+
     // bit 17-28
     static final int MASK_SRC_ALIAS = 0x00000FFF;
-    
+
     // bit 2-16
     static final int MASK_VARIABLE_FIELD = 0x07FFF000;
     static final int SHIFT_VARIABLE_FIELD = 12;
-    
+
     // bit 2-4, at the top of the variable field
     static final int MASK_OPENLCB_FORMAT = 0x07000;
     static final int SHIFT_OPENLCB_FORMAT = 12;
@@ -96,7 +96,7 @@ public class OpenLcbCanFrame implements CanFrame {
     id &= ~MASK_SRC_ALIAS;
     id = id | (a & MASK_SRC_ALIAS);
   }
-  
+
   int getSourceAlias() {
       return (int)(id & MASK_SRC_ALIAS);
   }
@@ -118,17 +118,17 @@ public class OpenLcbCanFrame implements CanFrame {
   }
 
   void setFrameTypeCAN() {
-    id &= ~MASK_FRAME_TYPE;     
+    id &= ~MASK_FRAME_TYPE;
   }
-  
+
   boolean isFrameTypeCAN() {
     return (id & MASK_FRAME_TYPE) == 0x00000000L;
   }
 
   void setFrameTypeOpenLcb() {
-    id |= MASK_FRAME_TYPE;     
+    id |= MASK_FRAME_TYPE;
   }
-  
+
   boolean isFrameTypeOpenLcb() {
     return (id & MASK_FRAME_TYPE) == MASK_FRAME_TYPE;
   }
@@ -141,11 +141,11 @@ public class OpenLcbCanFrame implements CanFrame {
   int getVariableField() {
     return (int)(id & MASK_VARIABLE_FIELD) >> SHIFT_VARIABLE_FIELD;
   }
-  
+
   // end of basic message structure
-  
+
   // start of CAN-level messages
- 
+
   static final int RIM_VAR_FIELD = 0x0700;
   static final int AMD_VAR_FIELD = 0x0701;
   static final int AME_VAR_FIELD = 0x0702;
@@ -154,7 +154,7 @@ public class OpenLcbCanFrame implements CanFrame {
   void setCIM(int i, int testval, int alias) {
     init(alias);
     setFrameTypeCAN();
-    int var =  (( (0x7-i) & 7) << 12) | (testval & 0xFFF); 
+    int var =  (( (0x7-i) & 7) << 12) | (testval & 0xFFF);
     setVariableField(var);
     length=0;
   }
@@ -198,6 +198,20 @@ public class OpenLcbCanFrame implements CanFrame {
     data[5] = val[5];
   }
 
+  void setAMD(int alias, NodeID nid) {
+    init(alias);
+    setFrameTypeCAN();
+    setVariableField(AMD_VAR_FIELD);
+    length=6;
+    byte[] val = nid.getContents();
+    data[0] = val[0];
+    data[1] = val[1];
+    data[2] = val[2];
+    data[3] = val[3];
+    data[4] = val[4];
+    data[5] = val[5];
+  }
+
   void setAME(int alias, @Nullable NodeID nid) {
     init(alias);
     setFrameTypeCAN();
@@ -217,9 +231,9 @@ public class OpenLcbCanFrame implements CanFrame {
   }
 
   // end of CAN-level messages
-  
+
   // start of OpenLCB format support
-  
+
   int getOpenLcbFormat() {
       return (getVariableField() & MASK_OPENLCB_FORMAT) >> SHIFT_OPENLCB_FORMAT;
   }
@@ -228,29 +242,29 @@ public class OpenLcbCanFrame implements CanFrame {
       int now = getVariableField() & ~MASK_OPENLCB_FORMAT;
       setVariableField( ((i << SHIFT_OPENLCB_FORMAT) & MASK_OPENLCB_FORMAT) | now);
   }
-  
+
   void setOpenLcbMTI(int mti) {
         setFrameTypeOpenLcb();
         setVariableField(mti | (FRAME_FORMAT_MTI << 12) );
   }
-  
+
   boolean isOpenLcbMTI(int mti) {
-      return isFrameTypeOpenLcb() 
+      return isFrameTypeOpenLcb()
                 && ( getOpenLcbFormat() == FRAME_FORMAT_MTI )
                 && ( (getVariableField()&~MASK_OPENLCB_FORMAT) == mti );
   }
 
   // end of OpenLCB format and decode support
-  
+
   // start of OpenLCB messages
-  
+
   void setPCEventReport(EventID eid) {
     init(nodeAlias);
     setOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
     length=8;
     loadFromEid(eid);
   }
-  
+
   boolean isPCEventReport() {
       return isOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
   }
@@ -279,19 +293,19 @@ public class OpenLcbCanFrame implements CanFrame {
     data[4] = val[4];
     data[5] = val[5];
   }
-  
+
   boolean isInitializationComplete() {
       return isOpenLcbMTI(MessageTypeIdentifier.InitializationComplete.mti());
   }
-  
+
   EventID getEventID() {
     return new EventID(data);
   }
-  
+
   NodeID getNodeID() {
     return new NodeID(data);
   }
-  
+
   boolean isVerifyNID() {
       return isOpenLcbMTI(MessageTypeIdentifier.VerifyNodeIdGlobal.mti());
   }
@@ -357,10 +371,10 @@ public class OpenLcbCanFrame implements CanFrame {
     data[6] = val[6];
     data[7] = val[7];
   }
-  
+
   // general, but not efficient
   boolean isDatagram() {
-      return isFrameTypeOpenLcb() 
+      return isFrameTypeOpenLcb()
                 && ( (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_ALL)
                         || (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_FIRST)
                         || (getOpenLcbFormat() == FRAME_FORMAT_ADDRESSED_DATAGRAM_MID)
@@ -432,7 +446,7 @@ public class OpenLcbCanFrame implements CanFrame {
                   // hash codes must be the same when equals returns true
                   // but will not allow good hashing of OpenLcbCanFrames
     }
-    
+
     public String toString() {
         String retval = "[0x"+Integer.toHexString(id)+"]";
         for (int i = 0; i<length; i++) {
@@ -446,7 +460,7 @@ public class OpenLcbCanFrame implements CanFrame {
     /**
      * OpenLCB CAN MTI format bits
      */
-    static final int FRAME_FORMAT_MTI                      = 1; 
+    static final int FRAME_FORMAT_MTI                      = 1;
     //
     //
     static final int FRAME_FORMAT_ADDRESSED_DATAGRAM_ALL   = 2;
