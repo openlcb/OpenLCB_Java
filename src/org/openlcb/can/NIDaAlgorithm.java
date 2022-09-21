@@ -101,9 +101,9 @@ public class NIDaAlgorithm implements CanFrameListener {
             if (complete) {
                 if (f.data.length == 0 || compareDataAndNodeID(f)) {
                     // AME for us, reply with AMD
-                    f = new OpenLcbCanFrame(nida.getNIDa());
-                    f.setAMD(nida.getNIDa(), nid);
-                    sendInterface.send(f);
+                    OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
+                    frame.setAMD(nida.getNIDa(), nid);
+                    sendInterface.send(frame);
                 }
             }
         }
