@@ -20,6 +20,7 @@ public class HubTest {
         Assume.assumeFalse(GraphicsEnvironment.isHeadless());
         Hub t = new Hub();
         Assert.assertNotNull("exists",t);
+        t.dispose();
     }
 
     // The minimal setup for log4J
