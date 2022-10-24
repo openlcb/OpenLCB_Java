@@ -18,6 +18,10 @@ import java.util.logging.Logger;
  * <P>
  * Code for finding start / end of CAN frames without line feeds adapted from JMRI.
  * <p>
+ * Hub without line endings currently supports the GridConnect Serial spec for
+ * their CANUSB Interface, section 2.7.1 Message String Syntax in the pdf from
+ * gridconnect.com/collections/can-pc-interfaces/products/canusb-com-fd-converter-usb-can-fd-interface#documents-and-drivers
+ * <p>
  * main() directly invokes an object of the class.
  * <p>
  * Current threading model does all the sending from a
