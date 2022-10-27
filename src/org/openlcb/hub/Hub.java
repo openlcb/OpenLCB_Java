@@ -241,7 +241,7 @@ public class Hub {
         
     }
     
-    public class Memo {
+    static public class Memo {
         public String line;
         public Forwarding source;
         
