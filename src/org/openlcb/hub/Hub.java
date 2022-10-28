@@ -230,7 +230,7 @@ public class Hub {
 
         @Override
         public void forward(Memo m) {
-            if (! this.equals(m.source)) {
+            if ((! this.equals(m.source)) && output != null) {
                 if (lineEndings) {
                     output.println(m.line);
                 } else {
