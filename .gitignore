@@ -11,3 +11,7 @@ restreport
 # bash autocompletion artifacts
 /.ant-targets-build.xml
 /nbproject/private/
+
+# IDE UI files
+# intelliJ
+*.iml
