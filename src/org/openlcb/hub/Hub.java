@@ -38,14 +38,14 @@ public class Hub {
     public final static int DEFAULT_PORT = 12021;
     final static int CAPACITY = 20;  // not too long, to reduce delay
     private final boolean sendLineEndings;
-    private final boolean receiveLineEndings;
+    private final boolean requireIncomingLineEndings;
     private boolean disposed = false;
 
     /**
      * Constructs a new instance using default values.
      * Port - 12021
      * Send line endings - true
-     * Receive line endings - false
+     * Require incoming line endings - true
      */
     public Hub() {
         this(Hub.DEFAULT_PORT);
@@ -54,23 +54,24 @@ public class Hub {
     /**
      * Constructs a new instance using a specified port.
      * Send line endings - true
-     * Receive line endings - false
+     * Require incoming line endings - true
      * @param port the port number to use for incoming connections.
      */
     public Hub(int port) {
-        this(port, true, false);
+        this(port, true, true);
     }
 
     /**
      * Constructs a new instance with the specified port and line end behaviour.
      * @param port the port number to use for incoming connections.
      * @param sendLineEndings true if line endings should be added to sent messages, false otherwise.
-     * @param receiveLineEndings true if line endings should be expected in received messages, false otherwise.
+     * @param requireIncomingLineEndings true if line endings should be expected in received messages,
+     *                      false to detect messages using GridConnect Serial format.
      */
-    public Hub(int port, boolean sendLineEndings, boolean receiveLineEndings ) {
+    public Hub(int port, boolean sendLineEndings, boolean requireIncomingLineEndings ) {
         this.port = port;
         this.sendLineEndings = sendLineEndings;
-        this.receiveLineEndings = receiveLineEndings;
+        this.requireIncomingLineEndings = requireIncomingLineEndings;
         createServerThread();
     }
 
@@ -178,7 +179,7 @@ public class Hub {
                 output = new PrintStream(clientSocket.getOutputStream(),true,"ISO-8859-1");
                 while (!disposed) {
                     String line;
-                    if (receiveLineEndings) {
+                    if (requireIncomingLineEndings) {
                         line = bfr.readLine();
                     } else {
                         line = loadChars( input);
