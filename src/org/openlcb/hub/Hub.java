@@ -45,7 +45,7 @@ public class Hub {
      * Constructs a new instance using default values.
      * Port - 12021
      * Send line endings - true
-     * Require incoming line endings - true
+     * Require incoming line endings - false
      */
     public Hub() {
         this(Hub.DEFAULT_PORT);
@@ -54,11 +54,11 @@ public class Hub {
     /**
      * Constructs a new instance using a specified port.
      * Send line endings - true
-     * Require incoming line endings - true
+     * Require incoming line endings - false
      * @param port the port number to use for incoming connections.
      */
     public Hub(int port) {
-        this(port, true, true);
+        this(port, true, false);
     }
 
     /**
