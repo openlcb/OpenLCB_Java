@@ -28,18 +28,31 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * from a MimicNodeStore
  *
  * @author	Bob Jacobsen   Copyright (C) 2012
- * @version	$Revision$
  */
 public class NodeSelector extends JPanel  {
-    /** Comment for <code>serialVersionUID</code>. */
-    private static final long serialVersionUID = 1714640844679691939L;
-    
+
     private final PropertyChangeListener propertyChangeListener;
     MimicNodeStore store;
     JComboBox<ModelEntry> box;
     private DefaultComboBoxModel<ModelEntry> model = new DefaultComboBoxModel<ModelEntry>();
     private boolean seenLight = false;
+    private int termCount = 2; // how many terms to keep in ID string
 
+
+    /**
+     * Constructor that allows you to set the length of the displayed ID
+     * @param store Node store containing the existing network
+     * @param termCount Number of ID terms to include in the displayed ID
+     */
+    public NodeSelector(MimicNodeStore store, int termCount) {
+        this(store);
+        this.termCount = termCount;
+    }
+
+    /**
+     * Constructor with default displayed ID
+     * @param store Node store containing the existing network
+     */
     public NodeSelector(MimicNodeStore store) {
         this.store = store;
 
@@ -98,7 +111,7 @@ public class NodeSelector extends JPanel  {
 
         /**
          * Constructor for prototype display value
-         * 
+         *
          * @param description prototype display value
          */
         private ModelEntry(String description) {
@@ -115,17 +128,17 @@ public class NodeSelector extends JPanel  {
             StringBuilder sb = new StringBuilder();
             sb.append(nodeMemo.getNodeID().toString());
             int count = 0;
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getUserName(), sb);
             }
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getUserDesc(), sb);
             }
-            if (count < 2) {
-                count += addToDescription(ident.getMfgName() + ident.getModelName(),
+            if (count < termCount) {
+                count += addToDescription(ident.getMfgName() + " " +ident.getModelName(),
                         sb);
             }
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getSoftwareVersion(), sb);
             }
             String newDescription = sb.toString();
@@ -174,7 +187,7 @@ public class NodeSelector extends JPanel  {
             }
             return false;
         }
-        
+
         @Override
         public int hashCode() {
             return getNodeID().hashCode();
