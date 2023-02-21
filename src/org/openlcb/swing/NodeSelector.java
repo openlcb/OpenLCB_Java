@@ -135,8 +135,10 @@ public class NodeSelector extends JPanel  {
                 count += addToDescription(ident.getUserDesc(), sb);
             }
             if (count < termCount) {
-                count += addToDescription(ident.getMfgName() + " " +ident.getModelName(),
+                if (!ident.getMfgName().isEmpty() || !ident.getModelName().isEmpty()) {
+                    count += addToDescription(ident.getMfgName() + " " +ident.getModelName(),
                         sb);
+                }
             }
             if (count < termCount) {
                 count += addToDescription(ident.getSoftwareVersion(), sb);
