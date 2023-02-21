@@ -40,7 +40,11 @@ public class NodeSelector extends JPanel  {
 
 
     /**
-     * Constructor that allows you to set the length of the displayed ID
+     * Constructor that allows you to set the length of the displayed ID.
+     *
+     * The properties will be shown in the order of User Name, User Description,
+     * Manufacturer+Model, Software version. Only non-empty values are shown.
+     *
      * @param store Node store containing the existing network
      * @param termCount Number of ID terms to include in the displayed ID
      */
