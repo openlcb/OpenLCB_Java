@@ -37,20 +37,41 @@ public class Hub {
     private final static Logger logger = Logger.getLogger(Hub.class.getName());
     public final static int DEFAULT_PORT = 12021;
     final static int CAPACITY = 20;  // not too long, to reduce delay
-    private final boolean lineEndings;
+    private final boolean sendLineEndings;
+    private final boolean requireIncomingLineEndings;
     private boolean disposed = false;
 
+    /**
+     * Constructs a new instance using default values.
+     * Port - 12021
+     * Send line endings - true
+     * Require incoming line endings - false
+     */
     public Hub() {
         this(Hub.DEFAULT_PORT);
     }
-    
+
+    /**
+     * Constructs a new instance using a specified port.
+     * Send line endings - true
+     * Require incoming line endings - false
+     * @param port the port number to use for incoming connections.
+     */
     public Hub(int port) {
-        this(port, true);
+        this(port, true, false);
     }
 
-    public Hub(int port, boolean lineEndings ) {
+    /**
+     * Constructs a new instance with the specified port and line end behaviour.
+     * @param port the port number to use for incoming connections.
+     * @param sendLineEndings true if line endings should be added to sent messages, false otherwise.
+     * @param requireIncomingLineEndings true if line endings should be expected in received messages,
+     *                      false to detect messages using GridConnect Serial format.
+     */
+    public Hub(int port, boolean sendLineEndings, boolean requireIncomingLineEndings ) {
         this.port = port;
-        this.lineEndings = lineEndings;
+        this.sendLineEndings = sendLineEndings;
+        this.requireIncomingLineEndings = requireIncomingLineEndings;
         createServerThread();
     }
 
@@ -83,6 +104,9 @@ public class Hub {
     ArrayList<Forwarding> threads = new ArrayList<>();
     final int port;
 
+    /**
+     * Starts the server and listens to incoming connections.
+     */
     public void start() {
         try (ServerSocket service = new ServerSocket(port)) {
             while (!disposed) {
@@ -155,7 +179,7 @@ public class Hub {
                 output = new PrintStream(clientSocket.getOutputStream(),true,"ISO-8859-1");
                 while (!disposed) {
                     String line;
-                    if (lineEndings) {
+                    if (requireIncomingLineEndings) {
                         line = bfr.readLine();
                     } else {
                         line = loadChars( input);
@@ -231,7 +255,7 @@ public class Hub {
         @Override
         public void forward(Memo m) {
             if ((! this.equals(m.source)) && output != null) {
-                if (lineEndings) {
+                if (sendLineEndings) {
                     output.println(m.line);
                 } else {
                     output.print(m.line);
