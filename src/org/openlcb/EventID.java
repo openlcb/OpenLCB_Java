@@ -1,8 +1,8 @@
 package org.openlcb;
 
 // For annotations
-import net.jcip.annotations.*; 
-import edu.umd.cs.findbugs.annotations.*; 
+import net.jcip.annotations.*;
+import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * Common EventID implementation.
@@ -17,16 +17,16 @@ import edu.umd.cs.findbugs.annotations.*;
 public class EventID {
 
     static final int BYTECOUNT = 8;
-    
+
     @CheckReturnValue
     public EventID(@NonNull NodeID node, int b7, int b8) {
         this.contents = new byte[BYTECOUNT];
         System.arraycopy(node.contents, 0, this.contents, 0, BYTECOUNT-2);
-            
+
         this.contents[6] = (byte)b7;
         this.contents[7] = (byte)b8;
     }
-    
+
     @CheckReturnValue
     public EventID(@NonNull byte[] contents) {
         if (contents == null)
@@ -36,7 +36,7 @@ public class EventID {
         this.contents = new byte[BYTECOUNT];
         System.arraycopy(contents, 0, this.contents, 0, BYTECOUNT);
     }
-    
+
     @CheckReturnValue
     public EventID(@NonNull String value) {
         if (value == null)
@@ -47,9 +47,9 @@ public class EventID {
         this.contents = new byte[BYTECOUNT];
         System.arraycopy(data, 0, this.contents, 0, BYTECOUNT);
     }
-    
+
     byte[] contents;
-    
+
     @CheckReturnValue
     @NonNull
     public byte[] getContents() {
@@ -71,7 +71,7 @@ public class EventID {
         } catch (Exception e) {
             return false;
         }
-    }  
+    }
 
     /// Checks whether a given Event ID comes from a given Node ID's space.
     public boolean startsWith(NodeID id) {
@@ -92,21 +92,20 @@ public class EventID {
             +(contents[5]<<6)
             +(contents[6]<<3)
             +(contents[7]);
-    } 
+    }
 
     @CheckReturnValue
     @NonNull
     @Override
     public String toString() {
         return "EventID:"
-                +Utilities.toHexPair(contents[0])+"."
-                +Utilities.toHexPair(contents[1])+"."
-                +Utilities.toHexPair(contents[2])+"."
-                +Utilities.toHexPair(contents[3])+"."
-                +Utilities.toHexPair(contents[4])+"."
-                +Utilities.toHexPair(contents[5])+"."
-                +Utilities.toHexPair(contents[6])+"."
-                +Utilities.toHexPair(contents[7]);
+                +Utilities.toHexDotsString(contents);
+    }
+
+    @CheckReturnValue
+    @NonNull
+    public String toShortString() {
+        return Utilities.toHexDotsString(contents);
     }
 
     public long toLong() {
