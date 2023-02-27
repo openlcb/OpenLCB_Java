@@ -66,9 +66,6 @@ public class NodeSelector extends JPanel  {
 
         box = new JComboBox<ModelEntry>(model);
         add(box);
-        box.setPrototypeDisplayValue(new ModelEntry("01.02.03.04.05.06"
-                + " - East Pershing Tower Node"
-                + " - Some Description Here"));
 
         // listen for newly arrived nodes
         propertyChangeListener = new PropertyChangeListener() {
@@ -88,6 +85,12 @@ public class NodeSelector extends JPanel  {
         // add existing nodes
         for (MimicNodeStore.NodeMemo memo : store.getNodeMemos() ) {
             newNodeInList(memo);
+        }
+
+        // If there are no nodes added, manually set the size
+        // to a reasonable value
+        if (box.getItemCount() == 0) {
+            box.setPrototypeDisplayValue(new ModelEntry(new String(new char[70])));
         }
 
         addHierarchyListener(new HierarchyListener() {
