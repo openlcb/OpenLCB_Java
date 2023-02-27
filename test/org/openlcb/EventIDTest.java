@@ -40,13 +40,13 @@ public class EventIDTest {
         }
         Assert.fail("Should have thrown exception");
     }
-    
+
     @Test
     public void testOKLengthArg() {
         EventID e = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertNotNull(e);
     }
-    
+
     @Test
     public void testEqualsSame() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
@@ -54,7 +54,7 @@ public class EventIDTest {
         Assert.assertTrue(e1.equals(e2));
         Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e2.hashCode());
     }
-    
+
     @Test
     public void testStringArgDotted() {
         EventID e1 = new EventID("1.2.3.4.5.6.7.8");
@@ -72,13 +72,13 @@ public class EventIDTest {
     @Test
     public void testAltCtor() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
-        
+
         NodeID n = new NodeID(new byte[]{1,2,3,4,5,6});
         EventID e2 = new EventID(n, 7, 8);
 
         Assert.assertTrue(e1.equals(e2));
     }
-    
+
     @Test
     public void testEqualsCastSame() {
         Object e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
@@ -86,14 +86,14 @@ public class EventIDTest {
         Assert.assertTrue(e1.equals(e2));
         Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e2.hashCode());
     }
-    
+
     @Test
     public void testEqualsSelf() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         Assert.assertTrue(e1.equals(e1));
         Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e1.hashCode());
     }
-    
+
     @Test
     public void testEqualsCastSelf() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
@@ -101,14 +101,14 @@ public class EventIDTest {
         Assert.assertTrue(e1.equals(e2));
         Assert.assertEquals("hashcodes equal when equal",e1.hashCode(),e1.hashCode());
     }
-    
+
     @Test
     public void testNotEquals() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
         EventID e2 = new EventID(new byte[]{1,3,3,4,5,6,7,8});
         Assert.assertTrue(!e1.equals(e2));
     }
-    
+
     @Test
     public void testNotEqualsOtherType() {
         EventID e1 = new EventID(new byte[]{1,2,3,4,5,6,7,8});
@@ -129,6 +129,12 @@ public class EventIDTest {
     public void testOutputFormat() {
         EventID e1 = new EventID(new byte[]{0,0,1,0x10,0x13,0x0D,(byte)0xD0,(byte)0xAB});
         Assert.assertEquals(e1.toString(), "EventID:00.00.01.10.13.0D.D0.AB");
+    }
+
+    @Test
+    public void testShortOutputFormat() {
+        EventID e1 = new EventID(new byte[]{0,0,1,0x10,0x13,0x0D,(byte)0xD0,(byte)0xAB});
+        Assert.assertEquals(e1.toShortString(), "00.00.01.10.13.0D.D0.AB");
     }
 
     @Test

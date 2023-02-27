@@ -99,27 +99,13 @@ public class EventID {
     @Override
     public String toString() {
         return "EventID:"
-                +Utilities.toHexPair(contents[0])+"."
-                +Utilities.toHexPair(contents[1])+"."
-                +Utilities.toHexPair(contents[2])+"."
-                +Utilities.toHexPair(contents[3])+"."
-                +Utilities.toHexPair(contents[4])+"."
-                +Utilities.toHexPair(contents[5])+"."
-                +Utilities.toHexPair(contents[6])+"."
-                +Utilities.toHexPair(contents[7]);
+                +Utilities.toHexDotsString(contents);
     }
 
     @CheckReturnValue
     @NonNull
     public String toShortString() {
-        return   Utilities.toHexPair(contents[0])+"."
-                +Utilities.toHexPair(contents[1])+"."
-                +Utilities.toHexPair(contents[2])+"."
-                +Utilities.toHexPair(contents[3])+"."
-                +Utilities.toHexPair(contents[4])+"."
-                +Utilities.toHexPair(contents[5])+"."
-                +Utilities.toHexPair(contents[6])+"."
-                +Utilities.toHexPair(contents[7]);
+        return Utilities.toHexDotsString(contents);
     }
 
     public long toLong() {
