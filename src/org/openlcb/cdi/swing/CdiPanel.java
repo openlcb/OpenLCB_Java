@@ -435,7 +435,7 @@ public class CdiPanel extends JPanel {
         }
         fileName += "-"+java.time.LocalDate.now();
         fileName  += "-"+java.time.LocalTime.now().format( // use default time zone
-                        java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")
+                        java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss")
                     );
 
         fileName = fileName.replace(" ", "_"); // don't use spaces in file names!
