@@ -113,6 +113,9 @@ public class CdiPanel extends JPanel {
      * last-accessed directory remains available.
      */
     static JFileChooser fci = new JFileChooser();
+    {
+                fci.setSelectedFile(new File(".txt"));
+    }
 
     private ConfigRepresentation rep;
     private EventTable eventTable = null;
@@ -448,8 +451,6 @@ public class CdiPanel extends JPanel {
         // First select a file to save to.
         fci.setDialogTitle("Open configuration restore file");
         fci.rescanCurrentDirectory();
-
-        fci.setSelectedFile(new File(generateFileName()));
 
         int retVal = fci.showOpenDialog(null);
         if (retVal != JFileChooser.APPROVE_OPTION) {
