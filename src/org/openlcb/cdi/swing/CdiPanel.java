@@ -113,6 +113,9 @@ public class CdiPanel extends JPanel {
      * last-accessed directory remains available.
      */
     static JFileChooser fci = new JFileChooser();
+    {
+                fci.setSelectedFile(new File(".txt"));
+    }
 
     private ConfigRepresentation rep;
     private EventTable eventTable = null;
@@ -176,6 +179,7 @@ public class CdiPanel extends JPanel {
      * @param factory Implements hooks for optional interface elements
      */
     public void initComponents(ConfigRepresentation rep, GuiItemFactory factory) {
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
@@ -305,7 +309,7 @@ public class CdiPanel extends JPanel {
         sensorHelperPanel.setBackground(getForeground());
         sensorHelperPanel.setExpanded(false);
         sensorHelperPanel.setBorder(BorderFactory.createMatteBorder(10,0,10,0, getForeground()));
-        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height)); 
+        //cp.setMinimumSize(new Dimension(0, cp.getPreferredSize().height));
         add(sensorHelperPanel);
     }
 
@@ -399,8 +403,9 @@ public class CdiPanel extends JPanel {
     public void runBackup() {
         // First select a file to save to.
         fci.setDialogTitle("Save configuration backup file");
+
         fci.rescanCurrentDirectory();
-        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+        fci.setSelectedFile(new File(generateFileName()));
         int retVal = fci.showSaveDialog(null);
         if (retVal != JFileChooser.APPROVE_OPTION || fci.getSelectedFile() == null) {
             return;
@@ -422,11 +427,31 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    private String generateFileName() {
+        String fileName = rep.getRemoteNodeAsString();
+        if (!nodeName.isEmpty()) {
+            fileName += "-"+nodeName;
+        }
+        if (rep.getCdiRep() != null && rep.getCdiRep().getIdentification() != null) {
+            // info not present if configuration hasn't been read yet
+            fileName += "-"+rep.getCdiRep().getIdentification().getSoftwareVersion();
+        }
+        fileName += "-"+java.time.LocalDate.now();
+        fileName  += "-"+java.time.LocalTime.now().format( // use default time zone
+                        java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss")
+                    );
+
+        fileName = fileName.replace(" ", "_"); // don't use spaces in file names!
+
+        return "config." + fileName + ".txt";
+    }
+
+
     public void runRestore() {
         // First select a file to save to.
         fci.setDialogTitle("Open configuration restore file");
         fci.rescanCurrentDirectory();
-        fci.setSelectedFile(new File("config." + rep.getRemoteNodeAsString() + ".txt"));
+
         int retVal = fci.showOpenDialog(null);
         if (retVal != JFileChooser.APPROVE_OPTION) {
             return;
@@ -1371,7 +1396,7 @@ public class CdiPanel extends JPanel {
             long startTime = System.nanoTime();
             List<EventTable.EventTableEntry> results = eventTable.searchForEvent(searchQuery, 8);
             long timelen = System.nanoTime() - startTime;
-            logger.log(Level.FINE, String.format("Search took %.2f msec", 
+            logger.log(Level.FINE, String.format("Search took %.2f msec",
                                    timelen * 1.0 / 1e6));
             suggestMenu.removeAll();
             for (EventTable.EventTableEntry result : results) {
@@ -1651,7 +1676,7 @@ public class CdiPanel extends JPanel {
 
         /**
          * Updates the UI for the list of other uses of the event.
-         * 
+         *
          * @param eventInfo from the event table.
          */
         private void updateEventDescriptionField(EventTable.EventInfo eventInfo) {
@@ -1733,7 +1758,7 @@ public class CdiPanel extends JPanel {
         protected void additionalButtons() {
 
             final JTextField tf = textField;
-  
+
             JButton bb = factory.handleProduceButton(new JButton("Trigger"));
             bb.setToolTipText("Click to fire this event.");
             bb.addActionListener(new java.awt.event.ActionListener() {
@@ -1743,18 +1768,18 @@ public class CdiPanel extends JPanel {
                     EventID ev = new EventID(org.openlcb.Utilities.bytesFromHexString((String)textField.getText()));
                     rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), rep.getConnection().getOutputConnection());
                 }
-            });   
+            });
             addButtonToEventidMoreFunctions(bb);
 
             JButton bAS = factory.handleProduceButton(new JButton("Make Sensor"));
             bAS.setToolTipText("Add a JMRI sensor with the Event ID.");
             bAS.addActionListener(new java.awt.event.ActionListener() {
                 @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) { 
+                public void actionPerformed(java.awt.event.ActionEvent e) {
                     factory.makeSensor(textField.getText(), getEventName());
                 }
-            }); 
-            addButtonToEventidMoreFunctions(bAS);        
+            });
+            addButtonToEventidMoreFunctions(bAS);
 
             p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
@@ -1789,7 +1814,7 @@ public class CdiPanel extends JPanel {
                 }
             };
             eventidMoreMenu.add(a);
-            
+
         }
 
         private void showEventidMoreFunctionsMenu() {
@@ -1990,7 +2015,7 @@ public class CdiPanel extends JPanel {
         }
         public JButton handleEventidMoreButton(JButton button) {
             return button;
-         } 
+         }
         public JButton handleProduceButton(JButton button) {
            return button;
         }
