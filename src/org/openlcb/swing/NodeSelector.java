@@ -40,6 +40,15 @@ public class NodeSelector extends JPanel  {
 
 
     /**
+     * Constructor with default displayed ID consisting of NodeID,
+     * User Name and User Description.
+     * @param store Node store containing the existing network
+     */
+    public NodeSelector(MimicNodeStore store) {
+        this(store, 2);
+    }
+
+    /**
      * Constructor that allows you to set the number of properties displayed
      * after the NodeID.
      *
@@ -50,17 +59,8 @@ public class NodeSelector extends JPanel  {
      * @param termCount Number of ID terms to include in the displayed ID
      */
     public NodeSelector(MimicNodeStore store, int termCount) {
-        this(store);
-        this.termCount = termCount;
-    }
-
-    /**
-     * Constructor with default displayed ID consisting of NodeID,
-     * User Name and User Description.
-     * @param store Node store containing the existing network
-     */
-    public NodeSelector(MimicNodeStore store) {
         this.store = store;
+        this.termCount = termCount;
 
         this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
