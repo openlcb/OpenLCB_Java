@@ -237,7 +237,7 @@ public class MimicNodeStore extends AbstractConnection {
                 }
                 pIdent = new ProtocolIdentification(node, id);
                 pipInteraction = new Interaction() {
-                    int numTriesLeft = 3;
+                    int numTriesLeft = 1;
 
                     @Override
                     void sendRequest(Connection downstream) {
@@ -295,7 +295,7 @@ public class MimicNodeStore extends AbstractConnection {
             if (pSimpleNode == null) {
                 pSimpleNode = new SimpleNodeIdent(node, id);
                 snipInteraction = new Interaction() {
-                    int numTriesLeft = 3;
+                    int numTriesLeft = 1;
 
                     @Override
                     void sendRequest(Connection downstream) {
