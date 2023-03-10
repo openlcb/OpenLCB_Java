@@ -9,7 +9,7 @@ public abstract class Interaction {
      * Timeout after each sendRequest for the interaction to be completed before
      * the onTimeout is called.
      */
-    int deadlineMsec = 700;
+    int deadlineMsec = 3000;
 
     /**
      * Set to true by the system when a cancel/complete call arrives for this
