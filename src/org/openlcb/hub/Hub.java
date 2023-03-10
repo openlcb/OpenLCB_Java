@@ -10,10 +10,18 @@ import java.util.logging.Logger;
 /**
  * Simple multi-threaded OpenLCB hub implementation.
  * <P>
- * Multiple connections send lines terminated by newline,
+ * Multiple connections send and receive lines terminated by newline,
  * each of which is echoed to all other connections.
- *
  * <P>
+ * Line end behaviours can be changed to not require the newline between
+ * incoming CAN Frames or adding them at the end of a Frame whilst sending.
+ * <P>
+ * Code for finding start / end of CAN frames without line feeds adapted from JMRI.
+ * <p>
+ * Hub without line endings currently supports the GridConnect Serial spec for
+ * their CANUSB Interface, section 2.7.1 Message String Syntax in the pdf from
+ * gridconnect.com/collections/can-pc-interfaces/products/canusb-com-fd-converter-usb-can-fd-interface#documents-and-drivers
+ * <p>
  * main() directly invokes an object of the class.
  * <p>
  * Current threading model does all the sending from a
@@ -29,17 +37,50 @@ public class Hub {
     private final static Logger logger = Logger.getLogger(Hub.class.getName());
     public final static int DEFAULT_PORT = 12021;
     final static int CAPACITY = 20;  // not too long, to reduce delay
-    
+    private final boolean sendLineEndings;
+    private final boolean requireIncomingLineEndings;
+    private boolean disposed = false;
+
+    /**
+     * Constructs a new instance using default values.
+     * Port - 12021
+     * Send line endings - true
+     * Require incoming line endings - false
+     */
     public Hub() {
         this(Hub.DEFAULT_PORT);
     }
-    
+
+    /**
+     * Constructs a new instance using a specified port.
+     * Send line endings - true
+     * Require incoming line endings - false
+     * @param port the port number to use for incoming connections.
+     */
     public Hub(int port) {
+        this(port, true, false);
+    }
+
+    /**
+     * Constructs a new instance with the specified port and line end behaviour.
+     * @param port the port number to use for incoming connections.
+     * @param sendLineEndings true if line endings should be added to sent messages, false otherwise.
+     * @param requireIncomingLineEndings true if line endings should be expected in received messages,
+     *                      false to detect messages using GridConnect Serial format.
+     */
+    public Hub(int port, boolean sendLineEndings, boolean requireIncomingLineEndings ) {
         this.port = port;
+        this.sendLineEndings = sendLineEndings;
+        this.requireIncomingLineEndings = requireIncomingLineEndings;
+        createServerThread();
+    }
+
+    private void createServerThread() {
         // create array server thread
         Thread t = new Thread("openlcb-hub-output") {
+            @Override
             public void run() {
-                while (true) {
+                while (!disposed) {
                     try {
                         // as items arrive in queue, forward to every available connection
                         Memo m = queue.take();
@@ -49,6 +90,7 @@ public class Hub {
                     } catch (InterruptedException e) {
                         logger.severe("Hub: Interrupted in queue handling loop");
                         logger.log(Level.SEVERE, "", e);
+                        dispose();
                         return; // we have been asked to exit.
                     }
                 }
@@ -58,16 +100,16 @@ public class Hub {
         t.start();
     }
     
-    BlockingQueue<Memo> queue = new LinkedBlockingQueue<Memo>();
-    ArrayList<Forwarding> threads = new ArrayList<Forwarding>();
-    int port;
-    
-    ServerSocket service;
+    BlockingQueue<Memo> queue = new LinkedBlockingQueue<>();
+    ArrayList<Forwarding> threads = new ArrayList<>();
+    final int port;
 
+    /**
+     * Starts the server and listens to incoming connections.
+     */
     public void start() {
-        try {
-            service = new ServerSocket(port);
-            while (true) {
+        try (ServerSocket service = new ServerSocket(port)) {
+            while (!disposed) {
                 Socket clientSocket = service.accept();
                 ReaderThread r = new ReaderThread(clientSocket);
                 addForwarder(r);
@@ -78,6 +120,8 @@ public class Hub {
         } catch (IOException e) {
             logger.severe("Hub: Exception in main loop");
             logger.log(Level.SEVERE, "", e);
+            notifyOwner(e.getLocalizedMessage());
+            dispose();
         }
     }
     
@@ -108,7 +152,12 @@ public class Hub {
             logger.log(Level.SEVERE, "", e);
         }
     }
-    
+
+    public void dispose() {
+        notifyOwner("Hub Shutting Down");
+        disposed = true;
+    }
+
     public interface Forwarding {
         public void forward(Memo m);
     }
@@ -120,16 +169,21 @@ public class Hub {
         }
         
         Socket clientSocket;
-        DataInputStream input;
         PrintStream output;
         
+        @Override
         public void run() {
-            try {
-                input = new DataInputStream(clientSocket.getInputStream());
+            try ( DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+                    BufferedReader bfr = new BufferedReader(new InputStreamReader(input));
+            ) {
                 output = new PrintStream(clientSocket.getOutputStream(),true,"ISO-8859-1");
-        
-                while (true) {
-                    String line = input.readLine();
+                while (!disposed) {
+                    String line;
+                    if (requireIncomingLineEndings) {
+                        line = bfr.readLine();
+                    } else {
+                        line = loadChars( input);
+                    }
                     if (line == null) break;  // socket ended
                     queue.put(new Memo(line, this));
                 }
@@ -151,15 +205,67 @@ public class Hub {
             }
         }
         
+        // increase to 140 for FD CAN Frame Support, should not be > 30 for Classic Frame without timestamp extensions.
+        final static int MAX_STREAM_FRAME_BYTE_LENGTH = 30;
+
+        // Defined this way to reduce new object creation
+        private byte char1;
+
+        // adapted from jmri.jmrix.can.adapters.gridconnect.GcTrafficController
+        private String loadChars(DataInputStream istream) throws IOException {
+            StringBuilder sb = new StringBuilder(MAX_STREAM_FRAME_BYTE_LENGTH);
+            for (int i = 0; i < MAX_STREAM_FRAME_BYTE_LENGTH; i++) {
+                char1 = readByteProtected(istream);
+                if (i == 0) {
+                    // skip until you find ':' standard Frame start, or
+                    // | which will pass a self-receive message. 
+                    while (char1 != ':' && char1 != '|' && !disposed) {
+                        char1 = readByteProtected(istream);
+                    }
+                }
+                sb.append((char)char1);
+                // ; standard termination
+                // ! one-shot Frame time senstitive
+                if (char1 == ';' || char1 =='!') {
+                    break; // end of CAN Frame character found
+                }
+            }
+            return sb.toString();
+        }
+
+        // Defined this way to reduce new object creation
+        @SuppressWarnings("MismatchedReadAndWriteOfArray")
+        private final byte[] rcvBuffer = new byte[1];
+
+        // adapted from jmri.jmrix.AbstractMRTrafficController
+        private byte readByteProtected(DataInputStream istream) throws IOException {
+            while (!disposed) { // loop will repeat until character found
+                int nchars = istream.read(rcvBuffer, 0, 1);
+                if (nchars == -1) {
+                    // No more bytes can be read from the channel
+                    throw new IOException("Connection not terminated normally");
+                }
+                if (nchars > 0) {
+                    return rcvBuffer[0];
+                }
+            }
+            return 0x00;
+        }
+
+        @Override
         public void forward(Memo m) {
-            if (! this.equals(m.source)) {
-                output.println(m.line); 
+            if ((! this.equals(m.source)) && output != null) {
+                if (sendLineEndings) {
+                    output.println(m.line);
+                } else {
+                    output.print(m.line);
+                }
             }
         }
         
     }
     
-    public class Memo {
+    static public class Memo {
         public String line;
         public Forwarding source;
         

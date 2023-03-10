@@ -5,11 +5,14 @@ package org.openlcb.swing.memconfig;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.awt.FlowLayout;
+
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 
 import org.openlcb.MimicNodeStore;
@@ -29,29 +32,29 @@ public class MemConfigDescriptionPane extends JPanel {
 
     private final static Logger logger = Logger.getLogger(
             MemConfigDescriptionPane.class.getName());
-    
+
     NodeID node;
     MimicNodeStore store;
     MemoryConfigurationService service;
-    
+
     JLabel commandLabel = new JLabel("       ");
     JLabel highSpaceLabel = new JLabel("       ");
     JLabel lowSpaceLabel = new JLabel("       ");
-    
+
     public MemConfigDescriptionPane(NodeID node, MimicNodeStore store,
             MemoryConfigurationService service) {
         this.node = node;
         this.store = store;
         this.service = service;
-        
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
+
         addLine(commandLabel, "Commands:");
         addLine(highSpaceLabel,"High Address Space:");
         addLine(lowSpaceLabel, "Low Address Space:");
         add(new JSeparator());
     }
-    
+
     void addLine(JComponent j, String name) {
         JPanel p = new JPanel();
         p.setLayout(new java.awt.FlowLayout());
@@ -59,14 +62,14 @@ public class MemConfigDescriptionPane extends JPanel {
         p.add(j);
         add(p);
     }
-    
+
     /**
      * To be invoked after Swing component installation is complete,
      * as it drives display changes.
      */
     public void initComponents() {
         // start by asking for basic config
-        MemoryConfigurationService.McsConfigMemo memo = 
+        MemoryConfigurationService.McsConfigMemo memo =
             new MemoryConfigurationService.McsConfigMemo(node) {
                 @Override
                 public void handleFailure(int code) {
@@ -78,17 +81,17 @@ public class MemConfigDescriptionPane extends JPanel {
                 public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) {
                     // fill window from values
                     commandLabel.setText("0x"+Utilities.toHexPair(commands>>8)+Utilities.toHexPair(commands));
-                    
+
                     highSpaceLabel.setText("0x"+Utilities.toHexPair(highSpace));
                     lowSpaceLabel.setText("0x"+Utilities.toHexPair(lowSpace));
-                    
+
                     // and start address space read
                     readSpace(dest, highSpace, lowSpace);
                 }
             };
         service.request(memo);
     }
-    
+
     void readSpace(NodeID dest, final int highSpace, final int lowSpace) {
         if (highSpace < lowSpace) {
             // done, no further reads
@@ -99,20 +102,23 @@ public class MemConfigDescriptionPane extends JPanel {
             }
             return;
         }
-        MemoryConfigurationService.McsAddrSpaceMemo memo = 
+        MemoryConfigurationService.McsAddrSpaceMemo memo =
             new MemoryConfigurationService.McsAddrSpaceMemo(node, highSpace) {
                 @Override
-                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) { 
+                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) {
                     // new line with values
                     JPanel p = new JPanel();
-                    p.setLayout(new java.awt.FlowLayout());
+                    p.setLayout(new FlowLayout(FlowLayout.LEFT));
                     MemConfigDescriptionPane.this.add(p);
                     p.add(new JLabel("Space: 0x"+Utilities.toHexPair(space)));
-                    p.add(new JLabel("High address: 0x"+Long.toHexString(hiAddress).toUpperCase()));
+                    p.add(new JLabel("High address: 0x"+Long.toHexString(hiAddress).toUpperCase()+" "+hiAddress));
+                    // resize to fit
+                    ((JFrame) getRootPane().getParent()).pack();
+
                     // and read next space
                     readSpace(dest, highSpace-1, lowSpace);
                 }
             };
-        service.request(memo);        
+        service.request(memo);
     }
 }

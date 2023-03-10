@@ -28,28 +28,44 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * from a MimicNodeStore
  *
  * @author	Bob Jacobsen   Copyright (C) 2012
- * @version	$Revision$
  */
 public class NodeSelector extends JPanel  {
-    /** Comment for <code>serialVersionUID</code>. */
-    private static final long serialVersionUID = 1714640844679691939L;
-    
+
     private final PropertyChangeListener propertyChangeListener;
     MimicNodeStore store;
     JComboBox<ModelEntry> box;
     private DefaultComboBoxModel<ModelEntry> model = new DefaultComboBoxModel<ModelEntry>();
     private boolean seenLight = false;
+    private int termCount = 2; // how many terms to keep in ID string
 
+
+    /**
+     * Constructor with default displayed ID consisting of NodeID,
+     * User Name and User Description.
+     * @param store Node store containing the existing network
+     */
     public NodeSelector(MimicNodeStore store) {
+        this(store, 2);
+    }
+
+    /**
+     * Constructor that allows you to set the number of properties displayed
+     * after the NodeID.
+     *
+     * The properties will be shown in the order of User Name, User Description,
+     * Manufacturer+Model, Software version. Only non-empty values are shown.
+     *
+     * @param store Node store containing the existing network
+     * @param termCount Number of ID terms to include in the displayed ID
+     */
+    public NodeSelector(MimicNodeStore store, int termCount) {
         this.store = store;
+        this.termCount = termCount;
 
         this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
         box = new JComboBox<ModelEntry>(model);
         add(box);
-        box.setPrototypeDisplayValue(new ModelEntry("01.02.03.04.05.06"
-                + " - East Pershing Tower Node"
-                + " - Some Description Here"));
 
         // listen for newly arrived nodes
         propertyChangeListener = new PropertyChangeListener() {
@@ -69,6 +85,12 @@ public class NodeSelector extends JPanel  {
         // add existing nodes
         for (MimicNodeStore.NodeMemo memo : store.getNodeMemos() ) {
             newNodeInList(memo);
+        }
+
+        // If there are no nodes added, manually set the size
+        // to a reasonable value
+        if (box.getItemCount() == 0) {
+            box.setPrototypeDisplayValue(new ModelEntry(new String(new char[70])));
         }
 
         addHierarchyListener(new HierarchyListener() {
@@ -98,7 +120,7 @@ public class NodeSelector extends JPanel  {
 
         /**
          * Constructor for prototype display value
-         * 
+         *
          * @param description prototype display value
          */
         private ModelEntry(String description) {
@@ -115,17 +137,19 @@ public class NodeSelector extends JPanel  {
             StringBuilder sb = new StringBuilder();
             sb.append(nodeMemo.getNodeID().toString());
             int count = 0;
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getUserName(), sb);
             }
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getUserDesc(), sb);
             }
-            if (count < 2) {
-                count += addToDescription(ident.getMfgName() + ident.getModelName(),
+            if (count < termCount) {
+                if (!ident.getMfgName().isEmpty() || !ident.getModelName().isEmpty()) {
+                    count += addToDescription(ident.getMfgName() + " " +ident.getModelName(),
                         sb);
+                }
             }
-            if (count < 2) {
+            if (count < termCount) {
                 count += addToDescription(ident.getSoftwareVersion(), sb);
             }
             String newDescription = sb.toString();
@@ -174,7 +198,7 @@ public class NodeSelector extends JPanel  {
             }
             return false;
         }
-        
+
         @Override
         public int hashCode() {
             return getNodeID().hashCode();
