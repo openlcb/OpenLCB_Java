@@ -125,7 +125,7 @@ public class MemConfigDescriptionPane extends JPanel {
                                             +(((flags&0x01) == 0) ? " Writable" : " Read Only");
 
                         // add description field if provided
-                        if (desc != null && ! desc.isBlank()) {
+                        if (desc != null && ! desc.isEmpty()) {
                             content += " \""+desc+"\"";
                         }
                     } else {
