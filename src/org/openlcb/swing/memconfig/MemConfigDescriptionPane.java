@@ -38,8 +38,11 @@ public class MemConfigDescriptionPane extends JPanel {
     MemoryConfigurationService service;
 
     JLabel commandLabel = new JLabel("       ");
+    JLabel writesLabel = new JLabel("       ");
     JLabel highSpaceLabel = new JLabel("       ");
     JLabel lowSpaceLabel = new JLabel("       ");
+
+    // TODO: Should use a GridBagLayout to keep the various by-address-space columns aligned.
 
     public MemConfigDescriptionPane(NodeID node, MimicNodeStore store,
             MemoryConfigurationService service) {
@@ -50,6 +53,7 @@ public class MemConfigDescriptionPane extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         addLine(commandLabel, "Commands:");
+        addLine(writesLabel, "Write Codes:");
         addLine(highSpaceLabel,"High Address Space:");
         addLine(lowSpaceLabel, "Low Address Space:");
         add(new JSeparator());
@@ -81,10 +85,14 @@ public class MemConfigDescriptionPane extends JPanel {
                 public void handleConfigData(NodeID dest, int commands, int lengths, int highSpace, int lowSpace, String name) {
                     // fill window from values
                     commandLabel.setText("0x"+Utilities.toHexPair(commands>>8)+Utilities.toHexPair(commands));
+                    writesLabel.setText("0x"+Utilities.toHexPair(lengths));
 
                     highSpaceLabel.setText("0x"+Utilities.toHexPair(highSpace));
                     lowSpaceLabel.setText("0x"+Utilities.toHexPair(lowSpace));
 
+                    // sometimes highSpace doesn't include the pre-defined spaces,
+                    // so in the case we add them on and start with 0xFF
+                    if (highSpace >= 0xFA) highSpace = 0xFF;
                     // and start address space read
                     readSpace(dest, highSpace, lowSpace);
                 }
@@ -105,14 +113,28 @@ public class MemConfigDescriptionPane extends JPanel {
         MemoryConfigurationService.McsAddrSpaceMemo memo =
             new MemoryConfigurationService.McsAddrSpaceMemo(node, highSpace) {
                 @Override
-                public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) {
+                public void handleAddrSpaceData(NodeID dest, int space, boolean present, long hiAddress, long lowAddress, int flags, String desc) {
                     // new line with values
                     JPanel p = new JPanel();
                     p.setLayout(new FlowLayout(FlowLayout.LEFT));
                     MemConfigDescriptionPane.this.add(p);
                     p.add(new JLabel("Space: 0x"+Utilities.toHexPair(space)));
-                    p.add(new JLabel("High address: 0x"+Long.toHexString(hiAddress).toUpperCase()+" "+hiAddress));
-                    // resize to fit
+                    String content;
+                    if (present) {
+                        content = String.format("Low Address: 0x%010X High address: 0x%010X Length: %10d ", lowAddress, hiAddress, (hiAddress-lowAddress+1))
+                                            +(((flags&0x01) == 0) ? " Writable" : " Read Only");
+
+                        // add description field if provided
+                        if (desc != null && ! desc.isBlank()) {
+                            content += " \""+desc+"\"";
+                        }
+                    } else {
+                        content = "Not Present";
+                    }
+
+                    p.add(new JLabel(content));
+
+                    // resize frame to fit
                     ((JFrame) getRootPane().getParent()).pack();
 
                     // and read next space
