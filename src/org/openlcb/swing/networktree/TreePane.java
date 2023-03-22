@@ -65,7 +65,7 @@ public class TreePane extends JPanel  {
     DefaultMutableTreeNode nodes;
     DefaultTreeModel treeModel;
     TreeSelectionListener clientListener;
-    
+
     MimicNodeStore getStore() { return store; }
     DefaultTreeModel getTreeModel() { return treeModel; }
     JTree tree;
@@ -103,7 +103,7 @@ public class TreePane extends JPanel  {
 
     public TreePane() {
         super();
-        
+
         timer = new Timer("OpenLCB Tree Pane Timer");
     }
 
@@ -113,7 +113,7 @@ public class TreePane extends JPanel  {
 
         setPreferredSize(new Dimension(500, 700));
         nodes = new DefaultMutableTreeNode("OpenLCB Network");
-    
+
         // build GUI
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
 
@@ -204,7 +204,7 @@ public class TreePane extends JPanel  {
         store.addPropertyChangeListener(
             new PropertyChangeListener(){
             @Override
-            public void propertyChange(java.beans.PropertyChangeEvent e) { 
+            public void propertyChange(java.beans.PropertyChangeEvent e) {
                 if (e.getPropertyName().equals(MimicNodeStore.ADD_PROP_NODE)) {
                     MimicNodeStore.NodeMemo memo = (MimicNodeStore.NodeMemo) e.getNewValue();
                     if (!memo.getNodeID().equals(nullNode)) {
@@ -236,7 +236,7 @@ public class TreePane extends JPanel  {
                 n.initConnections();
             }
         }
-        
+
         // start with top level expanded
         tree.expandPath(new TreePath(nodes.getPath()));
 
@@ -407,5 +407,6 @@ public class TreePane extends JPanel  {
      */
     public void release() {
         timer.cancel();
+        timer = null; // get a new one next time
     }
 }
