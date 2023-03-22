@@ -99,7 +99,7 @@ public class Hub {
         t.setDaemon(true);
         t.start();
     }
-    
+
     BlockingQueue<Memo> queue = new LinkedBlockingQueue<>();
     ArrayList<Forwarding> threads = new ArrayList<>();
     final int port;
@@ -124,16 +124,16 @@ public class Hub {
             dispose();
         }
     }
-    
+
     public int getPort() { return port; }
     public void addForwarder(Forwarding f) {
         threads.add(f);
     }
-    
+
     public void notifyOwner(String line) {
         logger.info(line);
     }
-    
+
     // from jmri.util.SocketUtil
     String getRemoteSocketAddress(Socket socket) {
         try {
@@ -144,7 +144,7 @@ public class Hub {
         }
         return "<unknown>";
     }
-    
+
     public void putLine(String line) {
         try {
             queue.put(new Memo(line, null));
@@ -161,16 +161,16 @@ public class Hub {
     public interface Forwarding {
         public void forward(Memo m);
     }
-    
+
     class ReaderThread extends Thread implements Forwarding {
-    
+
         ReaderThread(Socket clientSocket) {
             this.clientSocket = clientSocket;
         }
-        
+
         Socket clientSocket;
         PrintStream output;
-        
+
         @Override
         public void run() {
             try ( DataInputStream input = new DataInputStream(clientSocket.getInputStream());
@@ -187,7 +187,7 @@ public class Hub {
                     if (line == null) break;  // socket ended
                     queue.put(new Memo(line, this));
                 }
-     
+
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Hub: Error while handling input from {0}", getRemoteSocketAddress(clientSocket));
                 logger.log(Level.SEVERE, "", e);
@@ -204,7 +204,7 @@ public class Hub {
                 logger.log(Level.SEVERE, "", e);
             }
         }
-        
+
         // increase to 140 for FD CAN Frame Support, should not be > 30 for Classic Frame without timestamp extensions.
         final static int MAX_STREAM_FRAME_BYTE_LENGTH = 30;
 
@@ -218,7 +218,7 @@ public class Hub {
                 char1 = readByteProtected(istream);
                 if (i == 0) {
                     // skip until you find ':' standard Frame start, or
-                    // | which will pass a self-receive message. 
+                    // | which will pass a self-receive message.
                     while (char1 != ':' && char1 != '|' && !disposed) {
                         char1 = readByteProtected(istream);
                     }
@@ -239,14 +239,22 @@ public class Hub {
 
         // adapted from jmri.jmrix.AbstractMRTrafficController
         private byte readByteProtected(DataInputStream istream) throws IOException {
+            // The socket's SO_TIMEOUT has been set to zero,
+            // but we observe this Stream.read call returning 0 characters.
+            // So we loop around until we get a real character.
             while (!disposed) { // loop will repeat until character found
-                int nchars = istream.read(rcvBuffer, 0, 1);
-                if (nchars == -1) {
-                    // No more bytes can be read from the channel
-                    throw new IOException("Connection not terminated normally");
-                }
-                if (nchars > 0) {
-                    return rcvBuffer[0];
+                try {
+                    int nchars = istream.read(rcvBuffer, 0, 1);
+                    if (nchars == -1) {
+                        // No more bytes can be read from the channel
+                        throw new IOException("Connection not terminated normally");
+                    }
+                    if (nchars > 0) {
+                        return rcvBuffer[0];
+                    }
+                } catch (java.net.SocketTimeoutException ex) {
+                    // this is a normal timeout, so just
+                    continue;
                 }
             }
             return 0x00;
@@ -262,23 +270,23 @@ public class Hub {
                 }
             }
         }
-        
+
     }
-    
+
     static public class Memo {
         public String line;
         public Forwarding source;
-        
+
         Memo(String line, Forwarding source) {
             this.line = line;
             this.source = source;
         }
     }
-    
+
     static public void main(String[] args) {
         Hub h = new Hub();
-        
+
         h.start();
-        
+
     }
 }
