@@ -75,7 +75,9 @@ public class MemoryConfigurationService {
                 //log System.out.println("OLCB: handleData");
                 service.acceptData(0);
                 if (addrSpaceMemo != null) {
-                    // doesn't handle decode of desc string, but should
+                    boolean present = (data[1] == 0x87);
+
+                    // TODO: doesn't handle decode of desc string, but should
                     int space = data[2] & 0xFF;
 
                     long highAddress = 0; // ludicrous default for nodes who fail to send this info
@@ -96,7 +98,7 @@ public class MemoryConfigurationService {
 
                     McsAddrSpaceMemo memo = addrSpaceMemo;
                     addrSpaceMemo = null;
-                    memo.handleAddrSpaceData(dest, space, highAddress, lowAddress, flags, "");
+                    memo.handleAddrSpaceData(dest, space, present, highAddress, lowAddress, flags, "");
                     return;
                 }
                 // config memo may trigger address space read, so do second
@@ -919,6 +921,9 @@ public class MemoryConfigurationService {
 
         /**
          * Overload this for notification of data.
+         * <p>
+         * Kept for backwards compatibility.
+         *
          * @param dest          node that sent this reply
          * @param space         address space we queried
          * @param hiAddress     largest valid address in this address space
@@ -927,6 +932,24 @@ public class MemoryConfigurationService {
          * @param desc          string description for this address space
          */
         public void handleAddrSpaceData(NodeID dest, int space, long hiAddress, long lowAddress, int flags, String desc) {
+        }
+
+        /**
+         * Overload this for notification of data.
+         * <p>
+         * This is the preferred form.
+         *
+         * @param dest          node that sent this reply
+         * @param space         address space we queried
+         * @param present       if false, this address space was marked as not present.
+         *                      The rest of the values may not be reliable.
+         * @param hiAddress     largest valid address in this address space
+         * @param lowAddress    smallest valid address in this address space
+         * @param flags         address space flags (e.g. R/O, see standard)
+         * @param desc          string description for this address space
+         */
+        public void handleAddrSpaceData(NodeID dest, int space, boolean present, long hiAddress, long lowAddress, int flags, String desc) {
+            handleAddrSpaceData(dest, space, hiAddress, lowAddress, flags, desc);
         }
 
     }

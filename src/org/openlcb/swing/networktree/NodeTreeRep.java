@@ -143,15 +143,24 @@ public class NodeTreeRep extends DefaultMutableTreeNode  {
             b.append(e.getMfgName());
         }
         String n2 = e.getUserDesc().trim();
+        String n3 = "";
         if (n2.isEmpty() && n1.isEmpty()) {
-            // if displaying Mfg and no user desc, display model
+            // if displaying Mfg and no user desc, display model and hardware info
             n2 = e.getModelName();
+            n3 = e.getHardwareVersion();
+
         }
         if (!n2.isEmpty()) {
             if (b.length() > 0) {
                 b.append(" - ");
             }
             b.append(n2);
+        }
+        if (!n3.isEmpty()) {
+            if (b.length() > 0) {
+                b.append(" - ");
+            }
+            b.append(n3);
         }
         String newDesc = b.toString();
         if (!nodeDescription.equals(newDesc)) {
