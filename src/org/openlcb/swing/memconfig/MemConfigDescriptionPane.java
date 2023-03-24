@@ -53,7 +53,7 @@ public class MemConfigDescriptionPane extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         addLine(commandLabel, "Commands:");
-        addLine(writesLabel, "Write Codes:");
+        addLine(writesLabel, "Write Modes:");
         addLine(highSpaceLabel,"High Address Space:");
         addLine(lowSpaceLabel, "Low Address Space:");
         add(new JSeparator());
