@@ -509,7 +509,7 @@ public class MemoryConfigurationService {
                 }
                 // Now: something is fishy.
                 if (memo instanceof RequestWithReplyDatagram) {
-                    logger.info("Expected reply pending, got zero.");
+                    logger.fine("Expected reply pending, got zero.");
                     // We will still wait for a reply datagram.
                     return;
                 }
