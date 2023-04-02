@@ -71,6 +71,10 @@ public class NIDaAlgorithm implements CanFrameListener {
             f = new OpenLcbCanFrame(nida.getNIDa());
             f.setRIM(nida.getNIDa());
             complete = true;
+        } else if (index == 5) {
+            f = new OpenLcbCanFrame(nida.getNIDa());
+            f.setAMD(nida.getNIDa(), nid);
+            complete = true;
         } else {
             // send nothing
             f = null;

@@ -52,15 +52,17 @@ public class NIDaAlgorithmTest {
     }
 
     @Test
-    public void testFifth() {
+    public void testSixth() {
         Assert.assertTrue("not complete", !alg.isComplete());
 
-        // seventh frame is RIM
+        // fifth frame is RIM
         Assert.assertTrue(alg.nextFrame().isCIM());
         Assert.assertTrue(alg.nextFrame().isCIM());
         Assert.assertTrue(alg.nextFrame().isCIM());
         Assert.assertTrue(alg.nextFrame().isCIM());
         Assert.assertTrue(alg.nextFrame().isRIM());
+
+        Assert.assertNotEquals(alg.nextFrame(), null); // AMD frame
 
         Assert.assertTrue("complete", alg.isComplete());
 
@@ -93,6 +95,9 @@ public class NIDaAlgorithmTest {
         t.setCIM(1, 0, 0);
         alg.processFrame(t);
         Assert.assertTrue(alg.nextFrame().isRIM());
+
+        // sixth is AMD
+        Assert.assertNotEquals((alg.nextFrame()), null);
 
         Assert.assertTrue("complete", alg.isComplete());
 
@@ -130,6 +135,9 @@ public class NIDaAlgorithmTest {
         f = alg.nextFrame();
         Assert.assertTrue(f.isRIM());
 
+        // sixth is AMD
+        Assert.assertNotEquals((f = alg.nextFrame()), null);
+
         Assert.assertTrue("complete", alg.isComplete());
 
         Assert.assertEquals((f = alg.nextFrame()), null);
@@ -156,6 +164,9 @@ public class NIDaAlgorithmTest {
         // fifth
         f = alg.nextFrame();
         Assert.assertTrue(f.isRIM());
+
+        // sixth is AMD
+        Assert.assertNotEquals((f = alg.nextFrame()), null);
 
         int nida = f.getSourceAlias();
         Assert.assertTrue("complete", alg.isComplete());
