@@ -264,7 +264,6 @@ public class MessageBuilder implements AliasMap.Watcher {
             case ProtocolSupportReply:
                 long flags = f.dataAsLong();
                 flags = flags << (8 * Math.max(0, 8-f.getNumDataElements()));
-                System.out.println("find "+f.getNumDataElements()+" "+flags);
                 retlist.add(new ProtocolIdentificationReplyMessage(source, dest, flags));
                 return retlist;
             case TractionControlRequest:
