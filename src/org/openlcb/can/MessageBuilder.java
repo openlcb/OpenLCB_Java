@@ -262,7 +262,10 @@ public class MessageBuilder implements AliasMap.Watcher {
                 retlist.add(new ProtocolIdentificationRequestMessage(source, dest));
                 return retlist;
             case ProtocolSupportReply:
-                retlist.add(new ProtocolIdentificationReplyMessage(source, dest, f.dataAsLong()));
+                long flags = f.dataAsLong();
+                flags = flags << (8 * Math.max(0, 8-f.getNumDataElements()));
+                System.out.println("find "+f.getNumDataElements()+" "+flags);
+                retlist.add(new ProtocolIdentificationReplyMessage(source, dest, flags));
                 return retlist;
             case TractionControlRequest:
                 retlist.add(new TractionControlRequestMessage(source, dest, content));
