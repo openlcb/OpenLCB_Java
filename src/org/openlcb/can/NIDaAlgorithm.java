@@ -12,7 +12,7 @@ import org.openlcb.NodeID;
  * to and from the actual interface.
  * It also requires subclassing to provide a timer function.
  *
- * @author  Bob Jacobsen   Copyright 2009, 2010
+ * @author  Bob Jacobsen   Copyright 2009, 2010, 2023
  */
 public class NIDaAlgorithm implements CanFrameListener {
     /// Callback to invoke when the alias was successfully reserved.
@@ -70,7 +70,6 @@ public class NIDaAlgorithm implements CanFrameListener {
         } else if (index == 4) {
             f = new OpenLcbCanFrame(nida.getNIDa());
             f.setRIM(nida.getNIDa());
-            complete = true;
         } else if (index == 5) {
             f = new OpenLcbCanFrame(nida.getNIDa());
             f.setAMD(nida.getNIDa(), nid);
@@ -152,6 +151,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             }
             scheduleTimer(200);
         } else if (index == 4) {
+            sendInterface.send(nextFrame());
             sendInterface.send(nextFrame());
             if (done != null) {
                 done.run();
