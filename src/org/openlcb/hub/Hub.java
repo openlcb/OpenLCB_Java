@@ -188,6 +188,9 @@ public class Hub {
                     queue.put(new Memo(line, this));
                 }
 
+            } catch (SocketException e) { // typically client has disconnected
+                logger.log(Level.WARNING, "Hub: {0} while handling input from "
+                    +getRemoteSocketAddress(clientSocket), e.getMessage());
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Hub: Error while handling input from {0}", getRemoteSocketAddress(clientSocket));
                 logger.log(Level.SEVERE, "", e);

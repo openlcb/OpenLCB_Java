@@ -588,6 +588,24 @@ public class MessageBuilderTest  {
     }
 
     @Test
+    public void testPipReplyFrameShort() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19668071);
+        frame.setData(new byte[]{0x02, (byte)0xB4, (byte)0xD5});
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof ProtocolIdentificationReplyMessage);
+
+        Assert.assertTrue(((ProtocolIdentificationReplyMessage)msg).getValue() == 0xD50000000000L);
+    }
+
+    @Test
     public void testOptionalRejectFrame1() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19068071);
