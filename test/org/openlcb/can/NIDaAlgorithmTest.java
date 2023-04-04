@@ -199,7 +199,7 @@ public class NIDaAlgorithmTest {
         alg1.nextFrame();
         alg1.nextFrame();
 
-        int expectedCount = 5;
+        int expectedCount = 6;
         int count = sequentialRunner(new NIDaAlgorithm[]{alg1, alg2}, expectedCount);
 
         debug("tSS2 converges " + count);
