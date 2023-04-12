@@ -229,9 +229,15 @@ public class CdiPanel extends JPanel {
             bb.setToolTipText("Requests the configured node to restart.");
             bb.addActionListener(actionEvent -> runReboot());
             addButtonToMoreFunctions(bb);
+
             bb = new JButton("Update Complete");
             bb.setToolTipText("Tells the configured node that the you are done with changing the settings and they should be taking effect now. Might restart the node.");
             bb.addActionListener(actionEvent -> runUpdateComplete());
+            addButtonToMoreFunctions(bb);
+
+            bb = new JButton("Factory Reset");
+            bb.setToolTipText("Resets the node to its factory default content");
+            bb.addActionListener(actionEvent -> runFactoryReset());
             addButtonToMoreFunctions(bb);
         }
 
@@ -495,6 +501,28 @@ public class CdiPanel extends JPanel {
 
     private void runReboot() {
         rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
+    }
+
+    private void runFactoryReset() {
+        int reply = javax.swing.JOptionPane. showConfirmDialog(this,
+                "Do you want to make a backup first?", "Factory Reset", JOptionPane.YES_NO_OPTION);
+        if (reply != javax.swing.JOptionPane.NO_OPTION) {
+            runBackup();
+        }
+
+        reply = javax.swing.JOptionPane. showConfirmDialog(this,
+                "This resets node contents. Proceed?", "Factory Reset", JOptionPane.YES_NO_OPTION);
+        if (reply != javax.swing.JOptionPane.YES_OPTION) return;
+
+       int[] contentArray = new int[8];
+        contentArray[0] = 0x20;
+        contentArray[1] = 0xAA;
+
+        byte[] nodeID = rep.getRemoteNodeID().getContents();
+        for (int i =0; i < 6; i++)
+            contentArray[i+2] = nodeID[i];
+
+        rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), contentArray);
     }
 
     private void runUpdateComplete() {
