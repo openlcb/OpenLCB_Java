@@ -26,7 +26,7 @@ public class CdiMemConfigReader  {
     MimicNodeStore store;
     MemoryConfigurationService service;
     final int space;
-        
+
     public CdiMemConfigReader(NodeID node, MimicNodeStore store, MemoryConfigurationService service) {
         this.node = node;
         this.store = store;
@@ -44,7 +44,7 @@ public class CdiMemConfigReader  {
 
     long nextAddress = 0;
     StringBuffer buf;
-    
+
     ReaderAccess retval;
     public void startLoadReader(ReaderAccess retval) {
         this.retval = retval;
@@ -52,19 +52,29 @@ public class CdiMemConfigReader  {
         buf = new StringBuffer();
         nextRequest();
     }
-    
+
     void nextRequest() {
         if (retval != null) {
             retval.progressNotify(buf.length(), -1);
         }
         MemoryConfigurationService.McsReadHandler memo =
             new MemoryConfigurationService.McsReadHandler() {
+
+                int retryCount = 0;
+
                 @Override
                 public void handleFailure(int code) {
-                    logger.warning("Error reading CDI: " + Integer.toHexString(code));
-                    done();
-                    // TODO: 5/2/16 proxy error messages to the caller.
-                    // don't do next request
+                     // see if we can retry
+                    retryCount++; // count from 1
+                    if (retryCount > 3) {
+                        // fail - don't do another request
+                        logger.warning("Too many retries, ending");
+                        done();
+                    } else {
+                        // retry this read request
+                        logger.warning("Retrying after error reading CDI: " + Integer.toHexString(code));
+                        service.requestRead(node, space, nextAddress, LENGTH, this);
+                    }
                 }
 
                 public void handleReadData(NodeID dest, int space, long address, byte[] data) {
@@ -87,7 +97,7 @@ public class CdiMemConfigReader  {
             };
         service.requestRead(node, space, nextAddress, LENGTH, memo);
     }
-    
+
     private void done() {
         // done, pass back a reader based on the current buffer contents
         if (retval != null) {
@@ -96,7 +106,7 @@ public class CdiMemConfigReader  {
             retval.provideReader(new java.io.StringReader(new String(buf)));
         }
     }
-    
+
     public interface ReaderAccess {
         /**
          *
