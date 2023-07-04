@@ -104,11 +104,14 @@ public class Hub {
     ArrayList<Forwarding> threads = new ArrayList<>();
     final int port;
 
+    private ServerSocket service = null;
+
     /**
      * Starts the server and listens to incoming connections.
      */
     public void start() {
-        try (ServerSocket service = new ServerSocket(port)) {
+        try {
+            service = new ServerSocket(port);
             while (!disposed) {
                 Socket clientSocket = service.accept();
                 ReaderThread r = new ReaderThread(clientSocket);
@@ -122,6 +125,14 @@ public class Hub {
             logger.log(Level.SEVERE, "", e);
             notifyOwner(e.getLocalizedMessage());
             dispose();
+        } finally {
+            if ( service != null ) {
+                try {
+                    service.close();
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Exception closing Service", e);
+                }
+            }
         }
     }
 
@@ -156,6 +167,13 @@ public class Hub {
     public void dispose() {
         notifyOwner("Hub Shutting Down");
         disposed = true;
+        // use a new socket to interrupt existing ServerSocket service.accept , see
+        // https://coderanch.com/t/560718/java/Socket-interrupt-serverSocket-accept
+        try {
+            new Socket(service.getInetAddress(), service.getLocalPort()).close();
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "dispose exception", e);
+        }
     }
 
     public interface Forwarding {
