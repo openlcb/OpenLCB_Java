@@ -170,7 +170,9 @@ public class Hub {
         // use a new socket to interrupt existing ServerSocket service.accept , see
         // https://coderanch.com/t/560718/java/Socket-interrupt-serverSocket-accept
         try {
-            new Socket(service.getInetAddress(), service.getLocalPort()).close();
+            if ( service != null ) {
+                new Socket(service.getInetAddress(), service.getLocalPort()).close();
+            }
         } catch (IOException e) {
             logger.log(Level.SEVERE, "dispose exception", e);
         }
