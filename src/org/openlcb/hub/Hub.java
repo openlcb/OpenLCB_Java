@@ -129,6 +129,7 @@ public class Hub {
             if ( service != null ) {
                 try {
                     service.close();
+                    service = null;
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "Exception closing Service", e);
                 }
