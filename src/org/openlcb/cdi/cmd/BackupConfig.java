@@ -7,6 +7,7 @@ import org.openlcb.cdi.impl.ConfigRepresentation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,12 +18,12 @@ import java.nio.file.Paths;
 public class BackupConfig {
 
 
-    static public void writeEntry(BufferedWriter outFile, String key, String value) {
+    static public void writeEntry(BufferedWriter writer, String key, String value) {
         try {
-            outFile.write(Util.escapeString(key));
-            outFile.write('=');
-            outFile.write(Util.escapeString(value));
-            outFile.write('\n');
+            writer.write(Util.escapeString(key));
+            writer.write('=');
+            writer.write(Util.escapeString(value));
+            writer.write('\n');
         } catch (IOException e1) {
             e1.printStackTrace();
             System.exit(1);
@@ -35,25 +36,34 @@ public class BackupConfig {
 
         outFile = Files.newBufferedWriter(Paths.get(fileName), Charset.forName("UTF-8"));
         final BufferedWriter finalOutFile = outFile;
+        
+        writeConfigToWriter(finalOutFile, repr);
+        
+        outFile.close();
+    }
+
+    public static void writeConfigToWriter(Writer writer, ConfigRepresentation repr) throws
+            IOException {
+
+        final BufferedWriter finalWriter = new BufferedWriter(writer);;
         repr.visit(new ConfigRepresentation.Visitor() {
                        @Override
                        public void visitString(ConfigRepresentation.StringEntry e) {
-                           writeEntry(finalOutFile, e.key, e.getValue());
+                           writeEntry(finalWriter, e.key, e.getValue());
                        }
 
                        @Override
                        public void visitInt(ConfigRepresentation.IntegerEntry e) {
-                           writeEntry(finalOutFile, e.key, Long.toString(e.getValue()));
+                           writeEntry(finalWriter, e.key, Long.toString(e.getValue()));
                        }
 
                        @Override
                        public void visitEvent(ConfigRepresentation.EventEntry e) {
-                           writeEntry(finalOutFile, e.key, Utilities.toHexDotsString(e.getValue
+                           writeEntry(finalWriter, e.key, Utilities.toHexDotsString(e.getValue
                                    ().getContents()));
                        }
                    }
         );
-        outFile.close();
     }
 
 
