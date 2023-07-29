@@ -749,6 +749,10 @@ public class CdiPanel extends JPanel {
         });
     }
 
+    /**
+     * Visitor class to find a full name for changed elements
+     * that have not been saved.
+     */
     private class GetEntryNameVisitor extends ConfigRepresentation.Visitor {
         CdiRep.Item item;
         int segNum = 1;
@@ -1002,13 +1006,16 @@ public class CdiPanel extends JPanel {
             final String name = (item.getRepName() != null ? (item.getRepName()) : "Group") + " "
                     + (e.index);
             //currentPane.setBorder(BorderFactory.createTitledBorder(name));
+            
+            // set the name of this pane, which names the tab
             currentPane.setName(name);
-
+            
             // Finds a string field that could be used as a caption.
             FindDescriptorVisitor vv = new FindDescriptorVisitor();
             vv.visitContainer(e);
 
             if (vv.foundEntry != null) {
+                // here a unique descriptor has been found
                 final JPanel tabPanel = currentPane;
                 final ConfigRepresentation.StringEntry source = vv.foundEntry;
                 final JTabbedPane parentTabs = currentTabbedPane;
@@ -1054,6 +1061,12 @@ public class CdiPanel extends JPanel {
             // add this new pane to the combined tab pane
             currentTabbedPane.add(currentPane);
             tabsByKey.put(e.key, currentTabbedPane);
+            
+            // set the tab to a label with copy/pasteValue
+            int index = currentTabbedPane.indexOfComponent(currentPane);
+            JComponent tabLabel = getTabLabel(currentTabbedPane, index, name, e);
+            currentTabbedPane.setTabComponentAt(index, tabLabel);
+            
         }
 
         /**
