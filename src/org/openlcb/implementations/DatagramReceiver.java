@@ -4,10 +4,8 @@ import org.openlcb.*;
 
 /**
  * Example of receiving a OpenLCB datagram.
- *<p>
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class DatagramReceiver extends MessageDecoder {
     public DatagramReceiver(NodeID here, NodeID far, Connection c) {

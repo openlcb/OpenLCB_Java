@@ -24,10 +24,8 @@ import org.openlcb.*;
  *<li>Does not parallelize Datagrams to separate nodes
  *<li>Needs to timeout and resume operation if no reply received
  *</ul>
- *<p>
  *
  * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision$
  */
 public class DatagramMeteringBuffer extends MessageDecoder {
 
