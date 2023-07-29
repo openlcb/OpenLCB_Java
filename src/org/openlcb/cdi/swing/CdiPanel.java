@@ -3,6 +3,7 @@ package org.openlcb.cdi.swing;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.openlcb.EventID;
 import org.openlcb.NodeID;
+import org.openlcb.Utilities;
 import org.openlcb.cdi.CdiRep;
 import org.openlcb.cdi.cmd.BackupConfig;
 import org.openlcb.cdi.cmd.RestoreConfig;
@@ -30,14 +31,21 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,6 +71,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -314,6 +323,8 @@ public class CdiPanel extends JPanel {
     }
 
     /**
+     * Load from a CDI representation with a default {@link GuiItemFactory}.
+     *
      * @param rep Representation of the config to be loaded
      */
     public void initComponents(ConfigRepresentation rep) {
@@ -385,7 +396,9 @@ public class CdiPanel extends JPanel {
     }
 
     /**
-     * Triggers a warning at the close of this dialog that the panel file needs to be saved in JMRI.
+     * Triggers a warning at the close of this dialog that a Senor has been made.
+     * This triggers a message the panel file needs to be saved in JMRI.
+     *
      * @param uName unused.
      */
     public void madeSensor(String uName) {
@@ -393,7 +406,9 @@ public class CdiPanel extends JPanel {
     }
 
     /**
-     * Triggers a warning at the close of this dialog that the panel file needs to be saved in JMRI.
+     * Triggers a warning at the close of this dialog that a Turnout has been made.
+     * This triggers a message the panel file needs to be saved in JMRI.
+     *
      * @param uName unused.
      */
     public void madeTurnout(String uName) {
@@ -547,6 +562,11 @@ public class CdiPanel extends JPanel {
         }, 500);
     }
 
+    /**
+     * Remove the listener to the CDI representation that gets a notification that 
+     * loading of the CDI is complete.
+     * Paired with {@link #addLoadingListener}.
+     */
     private void removeLoadingListener() {
         synchronized (rep) {
             if (loadingListener != null) rep.removePropertyChangeListener(loadingListener);
@@ -554,6 +574,11 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    /**
+     * Add a listener to the CDI representation to get a notification that 
+     * loading of the CDI is complete.
+     * Paired with {@link #removeLoadingListener}.
+     */
     private void addLoadingListener() {
         synchronized(rep) {
             if (loadingListener != null) return;
@@ -576,6 +601,9 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    /**
+     * CDI loading is done, update the UI and listeners
+     */
     private void hideLoadingProgress() {
         if (loadingPanel == null) return;
         removeLoadingListener();
@@ -591,6 +619,10 @@ public class CdiPanel extends JPanel {
         loadingPanel.setVisible(true);
     }
 
+    /**
+     * Create a separate thread to render the CDI to the UI.
+     * When done, invokes {@link displayComplete} on the Swing/AWT thread
+     */
     private void displayCdi() {
         displayLoadingProgress();
         loadingText.setText("Creating display...");
@@ -608,6 +640,10 @@ public class CdiPanel extends JPanel {
         }, "openlcb-cdi-render").start();
     }
 
+    /**
+     * Rendering thread is complete, show the CDI display in the UI.
+     * Must be invoked on the Swing/AWT thread
+     */
     private void displayComplete() {
         synchronized (startupTasks) {
             renderingInProgress = false;
@@ -985,15 +1021,20 @@ public class CdiPanel extends JPanel {
                                 String downstreamName = "";
                                 if (source.lastVisibleValue != null && !source.lastVisibleValue
                                         .isEmpty()) {
+                                    // we have a new name from a description, use it
                                     String newName = (name + " (" + source.lastVisibleValue + ")");
                                     tabPanel.setName(newName);
                                     if (parentTabs.getTabCount() >= e.index) {
-                                        parentTabs.setTitleAt(e.index - 1, newName);
+                                        JComponent tabLabel = getTabLabel(parentTabs, e.index-1, newName, e);
+                                        parentTabs.setTabComponentAt(e.index - 1, tabLabel);
                                     }
                                     downstreamName = source.lastVisibleValue;
                                 } else {
+                                    // use the name created above from the repName
                                     if (parentTabs.getTabCount() >= e.index) {
-                                        parentTabs.setTitleAt(e.index - 1, name);
+                                        // update the name listed in the tab
+                                        JComponent tabLabel = getTabLabel(parentTabs, e.index-1, name, e);
+                                        parentTabs.setTabComponentAt(e.index - 1, tabLabel);
                                     }
                                 }
                                 new UpdateGroupNameVisitor(e.key, downstreamName).visitContainer(e);
@@ -1010,10 +1051,197 @@ public class CdiPanel extends JPanel {
             factory.handleGroupPaneEnd(currentPane);
             currentPane.add(Box.createVerticalGlue());
 
+            // add this new pane to the combined tab pane
             currentTabbedPane.add(currentPane);
             tabsByKey.put(e.key, currentTabbedPane);
         }
 
+        /**
+         * Generate the tab label for a group item.
+         * Including any needed navigation, tooltip, popup menu, etc.
+         * @param parentTabbedPane The tabbed pane which it to be navigated
+         * @param name The name to display
+         * @param rep the configuration data representation
+         * @return Tab label component
+         */
+        protected JComponent getTabLabel(JTabbedPane parentTabbedPane, int index, String name, ConfigRepresentation.GroupRep rep) {
+            JLabel tabLabel = new JLabel(name);
+            
+            tabLabel.addMouseListener(new MouseAdapter() {
+
+                // for click logic: https://stackoverflow.com/questions/46840814/right-click-jpopupmenu-on-jtabbedpane
+                @Override
+                public void mouseClicked(MouseEvent event) {
+
+                    // isPopupTrigger doesn't work on all platforms, all versions?
+                    boolean isPopup = (event.getModifiersEx() & InputEvent.CTRL_DOWN_MASK) != 0 || event.isPopupTrigger();
+                    if ( !isPopup ) {
+                        // user selected a tab
+                        parentTabbedPane.setSelectedIndex(index);
+                    } else {
+                        // user requested the popup menu
+                        // move to tab, in case non-active one clicked
+                        parentTabbedPane.setSelectedIndex(index);
+                        
+                        JPopupMenu popupMenu = new JPopupMenu();
+                        JMenuItem menuItem = new JMenuItem("Copy");
+                        popupMenu.add(menuItem);
+                        menuItem.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                performCopy(index, rep);
+                            }
+                        });
+                        menuItem = new JMenuItem("Paste");
+                        popupMenu.add(menuItem);
+                        menuItem.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                performPaste(index, rep);
+                            }
+                        });
+                        
+                        popupMenu.show(tabLabel, event.getX(), event.getY());
+                    }
+                }
+
+            });
+            
+            return tabLabel;
+        }
+        
+        /**
+         * Perform a "copy" operation on a selected tabColorTimer
+         */
+        protected void performCopy(int index, ConfigRepresentation.GroupRep rep) {
+            String result = groupToString(rep);
+            
+            // store to clipboard
+            StringSelection selection = new StringSelection(result);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);            
+            
+        }
+                
+        /**
+         * Copy an entire group replication to a String
+         */
+        protected String groupToString(ConfigRepresentation.GroupRep rep) {
+            StringBuilder result = new StringBuilder();
+
+            ConfigRepresentation.Visitor visitor = new ConfigRepresentation.Visitor() {
+ 
+                @Override
+                public void visitString(ConfigRepresentation.StringEntry e) {
+                   writeEntry(e.key, e.getValue());
+                }
+
+                @Override
+                public void visitInt(ConfigRepresentation.IntegerEntry e) {
+                   writeEntry(e.key, Long.toString(e.getValue()));
+                }
+
+                @Override
+                public void visitEvent(ConfigRepresentation.EventEntry e) {
+                   writeEntry(e.key, org.openlcb.Utilities.toHexDotsString(e.getValue
+                           ().getContents()));
+                }
+                
+                protected void writeEntry(String key, String entry) {
+                    result.append(key);
+                    result.append("=");
+                    result.append(entry);
+                    result.append("\n");
+                }
+            };
+            
+            visitor.visitGroupRep(rep);
+            return new String(result);
+        }  
+            
+        
+        /**
+         * Perform a "paste" operation on a selected tabColorTimer
+         */
+        protected void performPaste(int index, ConfigRepresentation.GroupRep rep) {
+            // retrieve from clipboard
+            Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
+            Transferable t = c.getContents( null );
+            String newContentString = "";
+            if ( t.isDataFlavorSupported(DataFlavor.stringFlavor) ) {
+                try {
+                    newContentString = (String)t.getTransferData( DataFlavor.stringFlavor );
+                } catch (UnsupportedFlavorException | IOException e) {
+                    // this can never happen as we checked bafore
+                }
+            } // this should always have succeeded
+            
+            // store the values that are going to be replaced
+            String previousContentString = groupToString(rep); 
+
+            String[] newContentLines = newContentString.split("\n");
+            String[] previousContentLines = previousContentString.split("\n");
+            
+            // compare keys to see if the variables match up
+            // this version just checks the line count, more needed here
+            if (previousContentLines.length != newContentLines.length) {
+                logger.log(Level.WARNING, "Cannot paste into a mis-matching entry type");
+                return;
+            }
+            
+            // change the number in the newContentLines to this index
+            // First, find the prefix we're going to change
+            List<String> list = java.util.Arrays.asList(newContentLines);
+            String prefix = Utilities.longestLeadingSubstring(list);
+            
+            // That prefix should end with "(1)."
+            
+            StringBuilder processedContentSB = new StringBuilder();
+            for (int i = 0; i<newContentLines.length; i++) {
+                newContentLines[i] = newContentLines[i].substring(0, prefix.length()-4)+"("+index+")."+newContentLines[i].substring(prefix.length())+"\n";
+                processedContentSB.append(newContentLines[i]);
+            }
+            // at this point, processedContent has the new values to restore
+            String processedContent = new String(processedContentSB);
+            
+            // finally, feed to the restore procedure
+            BufferedReader reader = new BufferedReader(new StringReader(processedContent));
+            
+            RestoreConfig.parseConfigFromReader(reader, new RestoreConfig.ConfigCallback() {
+                boolean hasError = false;
+
+                @Override
+                public void onConfigEntry(String key, String value) {
+                    EntryPane pp = entriesByKey.get(key);
+                    if (pp == null) {
+                        onError("Could not find variable for key " + key);
+                        return;
+                    }
+                    // TODO: The logical value to display value change should not be the
+                    // responsibility of this code; there is duplication over the
+                    // ConfigRepresentation.IntegerEntry class. This
+                    // should probably go via someplace else.
+                    CdiRep.Map map = pp.entry.getCdiItem().getMap();
+                    if (map != null && map.getKeys().size() > 0) {
+                        String mapvalue = map.getEntry(value);
+                        if (mapvalue != null) value = mapvalue;
+                    }
+                    pp.updateDisplayText(value);
+                    pp.updateColor();
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (!hasError) {
+                        logger.severe("Error(s) encountered during loading configuration backup.");
+                        hasError = true;
+                    }
+                    logger.severe(error);
+                }
+            });
+            _unsavedRestore = true;
+        }
+        
         @Override
         public void visitString(ConfigRepresentation.StringEntry e) {
             currentLeaf = new StringPane(e);
@@ -2007,33 +2235,98 @@ public class CdiPanel extends JPanel {
      * Default behavior is to do nothing
      */
     public static class GuiItemFactory {
+        /**
+         * Allows replacement of the Read button in the interface
+         * @param button proposed Read button for the interface
+         * @return the actual Read button for the interface
+         */
         public JButton handleReadButton(JButton button) {
             return button;
         }
+        
+        /**
+         * Allows replacement of the Write button in the interface
+         * @param button proposed Write button for the interface
+         * @return the actual Write button for the interface
+         */
         public JButton handleWriteButton(JButton button) {
             return button;
         }
+        
+        /**
+         * Allows replacement of the More... button on an event ID in the interface
+         * @param button proposed More... button for the interface
+         * @return the actual More... button for the interface
+         */
         public JButton handleEventidMoreButton(JButton button) {
             return button;
-         }
+        }
+        
+        /**
+         * Allows replacement of the Produce button in the interface
+         * @param button proposed Produce button for the interface
+         * @return the actual Produce button for the interface
+         */
         public JButton handleProduceButton(JButton button) {
            return button;
         }
+        
+        /**
+         * Process pressing the Make Sensor button
+         * @param ev EventId to use
+         * @param mdesc Description to Use
+         */
         public void makeSensor(String ev, String mdesc) {
             return;
         }
+        
+        /**
+         * A new CDI group is being constructed.  This makes the place for that
+         * available so that it can be replaced if need be.
+         * Paired with {@link handleGroupPaneEnd}.
+         *
+         * @param pane The GUI panel that will be populated with the 
+         *              representation of the group. In {@link CdiPanel}, 
+         *              this is a {@link GroupPane}.
+         */
         public void handleGroupPaneStart(JPanel pane) {
             return;
         }
+
+        /**
+         * Called after a group have been constructedd.
+         * Paired with {@link handleGroupPaneStart}.
+         *
+         * @param pane The GUI panel that has been populated with the 
+         *              representation of the group. In {@link CdiPanel}, 
+         *              this is a {@link GroupPane}.
+         */
         public void handleGroupPaneEnd(JPanel pane) {
             return;
         }
+        
+        /**
+         * Allow separate processing of an Event ID entry field
+         * @param field The proposed EventID entry field
+         * @return The EventID entry field to use
+         */
         public JFormattedTextField handleEventIdTextField(JFormattedTextField field) {
             return field;
         }
+        
+        /** Allow updates of the input field for a text value.
+         * @param value The proposed input field.
+         * @return The input field to use.
+         */
         public JTextField handleStringValue(JTextField value) {
             return value;
         }
+        
+        /** Allow updates of the input field for a text value.
+         * In {@link CdiPanel}, this is an input field with a length of more than 64.
+         * @param value The proposed input field.
+         * @return The input field to use.
+         */
         public JTextArea handleEditorValue(JTextArea value) {
             return value;
         }
