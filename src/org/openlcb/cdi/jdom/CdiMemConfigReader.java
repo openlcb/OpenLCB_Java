@@ -15,7 +15,6 @@ import org.openlcb.implementations.*;
  * by call back.
  *
  * @author	Bob Jacobsen   Copyright (C) 2012
- * @version	$Revision$
  */
 public class CdiMemConfigReader  {
     private final static Logger logger = getLogger(CdiMemConfigReader.class.getName());

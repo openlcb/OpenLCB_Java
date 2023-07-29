@@ -7,7 +7,6 @@ package org.openlcb.cdi;
  * object implementing this interface.
  *
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision: -1 $
  */
 public interface CdiRep {
 
