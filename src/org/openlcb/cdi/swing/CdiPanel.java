@@ -123,7 +123,7 @@ public class CdiPanel extends JPanel {
      */
     static JFileChooser fci = new JFileChooser();
     {
-                fci.setSelectedFile(new File(".txt"));
+        fci.setSelectedFile(new File(".txt"));
     }
 
     private ConfigRepresentation rep;
@@ -1089,7 +1089,7 @@ public class CdiPanel extends JPanel {
                         menuItem.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                performCopy(index, rep);
+                                performGroupReplCopy(index, rep);
                             }
                         });
                         menuItem = new JMenuItem("Paste");
@@ -1097,7 +1097,7 @@ public class CdiPanel extends JPanel {
                         menuItem.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                performPaste(index, rep);
+                                performGroupReplPaste(index, rep);
                             }
                         });
                         
@@ -1111,10 +1111,10 @@ public class CdiPanel extends JPanel {
         }
         
         /**
-         * Perform a "copy" operation on a selected tabColorTimer
+         * Perform a "copy" operation on a selected group tab
          */
-        protected void performCopy(int index, ConfigRepresentation.GroupRep rep) {
-            String result = groupToString(rep);
+        protected void performGroupReplCopy(int index, ConfigRepresentation.GroupRep rep) {
+            String result = groupReplToString(rep);
             
             // store to clipboard
             StringSelection selection = new StringSelection(result);
@@ -1126,7 +1126,7 @@ public class CdiPanel extends JPanel {
         /**
          * Copy an entire group replication to a String
          */
-        protected String groupToString(ConfigRepresentation.GroupRep rep) {
+        protected String groupReplToString(ConfigRepresentation.GroupRep rep) {
             StringBuilder result = new StringBuilder();
 
             ConfigRepresentation.Visitor visitor = new ConfigRepresentation.Visitor() {
@@ -1150,7 +1150,8 @@ public class CdiPanel extends JPanel {
                 protected void writeEntry(String key, String entry) {
                     result.append(key);
                     result.append("=");
-                    result.append(entry);
+                    // result.append(entry); // use the value currently in CD
+                    result.append(entriesByKey.get(key).getCurrentValue()); // use value currently in UI
                     result.append("\n");
                 }
             };
@@ -1161,9 +1162,9 @@ public class CdiPanel extends JPanel {
             
         
         /**
-         * Perform a "paste" operation on a selected tabColorTimer
+         * Perform a "paste" operation into a selected group tab
          */
-        protected void performPaste(int index, ConfigRepresentation.GroupRep rep) {
+        protected void performGroupReplPaste(int index, ConfigRepresentation.GroupRep rep) {
             // retrieve from clipboard
             Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
             Transferable t = c.getContents( null );
@@ -1173,29 +1174,30 @@ public class CdiPanel extends JPanel {
                     newContentString = (String)t.getTransferData( DataFlavor.stringFlavor );
                 } catch (UnsupportedFlavorException | IOException e) {
                     // this can never happen as we checked bafore
+                    return;
                 }
-            } // this should always have succeeded
+            } // this should always have succeeded, but if it doesn't the match below will fail
             
             // store the values that are going to be replaced
-            String previousContentString = groupToString(rep); 
+            String previousContentString = groupReplToString(rep); 
 
             String[] newContentLines = newContentString.split("\n");
             String[] previousContentLines = previousContentString.split("\n");
             
             // compare keys to see if the variables match up
-            // this version just checks the line count, more needed here
+            // this version just checks the line count, more could be added here
             if (previousContentLines.length != newContentLines.length) {
                 logger.log(Level.WARNING, "Cannot paste into a mis-matching entry type");
                 return;
             }
             
-            // change the number in the newContentLines to this index
+            // change the repl number in the newContentLines to this index
             // First, find the prefix we're going to change
             List<String> list = java.util.Arrays.asList(newContentLines);
             String prefix = Utilities.longestLeadingSubstring(list);
-            
             // That prefix should end with "(1)."
             
+            // replace and rebuild the lines
             StringBuilder processedContentSB = new StringBuilder();
             for (int i = 0; i<newContentLines.length; i++) {
                 newContentLines[i] = newContentLines[i].substring(0, prefix.length()-4)+"("+index+")."+newContentLines[i].substring(prefix.length())+"\n";
@@ -1207,6 +1209,7 @@ public class CdiPanel extends JPanel {
             // finally, feed to the restore procedure
             BufferedReader reader = new BufferedReader(new StringReader(processedContent));
             
+            // This is largely taken from the runRestore method in this class
             RestoreConfig.parseConfigFromReader(reader, new RestoreConfig.ConfigCallback() {
                 boolean hasError = false;
 
@@ -1852,9 +1855,20 @@ public class CdiPanel extends JPanel {
         protected abstract void updateDisplayText(@NonNull String value);
 
         // returns the currently displayed value ("" if none).
-        protected abstract
         @NonNull
-        String getDisplayText();
+        protected abstract String getDisplayText();
+        
+        /**
+         * Get the current value as a String.
+         * Usually, this is the display text, but in the case of a 
+         * {@link IntPane} with a map it's the integer value of the 
+         * current selection.
+         * @return Current value for storage as a String.
+         */
+        @NonNull
+        protected String getCurrentValue() {
+            return getDisplayText();
+        }
     }
 
     private class EventIdPane extends EntryPane {
@@ -2177,6 +2191,21 @@ public class CdiPanel extends JPanel {
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
         }
+
+        /**
+         * Get the current value as a numerical String.
+         * Usually, this is the display text, but in the case of a 
+         * a map it's the integer value of the 
+         * current selection.
+         * @return Current value for storage as a String.
+         */
+        @NonNull
+        protected String getCurrentValue() {
+            String s = (box == null) ? (String) textField.getText()
+                    : ""+box.getSelectedIndex();
+            return s == null ? "" : s;
+        }
+
     }
 
     private class StringPane extends EntryPane {
