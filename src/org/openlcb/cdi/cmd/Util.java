@@ -11,6 +11,8 @@ import org.openlcb.can.impl.OlcbConnection;
 
 /**
  * Created by bracz on 4/9/16.
+ *
+ * @see org.openlcb.Utilities
  */
 public class Util {
     private final static Logger logger = Logger.getLogger(Util.class.getName());

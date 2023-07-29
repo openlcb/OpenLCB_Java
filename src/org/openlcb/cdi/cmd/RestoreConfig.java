@@ -32,9 +32,13 @@ public class RestoreConfig {
             callback.onError("Failed to open input file: " + e.toString());
             return;
         }
+        parseConfigFromReader(inFile, callback);
+    }
+
+    public static void parseConfigFromReader(@NonNull BufferedReader reader, @NonNull ConfigCallback callback) {
         String line = null;
         try {
-            while ((line = inFile.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 if (line.charAt(0) == '#') continue;
                 int pos = line.indexOf('=');
                 if (pos < 0) {
@@ -46,9 +50,9 @@ public class RestoreConfig {
                 callback.onConfigEntry(key, value);
             }
 
-            inFile.close();
+            reader.close();
         } catch (IOException x) {
-            callback.onError("Error reading input file: " + x.toString());
+            callback.onError("Error reading for restore: " + x.toString());
             return;
         }
     }

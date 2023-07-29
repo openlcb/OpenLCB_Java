@@ -11,7 +11,6 @@ import org.openlcb.cdi.*;
  * JDOM-based OpenLCB loader
  *
  * @author Bob Jacobsen Copyright 2011
- * @version $Revision: -1 $
  */
 public class JdomCdiReader {
 

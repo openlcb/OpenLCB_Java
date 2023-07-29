@@ -4,10 +4,8 @@ import org.openlcb.*;
 
 /**
  * Example of receiving a OpenLCB stream.
- *<p>
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class StreamReceiver extends MessageDecoder {
     public StreamReceiver(NodeID here, NodeID far, Connection c) {
