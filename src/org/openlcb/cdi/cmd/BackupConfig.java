@@ -64,6 +64,8 @@ public class BackupConfig {
                        }
                    }
         );
+        
+        finalWriter.close();
     }
 
 
