@@ -2214,8 +2214,13 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
-            String s = (box == null) ? (String) textField.getText()
-                    : ""+box.getSelectedIndex();
+            String s;
+            if (box!=null) {
+                s = (String) textField.getText();
+            } else {
+                String entry = (String) box.getSelectedItem();
+                s = map.getKey(entry);  
+            }
             return s == null ? "" : s;
         }
 
