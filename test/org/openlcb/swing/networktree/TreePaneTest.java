@@ -314,12 +314,12 @@ public class TreePaneTest  {
         // System.err.println(new Integer(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_2, memo_0_5_4)).toString()+" memo_0_5_2, memo_0_5_4");
         // System.err.println(new Integer(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_4, memo_11_0_5)).toString()+" memo_0_5_4, memo_11_0_5");
 
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_3, memo_0_5_A) < 0);
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_A, memo_11_0_4) < 0);
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_11_0_4, memo_0_5_6) < 0);
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_6, memo_0_5_2) < 0);
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_2, memo_0_5_4) < 0);
-        // Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_4, memo_11_0_5) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_3, memo_0_5_A) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_A, memo_11_0_4) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_11_0_4, memo_0_5_6) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_6, memo_0_5_2) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_2, memo_0_5_4) < 0);
+        Assert.assertTrue(new TreePane.Sorter(TreePane.SortOrder.BY_NAME).compare(memo_0_5_4, memo_11_0_5) < 0);
     }
 
     @Test
