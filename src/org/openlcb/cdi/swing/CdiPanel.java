@@ -402,7 +402,7 @@ public class CdiPanel extends JPanel {
     }
 
     /**
-     * Triggers a warning at the close of this dialog that a Senor has been made.
+     * Triggers a warning at the close of this dialog that a Sensor has been made.
      * This triggers a message the panel file needs to be saved in JMRI.
      *
      * @param uName unused.
@@ -1214,7 +1214,7 @@ public class CdiPanel extends JPanel {
                 try {
                     newContentString = (String)t.getTransferData( DataFlavor.stringFlavor );
                 } catch (UnsupportedFlavorException | IOException e) {
-                    // this can never happen as we checked bafore
+                    // this can never happen as we checked before
                     return;
                 }
             } // this should always have succeeded, but if it doesn't the match below will fail
@@ -1237,12 +1237,15 @@ public class CdiPanel extends JPanel {
             List<String> list = java.util.Arrays.asList(newContentLines);
             String prefix = Utilities.longestLeadingSubstring(list);
             // That prefix should end with "(1)."
+            System.out.println("Prefix:  \""+prefix+"\"");
             
             // replace and rebuild the lines
             StringBuilder processedContentSB = new StringBuilder();
             for (int i = 0; i<newContentLines.length; i++) {
-                newContentLines[i] = newContentLines[i].substring(0, prefix.length()-4)+"("+index+")."+newContentLines[i].substring(prefix.length())+"\n";
+                System.out.println("rep.key  \""+rep.key+"\"");
+                newContentLines[i] = rep.key+"."+newContentLines[i].substring(prefix.length())+"\n";
                 processedContentSB.append(newContentLines[i]);
+                System.out.println("Store:   \""+newContentLines[i]+"\"");    
             }
             // at this point, processedContent has the new values to restore
             String processedContent = new String(processedContentSB);
@@ -2242,8 +2245,13 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
-            String s = (box == null) ? (String) textField.getText()
-                    : ""+box.getSelectedIndex();
+            String s;
+            if (box==null) {
+                s = (String) textField.getText();
+            } else {
+                String entry = (String) box.getSelectedItem();
+                s = map.getKey(entry);  
+            }
             return s == null ? "" : s;
         }
 

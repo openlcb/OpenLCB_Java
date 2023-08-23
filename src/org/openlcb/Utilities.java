@@ -226,6 +226,8 @@ public class Utilities {
     @CheckReturnValue
     @NonNull
     static public String longestLeadingSubstring(@NonNull java.util.List<String> list) {
+        if (list.size()==0) return "";
+        
         String result = list.get(0);
         for (int entry = 1; entry < list.size(); entry++) {
             for (int index = Math.min(result.length(), list.get(entry).length()); index >= 0; index--) {

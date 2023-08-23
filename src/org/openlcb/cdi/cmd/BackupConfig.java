@@ -32,20 +32,22 @@ public class BackupConfig {
 
     public static void writeConfigToFile(String fileName, ConfigRepresentation repr) throws
             IOException {
-        BufferedWriter outFile = null;
-
-        outFile = Files.newBufferedWriter(Paths.get(fileName), Charset.forName("UTF-8"));
-        final BufferedWriter finalOutFile = outFile;
         
-        writeConfigToWriter(finalOutFile, repr);
+        BufferedWriter outFile = Files.newBufferedWriter(Paths.get(fileName), Charset.forName("UTF-8"));
+        
+        writeConfigToWriter(outFile, repr);
         
         outFile.close();
     }
 
-    public static void writeConfigToWriter(Writer writer, ConfigRepresentation repr) throws
+    /**
+     * @param writer Receives output.  Flushed at end, but not closed.
+     * @param repr Representation containing contents to be written.
+     */
+    public static void writeConfigToWriter(BufferedWriter writer, ConfigRepresentation repr) throws
             IOException {
 
-        final BufferedWriter finalWriter = new BufferedWriter(writer);;
+        final BufferedWriter finalWriter = writer;
         repr.visit(new ConfigRepresentation.Visitor() {
                        @Override
                        public void visitString(ConfigRepresentation.StringEntry e) {
@@ -65,7 +67,7 @@ public class BackupConfig {
                    }
         );
         
-        finalWriter.close();
+        finalWriter.flush();
     }
 
 
