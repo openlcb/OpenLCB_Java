@@ -64,7 +64,12 @@ public class CdiMemConfigReader  {
 
                 @Override
                 public void handleFailure(int code) {
-                     // see if we can retry
+                    // code 0x1082 is "read of of bounds", which doesn't need a retry
+                    if (code == 0x1082) {
+                        done();
+                        return;
+                    }
+                    // see if we can retry
                     retryCount++; // count from 1
                     if (retryCount > 3) {
                         // fail - don't do another request
