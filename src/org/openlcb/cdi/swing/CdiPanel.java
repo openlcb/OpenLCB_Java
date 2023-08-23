@@ -396,7 +396,7 @@ public class CdiPanel extends JPanel {
     }
 
     /**
-     * Triggers a warning at the close of this dialog that a Senor has been made.
+     * Triggers a warning at the close of this dialog that a Sensor has been made.
      * This triggers a message the panel file needs to be saved in JMRI.
      *
      * @param uName unused.
@@ -1186,7 +1186,7 @@ public class CdiPanel extends JPanel {
                 try {
                     newContentString = (String)t.getTransferData( DataFlavor.stringFlavor );
                 } catch (UnsupportedFlavorException | IOException e) {
-                    // this can never happen as we checked bafore
+                    // this can never happen as we checked before
                     return;
                 }
             } // this should always have succeeded, but if it doesn't the match below will fail

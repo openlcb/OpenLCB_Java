@@ -45,7 +45,7 @@ public class BackupConfig {
     public static void writeConfigToWriter(Writer writer, ConfigRepresentation repr) throws
             IOException {
 
-        final BufferedWriter finalWriter = new BufferedWriter(writer);;
+        final BufferedWriter finalWriter = new BufferedWriter(writer);
         repr.visit(new ConfigRepresentation.Visitor() {
                        @Override
                        public void visitString(ConfigRepresentation.StringEntry e) {
