@@ -1201,6 +1201,9 @@ public class CdiPanel extends JPanel {
             // this version just checks the line count, more could be added here
             if (previousContentLines.length != newContentLines.length) {
                 logger.log(Level.WARNING, "Cannot paste into a mis-matching entry type");
+                // provide a system alert to notify user
+                Toolkit.getDefaultToolkit().beep();
+                // end of attempt to paste
                 return;
             }
             
