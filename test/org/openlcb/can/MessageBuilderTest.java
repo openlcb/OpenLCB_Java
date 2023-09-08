@@ -723,6 +723,96 @@ public class MessageBuilderTest  {
     }
 
     @Test
+    public void testAccumulateLongSniipReply() {
+        // note short frame at end of MFG info
+        // as seen from real Signal32
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        // start frame
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071);
+        frame.setData(new byte[]{0x12, 0x02,   0x04, 0x31, 0x32, 0x33, 0x34, 0x35});
+        List<Message> list = b.processFrame(frame);
+
+        // five middle frames
+        frame.setData(new byte[]{0x32, 0x02,   0x36, 0x37, 0x38, 0x39, 0x30, 0x00});
+        list = b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x31, 0x32, 0x33, 0x34, 0x35, 0x36});
+        list = b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x37, 0x38, 0x39, 0x30, 0x41, 0x42});
+        list = b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x43, 0x44, 0x00, 0x31, 0x32, 0x33});
+        list = b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x34, 0x35, 0x00, 0x31, 0x31, 0x32});
+        b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x33, 0x34, 0x35, 0x36, 0x00      }); // note short
+        b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x02, 0x31, 0x32, 0x33, 0x34, 0x35});
+        b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x36, 0x37, 0x38, 0x39, 0x30, 0x41});
+        b.processFrame(frame);
+
+        frame.setData(new byte[]{0x32, 0x02,   0x42, 0x43, 0x44, 0x00, 0x31, 0x32});
+        b.processFrame(frame);
+
+        Assert.assertEquals("count", 0, list.size()); // not emitted yet, waiting for end
+
+        // end frame
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071);
+        frame.setData(new byte[]{0x22, 0x02,   0x33, 0x34, 0x35, 0x36, 0x37, 0x00});
+
+        list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof SimpleNodeIdentInfoReplyMessage);
+
+        Assert.assertEquals(0x04, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[ 0]);
+        Assert.assertEquals(0x31, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[ 1]);
+        Assert.assertEquals(0x32, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[ 2]);
+        Assert.assertEquals(0x33, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[ 3]);
+
+        Assert.assertEquals(0x32, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[35]);
+
+        Assert.assertEquals(0x00, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[40]);
+        Assert.assertEquals(0x02, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[41]);
+        Assert.assertEquals(0x31, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[42]);
+
+        Assert.assertEquals(0x36, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[47]);
+
+        Assert.assertEquals(0x41, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[52]);
+
+        Assert.assertEquals(0x32, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[58]);
+
+        Assert.assertEquals(0x37, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[63]);
+        Assert.assertEquals(0x00, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[64]);
+
+        // check for no stored state
+        frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19A08071);
+        frame.setData(new byte[]{0x02, 0x02, 0x12, 0x34});
+
+        list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        msg = list.get(0);
+        Assert.assertTrue(msg instanceof SimpleNodeIdentInfoReplyMessage);
+
+        Assert.assertEquals(2, ((SimpleNodeIdentInfoReplyMessage)msg).getData().length);
+        Assert.assertEquals(0x12, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[0]);
+        Assert.assertEquals(0x34, ((SimpleNodeIdentInfoReplyMessage)msg).getData()[1]);
+    }
+
+    @Test
     public void testTractionControlRequestParseSingle() {
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x195EB123);
