@@ -1212,15 +1212,12 @@ public class CdiPanel extends JPanel {
             List<String> list = java.util.Arrays.asList(newContentLines);
             String prefix = Utilities.longestLeadingSubstring(list);
             // That prefix should end with "(1)."
-            System.out.println("Prefix:  \""+prefix+"\"");
             
             // replace and rebuild the lines
             StringBuilder processedContentSB = new StringBuilder();
             for (int i = 0; i<newContentLines.length; i++) {
-                System.out.println("rep.key  \""+rep.key+"\"");
                 newContentLines[i] = rep.key+"."+newContentLines[i].substring(prefix.length())+"\n";
                 processedContentSB.append(newContentLines[i]);
-                System.out.println("Store:   \""+newContentLines[i]+"\"");    
             }
             // at this point, processedContent has the new values to restore
             String processedContent = new String(processedContentSB);
