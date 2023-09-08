@@ -1,5 +1,9 @@
 package org.openlcb.cdi.jdom;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+import java.util.List;
+
 import org.jdom2.Attribute;
 import org.jdom2.Element;
 import org.openlcb.cdi.CdiRep;
@@ -247,12 +251,67 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
 
+        /**
+         * Provides the name for this replication. See the CDI TN for the 
+         * algorithm being used.
+         * @param index a 1-based index of an element within the group
+         * @return a default "Group" string if no repname elements exist
+         */
         @Override
-        public String getRepName() {
-            Element d = e.getChild("repname");
-            if (d==null) return null;
-            return d.getText();
-       }
+        @NonNull
+        public String getRepName(int index) {
+            if (index < 1) throw new IllegalArgumentException("index "+index+" must be >= 1");
+            
+            Element d;
+            
+            List<Element> repnames = e.getChildren("repname");
+            // more than one and index refers to not last, use the appropriate one
+            if (index < repnames.size()) {  // index is 1-based as is size()
+                // not last element, use the name from the repname directly
+                d = repnames.get(index-1); // index is 1-based
+                return d.getText();
+            } 
+            
+            // note: We need to check for the case that this index == number of
+            // repnames _and_ index == rep count.  That should not be extended.
+            // Note that the rep count is not available here yet.
+            
+            // in this case, we have to extend the last repname
+            d = repnames.get(repnames.size()-1);
+            String name;
+            if (d==null) name = "Group";
+            else name = d.getText();
+            
+            int firstTrailingDigit = indexOfFirstTrailingDigit(name);
+            if (firstTrailingDigit == -1) {
+                return name+index; // note this does not add whitespace in between as recommended by TN
+            }
+            
+            // now we need to extract the trailing digits and index off them
+            String digits = name.substring(firstTrailingDigit);
+            
+            int initialValue = Integer.parseInt(digits);
+            int trailingNumber = initialValue + ((index-1) - (repnames.size()-1));
+            return name.substring(0,firstTrailingDigit)+trailingNumber;
+        }
+       
+        // Find the trailing digit characters, if any, in a String
+        // Return the offset of the 1st digit character
+        // Return -1 if not found
+        int indexOfFirstTrailingDigit(String input) {
+            if (! Character.isDigit(input.charAt(input.length()-1)) ) return -1;
+            
+            // so there is at least one digit at end, scan for first non-digit
+            for (int first = input.length()-1; first>=0; first--) {
+                if (! Character.isDigit(input.charAt(first))) {
+                    return first+1;
+                }
+            }
+            
+            // here if its all digits!
+            return 0;
+        }
+
     }
 
     public static class EventID extends Item implements CdiRep.EventID {

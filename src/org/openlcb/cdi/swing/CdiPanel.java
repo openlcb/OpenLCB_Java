@@ -991,8 +991,7 @@ public class CdiPanel extends JPanel {
             currentPane.setLayout(new BoxLayout(currentPane, BoxLayout.Y_AXIS));
             currentPane.setAlignmentX(Component.LEFT_ALIGNMENT);
             CdiRep.Group item = e.group;
-            final String name = (item.getRepName() != null ? (item.getRepName()) : "Group") + " "
-                    + (e.index);
+            final String name = item.getRepName(e.index);
             //currentPane.setBorder(BorderFactory.createTitledBorder(name));
             currentPane.setName(name);
 
