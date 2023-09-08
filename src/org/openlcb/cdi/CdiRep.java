@@ -44,7 +44,7 @@ public interface CdiRep {
     public static interface Group extends Item {
         public java.util.List<Item> getItems();
         public int getReplication();
-        public String getRepName();
+        public String getRepName(int index, int replications);
     }
 
     public static interface Map {
