@@ -1,5 +1,7 @@
 package org.openlcb;
 
+import java.util.ArrayList;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -114,4 +116,17 @@ public class UtilitiesTest  {
         }
         return false;
     }
+
+    @Test
+    public void testLongestLeadingSubstring() {
+        ArrayList<String> list = new ArrayList<>();
+        list.add("Port I/O.Line(1).Line Description");
+        list.add("Port I/O.Line(1).Output Function");
+        list.add("Port I/O.Line(1).Receiving the configured Command (C)");
+        
+        String result = Utilities.longestLeadingSubstring(list);
+        
+        Assert.assertTrue(result.equals("Port I/O.Line(1)."));        
+    }
+    
 }

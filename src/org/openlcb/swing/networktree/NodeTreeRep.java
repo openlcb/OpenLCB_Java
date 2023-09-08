@@ -15,10 +15,8 @@ import org.openlcb.SimpleNodeIdent;
 
 /**
  * Represent a single node for the tree display
- *<p>
  *
  * @author	Bob Jacobsen   Copyright (C) 2010, 2012
- * @version	$Revision$
  */
 public class NodeTreeRep extends DefaultMutableTreeNode  {
     /** Comment for <code>serialVersionUID</code>. */

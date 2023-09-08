@@ -13,7 +13,6 @@ import org.openlcb.cdi.CdiRep;
  * JDOM for reading the underlying XML.
  *
  * @author  Bob Jacobsen   Copyright 2011
- * @version $Revision: -1 $
  */
 public class JdomCdiRep implements CdiRep {
 

@@ -9,8 +9,9 @@ import edu.umd.cs.findbugs.annotations.*;
  * <p>
  * NodeID objects are immutable once created.
  *
- * @author  Bob Jacobsen   Copyright 2009, 2010, 2011 2012
- * @version $Revision$
+ * @see org.openlcb.cdi.cmd.Util
+ *
+ * @author  Bob Jacobsen   Copyright 2009, 2010, 2011, 2012, 2023
  */
 @Immutable
 @ThreadSafe
@@ -216,6 +217,28 @@ public class Utilities {
         arr[offset+3] = (byte) ((value >> 16) & 0xff);
         arr[offset+4] = (byte) ((value >> 8) & 0xff);
         arr[offset+5] = (byte) ((value) & 0xff);
+    }
+
+    /** 
+     * Find the longest starting substring of a List of Strings.
+     * This is useful for finding e.g. the common prefix of a replication dump
+     */
+    @CheckReturnValue
+    @NonNull
+    static public String longestLeadingSubstring(@NonNull java.util.List<String> list) {
+        if (list.size()==0) return "";
+        
+        String result = list.get(0);
+        for (int entry = 1; entry < list.size(); entry++) {
+            for (int index = Math.min(result.length(), list.get(entry).length()); index >= 0; index--) {
+                if (list.get(entry).startsWith(result.substring(0,index))) {
+                    // found longest match
+                    result = result.substring(0, index);
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
 }
