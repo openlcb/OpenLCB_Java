@@ -259,32 +259,41 @@ public class JdomCdiRep implements CdiRep {
          */
         @Override
         @NonNull
-        public String getRepName(int index) {
+        public String getRepName(int index, int replications) {
             if (index < 1) throw new IllegalArgumentException("index "+index+" must be >= 1");
-            
-            Element d;
-            
+
             List<Element> repnames = e.getChildren("repname");
-            // more than one and index refers to not last, use the appropriate one
+            
+            // no repnames, return default
+            if (repnames == null || repnames.size() == 0) return DEFAULT_REP_PREFIX;
+            
+            Element d;            
+
+            // more than one repname element and index refers to not last, use the appropriate one
             if (index < repnames.size()) {  // index is 1-based as is size()
                 // not last element, use the name from the repname directly
                 d = repnames.get(index-1); // index is 1-based
                 return d.getText();
             } 
             
-            // note: We need to check for the case that this index == number of
+            // Check for the case that this index == number of
             // repnames _and_ index == rep count.  That should not be extended.
-            // Note that the rep count is not available here yet.
+            if (index == repnames.size() && index == replications) {
+                // this the special case of _not_ extending the last repname
+                d = repnames.get(index-1); // index is 1-based
+                return d.getText();
+            }            
             
             // in this case, we have to extend the last repname
             d = repnames.get(repnames.size()-1);
-            String name;
-            if (d==null) name = "Group";
-            else name = d.getText();
+            String name = d.getText();
             
             int firstTrailingDigit = indexOfFirstTrailingDigit(name);
             if (firstTrailingDigit == -1) {
-                return name+index; // note this does not add whitespace in between as recommended by TN
+                // no final digits
+                // append appropriate index taking into account prior repname elements
+                int trailingNumber = index - (repnames.size()-1);
+                return name+trailingNumber; // as recommended by TN, this does not add whitespace in between
             }
             
             // now we need to extract the trailing digits and index off them
@@ -295,6 +304,8 @@ public class JdomCdiRep implements CdiRep {
             return name.substring(0,firstTrailingDigit)+trailingNumber;
         }
        
+        static final private String DEFAULT_REP_PREFIX = "Group";
+        
         // Find the trailing digit characters, if any, in a String
         // Return the offset of the 1st digit character
         // Return -1 if not found
