@@ -4,10 +4,8 @@ import org.openlcb.*;
 
 /**
  * Example of sending a OpenLCB datagram.
- *<p>
  *
  * @author  Bob Jacobsen   Copyright 2009
- * @version $Revision$
  */
 public class DatagramTransmitter extends MessageDecoder {
 

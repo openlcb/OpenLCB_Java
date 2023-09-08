@@ -9,9 +9,8 @@ package org.openlcb;
  * two places.
  * <P>
  * You have to manually keep this synchronized with the manifest file.
- * <P>
+ * 
  * @author  Bob Jacobsen   Copyright 2011 - 2012
- * @version $Revision: 17977 $
  */
 
 public class Version {

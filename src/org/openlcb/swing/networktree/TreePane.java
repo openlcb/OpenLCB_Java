@@ -45,10 +45,8 @@ import org.openlcb.VerifyNodeIDNumberMessage;
 
 /**
  * Pane for monitoring an entire OpenLCB network as a logical tree
- *<p>
  *
  * @author	Bob Jacobsen   Copyright (C) 2010, 2012
- * @version	$Revision$
  */
 public class TreePane extends JPanel  {
     /** Comment for <code>serialVersionUID</code>. */
