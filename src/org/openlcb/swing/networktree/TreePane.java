@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -81,6 +82,16 @@ public class TreePane extends JPanel  {
                 // This code will delay the updating of the display by a bit and coalesces update
                 // commands. This way we can ensure we don't spend too much CPU repeatedly
                 // updating the display.
+                
+                if (timer == null) {
+                    // A release() has removed the timer, which can 
+                    // happen if property changes overlap with the window closing.
+                    // We ignore the event with a warning.
+                    Logger logger = Logger.getLogger(TreePane.class.getName());
+                    logger.warning("Data change while closing configuration window ignored");
+                    return;
+                }
+                
                 synchronized (timer) {
                     needResortTree = true;
                 }
@@ -403,7 +414,7 @@ public class TreePane extends JPanel  {
     /**
      * Cleans up all property change listeners etc in preparation when closing the window.
      */
-    public void release() {
+    public void release() {        
         timer.cancel();
         timer = null; // get a new one next time
     }
