@@ -42,7 +42,9 @@ public class ProducerIdentifiedMessage extends EventMessage {
     } 
 
     public String toString() {
-        return super.toString() + " Producer Identified " + eventState.toString() + " for " + eventID.toString();
+        return super.toString() + " Producer Identified " + eventState.toString() + 
+            "     ".substring(0,7-eventState.toString().length()) +
+            " for " + eventID.toString();
     }
 
     public int getMTI() { return MTI_PRODUCER_IDENTIFIED; }
