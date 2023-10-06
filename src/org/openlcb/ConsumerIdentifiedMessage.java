@@ -49,7 +49,9 @@ public class ConsumerIdentifiedMessage extends EventMessage {
 
     @Override
     public String toString() {
-        return super.toString() + " Consumer Identified " + eventState.toString() + " for "+eventID.toString();
+        return super.toString() + " Consumer Identified " + eventState.toString() + 
+            "     ".substring(0,7-eventState.toString().length()) +
+            " for " + eventID.toString();
     }
 
     public int getMTI() { return MTI_CONSUMER_IDENTIFIED; }
