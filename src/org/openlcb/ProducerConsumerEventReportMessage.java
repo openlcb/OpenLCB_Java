@@ -31,7 +31,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
 
     public String toString() {
         return super.toString()
-                +" Producer/Consumer Event Report with "+eventID.toString();     
+                +" Producer/Consumer Event Report  "+eventID.toString();     
     }
     
     public int getMTI() { return MTI_PC_EVENT_REPORT; }
