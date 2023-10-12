@@ -309,6 +309,7 @@ public class JdomCdiRep implements CdiRep {
         // Return the offset of the 1st digit character
         // Return -1 if not found
         int indexOfFirstTrailingDigit(String input) {
+            if ( input.isEmpty() ) return -1;
             if (! Character.isDigit(input.charAt(input.length()-1)) ) return -1;
             
             // so there is at least one digit at end, scan for first non-digit
