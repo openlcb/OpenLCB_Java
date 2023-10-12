@@ -388,6 +388,8 @@ public class CdiPanel extends JPanel {
             }
         }
         checkForSave();
+
+        logger.info("Save changes done.");
     }
 
     private void checkForSave() {
@@ -446,6 +448,7 @@ public class CdiPanel extends JPanel {
             e.printStackTrace();
             logger.severe("Failed to write variables to file " + fci.getSelectedFile().getPath() + ": " + e.toString());
         }
+            logger.info("Config backup done.");
     }
 
     private String generateFileName() {
