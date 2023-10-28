@@ -20,7 +20,7 @@ public class ProtocolIdentificationTest  {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x800000000000L);
         
         Assert.assertEquals("length", 1, result.size());
-        Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
+        Assert.assertEquals("result 1", "SimpleProtocolSubset", result.get(0));
     }
     
     @Test
@@ -28,7 +28,7 @@ public class ProtocolIdentificationTest  {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0x880000000000L);
         
         Assert.assertEquals("length", 2, result.size());
-        Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
+        Assert.assertEquals("result 1", "SimpleProtocolSubset", result.get(0));
         Assert.assertEquals("result 2", "Reservation", result.get(1));
     }
 
@@ -37,7 +37,7 @@ public class ProtocolIdentificationTest  {
         java.util.List result = ProtocolIdentification.Protocol.decodeNames(0xF01800000000L);
         
         Assert.assertEquals("length", 6, result.size());
-        Assert.assertEquals("result 1", "ProtocolIdentification", result.get(0));
+        Assert.assertEquals("result 1", "SimpleProtocolSubset", result.get(0));
         Assert.assertEquals("result 2", "Datagram", result.get(1));
         Assert.assertEquals("result 3", "Stream", result.get(2));
         Assert.assertEquals("result 4", "Configuration", result.get(3));
