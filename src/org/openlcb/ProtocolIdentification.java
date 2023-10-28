@@ -16,7 +16,7 @@ import java.util.List;
 public class ProtocolIdentification {
 
     public enum Protocol {
-        ProtocolIdentification(  0x800000000000L,"ProtocolIdentification"), 
+        ProtocolIdentification(  0x800000000000L,"SimpleProtocolSubset"), 
         Datagram(                0x400000000000L,"Datagram"),
         Stream(                  0x200000000000L,"Stream"), 
         Configuration(           0x100000000000L,"Configuration"),
