@@ -132,6 +132,7 @@ public class CdiPanel extends JPanel {
     private boolean _changeMade = false;    // set true when a write is done to the hardware.
     private boolean _unsavedRestore = false;    // set true when a restore is done.
     private boolean _panelChange = false;   // set true when a panel item changed.
+    private boolean _windowCloseCheckAlreadyHandled = false; // true skips unsaved-variables check on window close because handled externally
     private JButton _saveButton;
     private Color COLOR_DEFAULT;
     private List<util.CollapsiblePanel> segmentPanels = new ArrayList<>();
@@ -715,7 +716,32 @@ public class CdiPanel extends JPanel {
         segmentPanels.forEach(p -> p.setExpanded(false));
     }
 
-    private void targetWindowClosingEvent(WindowEvent e) {
+    protected void targetWindowClosingEvent(WindowEvent evt) { // evt is ignored here
+        boolean closeWindow = true;
+        if (!_windowCloseCheckAlreadyHandled) {
+            closeWindow = checkOnWindowClosing(); // result true -> close the Window
+        }
+        if (closeWindow) { // OK to close the window, proceed
+            release();
+            JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
+            f.dispose();
+        }
+    }
+    
+    /**
+     * Used when the check for unsaved changes et al has already been run, and 
+     * shouldn't be repeated when the window closes.  E.g. a program shutdown
+     * routine has already done the check through calling checkOnWindowClosing.
+     */
+    public void setWindowCloseCheckAlreadyHandled() {
+        _windowCloseCheckAlreadyHandled = true;
+    }
+    
+    /**
+     * Construct and display a cancel/proceed dialog, as needed for e.g. window closing
+     * @return true means that the window is OK to close; false means user has cancelled
+     */
+    public boolean checkOnWindowClosing() {
         StringBuilder sb = new StringBuilder();
         if (_unsavedRestore) {
             sb.append("The configuration was restored but not saved.");
@@ -752,7 +778,7 @@ public class CdiPanel extends JPanel {
                     "Unsaved changes", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
                     null, options, options[1]);
             if (confirm != 0) {
-                return;
+                return false; // user cancelled
             }
         } else if (_panelChange) {
             JOptionPane.showMessageDialog(this, sb.toString(),
@@ -762,11 +788,9 @@ public class CdiPanel extends JPanel {
         if (_changeMade) {
             runUpdateComplete();
         }
-        release();
-        JFrame f = (JFrame)SwingUtilities.getAncestorOfClass(JFrame.class, this);
-        f.dispose();
+        return true;
     }
-
+    
     /**
      * Updates the save changes button to mark the dialog dirty.
      */
