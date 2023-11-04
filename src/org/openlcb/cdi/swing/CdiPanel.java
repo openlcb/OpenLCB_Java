@@ -451,23 +451,30 @@ public class CdiPanel extends JPanel {
             logger.info("Config backup done.");
     }
 
+    // Class that generates the filename for a Backup operation.
+    public static class FileNameGenerator {
+        public String generateFileName(ConfigRepresentation rep, String nodeName) {
+            String fileName = rep.getRemoteNodeAsString();
+            if (!nodeName.isEmpty()) {
+                fileName += "-"+nodeName;
+            }
+            if (rep.getCdiRep() != null && rep.getCdiRep().getIdentification() != null) {
+                // info not present if configuration hasn't been read yet
+                fileName += "-"+rep.getCdiRep().getIdentification().getSoftwareVersion();
+            }
+            fileName += "-"+java.time.LocalDate.now();
+            fileName += "-"+java.time.LocalTime.now().format( // use default time zone
+                            java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss")
+                        );
+
+            fileName = fileName.replace(" ", "_"); // don't use spaces in file names!
+
+            return "config." + fileName + ".txt";
+        }
+    }
+    public static FileNameGenerator fileNameGenerator = new FileNameGenerator(); // this can be replaced to change the generated file name pattern
     private String generateFileName() {
-        String fileName = rep.getRemoteNodeAsString();
-        if (!nodeName.isEmpty()) {
-            fileName += "-"+nodeName;
-        }
-        if (rep.getCdiRep() != null && rep.getCdiRep().getIdentification() != null) {
-            // info not present if configuration hasn't been read yet
-            fileName += "-"+rep.getCdiRep().getIdentification().getSoftwareVersion();
-        }
-        fileName += "-"+java.time.LocalDate.now();
-        fileName  += "-"+java.time.LocalTime.now().format( // use default time zone
-                        java.time.format.DateTimeFormatter.ofPattern("HH-mm-ss")
-                    );
-
-        fileName = fileName.replace(" ", "_"); // don't use spaces in file names!
-
-        return "config." + fileName + ".txt";
+        return fileNameGenerator.generateFileName(rep, nodeName);
     }
 
 
