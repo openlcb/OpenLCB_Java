@@ -259,14 +259,24 @@ public class OpenLcbCanFrame implements CanFrame {
   // start of OpenLCB messages
 
   void setPCEventReport(EventID eid) {
+    this.setPCEventReport(eid, MessageTypeIdentifier.ProducerConsumerEventReport);
+  }
+
+  void setPCEventReport(EventID eid, MessageTypeIdentifier mti) {
     init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
+    setOpenLcbMTI(mti.mti());
     length=8;
     loadFromEid(eid);
   }
 
+  void setPCEventReport(EventID eid, MessageTypeIdentifier mti, byte[] data) {
+    this.setPCEventReport(eid, mti);
+    setData(data);
+  }
+
   boolean isPCEventReport() {
-      return isOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti());
+      return isOpenLcbMTI(MessageTypeIdentifier.ProducerConsumerEventReport.mti())
+                || isOpenLcbMTI(MessageTypeIdentifier.PCERfirst.mti());
   }
 
   void setLearnEvent(EventID eid) {

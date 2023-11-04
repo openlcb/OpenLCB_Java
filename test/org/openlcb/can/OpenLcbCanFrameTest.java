@@ -88,4 +88,27 @@ public class OpenLcbCanFrameTest  {
         Assert.assertTrue(f.isRIM());
     }
     
+    @Test
+    public void testPCERforms() {
+        OpenLcbCanFrame f = new OpenLcbCanFrame(123);
+        f.setPCEventReport(new EventID("1.2.3.4.5.6.7.8"));
+        
+        Assert.assertTrue(f.isPCEventReport());
+        
+        f = new OpenLcbCanFrame(123);
+        f.setPCEventReport(new EventID("1.2.3.4.5.6.7.8"), MessageTypeIdentifier.ProducerConsumerEventReport);
+
+        Assert.assertTrue(f.isPCEventReport());
+
+        f = new OpenLcbCanFrame(123);
+        f.setPCEventReport(new EventID("1.2.3.4.5.6.7.8"), MessageTypeIdentifier.PCERfirst);
+
+        Assert.assertTrue(f.isPCEventReport());
+
+        f = new OpenLcbCanFrame(123);
+        f.setPCEventReport(new EventID("1.2.3.4.5.6.7.8"), MessageTypeIdentifier.PCERlast);
+
+        Assert.assertFalse(f.isPCEventReport());
+    }
+    
 }
