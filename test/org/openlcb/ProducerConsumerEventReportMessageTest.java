@@ -50,6 +50,22 @@ public class ProducerConsumerEventReportMessageTest {
                                 nodeID1, eventID1 );
 
         Assert.assertEquals(0, m1.getPayloadSize());
+        Assert.assertEquals(0, m1.getPayload().size()); // not null        
+        
+        java.util.List<Integer> payload1 = new java.util.ArrayList<Integer>();
+        payload1.add(12);
+        ProducerConsumerEventReportMessage m2 = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, payload1 );
+        
+        Assert.assertEquals(1, m2.getPayloadSize());
+        Assert.assertEquals(12, m2.getPayload().get(0));
+        
+        ProducerConsumerEventReportMessage m3 = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, null ); // properly handle null
+        
+        Assert.assertEquals(0, m3.getPayloadSize());
+        Assert.assertEquals(0, m3.getPayload().size()); // not null        
+
     }
 
     @Test   
