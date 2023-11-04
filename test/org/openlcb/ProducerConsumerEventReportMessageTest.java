@@ -69,6 +69,53 @@ public class ProducerConsumerEventReportMessageTest {
     }
 
     @Test   
+    public void testPayloadHashAndEquals() {
+        ProducerConsumerEventReportMessage mNone = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1 );
+        
+        ProducerConsumerEventReportMessage mNull = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, null ); // properly handle null
+        
+        java.util.List<Integer> payload0 = new java.util.ArrayList<Integer>();
+        ProducerConsumerEventReportMessage mEmpty = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, payload0 );
+
+        Assert.assertEquals(mNone.hashCode(), mNull.hashCode());
+        Assert.assertEquals(mNull.hashCode(), mEmpty.hashCode());
+        Assert.assertEquals(mEmpty.hashCode(), mNone.hashCode());
+
+        Assert.assertTrue(mNone.equals(mNull));
+        Assert.assertTrue(mNone.equals(mEmpty));
+        Assert.assertTrue(mNull.equals(mNone));
+        Assert.assertTrue(mEmpty.equals(mNull));
+        Assert.assertTrue(mNull.equals(mNone));
+        Assert.assertTrue(mEmpty.equals(mNull));
+
+        java.util.List<Integer> payload1 = new java.util.ArrayList<Integer>();
+        payload1.add(12);
+        ProducerConsumerEventReportMessage mOne = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, payload1 );
+
+        java.util.List<Integer> payload2 = new java.util.ArrayList<Integer>();
+        payload2.add(13);
+        ProducerConsumerEventReportMessage mAnother = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, payload2 );
+                                
+        Assert.assertNotEquals(mOne.hashCode(), mNone.hashCode());
+        Assert.assertNotEquals(mOne.hashCode(), mAnother.hashCode());
+        
+        Assert.assertFalse(mOne.equals(mAnother));
+
+        Assert.assertFalse(mOne.equals(mNull));
+        Assert.assertFalse(mOne.equals(mEmpty));
+        Assert.assertFalse(mOne.equals(mNone));
+        Assert.assertFalse(mNull.equals(mOne));
+        Assert.assertFalse(mEmpty.equals(mOne));
+        Assert.assertFalse(mNone.equals(mOne));
+
+    }
+
+    @Test   
     public void testHandling() {
         result = false;
         Node n = new Node(){
