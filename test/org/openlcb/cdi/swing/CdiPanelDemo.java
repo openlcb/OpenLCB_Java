@@ -32,7 +32,7 @@ public class CdiPanelDemo {
         File file;
         if (fileName == null) {
             // find file & load file
-            fci.setDialogTitle("Find desired script file");
+            fci.setDialogTitle("Find desired CDI file");
             fci.rescanCurrentDirectory();
 
             int retVal = fci.showOpenDialog(null);
@@ -70,7 +70,7 @@ public class CdiPanelDemo {
      * We always use the same file chooser in this class, so that the user's
      * last-accessed directory remains available.
      */
-    static JFileChooser fci = new JFileChooser();
+    static JFileChooser fci = new JFileChooser(".");
 
     // Main entry point
     static public void main(String[] args) {
