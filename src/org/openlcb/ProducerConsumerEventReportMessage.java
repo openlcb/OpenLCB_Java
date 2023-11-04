@@ -28,10 +28,19 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleProducerConsumerEventReport(this, sender);
     }
+    
+    /**
+     * Get the size of the payload, which doesn't include
+     * the eight bytes of the event ID itself
+     */
+    public int getPayloadSize() {
+        return 0;
+    }
 
     public String toString() {
         return super.toString()
-                +" Producer/Consumer Event Report  "+eventID.toString();     
+                +" Producer/Consumer Event Report  "+eventID.toString()
+                +" payload of "+getPayloadSize();     
     }
     
     public int getMTI() { return MTI_PC_EVENT_REPORT; }

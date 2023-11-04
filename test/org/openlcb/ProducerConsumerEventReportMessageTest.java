@@ -45,6 +45,14 @@ public class ProducerConsumerEventReportMessageTest {
     }
 
     @Test   
+    public void testPayload() {
+        ProducerConsumerEventReportMessage m1 = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1 );
+
+        Assert.assertEquals(0, m1.getPayloadSize());
+    }
+
+    @Test   
     public void testHandling() {
         result = false;
         Node n = new Node(){
