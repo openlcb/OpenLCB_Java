@@ -258,10 +258,12 @@ public class OpenLcbCanFrame implements CanFrame {
 
   // start of OpenLCB messages
 
+  // creates a PCER-only
   void setPCEventReport(EventID eid) {
     this.setPCEventReport(eid, MessageTypeIdentifier.ProducerConsumerEventReport);
   }
 
+  // intended for PCERfirst
   void setPCEventReport(EventID eid, MessageTypeIdentifier mti) {
     init(nodeAlias);
     setOpenLcbMTI(mti.mti());
@@ -269,8 +271,11 @@ public class OpenLcbCanFrame implements CanFrame {
     loadFromEid(eid);
   }
 
-  void setPCEventReport(EventID eid, MessageTypeIdentifier mti, byte[] data) {
-    this.setPCEventReport(eid, mti);
+  // intended for PCERmiddle and PCERlast
+  void setPCEventReport(MessageTypeIdentifier mti, byte[] data) {
+    init(nodeAlias);
+    setOpenLcbMTI(mti.mti());
+    length=data.length;
     setData(data);
   }
 

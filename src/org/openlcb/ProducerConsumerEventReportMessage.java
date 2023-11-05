@@ -25,9 +25,17 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
         payload = null;
     }
 
-    public ProducerConsumerEventReportMessage(NodeID source, EventID eventID, List<Integer> payload) {
+    public ProducerConsumerEventReportMessage(NodeID source, EventID eventID, List<Byte> payload) {
         super(source, eventID);
         this.payload = payload;
+    }
+
+    public ProducerConsumerEventReportMessage(NodeID source, EventID eventID, byte[] bytes) {
+        super(source, eventID);
+        payload = new ArrayList<Byte>();
+        for (byte value : bytes) {
+            payload.add(value);
+        }
     }
 
     /**
@@ -42,7 +50,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
         decoder.handleProducerConsumerEventReport(this, sender);
     }
     
-    List<Integer> payload;
+    List<Byte> payload;
     
     /**
      * Get the size of the payload, which doesn't include
@@ -58,9 +66,24 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
      * @return unmodifiable list
      */
     @NonNull
-    public List getPayload() {
-        if (payload == null) return Collections.unmodifiableList(new ArrayList<Integer>()); // zero length list by default
+    public List getPayloadList() {
+        if (payload == null) return Collections.unmodifiableList(new ArrayList<Byte>()); // zero length list by default
         return Collections.unmodifiableList(payload);
+    }
+    
+    /**
+     * Get the payload
+     * @return dedicated aray
+     */
+    @NonNull
+    public byte[] getPayloadArray() {
+        if (payload == null) return new byte[0]; // zero length by default
+        byte[] result = new byte[payload.size()];
+        int i = 0;
+        for (Byte b : payload) {
+            result[i++] = (byte)b;
+        }
+        return result;
     }
     
     @Override
@@ -78,7 +101,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
             // check for empty payload other end
             if (p.payload == null || p.payload.size() == 0) return true;
         }
-        return (getPayload().equals(p.getPayload()) );
+        return (getPayloadList().equals(p.getPayloadList()) );
     }
 
     @Override

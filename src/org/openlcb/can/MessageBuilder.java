@@ -22,7 +22,7 @@ import org.openlcb.messages.TractionProxyRequestMessage;
  * created.
  *
  * @author  Bob Jacobsen   Copyright 2010
- * @version $Revision$
+ * @author  David Harris
  */
 public class MessageBuilder implements AliasMap.Watcher {
 
@@ -115,29 +115,32 @@ public class MessageBuilder implements AliasMap.Watcher {
 
         switch (format) {
             case 0:
-                return processFormat0(f);
+                return processFormat0(f);   // reserved
             case 1:
-                return processFormat1(f);
+                return processFormat1(f);   // global/addressed
             case 2:
-                return processFormat2(f);
+                return processFormat2(f);   // datagram only
             case 3:
-                return processFormat3(f);
+                return processFormat3(f);   // datagram first
             case 4:
-                return processFormat4(f);
+                return processFormat4(f);   // datagram middle
             case 5:
-                return processFormat5(f);
+                return processFormat5(f);   // datagram last
             case 6:
-                return processFormat6(f);
+                return processFormat6(f);   // reserved
             case 7:
-                return processFormat7(f);
+                return processFormat7(f);   // stream data
             default:  // should not happen
                 return null;
         }
     }
 
     HashMap<NodeID, List<Integer>> datagramData = new HashMap<NodeID, List<Integer>>();
-    // dph
+
     HashMap<NodeID, List<Integer>> streamData = new HashMap<NodeID, List<Integer>>();
+
+    HashMap<NodeID, List<Byte>> pcerData = new HashMap<NodeID, List<Byte>>();
+    HashMap<NodeID, EventID> pcerEventID = new HashMap<NodeID, EventID>();
 
     int getSourceID(CanFrame f) { return f.getHeader()&0x00000FFF; }
     int getMTI(CanFrame f) { return ( f.getHeader() & 0x00FFF000 ) >> 12; }
@@ -181,7 +184,7 @@ public class MessageBuilder implements AliasMap.Watcher {
     HashMap<Integer, AccumulationMemo> accumulations = new HashMap<Integer, AccumulationMemo>();
 
     List<Message> processFormat1(CanFrame f) {
-        // MTI
+        // global or addressed MTI
         List<Message> retlist = new java.util.ArrayList<Message>();
         NodeID source = map.getNodeID(getSourceID(f));
         NodeID dest = null;
@@ -311,6 +314,16 @@ public class MessageBuilder implements AliasMap.Watcher {
             case ProducerConsumerEventReport:
                 retlist.add(new ProducerConsumerEventReportMessage(source, getEventID(f)));
                 return retlist;
+            case PCERfirst:
+                receivedPCERfirst(source, f);
+                return retlist;
+            case PCERmiddle:
+                receivedPCERmiddle(source, f);
+                return retlist;
+            case PCERlast:
+                retlist.add(receivedPCERlast(source, f));
+                return retlist;
+                
             case IdentifyEventsAddressed:
                 retlist.add(new IdentifyEventsAddressedMessage(source, dest));
                 return retlist;
@@ -338,7 +351,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             case DatagramRejected:
                 retlist.add(new DatagramRejectedMessage(source,dest,(int)f.dataAsLong()));
                 return retlist;
-         // dph: add all stream messages reply and proceed.
+            // add all stream messages reply and proceed.
             case StreamInitiateRequest:
                 retlist.add(new StreamInitiateRequestMessage(source,dest,Utilities.NetworkToHostUint16(content, 2),content[4],
                         (content.length > 5 ? content[5] : -1)));
@@ -360,6 +373,52 @@ public class MessageBuilder implements AliasMap.Watcher {
                 return null;
         }
     }
+
+    void receivedPCERfirst(NodeID source, CanFrame f) {
+        // PCER first-segment
+        List<Byte> list = pcerData.get(source);
+        if (list == null) {
+            list = new ArrayList<Byte>();
+            pcerData.put(source, list);
+        } else {
+            logger.warning("datagram already in process for only-segment");
+        }
+        EventID eid = getEventID(f);
+        pcerEventID.put(source, eid);
+        return;
+    }
+
+    void receivedPCERmiddle(NodeID source, CanFrame f) {
+        // PCER middle-segment
+        List<Byte> list = pcerData.get(source);
+        if (list == null) {
+            // this is actually an error, should be already started
+            list = new ArrayList<Byte>();
+            pcerData.put(source, list);
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add((byte)(0xFF & f.getElement(i)) );
+        }
+        return;
+    }
+
+    Message receivedPCERlast(NodeID source, CanFrame f) {
+        // datagram last
+        List<Byte> list = pcerData.get(source);
+        if (list == null) {
+            list = new ArrayList<Byte>();
+        }
+        for (int i = 0; i < f.getNumDataElements(); i++) {
+            list.add((byte)(0xFF & f.getElement(i)) );
+        }
+
+        pcerData.put(source, null); // not accumulating any more
+        
+        EventID eID = pcerEventID.get(source);
+
+        return new ProducerConsumerEventReportMessage(source, eID, list);
+    }
+    
     List<Message> processFormat2(CanFrame f) {
         // datagram only-segment
         NodeID source = map.getNodeID(getSourceID(f));
@@ -385,6 +444,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         retlist.add(new DatagramMessage(source, dest, data));
         return retlist;
     }
+
     List<Message> processFormat3(CanFrame f) {
         // datagram first-segment
         NodeID source = map.getNodeID(getSourceID(f));
@@ -400,6 +460,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         }
         return null;
     }
+
     List<Message> processFormat4(CanFrame f) {
         // datagram middle-segment
         NodeID source = map.getNodeID(getSourceID(f));
@@ -414,6 +475,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         }
         return null;
     }
+
     List<Message> processFormat5(CanFrame f) {
         // datagram last
         NodeID source = map.getNodeID(getSourceID(f));
@@ -436,10 +498,12 @@ public class MessageBuilder implements AliasMap.Watcher {
         retlist.add(new DatagramMessage(source, dest, data));
         return retlist;
     }
+
     List<Message> processFormat6(CanFrame f) {
         // reserved
         return null;
     }
+
     List<Message> processFormat7(CanFrame f) {
         // stream data
         NodeID source = map.getNodeID(getSourceID(f));
@@ -583,6 +647,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             if (msg instanceof AddressedPayloadMessage) {
                 handleAddressedPayloadMessage((AddressedPayloadMessage)msg, sender);
             } else {
+                // all global messages handled explicitly
                 throw new java.lang.NoSuchMethodError("no handler for Message: " + msg.toString());
             }
         }
@@ -658,10 +723,49 @@ public class MessageBuilder implements AliasMap.Watcher {
          */
         @Override
         public void handleProducerConsumerEventReport(ProducerConsumerEventReportMessage msg, Connection sender){
-            OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setPCEventReport(msg.getEventID());
-            f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
-            retlist.add(f);
+            int payloadSize = msg.getPayloadSize();
+            if (payloadSize == 0) {
+                OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+                f.setPCEventReport(msg.getEventID());
+                f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                retlist.add(f);
+            } else {
+                // longer than 0, have to loop and create multiples.
+                // first frame with EID
+                int frameLength = Math.min(8, msg.getPayloadSize());
+                OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
+                f.setPCEventReport(msg.getEventID(), MessageTypeIdentifier.PCERfirst);
+                f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                retlist.add(f);                
+                
+                
+                // rest of frames
+                ArrayList<Byte> data = new ArrayList<Byte>(msg.getPayloadList());
+                
+                while (data.size() > 0) {
+                    int loopLength = Math.min(8, data.size());
+                    byte[] array = new byte[loopLength];
+                    for (int i = 0; i<loopLength; i++) {
+                        array[i] = data.remove(0);
+                    }
+                    if (data.size() == 0) {
+                        // done
+                        f = new OpenLcbCanFrame(0x00);
+                        f.setPCEventReport(MessageTypeIdentifier.PCERlast, array);
+                        f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                        retlist.add(f);
+                        return;
+                    } else {
+                        // not done
+                        f = new OpenLcbCanFrame(0x00);
+                        f.setPCEventReport(MessageTypeIdentifier.PCERmiddle, array);
+                        f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
+                        retlist.add(f);
+                        // and repeat
+                    }
+                }
+                logger.warning("should have returned within loop");
+            }
         }
         /**
          * Handle "Identify Consumers" message

@@ -206,6 +206,56 @@ public class MessageBuilderTest  {
     }
 
     @Test
+    public void testProducerConsumerEventReportMessageShortPayload() {
+        byte[] data = new byte[]{1,2,3,4,5,6,7};
+        Message m = new ProducerConsumerEventReportMessage(source, event, data);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        Assert.assertEquals("count", 2, list.size());
+        
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x195B7123), toHexString(f0.getHeader()));
+        compareContent(event.getContents(), f0);
+
+        CanFrame f1 = list.get(1);
+        Assert.assertEquals("header", toHexString(0x195B5123), toHexString(f1.getHeader()));
+        compareContent(data, f1);
+
+        // check that the frames code back to the original Message
+        testDecoding(m, list);
+    }
+
+    @Test
+    public void testProducerConsumerEventReportMessageLongPayload() {
+        byte[] data = new byte[]{1,2,3,4,5,6,7,8,9};
+        Message m = new ProducerConsumerEventReportMessage(source, event, data);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [195B4123] 11 12 13 14 15 16 17 18
+
+        Assert.assertEquals("count", 3, list.size());
+        
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x195B7123), toHexString(f0.getHeader()));
+        compareContent(event.getContents(), f0);
+
+        CanFrame f1 = list.get(1);
+        Assert.assertEquals("header", toHexString(0x195B6123), toHexString(f1.getHeader()));
+        compareContent(new byte[]{1,2,3,4,5,6,7,8}, f1);
+
+        CanFrame f2 = list.get(2);
+        Assert.assertEquals("header", toHexString(0x195B5123), toHexString(f2.getHeader()));
+        compareContent(new byte[]{9}, f2);
+
+        // check that the frames code back to the original Message
+        testDecoding(m, list);
+    }
+
+    @Test
     public void testTractionControlRequestMessageSingle() {
         Message m = new TractionControlRequestMessage(source, destination, new byte[]{(byte)0xCC,
                 (byte)0xAA, 0x55, 4, 5, 6});
@@ -671,7 +721,7 @@ public class MessageBuilderTest  {
 
         MessageBuilder b = new MessageBuilder(map);
 
-        System.out.println("Expect next line to be \" failed to parse MTI 0x541\"");
+        System.err.println("Expect next line to be \" failed to parse MTI 0x541\"");
         List<Message> list = b.processFrame(frame);
 
         Assert.assertEquals("count", 0, list.size());
