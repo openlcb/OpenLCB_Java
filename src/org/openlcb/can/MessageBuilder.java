@@ -381,7 +381,7 @@ public class MessageBuilder implements AliasMap.Watcher {
             list = new ArrayList<Byte>();
             pcerData.put(source, list);
         } else {
-            logger.warning("datagram already in process for only-segment");
+            logger.warning("PCER already in process for only-segment");
         }
         EventID eid = getEventID(f);
         pcerEventID.put(source, eid);
@@ -392,7 +392,7 @@ public class MessageBuilder implements AliasMap.Watcher {
         // PCER middle-segment
         List<Byte> list = pcerData.get(source);
         if (list == null) {
-            // this is actually an error, should be already started
+            logger.warning("PCER not started for middle segment");
             list = new ArrayList<Byte>();
             pcerData.put(source, list);
         }
