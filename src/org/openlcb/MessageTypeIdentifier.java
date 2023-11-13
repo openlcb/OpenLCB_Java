@@ -56,7 +56,10 @@ public enum MessageTypeIdentifier {
         IdentifyEventsGlobal        ( false, false, true,  0, 2, 11, 0, "IdentifyEventsGlobal"),
         
         LearnEvent                  ( false, true,  true,  0, 1, 12, 0, "LearnEvent"),
-        ProducerConsumerEventReport ( false, true,  true,  0, 1, 13, 0, "ProducerConsumerEventReport"),
+        ProducerConsumerEventReport ( false, true,  true,  0, 1, 13, 0, "ProducerConsumerEventReport"), // This is also the CAN PCER-only
+        PCERfirst                   ( false, true,  true,  0, 1, 13, 3, "PCERfirst"),                   // This is CAN only
+        PCERmiddle                  ( false, true,  true,  0, 1, 13, 2, "PCERmiddle"),                  // This is CAN only
+        PCERlast                    ( false, true,  true,  0, 1, 13, 1, "PCERlast"),                    // This is CAN only
 
         TractionControlRequest      (  true, false, false, 0, 1, 15, 3, "TractionControlRequest" ),
         TractionControlReply        (  true, false, false, 0, 0, 15, 1, "TractionControlReply" ),
