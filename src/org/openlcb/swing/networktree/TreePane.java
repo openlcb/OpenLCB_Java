@@ -314,9 +314,6 @@ public class TreePane extends JPanel  {
      * @param order new order.
      */
     public void setSortOrder(SortOrder order) {
-        if (sortOrder == order) {
-            return;
-        }
         sortOrder = order;
         SwingUtilities.invokeLater(() -> resortTree());
     }
