@@ -223,6 +223,8 @@ public class TreePane extends JPanel  {
                         memo.addPropertyChangeListener(resortListener);
                         tree.expandPath(new TreePath(nodes.getPath()));
                     }
+                    // ensure still properly sorted
+                    SwingUtilities.invokeLater(() -> resortTree());
                 } else if (e.getPropertyName().equals(MimicNodeStore.CLEAR_ALL_NODES)) {
                     synchronized (nodes) {
                         nodes.removeAllChildren();
