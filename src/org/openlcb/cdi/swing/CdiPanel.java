@@ -18,6 +18,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -64,6 +65,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.InputVerifier;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -86,7 +88,11 @@ import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 
 import util.CollapsiblePanel;
 
@@ -2290,6 +2296,13 @@ public class CdiPanel extends JPanel {
 
     }
 
+    Font textAreaFont;
+    {
+        Font existingFont = UIManager.getFont("TextArea.font");
+        int size = existingFont.getSize();
+        textAreaFont = new Font(Font.MONOSPACED, Font.PLAIN, size);
+    }
+    
     private class StringPane extends EntryPane {
         JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
@@ -2298,20 +2311,34 @@ public class CdiPanel extends JPanel {
             super(e, "String");
             this.entry = e;
 
-            if (entry.size <= 64) {
-                JTextField jtf = new JTextField(entry.size) {
+            Document doc = new PlainDocument(){
+                // limit the size of the text contents to the size of the data field
+                public void insertString(int offset, String str, AttributeSet a) throws BadLocationException {
+                    if (getLength() + str.length() > entry.size)
+                        java.awt.Toolkit.getDefaultToolkit().beep();
+                    else
+                        super.insertString(offset, str, a);
+                }
+            };
+
+            if (entry.size <= 64) { // somewhat arbitrary maximum length of single-line entry
+                            
+                JTextField jtf = new JTextField(doc, "", entry.size) {
                     public Dimension getMaximumSize() {
                         return getPreferredSize();
                     }
                 };
+                jtf.setFont(textAreaFont);
                 jtf = factory.handleStringValue(jtf);
+                   
                 textField = jtf;
             } else {
                 // Long string. Show multi-line editor
-                JTextArea jta = new JTextArea(Math.min(40, (int)(entry.size / 60)), 80);
+                JTextArea jta = new JTextArea(doc, "", Math.min(40, (int)(entry.size / 40)), 80);
                 jta.setEditable(true);
                 jta.setLineWrap(true);
                 jta.setWrapStyleWord(true);
+                jta.setFont(textAreaFont);
                 jta = factory.handleEditorValue(jta);
                 textField = jta;
             }
