@@ -2314,7 +2314,7 @@ public class CdiPanel extends JPanel {
             Document doc = new PlainDocument(){
                 // limit the size of the text contents to the size of the data field
                 public void insertString(int offset, String str, AttributeSet a) throws BadLocationException {
-                    if (getLength() + str.length() > entry.size)
+                    if (getLength() + str.length() > entry.size-1)  // -1 for trailing zero
                         java.awt.Toolkit.getDefaultToolkit().beep();
                     else
                         super.insertString(offset, str, a);
@@ -2323,7 +2323,7 @@ public class CdiPanel extends JPanel {
 
             if (entry.size <= 64) { // somewhat arbitrary maximum length of single-line entry
                             
-                JTextField jtf = new JTextField(doc, "", entry.size) {
+                JTextField jtf = new JTextField(doc, "", entry.size-1) { // -1 for trailing zero
                     public Dimension getMaximumSize() {
                         return getPreferredSize();
                     }
@@ -2334,7 +2334,7 @@ public class CdiPanel extends JPanel {
                 textField = jtf;
             } else {
                 // Long string. Show multi-line editor
-                JTextArea jta = new JTextArea(doc, "", Math.min(40, (int)(entry.size / 40)), 80);
+                JTextArea jta = new JTextArea(doc, "", Math.min(40, (int)(entry.size / 40)), 80);// line count is heuristic
                 jta.setEditable(true);
                 jta.setLineWrap(true);
                 jta.setWrapStyleWord(true);
