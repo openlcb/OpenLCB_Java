@@ -1787,6 +1787,13 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    Font countAreaFont; // font for the character count fields
+    {
+        Font existingFont = UIManager.getFont("TextArea.font");
+        int size = existingFont.getSize()*3/4;
+        countAreaFont = new Font(Font.MONOSPACED, Font.PLAIN, size);
+    }
+
     private abstract class EntryPane extends JPanel {
         protected final CdiRep.Item item;
         protected JComponent textComponent;
@@ -1822,7 +1829,58 @@ public class CdiPanel extends JPanel {
 
         protected void init() {
             if (textComponent instanceof JTextArea) {
-                p3.add(new JScrollPane(textComponent));
+                JPanel lengthPanel = new JPanel();
+                
+                // include an auto-updating "remaining characters" field
+                lengthPanel.setLayout(new FlowLayout());
+                JLabel lengthLabel = new JLabel("Remaining characters: ");
+                lengthPanel.add(lengthLabel);
+                final JTextField countField = new JTextField(6);
+                countField.setText(""+(entry.size-1));
+                lengthPanel.add(countField);
+                lengthLabel.setFont(countAreaFont);
+                countField.setFont(countAreaFont);
+                
+                JPanel combinedPanel = new JPanel();
+                combinedPanel.setLayout(new BoxLayout(combinedPanel, BoxLayout.Y_AXIS));
+                combinedPanel.add(new JScrollPane(textComponent){
+                    // Limit how small the layout will make the field
+                    public Dimension getMinimumSize() {
+                        Dimension superSize = super.getMinimumSize();
+                        int width = superSize.width;
+                        int height = Math.max(superSize.height, 200);
+                        return new Dimension(width, height);
+                    }
+                });
+                combinedPanel.add(lengthPanel);
+                
+                p3.add(combinedPanel);
+
+                // add listener to maintain the 
+                ((JTextArea) textComponent).getDocument().addDocumentListener(
+                        new DocumentListener() {
+                            @Override
+                            public void insertUpdate(DocumentEvent documentEvent) {
+                                updateLength();
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent documentEvent) {
+                                updateLength();
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent documentEvent) {
+                                updateLength();
+                            }
+
+                            private void updateLength() {
+                                countField.setText(""+(entry.size -1 - ((JTextArea) textComponent).getText().length() ) );
+                            }
+                        }
+                );
+
+
             } else {
                 p3.add(textComponent);
             }
