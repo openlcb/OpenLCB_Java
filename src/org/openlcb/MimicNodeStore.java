@@ -93,7 +93,7 @@ public class MimicNodeStore extends AbstractConnection {
     public void refresh() {
         map.clear();
         pcs.firePropertyChange(CLEAR_ALL_NODES, null, null);
-        connection.put(new VerifyNodeIDNumberMessage(node), this);
+        connection.put(new VerifyNodeIDNumberGlobalMessage(node), this);
     }
 
     public NodeMemo addNode(NodeID id) {
@@ -120,7 +120,7 @@ public class MimicNodeStore extends AbstractConnection {
         }
         
         // create and send targeted request
-        connection.put(new VerifyNodeIDNumberMessage(node, id), null);
+        connection.put(new VerifyNodeIDNumberGlobalMessage(node, id), null);
         return null;
     }
     

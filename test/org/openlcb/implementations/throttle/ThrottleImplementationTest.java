@@ -54,8 +54,8 @@ public class ThrottleImplementationTest {
         t.start();
         
         Assert.assertEquals(messagesReceived.size(), 1);
-        Assert.assertTrue(messagesReceived.get(0) instanceof VerifyNodeIDNumberMessage);
-        VerifyNodeIDNumberMessage v = (VerifyNodeIDNumberMessage)messagesReceived.get(0);
+        Assert.assertTrue(messagesReceived.get(0) instanceof VerifyNodeIDNumberGlobalMessage);
+        VerifyNodeIDNumberGlobalMessage v = (VerifyNodeIDNumberGlobalMessage)messagesReceived.get(0);
         
         Assert.assertEquals(new NodeID(new byte[]{0x06, 0x01, 0,0, (byte)(1234/256 | 0xC0), (byte)(1234&0xFF)}), v.getContent());
 

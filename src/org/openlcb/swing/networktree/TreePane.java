@@ -42,7 +42,7 @@ import org.openlcb.Connection;
 import org.openlcb.MimicNodeStore;
 import org.openlcb.NodeID;
 import org.openlcb.SimpleNodeIdent;
-import org.openlcb.VerifyNodeIDNumberMessage;
+import org.openlcb.VerifyNodeIDNumberGlobalMessage;
 
 /**
  * Pane for monitoring an entire OpenLCB network as a logical tree
@@ -256,7 +256,7 @@ public class TreePane extends JPanel  {
             @Override
             public void connectionActive(Connection c) {
                 // load the alias field
-                connection.put(new VerifyNodeIDNumberMessage(node), null);
+                connection.put(new VerifyNodeIDNumberGlobalMessage(node), null);
             }
         };
         if (connection != null) {

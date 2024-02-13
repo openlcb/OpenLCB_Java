@@ -236,15 +236,26 @@ public class MessageBuilder implements AliasMap.Watcher {
             case InitializationComplete:
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
+            case VerifyNodeIdAddressed:
+                // check for content
+                if (data.length >= 6) {
+                    NodeID node = new NodeID(data);
+                    retlist.add(new VerifyNodeIDNumberAddressedMessage(source, dest, node));
+                } else {
+                    retlist.add(new VerifyNodeIDNumberAddressedMessage(source, dest));
+                }
+                return retlist;
+            
             case VerifyNodeIdGlobal:
                 // check for content
                 if (data.length >= 6) {
                     NodeID node = new NodeID(data);
-                    retlist.add(new VerifyNodeIDNumberMessage(source, node));
+                    retlist.add(new VerifyNodeIDNumberGlobalMessage(source, node));
                 } else {
-                    retlist.add(new VerifyNodeIDNumberMessage(source));
+                    retlist.add(new VerifyNodeIDNumberGlobalMessage(source));
                 }
                 return retlist;
+                            
             case VerifiedNodeId:
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
                 return retlist;
@@ -615,9 +626,9 @@ public class MessageBuilder implements AliasMap.Watcher {
             // We don't know the destination alias.
 
             // Sends a node id verify message.
-            VerifyNodeIDNumberMessage om = new VerifyNodeIDNumberMessage(m.getSourceNodeID(),
+            VerifyNodeIDNumberGlobalMessage om = new VerifyNodeIDNumberGlobalMessage(m.getSourceNodeID(),
                     ((AddressedMessage) m).getDestNodeID());
-            handleVerifyNodeIDNumber(om, null);
+            handleVerifyNodeIDNumberGlobal(om, null);
 
             // Enqueues the outgoing message.
             synchronized (blockedMessages) {
@@ -709,7 +720,7 @@ public class MessageBuilder implements AliasMap.Watcher {
          * Handle "Verify Node ID Number" message
          */
         @Override
-        public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender){
+        public void handleVerifyNodeIDNumberGlobal(VerifyNodeIDNumberGlobalMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
             f.setVerifyNID(msg.getSourceNodeID());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));

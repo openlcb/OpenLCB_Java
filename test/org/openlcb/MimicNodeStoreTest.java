@@ -211,7 +211,7 @@ public class MimicNodeStoreTest {
         MimicNodeStore.NodeMemo retval = store.findNode(nid1);
 
         Assert.assertTrue(retval == null);
-        Assert.assertTrue(lastMessage.equals(new VerifyNodeIDNumberMessage(src, nid1)));
+        Assert.assertTrue(lastMessage.equals(new VerifyNodeIDNumberGlobalMessage(src, nid1)));
         
     }
     
@@ -252,7 +252,7 @@ public class MimicNodeStoreTest {
 
         // And a verify node ID message going out.
         Assert.assertNotNull(lastMessage);
-        Assert.assertTrue(lastMessage instanceof VerifyNodeIDNumberMessage);
+        Assert.assertTrue(lastMessage instanceof VerifyNodeIDNumberGlobalMessage);
 
         // As well as the node tree being clear now.
         Assert.assertEquals(0, store.getNodeMemos().size());

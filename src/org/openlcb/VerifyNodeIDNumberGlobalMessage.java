@@ -15,14 +15,14 @@ import edu.umd.cs.findbugs.annotations.*;
  */
 @Immutable
 @ThreadSafe
-public class VerifyNodeIDNumberMessage extends Message {
+public class VerifyNodeIDNumberGlobalMessage extends Message {
     
-    public VerifyNodeIDNumberMessage(NodeID source) {
+    public VerifyNodeIDNumberGlobalMessage(NodeID source) {
         super(source);
         this.content = null;
     }
 
-    public VerifyNodeIDNumberMessage(NodeID source, NodeID content) {
+    public VerifyNodeIDNumberGlobalMessage(NodeID source, NodeID content) {
         this(source);
         this.content = content;
     }
@@ -36,9 +36,9 @@ public class VerifyNodeIDNumberMessage extends Message {
       * same type and content
       */
      public boolean equals(Object o) {
-        if (! (o instanceof VerifyNodeIDNumberMessage))
+        if (! (o instanceof VerifyNodeIDNumberGlobalMessage))
             return false;
-        VerifyNodeIDNumberMessage msg = (VerifyNodeIDNumberMessage) o;
+        VerifyNodeIDNumberGlobalMessage msg = (VerifyNodeIDNumberGlobalMessage) o;
         if (this.content != null) {
             if (msg.content == null || (! this.content.equals(msg.content)))
                 return false;
@@ -57,12 +57,12 @@ public class VerifyNodeIDNumberMessage extends Message {
      */
      @Override
      public void applyTo(MessageDecoder decoder, Connection sender) {
-        decoder.handleVerifyNodeIDNumber(this, sender);
+        decoder.handleVerifyNodeIDNumberGlobal(this, sender);
      }
 
     public String toString() {
         return super.toString()
-                +" Verify Node ID Number: "
+                +" Verify Node ID Number Global: "
                 + ((content != null) ? (content+" only") : ("all nodes"));    
     }
 
