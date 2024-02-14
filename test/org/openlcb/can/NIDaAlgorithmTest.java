@@ -180,8 +180,7 @@ public class NIDaAlgorithmTest {
 
         // still active
         Assert.assertTrue("complete", alg.isComplete());
-        // wants to send RIM
-        Assert.assertTrue((f = alg.nextFrame()).isRIM());
+        // RIM was sent through interface
     }
 
     @Test
@@ -230,7 +229,7 @@ public class NIDaAlgorithmTest {
         alg1.nextFrame();
         alg1.nextFrame();
 
-        int expectedCount = 5;
+        int expectedCount = 6;
         int count = sequentialRunner(new NIDaAlgorithm[]{alg1, alg2}, 2 * expectedCount);
 
         debug("tSCS2 converges in " + count);
@@ -348,7 +347,7 @@ public class NIDaAlgorithmTest {
         }
 
         // run the startup
-        int expectedCount = (4 + 1) * 10; // count messages
+        int expectedCount = (4 + 1 + 1) * 10; // count messages
         int count = priorityRunner(algs, 2 * expectedCount);
 
         debug("tPS10 converges " + count);
@@ -418,7 +417,7 @@ public class NIDaAlgorithmTest {
         Assert.assertEquals("starting aliases same", alg1.getNIDa(), alg10.getNIDa());
 
         // run the startup
-        int expectedCount = 64; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 69; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2 * expectedCount);
 
         debug("tPCS10 converges " + count);
@@ -460,7 +459,7 @@ public class NIDaAlgorithmTest {
         }
 
         // run the startup
-        int expectedCount = 537; // messages (empirically determined, depends on NodeID bytes)
+        int expectedCount = 637; // messages (empirically determined, depends on NodeID bytes)
         int count = priorityRunner(algs, 2 * expectedCount);
 
         debug("tPMNSN converges " + count);
@@ -571,7 +570,9 @@ public class NIDaAlgorithmTest {
     // Local version of classes to allow forcing identical alias, state
     class NubNIDaAlgorithm extends NIDaAlgorithm {
         public NubNIDaAlgorithm(NodeID nid) {
-            super(nid);
+            super(nid, new CanFrameListener() {
+                        public void send(CanFrame frame){}
+                });
             this.nida = new NubNIDa(nid);
         }
         public void forceSeedValue(long seed1, long seed2) {
@@ -598,7 +599,10 @@ public class NIDaAlgorithmTest {
 
     @Before
     public void setUp() {
-        alg = new NIDaAlgorithm(new NodeID(new byte[] {10, 11, 12, 13, 14, 15}));
+        alg = new NIDaAlgorithm(new NodeID(new byte[] {10, 11, 12, 13, 14, 15}),
+                    new CanFrameListener() {
+                        public void send(CanFrame frame){}
+            });
     }
 
     @After
