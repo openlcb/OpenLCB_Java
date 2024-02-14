@@ -107,20 +107,39 @@ public class NIDaAlgorithm implements CanFrameListener {
                     OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
                     frame.setAMD(nida.getNIDa(), nid);
                     sendInterface.send(frame);
+                    return;
                 }
             }
         }
 
-        // System.out.println("process "+Integer.toHexString(f.getNodeIDa())
-        //                    +" vs our "+Integer.toHexString(nida.getNIDa()));
+        if (f.isAliasMapDefinition()) {
+            // complete == true is (mostly) Permitted state
+            if (complete) {
+                if (compareDataAndNodeID(f)) {
+                    // AMD for us, reply with AMR and restart
+                    OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
+                    frame.setAMR(nida.getNIDa(), nid);
+                    sendInterface.send(frame);
+                    return;
+                }
+            }
+        }
+
 
         if (f.getSourceAlias() != nida.getNIDa()) {
             return;  // not us
         }
         if (f.isCIM() && complete) {
             // CIM with our alias: send RIM
-            index = 4;
-            cancelTimer();
+            // if not complete, start over 
+            if (complete) {
+                OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
+                frame.setRIM(nida.getNIDa());
+                sendInterface.send(frame);
+            } else {
+                index = 4; // send RIM on next cycle
+                cancelTimer();
+            }
         } else {
             // other frame with our alias: reset and start over
             index = 0;
