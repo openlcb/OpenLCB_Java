@@ -130,16 +130,12 @@ public class NIDaAlgorithm implements CanFrameListener {
             return;  // not us
         }
         if (f.isCIM() && complete) {
-            // CIM with our alias: send RIM
-            // if not complete, start over 
-            if (complete) {
-                OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
-                frame.setRIM(nida.getNIDa());
-                sendInterface.send(frame);
-            } else {
-                index = 4; // send RIM on next cycle
-                cancelTimer();
-            }
+            // CIM with our established alias: send RIM
+            OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
+            frame.setRIM(nida.getNIDa());
+            sendInterface.send(frame);
+            return;
+                
         } else {
             // other frame with our alias: reset and start over
             index = 0;
