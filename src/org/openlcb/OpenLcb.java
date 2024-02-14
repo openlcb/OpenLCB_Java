@@ -19,11 +19,11 @@ public interface OpenLcb {
     static final int MTI_OPT_INT_REJECTED            = 0x30C0;
     
     static final int MTI_IDENTIFY_CONSUMERS          = 0x1242;
-    static final int MTI_CONSUMER_RANGE_IDENTIFIED    = 0x3252;
+    static final int MTI_CONSUMER_RANGE_IDENTIFIED   = 0x3252;
     static final int MTI_CONSUMER_IDENTIFIED         = 0x3263;
     
     static final int MTI_IDENTIFY_PRODUCERS          = 0x1282;
-    static final int MTI_PRODUCER_RANGE_IDENTIFIED    = 0x3292;
+    static final int MTI_PRODUCER_RANGE_IDENTIFIED   = 0x3292;
     static final int MTI_PRODUCER_IDENTIFIED         = 0x32A3;
     
     static final int MTI_IDENTIFY_EVENTS             = 0x12B4;

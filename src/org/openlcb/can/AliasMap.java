@@ -33,9 +33,12 @@ public class AliasMap {
     public void processFrame(OpenLcbCanFrame f) {
         // check type
         if (f.isInitializationComplete() || f.isVerifiedNID() || f.isAliasMapDefinition()) {
-            Integer alias = Integer.valueOf(f.getSourceAlias());
-            NodeID nid = f.getNodeID();
-            insert(alias, nid);
+            // some nodes don't properly send their NodeID in the data part, so we armour against that.
+            if (f.data.length >= 6) {
+                Integer alias = Integer.valueOf(f.getSourceAlias());
+                NodeID nid = f.getNodeID();
+                insert(alias, nid);
+            }
         } else if (f.isAliasMapReset()) {
             Integer alias = Integer.valueOf(f.getSourceAlias());
             remove(alias);

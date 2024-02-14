@@ -6,7 +6,8 @@ import org.openlcb.MessageDecoder;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.VerifiedNodeIDNumberMessage;
-import org.openlcb.VerifyNodeIDNumberMessage;
+import org.openlcb.VerifyNodeIDNumberGlobalMessage;
+import org.openlcb.VerifyNodeIDNumberAddressedMessage;
 
 /**
  * Handler for verify node ID requests to the local node.
@@ -30,15 +31,25 @@ public class VerifyNodeIdHandler extends MessageDecoder {
     }
 
     @Override
-    public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender) {
+    public void handleVerifyNodeIDNumberGlobal(VerifyNodeIDNumberGlobalMessage msg, Connection sender) {
         /* This is the Verify Node ID number "global" message.
         *
-        * TODO: we need to add VerifyNode ID number "addressed" message to the list of
-        * supported MTIs et al.
         */
 
         // Only reply if requesting all nodes or one node where the ID is this specific node.
         if (msg.getContent() == null || msg.getContent().equals(id)) {
+            Message omsg = new VerifiedNodeIDNumberMessage(id);
+            iface.getOutputConnection().put(omsg, this);
+        }
+    }
+
+    @Override
+    public void handleVerifyNodeIDNumberAddressed(VerifyNodeIDNumberAddressedMessage msg, Connection sender) {
+        /* This is the Verify Node ID number "addressed" message.
+        *
+        */
+        // Only reply if addressed to this node
+        if (msg.getDestNodeID().equals(id)) {
             Message omsg = new VerifiedNodeIDNumberMessage(id);
             iface.getOutputConnection().put(omsg, this);
         }

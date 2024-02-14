@@ -62,11 +62,19 @@ public class MessageDecoder extends AbstractConnection {
         defaultHandler(msg, sender);
     }
     /**
-     * Handle "Verify Node ID Number" message
+     * Handle "Verify Node ID Number" global message
      * @param msg       message to handle
      * @param sender    connection where it came from
      */
-    public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender){
+    public void handleVerifyNodeIDNumberGlobal(VerifyNodeIDNumberGlobalMessage msg, Connection sender){
+        defaultHandler(msg, sender);
+    }
+    /**
+     * Handle "Verify Node ID Number" addressed message
+     * @param msg       message to handle
+     * @param sender    connection where it came from
+     */
+    public void handleVerifyNodeIDNumberAddressed(VerifyNodeIDNumberAddressedMessage msg, Connection sender){
         defaultHandler(msg, sender);
     }
     /**

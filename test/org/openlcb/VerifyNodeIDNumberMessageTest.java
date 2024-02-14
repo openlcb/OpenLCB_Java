@@ -10,9 +10,9 @@ public class VerifyNodeIDNumberMessageTest  {
     
     @Test
     public void testEqualsSame() {
-        Message m1 = new VerifyNodeIDNumberMessage(
+        Message m1 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}) );
-        Message m2 = new VerifyNodeIDNumberMessage(
+        Message m2 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}) );
     
         Assert.assertTrue(m1.equals(m2));
@@ -20,9 +20,9 @@ public class VerifyNodeIDNumberMessageTest  {
 
     @Test
     public void testEqualsSameWithContent() {
-        Message m1 = new VerifyNodeIDNumberMessage(
+        Message m1 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}));
-        Message m2 = new VerifyNodeIDNumberMessage(
+        Message m2 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}) );
     
         Assert.assertTrue(m1.equals(m2));
@@ -30,9 +30,9 @@ public class VerifyNodeIDNumberMessageTest  {
 
     @Test
     public void testNotEqualsDifferent() {
-        Message m1 = new VerifyNodeIDNumberMessage(
+        Message m1 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}) );
-        Message m2 = new VerifyNodeIDNumberMessage(
+        Message m2 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,3,3,4,5,6}) );
     
         Assert.assertTrue( ! m1.equals(m2));
@@ -40,9 +40,9 @@ public class VerifyNodeIDNumberMessageTest  {
 
     @Test
     public void testEqualsContentMatters() {
-        Message m1 = new VerifyNodeIDNumberMessage(
+        Message m1 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,6}) );
-        Message m2 = new VerifyNodeIDNumberMessage(
+        Message m2 = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}), new NodeID(new byte[]{1,2,3,4,5,0}) );
     
         Assert.assertTrue( ! m1.equals(m2));
@@ -53,11 +53,11 @@ public class VerifyNodeIDNumberMessageTest  {
         result = false;
         Node n = new Node(){
             @Override
-            public void handleVerifyNodeIDNumber(VerifyNodeIDNumberMessage msg, Connection sender){
+            public void handleVerifyNodeIDNumberGlobal(VerifyNodeIDNumberGlobalMessage msg, Connection sender){
                 result = true;
             }
         };
-        Message m = new VerifyNodeIDNumberMessage(
+        Message m = new VerifyNodeIDNumberGlobalMessage(
                                             new NodeID(new byte[]{1,2,3,4,5,6}) );
         
         n.put(m, null);
