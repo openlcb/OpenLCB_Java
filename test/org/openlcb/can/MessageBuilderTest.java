@@ -28,7 +28,7 @@ import org.openlcb.StreamInitiateReplyMessage;
 import org.openlcb.StreamInitiateRequestMessage;
 import org.openlcb.Utilities;
 import org.openlcb.VerifiedNodeIDNumberMessage;
-import org.openlcb.VerifyNodeIDNumberMessage;
+import org.openlcb.VerifyNodeIDNumberGlobalMessage;
 import org.openlcb.implementations.DatagramUtils;
 import org.openlcb.messages.TractionControlReplyMessage;
 import org.openlcb.messages.TractionControlRequestMessage;
@@ -83,7 +83,7 @@ public class MessageBuilderTest  {
 
     @Test
     public void testVerifyNodeIDNumberMessageEmpty() {
-        Message m = new VerifyNodeIDNumberMessage(source);
+        Message m = new VerifyNodeIDNumberGlobalMessage(source);
         MessageBuilder b = new MessageBuilder(map);
 
         List<OpenLcbCanFrame> list = b.processMessage(m);
@@ -100,7 +100,7 @@ public class MessageBuilderTest  {
 
     @Test
     public void testVerifyNodeIDNumberMessageWithContent() {
-        Message m = new VerifyNodeIDNumberMessage(source, source);
+        Message m = new VerifyNodeIDNumberGlobalMessage(source, source);
         MessageBuilder b = new MessageBuilder(map);
 
         List<OpenLcbCanFrame> list = b.processMessage(m);
@@ -551,8 +551,8 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 1, list.size());
         Message msg = list.get(0);
 
-        Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage);
-        Assert.assertEquals(new VerifyNodeIDNumberMessage(source), msg);
+        Assert.assertTrue(msg instanceof VerifyNodeIDNumberGlobalMessage);
+        Assert.assertEquals(new VerifyNodeIDNumberGlobalMessage(source), msg);
     }
 
     @Test
@@ -568,8 +568,8 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 1, list.size());
         Message msg = list.get(0);
 
-        Assert.assertTrue(msg instanceof VerifyNodeIDNumberMessage);
-        Assert.assertEquals(new VerifyNodeIDNumberMessage(source, source), msg);
+        Assert.assertTrue(msg instanceof VerifyNodeIDNumberGlobalMessage);
+        Assert.assertEquals(new VerifyNodeIDNumberGlobalMessage(source, source), msg);
     }
 
     @Test
