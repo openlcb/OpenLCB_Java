@@ -1,7 +1,7 @@
 #based on https://docs.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven
 name: Java CI
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
   build:
