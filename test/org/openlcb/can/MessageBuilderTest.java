@@ -27,6 +27,7 @@ import org.openlcb.StreamDataProceedMessage;
 import org.openlcb.StreamInitiateReplyMessage;
 import org.openlcb.StreamInitiateRequestMessage;
 import org.openlcb.Utilities;
+import org.openlcb.UnknownMtiMessage;
 import org.openlcb.VerifiedNodeIDNumberMessage;
 import org.openlcb.VerifyNodeIDNumberGlobalMessage;
 import org.openlcb.implementations.DatagramUtils;
@@ -714,17 +715,20 @@ public class MessageBuilderTest  {
 
     @Test
     public void testBogusMti() {
-        // should emit "failed to parse MTI 0x541"
+        // should emit "Failed to parse MTI 0x541"
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19541071);
         frame.setData(new byte[]{0x02, 0x02, (byte)0x12, 0x34});
 
         MessageBuilder b = new MessageBuilder(map);
 
-        System.err.println("Expect next line to be \" failed to parse MTI 0x541\"");
+        System.err.println("Expect next line to be \"Failed to parse MTI 0x541\"");
         List<Message> list = b.processFrame(frame);
 
-        Assert.assertEquals("count", 0, list.size());
+        // expect that UnknownMTI message will be returned
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+        Assert.assertTrue(msg instanceof UnknownMtiMessage);
     }
 
     @Test
