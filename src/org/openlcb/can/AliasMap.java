@@ -3,6 +3,7 @@ package org.openlcb.can;
 import org.openlcb.NodeID;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Maintains a 2-way map between nodes and CAN node ID aliases.
@@ -19,7 +20,8 @@ public class AliasMap {
     java.util.HashMap<NodeID, Integer> iMap = new java.util.HashMap<NodeID, Integer>();
     java.util.HashMap<Integer, NodeID> nMap = new java.util.HashMap<Integer, NodeID>();
     java.util.List<Watcher> watchers = new ArrayList<>();
-
+    private final static Logger logger = Logger.getLogger(AliasMap.class.getName());
+    
     /// This interface allows an external component to watch for newly discovered aliases.
     public interface Watcher {
         /// Called when a new alias was discovered.
@@ -47,6 +49,17 @@ public class AliasMap {
     
     public void insert(int alias, NodeID nid) {
         synchronized (this) {
+            if (nMap.containsKey(alias) && nid.toLong() != nMap.get(alias).toLong()) {
+                logger.warning("map contains alias "
+                    +String.format("0x%03X", alias & 0xFFF)
+                    +" for node "+nMap.get(alias)+" change to "+nid);
+            }
+            if (iMap.containsKey(nid) && alias != iMap.get(nid)) {
+                logger.warning("map contains nodeID "+nid+" for alias "
+                    +String.format("0x%03X", iMap.get(nid) & 0xFFF)
+                    +" change to "
+                    +String.format("0x%03X", alias & 0xFFF));
+            }
             nMap.put(alias, nid);
             iMap.put(nid, alias);
         }
