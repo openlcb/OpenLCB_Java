@@ -115,11 +115,17 @@ public class NIDaAlgorithm implements CanFrameListener {
         if (f.isAliasMapDefinition()) {
             // complete == true is (mostly) Permitted state
             if (complete) {
-                if (compareDataAndNodeID(f)) {
+                if (compareDataAndNodeID(f) || f.getSourceAlias() == nida.getNIDa()) {
                     // AMD for us, reply with AMR and restart
                     OpenLcbCanFrame frame = new OpenLcbCanFrame(nida.getNIDa());
                     frame.setAMR(nida.getNIDa(), nid);
                     sendInterface.send(frame);
+                    // reset and start over
+                    index = 0;
+                    complete = false;
+                    nida.nextAlias();
+                    cancelTimer();
+                    timerExpired(); // starts the sequence
                     return;
                 }
             }
@@ -164,7 +170,7 @@ public class NIDaAlgorithm implements CanFrameListener {
             while (index < 4) {
                 sendInterface.send(nextFrame());
             }
-            scheduleTimer(200);
+            scheduleTimer(400);
         } else if (index == 4) {
             sendInterface.send(nextFrame());
             sendInterface.send(nextFrame());
