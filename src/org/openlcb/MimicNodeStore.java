@@ -332,6 +332,7 @@ public class MimicNodeStore extends AbstractConnection {
 
         @Override
         public void handleOptionalIntRejected(OptionalIntRejectedMessage msg, Connection sender){
+            if (node != msg.getDestNodeID()) return; // not for us
             if (msg.getRejectMTI() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
                 if ((msg.getCode() & 0x1000) == 0) {
