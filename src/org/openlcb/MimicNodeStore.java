@@ -335,7 +335,7 @@ public class MimicNodeStore extends AbstractConnection {
             if (node != msg.getDestNodeID()) return; // not for us
             if (msg.getRejectMTI() == MessageTypeIdentifier.SimpleNodeIdentInfoRequest.mti()) {
                 // check for temporary error
-                if ((msg.getCode() & 0x1000) == 0) {
+                if ((msg.getCode() & 0x2000) == 0) {
                     // not a temporary error, assume a permanent error
                     String logmsg = "Permanent error geting Simple Node Info "
                             + "for node {0} code 0x{1}";
@@ -352,7 +352,7 @@ public class MimicNodeStore extends AbstractConnection {
             }
             if (msg.getRejectMTI() == MessageTypeIdentifier.ProtocolSupportInquiry.mti()) {
                 // check for temporary error
-                if ((msg.getCode() & 0x1000) == 0) {
+                if ((msg.getCode() & 0x2000) == 0) {
                     // not a temporary error, assume a permanent error
                     String logmsg = "Permanent error geting Protocol Identification information "
                             + "for node {0} code 0x{1}";
