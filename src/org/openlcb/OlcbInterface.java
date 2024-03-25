@@ -5,6 +5,7 @@ import org.openlcb.implementations.DatagramMeteringBuffer;
 import org.openlcb.implementations.DatagramService;
 import org.openlcb.implementations.EventTable;
 import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.protocols.UnknownMtiHandler;
 import org.openlcb.protocols.VerifyNodeIdHandler;
 
 import java.util.ArrayList;
@@ -129,6 +130,7 @@ public class OlcbInterface {
         inputConnection.registerMessageListener(nodeStore);
         inputConnection.registerMessageListener(dmb.connectionForRepliesFromDownstream());
         inputConnection.registerMessageListener(dcs);
+        new UnknownMtiHandler(nodeId, this); // will register itself.
         new VerifyNodeIdHandler(nodeId, this); // will register itself.
 
         outputConnection.registerStartNotification(new Connection.ConnectionListener() {

@@ -228,8 +228,11 @@ public class MessageBuilder implements AliasMap.Watcher {
             // something bad happened
             String mtiString = "000"+Integer.toHexString(mti).toUpperCase();
             mtiString = mtiString.substring(mtiString.length()-3);
-            logger.log(Level.SEVERE, " failed to parse MTI 0x{0}", mtiString);
-            return retlist;  // nothing in it from this
+            logger.log(Level.SEVERE, "Failed to parse MTI 0x{0}", mtiString);
+
+            // return internal-only message
+            retlist.add(new UnknownMtiMessage(source, dest, mti, content ) );
+            return retlist;
         }
 
         switch (value) {
@@ -380,8 +383,11 @@ public class MessageBuilder implements AliasMap.Watcher {
                 return retlist;
 
             default:
-                logger.warning(String.format(" received unhandled MTI 0x%03X: %s", mti, value.toString()));
-                return null;
+                logger.warning(String.format(" received known but unhandled MTI 0x%03X: %s", mti, value.toString()));
+                
+                // return internal-only message
+                retlist.add(new UnknownMtiMessage(source, dest, mti, content ) );
+                return retlist;
         }
     }
 

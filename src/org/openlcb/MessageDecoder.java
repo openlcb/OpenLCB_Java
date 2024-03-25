@@ -301,4 +301,13 @@ public class MessageDecoder extends AbstractConnection {
         defaultHandler(msg, sender);
     }
 
+    /**
+     * Handle internal "Unknown MTI" message
+     * @param msg       message to handle
+     * @param sender    connection where it came from
+     */
+    public void handleUnknownMTI(UnknownMtiMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
 }
