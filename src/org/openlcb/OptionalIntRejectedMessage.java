@@ -39,8 +39,8 @@ public class OptionalIntRejectedMessage extends AddressedPayloadMessage {
 
     private static byte[] toPayload(int mti, int code) {
         byte[] b = new byte[4];
-        Utilities.HostToNetworkUint16(b, 0, mti);
-        Utilities.HostToNetworkUint16(b, 2, code);
+        Utilities.HostToNetworkUint16(b, 0, code);
+        Utilities.HostToNetworkUint16(b, 2, mti);
         return b;
     }
     
