@@ -200,7 +200,7 @@ public class MimicNodeStoreTest {
         MimicNodeStore.NodeMemo memo = list.iterator().next();
 
         Assert.assertNull(lastMessage);
-        store.put(new OptionalIntRejectedMessage(nid1,src,0x0DE8,0x1000), null);
+        store.put(new OptionalIntRejectedMessage(nid1,src,0x0DE8,0x2000), null);
         Assert.assertNotNull(lastMessage);
         
         Assert.assertEquals(lastMessage, new SimpleNodeIdentInfoRequestMessage(src, nid1) );
