@@ -432,7 +432,7 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 1, list.size());
         CanFrame f0 = list.get(0);
         Assert.assertEquals("header", toHexString(0x19A28123), toHexString(f0.getHeader()));
-        compareContent(new byte[]{0x03, 0x21}, f0);
+        compareContent(new byte[]{0x03, 0x21, 0}, f0);
 
         testDecoding(m, list);
     }
