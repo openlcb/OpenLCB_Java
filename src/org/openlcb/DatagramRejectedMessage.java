@@ -43,6 +43,14 @@ public class DatagramRejectedMessage extends AddressedPayloadMessage {
      }
 
     @Override
+    public String toString() {
+        StringBuilder p = new StringBuilder(super.toString());
+        p.append(" flags 0x");
+        p.append(Integer.toHexString(getCode()).toUpperCase());
+        return p.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (! (o instanceof DatagramRejectedMessage))
