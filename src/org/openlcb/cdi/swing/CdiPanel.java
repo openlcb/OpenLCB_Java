@@ -1799,6 +1799,7 @@ public class CdiPanel extends JPanel {
         protected JComponent textComponent;
         private ConfigRepresentation.CdiEntry entry;
         PropertyChangeListener entryListener = null;
+        JButton writeButton;  // reference to this pane's "Write" button
         boolean dirty = false;
         JPanel p3;
 
@@ -1950,14 +1951,14 @@ public class CdiPanel extends JPanel {
             });
             p3.add(b);
 
-            b = factory.handleWriteButton(new JButton("Write"));
-            b.addActionListener(new java.awt.event.ActionListener() {
+            writeButton = factory.handleWriteButton(new JButton("Write"));
+            writeButton.addActionListener(new java.awt.event.ActionListener() {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     writeDisplayTextToNode();
                 }
             });
-            p3.add(b);
+            p3.add(writeButton);
 
             additionalButtons();
 
@@ -1983,8 +1984,19 @@ public class CdiPanel extends JPanel {
             if (oldDirty != dirty) {
                 notifyTabColorRefresh();
             }
+            
+            // and check the value for write button, as needed
+            updateWriteButton();
         }
 
+        /**
+         * For types that control the enable status of the 
+         * write button based on whether the current input value is valid
+         */
+        void updateWriteButton() {
+            // by default, this does nothing
+        }
+        
         boolean isDirty() {
              return dirty;
         }
@@ -2297,7 +2309,9 @@ public class CdiPanel extends JPanel {
                     }
                 };
                 textComponent = textField;
-                textField.setToolTipText("Signed integer value of up to "+entry.size+" bytes");
+                textField.setToolTipText("Signed integer from "
+                        +entry.rep.getMin()+" to "+entry.rep.getMax()
+                        +" ("+entry.size+" bytes)");
             }
 
             init();
@@ -2350,6 +2364,29 @@ public class CdiPanel extends JPanel {
                 s = map.getKey(entry);  
             }
             return s == null ? "" : s;
+        }
+        
+        /**
+         * check that the current (String) value is 
+         * valid and within the min and max range.
+         * Disable/Enable write button as appropriate.
+         */
+        @Override
+        void updateWriteButton() {
+            if (writeButton == null) {
+                // skip these until the write button has been created
+                return;
+            }
+            try {
+                int value = Integer.valueOf(getCurrentValue());
+                if (value >= entry.rep.getMin() && value <= entry.rep.getMax() ) {
+                    writeButton.setEnabled(true);
+                } else {
+                    writeButton.setEnabled(false);
+                }
+            } catch (NumberFormatException ex) {
+                writeButton.setEnabled(false);
+            }
         }
 
     }

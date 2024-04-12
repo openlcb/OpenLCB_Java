@@ -85,8 +85,8 @@ public interface CdiRep {
     }
     public static interface IntegerRep extends Item {
         public int getDefault();
-        public int getMin();
-        public int getMax();
+        public long getMin();
+        public long getMax();
 
         public int getSize();
     }
