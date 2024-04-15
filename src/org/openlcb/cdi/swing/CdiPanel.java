@@ -119,6 +119,7 @@ public class CdiPanel extends JPanel {
     private static final Color COLOR_UNFILLED = new Color(0xffff00); // yellow
     private static final Color COLOR_WRITTEN = new Color(0xffffff); // white
     private static final Color COLOR_ERROR = new Color(0xff0000); // red
+    private static final Color COLOR_INVALID = new Color(0xC0C0FF); // blue
     private static final Pattern segmentPrefixRe = Pattern.compile("^seg[0-9]*[.]");
     private static final Pattern entrySuffixRe = Pattern.compile("[.]child[0-9]*$");
     private static final Color COLOR_COPIED = COLOR_EDITED; // orange
@@ -400,6 +401,13 @@ public class CdiPanel extends JPanel {
     }
 
     private void checkForSave() {
+        // check for invalid, which suppresses write capability
+        for (EntryPane entry : allEntries) {
+            if (entry.isDataInvalid()) {
+                setSaveInvalid();
+                return;   // done
+            }
+        }
         for (EntryPane entry : allEntries) {
             if (entry.isDirty()) {
                 setSaveDirty();
@@ -757,7 +765,16 @@ public class CdiPanel extends JPanel {
         int num_dirty = 0;
         final int MAX_DIRTY_TO_SHOW = 10;
         for (EntryPane entry : allEntries) {
-            if (entry.isDirty()) {
+            if (entry.isDataInvalid()) {
+                if (++num_dirty <= MAX_DIRTY_TO_SHOW) {
+                    GetEntryNameVisitor nameGetter = new GetEntryNameVisitor(entry);
+                    rep.visit(nameGetter);
+                    sb.append(nameGetter.getName());
+                    sb.append(" has an invalid value.");
+                    sb.append("\n");
+                }
+                save = true;
+            } else if (entry.isDirty()) {
                 if (++num_dirty <= MAX_DIRTY_TO_SHOW) {
                     GetEntryNameVisitor nameGetter = new GetEntryNameVisitor(entry);
                     rep.visit(nameGetter);
@@ -813,6 +830,16 @@ public class CdiPanel extends JPanel {
     private void setSaveClean() {
         SwingUtilities.invokeLater(() -> {
             _saveButton.setBackground(COLOR_DEFAULT);
+            _saveButton.setEnabled(false);
+        });
+    }
+
+    /**
+     * Updates the Save Changes button to mark the dialog invalid.
+     */
+    private void setSaveInvalid() {
+        SwingUtilities.invokeLater(() -> {
+            _saveButton.setBackground(COLOR_INVALID);
             _saveButton.setEnabled(false);
         });
     }
@@ -919,27 +946,34 @@ public class CdiPanel extends JPanel {
         }
         rep.visit(new ConfigRepresentation.Visitor() {
             boolean isDirty = false;
+            boolean isInvalid = false;
 
             @Override
             public void visitGroupRep(ConfigRepresentation.GroupRep e) {
                 boolean oldDirty = isDirty;
+                boolean oldInvalid = isInvalid;
                 isDirty = false;
+                isInvalid = false;
                 super.visitGroupRep(e);
                 JTabbedPane tabs = tabsByKey.get(e.key);
                 if (tabs != null && tabs.getTabCount() >= e.index) {
-                    if (isDirty) {
+                    if (isInvalid) {
+                        tabs.setBackgroundAt(e.index - 1, COLOR_INVALID);
+                    } else if (isDirty) {
                         tabs.setBackgroundAt(e.index - 1, COLOR_EDITED);
                     } else {
                         tabs.setBackgroundAt(e.index - 1, null);
                     }
                 }
                 isDirty |= oldDirty;
+                isInvalid |= oldInvalid;
             }
 
             @Override
             public void visitLeaf(ConfigRepresentation.CdiEntry e) {
                 EntryPane v = entriesByKey.get(e.key);
                 isDirty |= v.isDirty();
+                isInvalid |= v.isDataInvalid();
             }
         });
         checkForSave();
@@ -1972,7 +2006,12 @@ public class CdiPanel extends JPanel {
             }
             String v = getDisplayText();
             boolean oldDirty = dirty;
-            if (v.equals(entry.lastVisibleValue)) {
+            
+            if (isDataInvalid()) {
+                textComponent.setBackground(COLOR_INVALID);
+                dirty = true;
+                setSaveInvalid();
+            } else if (v.equals(entry.lastVisibleValue)) {
                 textComponent.setBackground(COLOR_WRITTEN);
                 dirty = false;
 //                EventQueue.invokeLater(() -> checkForSave());
@@ -1981,9 +2020,8 @@ public class CdiPanel extends JPanel {
                 dirty = true;
                 setSaveDirty();
             }
-            if (oldDirty != dirty) {
-                notifyTabColorRefresh();
-            }
+
+            notifyTabColorRefresh();
             
             // and check the value for write button, as needed
             updateWriteButton();
@@ -1995,6 +2033,14 @@ public class CdiPanel extends JPanel {
          */
         void updateWriteButton() {
             // by default, this does nothing
+        }
+        
+        /**
+         * For types that can check input for validity, e.g. in-range integer
+         */
+        boolean isDataInvalid() {
+            // by default, this does nothing
+            return false;
         }
         
         boolean isDirty() {
@@ -2366,6 +2412,20 @@ public class CdiPanel extends JPanel {
             return s == null ? "" : s;
         }
         
+
+        boolean isDataInvalid() {
+            try {
+                int value = Integer.valueOf(getCurrentValue());
+                if (value >= entry.rep.getMin() && value <= entry.rep.getMax() ) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } catch (NumberFormatException ex) {
+                return true;
+            }
+        }
+
         /**
          * check that the current (String) value is 
          * valid and within the min and max range.
@@ -2377,16 +2437,9 @@ public class CdiPanel extends JPanel {
                 // skip these until the write button has been created
                 return;
             }
-            try {
-                int value = Integer.valueOf(getCurrentValue());
-                if (value >= entry.rep.getMin() && value <= entry.rep.getMax() ) {
-                    writeButton.setEnabled(true);
-                } else {
-                    writeButton.setEnabled(false);
-                }
-            } catch (NumberFormatException ex) {
-                writeButton.setEnabled(false);
-            }
+                
+            writeButton.setEnabled( ! isDataInvalid());
+ 
         }
 
     }
