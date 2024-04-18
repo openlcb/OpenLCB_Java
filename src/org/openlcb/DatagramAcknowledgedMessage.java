@@ -20,7 +20,7 @@ public class DatagramAcknowledgedMessage extends AddressedPayloadMessage {
     }
 
     public DatagramAcknowledgedMessage(NodeID source, NodeID dest, int flags) {
-        super(source, dest, flags == 0 ? null : new byte[]{(byte)flags});
+        super(source, dest, new byte[]{(byte)flags});
         this.flags = flags;
     }
 
@@ -39,6 +39,14 @@ public class DatagramAcknowledgedMessage extends AddressedPayloadMessage {
      public void applyTo(MessageDecoder decoder, Connection sender) {
         decoder.handleDatagramAcknowledged(this, sender);
      }
+
+    @Override
+    public String toString() {
+        StringBuilder p = new StringBuilder(super.toString());
+        p.append(" flags 0x");
+        p.append(Integer.toHexString(getFlags()).toUpperCase());
+        return p.toString();
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -3,6 +3,7 @@ package org.openlcb.cdi.jdom;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.jdom2.Attribute;
 import org.jdom2.Element;
@@ -19,6 +20,8 @@ public class JdomCdiRep implements CdiRep {
     public JdomCdiRep(Element root) {
         this.root = root;
     }
+    
+    private static final Logger logger = Logger.getLogger(JdomCdiRep.class.getName());
     
     public static class Identification implements CdiRep.Identification {    
         @Override
@@ -332,11 +335,62 @@ public class JdomCdiRep implements CdiRep {
         IntRep(Element e) { super(e); }
                 
         @Override
-        public int getDefault() { return 0; }
+        public int getDefault() {
+            Element target = e.getChild("default");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for default element: "+text);
+                    // and return the default value from length
+                }
+            }
+            // otherwise, return default value of 0
+            return 0;
+        }
+
         @Override
-        public int getMin() { return 0; }
+        public long getMin() { 
+            Element target = e.getChild("min");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for min element: "+text);
+                    // and return the default value from length
+                }
+            }
+            // otherwise, return default
+            return 0;
+        }
+
         @Override
-        public int getMax() { return 0; }
+        public long getMax() { 
+            Element target = e.getChild("max");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for max element: "+text);
+                    // and return the value computed from length
+                }
+            }
+            // otherwise, return value computed from size
+            
+            // Unfortunately, size == 8 is an overflow from long due to the sign.
+            // We treat that specially by treating it like size == 4.
+            int size = getSize();
+            if (size == 8) {
+                size = 4;
+            }
+            
+            long retVal = 1L << (size*8L);  // done in two parts as a long
+            retVal = retVal -1L;
+            return retVal;
+        }
 
         @Override
         public int getSize() { 
