@@ -239,6 +239,14 @@ public class OlcbInterface {
         return rep;
     }
 
+
+    public synchronized void dropConfigForNode(NodeID remoteNode) {
+        if (nodeConfigs.containsKey(remoteNode)) {
+            nodeConfigs.remove(remoteNode);
+        }
+        return;
+    }
+
     /**
      * Blocks the current thread until the outgoing messages are all sent out. Useful for testing.
      */
