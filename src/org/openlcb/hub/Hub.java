@@ -29,14 +29,13 @@ import java.util.logging.Logger;
  * halt all flow, individual transmit queues and threads
  * may be needed.
  *
- * @author  Bob Jacobsen   Copyright 2012
- * @version $Revision: 17977 $
+ * @author  Bob Jacobsen   Copyright 2012, 2024
  */
 
 public class Hub {
     private final static Logger logger = Logger.getLogger(Hub.class.getName());
     public final static int DEFAULT_PORT = 12021;
-    final static int CAPACITY = 20;  // not too long, to reduce delay
+    final static int CAPACITY = 20;  // not too big, to reduce delay
     private final boolean sendLineEndings;
     private final boolean requireIncomingLineEndings;
     private boolean disposed = false;
@@ -80,18 +79,29 @@ public class Hub {
         Thread t = new Thread("openlcb-hub-output") {
             @Override
             public void run() {
-                while (!disposed) {
+                while (!disposed) { // loop until termination is requested
                     try {
                         // as items arrive in queue, forward to every available connection
                         Memo m = queue.take();
-                        for ( Forwarding e : threads) {
+                        
+                        ArrayList<Forwarding> threadList;
+                        synchronized (threads) {
+                            threadList = new ArrayList<>(threads); // avoid CME
+                        }
+                        
+                        for ( Forwarding e : threadList) {
                             e.forward(m);
                         }
                     } catch (InterruptedException e) {
-                        logger.severe("Hub: Interrupted in queue handling loop");
+                        logger.severe("Hub: Interrupted in queue handling loop - exiting");
                         logger.log(Level.SEVERE, "", e);
                         dispose();
                         return; // we have been asked to exit.
+                    } catch (Exception e) {
+                        // shouldn't happen, but if it does, suck it up and keep running
+                        logger.log(Level.SEVERE, 
+                                    "Hub: Continuing from unexpected Exception in openlcb-hub-output thread", 
+                                    e );
                     }
                 }
             }
@@ -101,7 +111,7 @@ public class Hub {
     }
 
     BlockingQueue<Memo> queue = new LinkedBlockingQueue<>();
-    ArrayList<Forwarding> threads = new ArrayList<>();
+    final List<Forwarding> threads = Collections.synchronizedList(new ArrayList<>());
     final int port;
 
     private ServerSocket service = null;
@@ -151,17 +161,16 @@ public class Hub {
         try {
             return  socket.getRemoteSocketAddress().toString();
         } catch (Throwable e) {
-        } finally {
-//            return "<unknown>";
+            // if anything goes wrong
+            return "<unknown>";
         }
-        return "<unknown>";
     }
 
     public void putLine(String line) {
         try {
             queue.put(new Memo(line, null));
         } catch (InterruptedException e) {
-            logger.log(Level.SEVERE, "", e);
+            logger.log(Level.SEVERE, "ERROR storing input", e);
         }
     }
 
@@ -219,8 +228,13 @@ public class Hub {
                 logger.log(Level.SEVERE, "Hub: Interrupted while handling input from {0}", getRemoteSocketAddress(clientSocket));
                 logger.log(Level.SEVERE, "", e);
             }
+            
+            // don't attempt to forward anything to here
+            output = null;
             threads.remove(this);
+            
             notifyOwner("Connection ended with "+getRemoteSocketAddress(clientSocket));
+            
             try {
                 clientSocket.close();
             } catch (IOException e) {
