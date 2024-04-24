@@ -111,7 +111,7 @@ public class Hub {
     }
 
     BlockingQueue<Memo> queue = new LinkedBlockingQueue<>();
-    List<Forwarding> threads = Collections.synchronizedList(new ArrayList<>());
+    final List<Forwarding> threads = Collections.synchronizedList(new ArrayList<>());
     final int port;
 
     private ServerSocket service = null;
@@ -228,8 +228,13 @@ public class Hub {
                 logger.log(Level.SEVERE, "Hub: Interrupted while handling input from {0}", getRemoteSocketAddress(clientSocket));
                 logger.log(Level.SEVERE, "", e);
             }
+            
+            // don't attempt to forward anything to here
+            output = null;
             threads.remove(this);
+            
             notifyOwner("Connection ended with "+getRemoteSocketAddress(clientSocket));
+            
             try {
                 clientSocket.close();
             } catch (IOException e) {
