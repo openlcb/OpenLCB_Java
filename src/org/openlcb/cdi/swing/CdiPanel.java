@@ -95,6 +95,7 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.PlainDocument;
 
 import util.CollapsiblePanel;
+import util.WrapLayout;
 
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
@@ -217,7 +218,7 @@ public class CdiPanel extends JPanel {
 
         bottomPanel = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        bottomPanel.setLayout(new FlowLayout());
+        bottomPanel.setLayout(new WrapLayout());
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
         bb.addActionListener(actionEvent -> reloadAll());
@@ -260,7 +261,12 @@ public class CdiPanel extends JPanel {
 
         createSensorCreateHelper();
 
-        bottomPanel.setMaximumSize(bottomPanel.getMinimumSize());
+        
+        //bottomPanel.setMaximumSize(bottomPanel.getPreferredSize());
+        Dimension size = bottomPanel.getMaximumSize();
+        size.height = bottomPanel.getPreferredSize().height;
+        bottomPanel.setMaximumSize(size);
+        
         add(bottomPanel);
 
         _changeMade = false;
