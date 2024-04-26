@@ -12,9 +12,11 @@ public interface OpenLcb {
      */
      
     static final int MTI_INITIALIZATION_COMPLETE     = (int)MessageTypeIdentifier.InitializationComplete.mti();
+    static final int MTI_INITIALIZATION_COMPLETE_SIMPLE = (int)MessageTypeIdentifier.InitializationCompleteSimple.mti();
     
     static final int MTI_VERIFY_NID                  = 0x10A4;
     static final int MTI_VERIFIED_NID                = 0x10B0;
+    static final int MTI_VERIFIED_NID_SIMPLE         = 0x10B1;
 
     static final int MTI_OPT_INT_REJECTED            = 0x30C0;
     

@@ -239,6 +239,11 @@ public class MessageBuilder implements AliasMap.Watcher {
             case InitializationComplete:
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
+
+            case InitializationCompleteSimple:
+                retlist.add(new InitializationCompleteSimpleMessage(source));
+                return retlist;
+
             case VerifyNodeIdAddressed:
                 // check for content
                 if (data.length >= 6) {
@@ -261,6 +266,10 @@ public class MessageBuilder implements AliasMap.Watcher {
                             
             case VerifiedNodeId:
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
+                return retlist;
+
+            case VerifiedNodeIdSimple:
+                retlist.add(new VerifiedNodeIDNumberSimpleMessage(source));
                 return retlist;
 
             case OptionalInteractionRejected: {
