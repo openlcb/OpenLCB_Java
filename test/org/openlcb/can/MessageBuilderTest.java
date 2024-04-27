@@ -83,6 +83,23 @@ public class MessageBuilderTest  {
     }
 
     @Test
+    public void testInitializationCompleteSimpleMessage() {
+        Message m = new InitializationCompleteMessage(source, true);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19101123] 01 02 03 04 05 06
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19101123), toHexString(f0.getHeader()));
+        compareContent(source.getContents(), f0);
+
+        testDecoding(m, list);
+    }
+
+    @Test
     public void testVerifyNodeIDNumberMessageEmpty() {
         Message m = new VerifyNodeIDNumberGlobalMessage(source);
         MessageBuilder b = new MessageBuilder(map);
@@ -184,6 +201,23 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 1, list.size());
         CanFrame f0 = list.get(0);
         Assert.assertEquals("header", toHexString(0x19170123), toHexString(f0.getHeader()));
+        compareContent(source.getContents(), f0);
+
+        testDecoding(m, list);
+    }
+
+    @Test
+    public void testVerifiedNodeIDNumberSimpleMessage() {
+        Message m = new VerifiedNodeIDNumberMessage(source, true);
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<OpenLcbCanFrame> list = b.processMessage(m);
+
+        // looking for [19171123] 01 02 03 04 05 06
+
+        Assert.assertEquals("count", 1, list.size());
+        CanFrame f0 = list.get(0);
+        Assert.assertEquals("header", toHexString(0x19171123), toHexString(f0.getHeader()));
         compareContent(source.getContents(), f0);
 
         testDecoding(m, list);
@@ -483,7 +517,7 @@ public class MessageBuilderTest  {
 
         // Now the verify node id comes back.
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x555);
-        frame.setInitializationComplete(0x575, unknownDst);
+        frame.setInitializationComplete(0x575, unknownDst, false);
 
         b.processFrame(frame);
         map.processFrame(frame);
@@ -523,6 +557,23 @@ public class MessageBuilderTest  {
         Message msg = list.get(0);
 
         Assert.assertTrue(msg instanceof InitializationCompleteMessage);
+        Assert.assertTrue(!((InitializationCompleteMessage)msg).hasSimpleProtocol() );
+    }
+
+    @Test
+    public void testInitializationCompleteSimpleFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19101123);
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof InitializationCompleteMessage);
+        Assert.assertTrue(((InitializationCompleteMessage)msg).hasSimpleProtocol() );
     }
 
     @Test
@@ -571,6 +622,38 @@ public class MessageBuilderTest  {
 
         Assert.assertTrue(msg instanceof VerifyNodeIDNumberGlobalMessage);
         Assert.assertEquals(new VerifyNodeIDNumberGlobalMessage(source, source), msg);
+    }
+
+    @Test
+    public void testVerifiedNodeFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19170123);
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof VerifiedNodeIDNumberMessage);
+        Assert.assertTrue(!((VerifiedNodeIDNumberMessage)msg).hasSimpleProtocol() );
+    }
+
+    @Test
+    public void testVerifiedNodeSimpleFrame() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19171123);
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof VerifiedNodeIDNumberMessage);
+        Assert.assertTrue(((VerifiedNodeIDNumberMessage)msg).hasSimpleProtocol() );
     }
 
     @Test

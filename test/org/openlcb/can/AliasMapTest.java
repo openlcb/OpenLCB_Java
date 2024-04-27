@@ -22,7 +22,7 @@ public class AliasMapTest  {
         AliasMap map = new AliasMap();
         
         OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
-        f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}), false);
         map.processFrame(f);
         Assert.assertEquals("check NodeID", new NodeID(new byte[]{0,1,2,3,4,5}), map.getNodeID(0x123));
         Assert.assertEquals("check alias", 0x123, map.getAlias(new NodeID(new byte[]{0,1,2,3,4,5})));
@@ -75,7 +75,7 @@ public class AliasMapTest  {
         found[0] = false;
 
         OpenLcbCanFrame f = new OpenLcbCanFrame(a);
-        f.setInitializationComplete(a, nid);
+        f.setInitializationComplete(a, nid, false);
         map.processFrame(f);
 
         Assert.assertTrue(found[0]);
