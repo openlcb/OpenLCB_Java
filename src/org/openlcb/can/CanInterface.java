@@ -111,10 +111,14 @@ public class CanInterface {
             // if the thread was interrupted, we are trying to terminate.
             return;
         }
-        // Acquires everybody else's alias.
-        OpenLcbCanFrame ameFrame = new OpenLcbCanFrame(0);
-        ameFrame.setAME(aliasWatcher.getNIDa(), null);
-        frameOutput.send(ameFrame);
+        // Acquires everybody else's ID.
+        
+        // no longer send a global AME
+        // OpenLcbCanFrame ameFrame = new OpenLcbCanFrame(0);
+        // ameFrame.setAME(aliasWatcher.getNIDa(), null);
+        // frameOutput.send(ameFrame);
+        
+        // send a global Verify Node ID to get all the reachable nodes
         OpenLcbCanFrame gReqFrame = new OpenLcbCanFrame(aliasWatcher.getNIDa());
         gReqFrame.setVerifyNID(null);
         frameOutput.send(gReqFrame);
@@ -126,6 +130,7 @@ public class CanInterface {
         }
         // Stores local node alias.
         aliasMap.insert(aliasWatcher.getNIDa(), nodeId);
+        aliasMap.insertLocalAlias(aliasWatcher.getNIDa(), nodeId);
         /// TODO(balazs.racz): If the alias changes, we need to update the local alias map.
 
         // Notify all listeners waiting for init. Call them outside of the lock.
