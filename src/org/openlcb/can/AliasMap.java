@@ -10,15 +10,20 @@ import java.util.logging.Logger;
  *<p>
  * Input is CAN frames, looking for VerifyNodeID frames.
  * 
- * @author  Bob Jacobsen   Copyright 2010
- * @version $Revision$
+ * @author  Bob Jacobsen   Copyright 2010, 2024
  */
 public class AliasMap {
 
     public AliasMap() {
     }
+    // general NodeID to alias map
     java.util.HashMap<NodeID, Integer> iMap = new java.util.HashMap<NodeID, Integer>();
+    // general alias to NodeID map
     java.util.HashMap<Integer, NodeID> nMap = new java.util.HashMap<Integer, NodeID>();
+    
+    // map of local aliases that should not be cleared on AME global
+    java.util.HashMap<Integer, NodeID> localAliases = new java.util.HashMap<Integer, NodeID>();
+
     java.util.List<Watcher> watchers = new ArrayList<>();
     private final static Logger logger = Logger.getLogger(AliasMap.class.getName());
     
@@ -44,7 +49,25 @@ public class AliasMap {
         } else if (f.isAliasMapReset()) {
             Integer alias = Integer.valueOf(f.getSourceAlias());
             remove(alias);
+        } else if (f.isAliasMapEnquiry() && f.length == 0) {
+            // global AME clears caches
+            iMap = new java.util.HashMap<NodeID, Integer>();
+            nMap = new java.util.HashMap<Integer, NodeID>();
+            // but keeps local aliases
+            for (int alias : localAliases.keySet()) {
+                NodeID nid = localAliases.get(alias);
+                nMap.put(alias, nid);
+                iMap.put(nid, alias);
+            }
         }
+    }
+    
+    /**
+     * Store a local alias which should be kept when 
+     * the caches are cleared by an AME global
+     */
+    public void insertLocalAlias(int alias, NodeID nid) {
+        localAliases.put(alias, nid);
     }
     
     public void insert(int alias, NodeID nid) {
