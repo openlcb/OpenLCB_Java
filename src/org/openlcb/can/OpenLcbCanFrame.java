@@ -295,10 +295,14 @@ public class OpenLcbCanFrame implements CanFrame {
       return isOpenLcbMTI(MessageTypeIdentifier.LearnEvent.mti());
   }
 
-  void setInitializationComplete(int alias, NodeID nid) {
+  void setInitializationComplete(int alias, NodeID nid, boolean simple) {
     nodeAlias = alias;
     init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.InitializationComplete.mti());
+    if (simple) {
+        setOpenLcbMTI(MessageTypeIdentifier.InitializationCompleteSimple.mti());
+    } else {
+        setOpenLcbMTI(MessageTypeIdentifier.InitializationComplete.mti());
+    }
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];
@@ -335,9 +339,13 @@ public class OpenLcbCanFrame implements CanFrame {
       return isOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeId.mti());
   }
 
-  void setVerifiedNID(NodeID nid) {
+  void setVerifiedNID(NodeID nid, boolean simple) {
     init(nodeAlias);
-    setOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeId.mti());
+    if (simple) {
+        setOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeIdSimple.mti());
+    } else {
+        setOpenLcbMTI(MessageTypeIdentifier.VerifiedNodeId.mti());
+    }
     length=6;
     byte[] val = nid.getContents();
     data[0] = val[0];

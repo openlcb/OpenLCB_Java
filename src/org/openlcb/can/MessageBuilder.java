@@ -239,6 +239,11 @@ public class MessageBuilder implements AliasMap.Watcher {
             case InitializationComplete:
                 retlist.add(new InitializationCompleteMessage(source));
                 return retlist;
+
+            case InitializationCompleteSimple:
+                retlist.add(new InitializationCompleteMessage(source, true));
+                return retlist;
+
             case VerifyNodeIdAddressed:
                 // check for content
                 if (data.length >= 6) {
@@ -261,6 +266,10 @@ public class MessageBuilder implements AliasMap.Watcher {
                             
             case VerifiedNodeId:
                 retlist.add(new VerifiedNodeIDNumberMessage(source));
+                return retlist;
+
+            case VerifiedNodeIdSimple:
+                retlist.add(new VerifiedNodeIDNumberMessage(source, true));
                 return retlist;
 
             case OptionalInteractionRejected: {
@@ -709,7 +718,9 @@ public class MessageBuilder implements AliasMap.Watcher {
         @Override
         public void handleInitializationComplete(InitializationCompleteMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setInitializationComplete(map.getAlias(msg.getSourceNodeID()), msg.getSourceNodeID());
+            f.setInitializationComplete(map.getAlias(msg.getSourceNodeID()), 
+                                        msg.getSourceNodeID(),
+                                        msg.hasSimpleProtocol());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }
@@ -718,7 +729,7 @@ public class MessageBuilder implements AliasMap.Watcher {
          */
         public void handleVerifiedNodeIDNumber(VerifiedNodeIDNumberMessage msg, Connection sender){
             OpenLcbCanFrame f = new OpenLcbCanFrame(0x00);
-            f.setVerifiedNID(msg.getSourceNodeID());
+            f.setVerifiedNID(msg.getSourceNodeID(), msg.hasSimpleProtocol());
             f.setSourceAlias(map.getAlias(msg.getSourceNodeID()));
             retlist.add(f);
         }

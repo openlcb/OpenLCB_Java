@@ -68,7 +68,7 @@ public class OpenLcbCanFrameTest  {
     @Test
     public void testInitializationComplete(){
         OpenLcbCanFrame f = new OpenLcbCanFrame(0x123);
-        f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}));
+        f.setInitializationComplete(0x123, new NodeID(new byte[]{0,1,2,3,4,5}), false);
         Assert.assertTrue("isIC", f.isInitializationComplete());         
     }
 

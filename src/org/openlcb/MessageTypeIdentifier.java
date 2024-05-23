@@ -31,9 +31,12 @@ public enum MessageTypeIdentifier {
         //                            addr,  event, simpl, S, P, Ty, M, Name
         
         InitializationComplete      ( false, false, false, 0, 0,  8, 0, "InitializationComplete"), 
+        InitializationCompleteSimple( false, false, false, 0, 0,  8, 1, "InitializationCompleteSimple"), 
+
         VerifyNodeIdAddressed       ( true,  false, false, 0, 1,  4, 0, "VerifyNodeIdAddressed"),
         VerifyNodeIdGlobal          ( false, false, true,  0, 1,  4, 0, "VerifyNodeIdGlobal"),
         VerifiedNodeId              ( false, false, true,  0, 0, 11, 0, "VerifiedNodeId"),
+        VerifiedNodeIdSimple        ( false, false, true,  0, 0, 11, 1, "VerifiedNodeIdSimple"),
         OptionalInteractionRejected ( true,  false, false, 0, 0,  3, 0, "OptionalInteractionRejected"),
         TerminateDueToError         ( true,  false, false, 0, 0,  5, 0, "TerminateDueToError"),
 
