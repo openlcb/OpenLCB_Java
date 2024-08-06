@@ -846,7 +846,8 @@ public class CdiPanel extends JPanel {
     private void setSaveInvalid() {
         SwingUtilities.invokeLater(() -> {
             _saveButton.setBackground(COLOR_INVALID);
-            _saveButton.setEnabled(false);
+            // Uncomment the following line to have "Save" button disabled when blue
+            //_saveButton.setEnabled(false);
         });
     }
 
