@@ -219,6 +219,7 @@ public class CdiPanel extends JPanel {
         bottomPanel = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         bottomPanel.setLayout(new WrapLayout());
+        
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
         bb.addActionListener(actionEvent -> reloadAll());
@@ -1388,6 +1389,12 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
+        public void visitActionButton(ConfigRepresentation.ActionButtonEntry e) {
+            currentLeaf = new ActionButtonPane(e);
+            super.visitActionButton(e);
+        }
+
+        @Override
         public void visitLeaf(ConfigRepresentation.CdiEntry e) {
             allEntries.add(currentLeaf);
             entriesByKey.put(currentLeaf.entry.key, currentLeaf);
@@ -1852,7 +1859,7 @@ public class CdiPanel extends JPanel {
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? item.getName() : defaultName);
             setBorder(BorderFactory.createTitledBorder(name));
-
+            
             createDescriptionPane(this, item.getDescription());
 
             p3 = new JPanel();
@@ -1982,25 +1989,27 @@ public class CdiPanel extends JPanel {
             });
             entry.fireUpdate();
 
-            JButton b;
-            b = factory.handleReadButton(new JButton("Refresh")); // was: read
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    entry.reload();
-                }
-            });
-            p3.add(b);
+            if (! (textComponent instanceof JButton )) { // Buttons write themselves
+                JButton b;
+                b = factory.handleReadButton(new JButton("Refresh")); // was: read
+                b.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                        entry.reload();
+                    }
+                });
+                p3.add(b);
 
-            writeButton = factory.handleWriteButton(new JButton("Write"));
-            writeButton.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    writeDisplayTextToNode();
-                }
-            });
-            p3.add(writeButton);
-
+                writeButton = factory.handleWriteButton(new JButton("Write"));
+                writeButton.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                        writeDisplayTextToNode();
+                    }
+                });
+                p3.add(writeButton);
+            }
+            
             additionalButtons();
 
             p3.add(Box.createHorizontalGlue());
@@ -2519,6 +2528,58 @@ public class CdiPanel extends JPanel {
         protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
+        }
+    }
+
+    private class ActionButtonPane extends EntryPane {
+        JButton actionButton;
+        private final ConfigRepresentation.ActionButtonEntry entry;
+
+        ActionButtonPane(ConfigRepresentation.ActionButtonEntry e) {
+            super(e, "Action");
+            this.entry = e;
+
+            actionButton = new JButton(e.rep.getButtonText());
+            textComponent = actionButton;
+            textComponent.setToolTipText("Writes to node when pressed.");
+            actionButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    writeDisplayTextToNode();
+                }
+            });
+
+            init();
+        }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+            if (entry.rep.getDialogText() == null || entry.rep.getDialogText().isEmpty()) {
+                entry.setValue(""+entry.rep.getValue());
+                _changeMade = true;
+                notifyTabColorRefresh();
+            } else {
+                // first, show a dialog box
+                int result = javax.swing.JOptionPane.showConfirmDialog(null, 
+                    entry.rep.getDialogText(),"",javax.swing.JOptionPane.OK_CANCEL_OPTION);
+                // if not OK, silently skip; if OK, act
+                if (result == 0) {
+                    entry.setValue(""+entry.rep.getValue());
+                    _changeMade = true;
+                    notifyTabColorRefresh();
+                }
+            }
+        }
+
+        @Override
+        protected void updateDisplayText(@NonNull String value) {
+            // does nothing
+        }
+
+        @NonNull
+        @Override
+        protected String getDisplayText() {
+            return entry.rep.getButtonText();
         }
     }
 

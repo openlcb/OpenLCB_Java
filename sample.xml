@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="XSLT/decoder.xsl"?>
-<cdi>
+<cdi xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 	
+    xsi:noNamespaceSchemaLocation="http://openlcb.org/schema/cdi/1/4/cdi.xsd">
 
 <identification>
     <manufacturer>Spacely Sprockets</manufacturer>
@@ -25,10 +26,6 @@
         <eventid/>
         <eventid/>
     </group>
-    <bit>
-        <name>Sample bit variable</name>
-        <description>Doesn't do anything</description>
-    </bit>
     <int size="2">
         <name>Sample integer variable</name>
         <description>Doesn't do anything</description>
@@ -41,12 +38,33 @@
 <segment origin="128" space="1">
     <int size="1">
         <name>Reset</name>
-        <description>Controls reloading and clearing node memory. Board must be restarted for this to take effect.</description>
+        <description>
+            Controls reloading and clearing node memory. 
+            Board must be restarted for this to take effect.
+        </description>
         <map>
             <relation><property>85</property><value>(No reset)</value></relation>
             <relation><property>0</property><value>Reset all to defaults</value></relation>
             <relation><property>170</property><value>Reset just EventIDs to defaults</value></relation>
         </map>
+    </int>
+    <action size="2">
+        <name>Factory Reset</name>
+        <buttonText>Perform Reset</buttonText>
+        <dialogText>Do a factory reset?</dialogText>
+        <value>2</value>
+    </action>
+    <action size="2" offset="-2">
+        <name>Reboot</name>
+        <buttonText>Perform Reboot</buttonText>
+        <dialogText></dialogText> <!-- no dialog -->
+        <value>9</value>
+    </action>
+    <blob size="10" mode="readwrite">
+    </blob>
+    <int size="1">
+        <name>Yet Another Reset</name>
+        <description>This should be stored at address 141.</description>
     </int>
 </segment>
 

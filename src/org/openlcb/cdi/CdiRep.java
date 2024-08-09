@@ -83,6 +83,7 @@ public interface CdiRep {
 
     public static interface EventID extends Item {
     }
+
     public static interface IntegerRep extends Item {
         public int getDefault();
         public long getMin();
@@ -90,12 +91,23 @@ public interface CdiRep {
 
         public int getSize();
     }
+
     public static interface BitRep extends Item {
         public boolean getDefault();
 
         public int getSize();
     }
+
     public static interface StringRep extends Item {  // "String" causes too many name conflicts
+
+        public int getSize();
+    }
+
+    public static interface ActionButtonRep extends Item {
+    
+        public int getValue();
+        public String getButtonText();
+        public String getDialogText();
 
         public int getSize();
     }

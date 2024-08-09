@@ -107,6 +107,7 @@ public class JdomCdiRep implements CdiRep {
                 else if ("int".equals(element.getName())) list.add(new IntRep(element));
                 else if ("eventid".equals(element.getName())) list.add(new EventID(element));
                 else if ("string".equals(element.getName())) list.add(new StringRep(element));
+                else if ("action".equals(element.getName())) list.add(new ActionButtonRep(element));
             }
             return list;
         }
@@ -430,6 +431,57 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
+    }
+
+    public static class ActionButtonRep extends Item implements CdiRep.ActionButtonRep {
+
+        ActionButtonRep(Element e) { super(e); }
+        
+        @Override
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
+
+        @Override
+        public int getValue() {
+            Element target = e.getChild("value");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for value element: "+text);
+                    // and return the default value from length
+                }
+            }
+            // otherwise, return default value of 0
+            return 0;
+        }
+
+        @Override
+        public String getButtonText() {
+            Element target = e.getChild("buttonText");
+            if (target != null) {
+                return target.getTextNormalize();
+            }
+            // otherwise, return empty value
+            return "";
+        }
+
+        @Override
+        public String getDialogText() {
+            Element target = e.getChild("dialogText");
+            if (target != null) {
+                return target.getTextNormalize();
+            }
+            // otherwise, return empty value
+            return "";
+        }
+
     }
 
     Element root;
