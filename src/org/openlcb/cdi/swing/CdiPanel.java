@@ -2555,7 +2555,8 @@ public class CdiPanel extends JPanel {
         @Override
         protected void writeDisplayTextToNode() {
             if (entry.rep.getDialogText() == null || entry.rep.getDialogText().isEmpty()) {
-                entry.setValue(""+entry.rep.getValue());
+                entry.setValue((long)(entry.rep.getValue()));
+                System.out.println(entry.rep.getValue());
                 _changeMade = true;
                 notifyTabColorRefresh();
             } else {
@@ -2564,7 +2565,8 @@ public class CdiPanel extends JPanel {
                     entry.rep.getDialogText(),"",javax.swing.JOptionPane.OK_CANCEL_OPTION);
                 // if not OK, silently skip; if OK, act
                 if (result == 0) {
-                    entry.setValue(""+entry.rep.getValue());
+                    entry.setValue((long)(entry.rep.getValue()));
+                    System.out.println(entry.rep.getValue());
                     _changeMade = true;
                     notifyTabColorRefresh();
                 }

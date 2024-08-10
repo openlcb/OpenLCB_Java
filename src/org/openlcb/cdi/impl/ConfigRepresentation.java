@@ -729,29 +729,23 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         @Override
         protected void updateVisibleValue() {
-            lastVisibleValue = getValue();
+            // does nothing in this class
         }
 
-        public String getValue() {
-            MemorySpaceCache cache = getCacheForSpace(space);
-            byte[] b = cache.read(origin, size);
-            if (b == null) return null;
-            // We search for a terminating null byte and clip the string there.
-            int len = 0;
-            while (len < b.length && b[len] != 0) ++len;
-            byte[] rep = new byte[len];
-            System.arraycopy(b, 0, rep, 0, len);
-            String ret = new String(rep, UTF8);
-            return ret;
+        public long getValue() {
+            // should not be called
+            logger.log(Level.SEVERE, "ActionButtonEntry.getValue should not be called");
+            return -1;
         }
 
-        public void setValue(String value) {
+        public void setValue(long value) {
             MemorySpaceCache cache = getCacheForSpace(space);
-            byte[] f;
-            f = value.getBytes(UTF8);
-            byte[] b = new byte[Math.min(size, f.length + 1)];
-            System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
-            cache.write(this.origin, b, this);
+            byte[] b = new byte[size];
+            for (int i = size - 1; i >= 0; --i) {
+                b[i] = (byte)(value & 0xff);
+                value >>= 8;
+            }
+            cache.write(origin, b, this);
         }
     }
 
