@@ -447,7 +447,7 @@ public class JdomCdiRep implements CdiRep {
         }
 
         @Override
-        public int getValue() {
+        public long getValue() {
             Element target = e.getChild("value");
             if (target != null) {
                 String text = target.getTextNormalize();

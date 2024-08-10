@@ -105,7 +105,7 @@ public interface CdiRep {
 
     public static interface ActionButtonRep extends Item {
     
-        public int getValue();
+        public long getValue();
         public String getButtonText();
         public String getDialogText();
 
