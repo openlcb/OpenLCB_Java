@@ -401,6 +401,29 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
+
+        @Override
+        public boolean isSliderHint() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return false;
+            return true;
+        }
+
+        @Override
+        public int getSliderDivisions() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return 1;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return 1;
+            Attribute divisions = slider.getAttribute("divisions");
+            if (divisions == null) return 1;
+            try { 
+                return divisions.getIntValue();
+            } catch (org.jdom2.DataConversionException e) { return 1; }
+        }
+
     }
     
     public static class BitRep extends Item implements CdiRep.BitRep {

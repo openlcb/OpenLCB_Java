@@ -90,6 +90,9 @@ public interface CdiRep {
         public long getMax();
 
         public int getSize();
+        
+        public boolean isSliderHint();
+        public int getSliderDivisions();
     }
 
     public static interface BitRep extends Item {

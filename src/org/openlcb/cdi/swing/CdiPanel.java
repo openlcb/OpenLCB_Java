@@ -78,6 +78,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -2344,6 +2345,7 @@ public class CdiPanel extends JPanel {
     private class IntPane extends EntryPane {
         JTextField textField = null;
         JComboBox box = null;
+        JSlider slider = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
 
@@ -2364,16 +2366,45 @@ public class CdiPanel extends JPanel {
                 };
                 textComponent = box;
             } else {
-                // map not present, just an entry box
-                textField = new JTextField(24) {
-                    public java.awt.Dimension getMaximumSize() {
-                        return getPreferredSize();
+                // map not present - is it a slider?
+                if (entry.rep.isSliderHint()) {
+                    // display a slider
+                    slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
+                    int divisionSpacing = 
+                        ((int)entry.rep.getMax()-(int)entry.rep.getMin())/entry.rep.getSliderDivisions();
+                    slider.setMajorTickSpacing(divisionSpacing);
+                    slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
+                    slider.setPaintTicks(true);
+                    slider.setPaintLabels(true);
+                    textComponent = slider;
+                    if (entry.rep.getMin() < 0) {
+                        slider.setToolTipText("Signed integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    } else {
+                        slider.setToolTipText("Unsigned integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
                     }
-                };
-                textComponent = textField;
-                textField.setToolTipText("Signed integer from "
-                        +entry.rep.getMin()+" to "+entry.rep.getMax()
-                        +" ("+entry.size+" bytes)");
+                    
+                } else {
+                    // display an entry box
+                    textField = new JTextField(24) {
+                        public java.awt.Dimension getMaximumSize() {
+                            return getPreferredSize();
+                        }
+                    };
+                    textComponent = textField;
+                    if (entry.rep.getMin() < 0) {
+                        textField.setToolTipText("Signed integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    } else {
+                        textField.setToolTipText("Unsigned integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    }
+                }
             }
 
             init();
@@ -2384,8 +2415,11 @@ public class CdiPanel extends JPanel {
             long value;
             if (textField != null) {
                 value = Long.parseLong(textField.getText());
+            } else if (slider != null) {
+                // get value from current slider position
+                value = slider.getValue();
             } else {
-                // have to get key from stored value
+                // have to get key from stored map value
                 String entry = (String) box.getSelectedItem();
                 String key = map.getKey(entry);
                 value = Long.parseLong(key);
@@ -2398,12 +2432,14 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
+            if (slider != null) slider.setValue(Integer.parseInt(value));
             if (box != null) box.setSelectedItem(value);
         }
 
         @NonNull
         @Override
         protected String getDisplayText() {
+            if (slider != null) return ""+slider.getValue();
             String s = (box == null) ? (String) textField.getText()
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
@@ -2418,6 +2454,8 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
+            if (slider != null) return ""+slider.getValue();
+            
             String s;
             if (box==null) {
                 s = (String) textField.getText();
@@ -2427,7 +2465,6 @@ public class CdiPanel extends JPanel {
             }
             return s == null ? "" : s;
         }
-        
 
         boolean isDataInvalid() {
             try {
@@ -2457,9 +2494,9 @@ public class CdiPanel extends JPanel {
             writeButton.setEnabled( ! isDataInvalid());
  
         }
-
     }
 
+    // Define font to be used in certain types of StringPanes
     Font textAreaFont;
     {
         Font existingFont = UIManager.getFont("TextArea.font");
