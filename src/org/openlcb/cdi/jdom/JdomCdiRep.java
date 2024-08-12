@@ -102,12 +102,32 @@ public class JdomCdiRep implements CdiRep {
             for (int i = 0; i<elements.size(); i++) {
                 // some elements aren't contained items
                 Element element = (Element)elements.get(i);
-                if ("group".equals(element.getName())) list.add(new Group(element));
-                else if ("bit".equals(element.getName())) list.add(new BitRep(element));
-                else if ("int".equals(element.getName())) list.add(new IntRep(element));
-                else if ("eventid".equals(element.getName())) list.add(new EventID(element));
-                else if ("string".equals(element.getName())) list.add(new StringRep(element));
-                else if ("action".equals(element.getName())) list.add(new ActionButtonRep(element));
+                switch (element.getName()) {
+                    case "group":
+                        list.add(new Group(element));
+                        break;
+                    case "bit":
+                        list.add(new BitRep(element));
+                        break;
+                    case "int":
+                        list.add(new IntRep(element));
+                        break;
+                    case "eventid":
+                        list.add(new EventID(element));
+                        break;
+                    case "string":
+                        list.add(new StringRep(element));
+                        break;
+                    case "action":
+                        list.add(new ActionButtonRep(element));
+                        break;
+                    case "name":
+                    case "description":
+                        break;
+                    default:
+                        list.add(new UnknownRep(element));
+                        break;
+                }
             }
             return list;
         }
@@ -230,7 +250,6 @@ public class JdomCdiRep implements CdiRep {
         public int getIndexInParent() {
             return e.getParent().indexOf(e);
         }
-
     }
 
     public static class Group extends Nested implements CdiRep.Group {
@@ -424,6 +443,22 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom2.DataConversionException e) { return 1; }
         }
 
+    }
+
+    public static class UnknownRep extends Item implements CdiRep.UnknownRep {
+        UnknownRep(Element e) { super(e); }
+        
+        @Override
+        public boolean getDefault() { return false; }
+
+        @Override
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
     }
     
     public static class BitRep extends Item implements CdiRep.BitRep {

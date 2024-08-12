@@ -255,6 +255,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 entry = new StringEntry(name, (CdiRep.StringRep) it, segment, origin);
             } else if (it instanceof CdiRep.ActionButtonRep) {
                 entry = new ActionButtonEntry(name, (CdiRep.ActionButtonRep) it, segment, origin);
+            } else if (it instanceof CdiRep.UnknownRep) {
+                entry = new UnknownEntry(name, (CdiRep.UnknownRep) it, segment, origin);
             } else {
                 logger.log(Level.SEVERE, "could not process CDI entry type of {0}", it);
             }
@@ -313,6 +315,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 visitGroup((GroupEntry) e);
             } else if (e instanceof SegmentEntry) {
                 visitSegment((SegmentEntry) e);
+            } else if (e instanceof UnknownEntry) {
+                visitUnknown((UnknownEntry) e);
             } else if (e instanceof CdiContainer) {
                 visitContainer((CdiContainer) e);
             } else {
@@ -349,6 +353,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         public void visitSegment(SegmentEntry e) {
             visitContainer(e);
+        }
+
+        public void visitUnknown(UnknownEntry e) {
+            visitLeaf(e);
         }
 
         public void visitContainer(CdiContainer c) {
@@ -663,6 +671,58 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         public CdiRep.StringRep rep;
 
         StringEntry(String name, CdiRep.StringRep rep, int segment, long origin) {
+            this.key = name;
+            this.space = segment;
+            this.origin = origin;
+            this.rep = rep;
+            this.size = rep.getSize();
+        }
+
+        @Override
+        public CdiRep.Item getCdiItem() {
+            return rep;
+        }
+
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = getValue();
+        }
+
+        @Override
+        public boolean isNullTerminated() {
+            return size > 64;
+        }
+
+        public String getValue() {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] b = cache.read(origin, size);
+            if (b == null) return null;
+            // We search for a terminating null byte and clip the string there.
+            int len = 0;
+            while (len < b.length && b[len] != 0) ++len;
+            byte[] rep = new byte[len];
+            System.arraycopy(b, 0, rep, 0, len);
+            String ret = new String(rep, UTF8);
+            return ret;
+        }
+
+        public void setValue(String value) {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] f;
+            f = value.getBytes(UTF8);
+            byte[] b = new byte[Math.min(size, f.length + 1)];
+            System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
+            cache.write(this.origin, b, this);
+        }
+    }
+
+    /**
+     * Represents an unknown variable, perhaps due to a more-recent schema
+     */
+    public class UnknownEntry extends CdiEntry {
+        public CdiRep.UnknownRep rep;
+
+        UnknownEntry(String name, CdiRep.UnknownRep rep, int segment, long origin) {
             this.key = name;
             this.space = segment;
             this.origin = origin;

@@ -25,6 +25,9 @@
         <description>The EventIDs for the consumers</description>
         <eventid/>
         <eventid/>
+        <blob size="10" mode="readwrite">
+            <name>Blob to see if works in group element</name>
+        </blob>
     </group>
     <int size="2">
         <name>Sample integer variable</name>
@@ -65,17 +68,17 @@
         <value>2</value>
     </action>
     <action size="2" offset="-2">
-        <name>Reboot via address 131</name>
+        <name>Reboot via address 129</name>
         <buttonText>Perform Reboot</buttonText>
         <dialogText></dialogText> <!-- no dialog -->
         <value>9</value>
     </action>
     <blob size="10" mode="readwrite">
-        <name>Blob defined at address 133</name>
+        <name>Blob defined at address 131</name>
     </blob>
     <int size="1">
         <name>Yet Another Reset</name>
-        <description>This should be stored at address 143.</description>
+        <description>This should be stored at address 141.</description>
     </int>
 </segment>
 

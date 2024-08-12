@@ -101,6 +101,12 @@ public interface CdiRep {
         public int getSize();
     }
 
+    public static interface UnknownRep extends Item {
+        public boolean getDefault();
+
+        public int getSize();
+    }
+
     public static interface StringRep extends Item {  // "String" causes too many name conflicts
 
         public int getSize();

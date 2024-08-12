@@ -1378,6 +1378,12 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
+        public void visitUnknown(ConfigRepresentation.UnknownEntry e) {
+            currentLeaf = new UnknownPane(e);
+            super.visitUnknown(e);
+        }
+
+        @Override
         public void visitInt(ConfigRepresentation.IntegerEntry e) {
             currentLeaf = new IntPane(e);
             super.visitInt(e);
@@ -1990,7 +1996,8 @@ public class CdiPanel extends JPanel {
             });
             entry.fireUpdate();
 
-            if (! (textComponent instanceof JButton )) { // Buttons write themselves
+            if (! (textComponent instanceof JButton ) // Buttons write themselves
+                 && ! (textComponent instanceof JLabel ) ) { // labels don't need to write
                 JButton b;
                 b = factory.handleReadButton(new JButton("Refresh")); // was: read
                 b.addActionListener(new java.awt.event.ActionListener() {
@@ -2571,6 +2578,33 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    private class UnknownPane extends EntryPane {
+        private final ConfigRepresentation.UnknownEntry entry;
+
+        UnknownPane(ConfigRepresentation.UnknownEntry e) {
+            super(e, "Unknown");
+            this.entry = e;
+
+            textComponent = new JLabel("Unknown Entry in the CDI Information");
+            textComponent.setToolTipText("Unknown element, perhaps from a later version of the CDI format?");
+            init();
+        }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+        }
+
+        @Override
+        protected void updateDisplayText(@NonNull String value) {
+        }
+
+        @NonNull
+        @Override
+        protected String getDisplayText() {
+            return "Unknown Element";
+        }
+    }
+
     private class ActionButtonPane extends EntryPane {
         JButton actionButton;
         private final ConfigRepresentation.ActionButtonEntry entry;
@@ -2596,7 +2630,6 @@ public class CdiPanel extends JPanel {
         protected void writeDisplayTextToNode() {
             if (entry.rep.getDialogText() == null || entry.rep.getDialogText().isEmpty()) {
                 entry.setValue((long)(entry.rep.getValue()));
-                System.out.println(entry.rep.getValue());
                 _changeMade = true;
                 notifyTabColorRefresh();
             } else {
