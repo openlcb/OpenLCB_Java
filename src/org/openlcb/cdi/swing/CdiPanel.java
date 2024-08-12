@@ -2370,12 +2370,15 @@ public class CdiPanel extends JPanel {
                 if (entry.rep.isSliderHint()) {
                     // display a slider
                     slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
-                    int divisionSpacing = 
-                        ((int)entry.rep.getMax()-(int)entry.rep.getMin())/entry.rep.getSliderDivisions();
-                    slider.setMajorTickSpacing(divisionSpacing);
-                    slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
-                    slider.setPaintTicks(true);
-                    slider.setPaintLabels(true);
+                    if (entry.rep.getSliderDivisions() > 1) {
+                        // display divisions on the slider
+                        int divisionSpacing = 
+                            ((int)(entry.rep.getMax()-entry.rep.getMin()))/entry.rep.getSliderDivisions();
+                        slider.setMajorTickSpacing(divisionSpacing);
+                        slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
+                        slider.setPaintTicks(true);
+                        slider.setPaintLabels(true);
+                    }
                     textComponent = slider;
                     if (entry.rep.getMin() < 0) {
                         slider.setToolTipText("Signed integer from "

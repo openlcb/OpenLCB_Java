@@ -59,22 +59,23 @@
         </map>
     </int>
     <action size="2">
-        <name>Factory Reset</name>
+        <name>Factory Reset via address 129</name>
         <buttonText>Perform Reset</buttonText>
         <dialogText>Do a factory reset?</dialogText>
         <value>2</value>
     </action>
     <action size="2" offset="-2">
-        <name>Reboot</name>
+        <name>Reboot via address 131</name>
         <buttonText>Perform Reboot</buttonText>
         <dialogText></dialogText> <!-- no dialog -->
         <value>9</value>
     </action>
     <blob size="10" mode="readwrite">
+        <name>Blob defined at address 133</name>
     </blob>
     <int size="1">
         <name>Yet Another Reset</name>
-        <description>This should be stored at address 141.</description>
+        <description>This should be stored at address 143.</description>
     </int>
 </segment>
 
