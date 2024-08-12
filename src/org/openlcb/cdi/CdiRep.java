@@ -79,6 +79,12 @@ public interface CdiRep {
          * @return a list of all user-visible values.
          */
         public java.util.List<String> getValues();
+        
+        /**
+         * Add an item to the map.  Useful if e.g. a non-mapped
+         * value is found in a location.
+         */
+        public void addItemToMap(String key, String entry);
     }
 
     public static interface EventID extends Item {

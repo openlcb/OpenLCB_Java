@@ -2443,7 +2443,17 @@ public class CdiPanel extends JPanel {
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
             if (slider != null) slider.setValue(Integer.parseInt(value));
-            if (box != null) box.setSelectedItem(value);
+            if (box != null) { 
+                // check to see if item exists
+                box.setSelectedItem(value);
+                if (box.getSelectedItem() != value) {
+                    // need to add it
+                    String newValue = "Reserved value: "+value;
+                    box.addItem(newValue);
+                    box.setSelectedItem(newValue);
+                    map.addItemToMap(newValue, value);
+                }
+            }
         }
 
         @NonNull

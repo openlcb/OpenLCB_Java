@@ -210,7 +210,19 @@ public class JdomCdiRep implements CdiRep {
             }
             return list;
         }
-        
+
+        public void addItemToMap(String key, String entry) {
+            Element relation = new Element("relation");
+            Element property = new Element("property");
+            Element value    = new Element("value");
+            
+            property.addContent(key);
+            value.addContent(entry);
+            relation.addContent(property);
+            relation.addContent(value);
+            map.addContent(relation);
+        }
+      
         Element map;
     }
 
