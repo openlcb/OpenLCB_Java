@@ -2351,7 +2351,7 @@ public class CdiPanel extends JPanel {
 
     private class IntPane extends EntryPane {
         JTextField textField = null;
-        JComboBox box = null;
+        JComboBox<String> box = null;
         JSlider slider = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
@@ -2446,12 +2446,15 @@ public class CdiPanel extends JPanel {
             if (box != null) { 
                 // check to see if item exists
                 box.setSelectedItem(value);
-                if (box.getSelectedItem() != value) {
-                    // need to add it
+                if (! box.getSelectedItem().equals(value)) {
+                    // not present per-se, see if need to add as reserved?
                     String newValue = "Reserved value: "+value;
-                    box.addItem(newValue);
                     box.setSelectedItem(newValue);
-                    map.addItemToMap(newValue, value);
+                    if ( ! box.getSelectedItem().equals(newValue)) {
+                        box.addItem(newValue);
+                        box.setSelectedItem(newValue);
+                        map.addItemToMap(newValue, value);
+                    }
                 }
             }
         }
@@ -2524,7 +2527,8 @@ public class CdiPanel extends JPanel {
         textAreaFont = new Font(Font.MONOSPACED, Font.PLAIN, size);
     }
     
-    private class StringPane extends EntryPane {
+    static final int MAX_SINGLE_LINE_ENTRY = 64; // somewhat arbitrary max length of single-line entry
+        private class StringPane extends EntryPane {
         JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
 
@@ -2542,8 +2546,8 @@ public class CdiPanel extends JPanel {
                 }
             };
 
-            if (entry.size <= 64) { // somewhat arbitrary maximum length of single-line entry
-                            
+            if (entry.size <= MAX_SINGLE_LINE_ENTRY) { 
+                // This case is a single line in a JTextField
                 JTextField jtf = new JTextField(doc, "", entry.size-1) { // -1 for trailing zero
                     public Dimension getMaximumSize() {
                         return getPreferredSize();
@@ -2551,6 +2555,7 @@ public class CdiPanel extends JPanel {
                 };
                 jtf.setFont(textAreaFont);
                 jtf = factory.handleStringValue(jtf);
+                jtf.getDocument().putProperty("filterNewlines", Boolean.FALSE); // needed so 0x0A doesn't become space
                    
                 textField = jtf;
             } else {
