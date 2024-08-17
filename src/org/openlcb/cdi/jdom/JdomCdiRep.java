@@ -121,6 +121,7 @@ public class JdomCdiRep implements CdiRep {
                     case "action":
                         list.add(new ActionButtonRep(element));
                         break;
+                    case "repname":
                     case "name":
                     case "description":
                         break;
@@ -467,7 +468,9 @@ public class JdomCdiRep implements CdiRep {
         public int getSize() { 
             Attribute a = e.getAttribute("size");
             try {
-                if (a == null) return 1;
+                // the `size` attribute is required to allocate space, so the 
+                // default value set here is zero
+                if (a == null) return 0;
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
