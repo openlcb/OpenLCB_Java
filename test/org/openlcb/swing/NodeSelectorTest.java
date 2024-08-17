@@ -63,8 +63,8 @@ public class NodeSelectorTest  {
 
     String getAllItems() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < nodeSelector.box.getItemCount(); ++i) {
-            sb.append(nodeSelector.box.getItemAt(i).toString());
+        for (int i = 0; i < nodeSelector.getItemCount(); ++i) {
+            sb.append(nodeSelector.getItemAt(i).toString());
             sb.append(';');
         }
         return sb.toString();
