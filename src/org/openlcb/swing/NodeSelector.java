@@ -29,11 +29,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @author	Bob Jacobsen   Copyright (C) 2012
  */
-public class NodeSelector extends JPanel  {
+public class NodeSelector extends JComboBox<NodeSelector.ModelEntry>  {
 
     private final PropertyChangeListener propertyChangeListener;
     MimicNodeStore store;
-    JComboBox<ModelEntry> box;
     private DefaultComboBoxModel<ModelEntry> model = new DefaultComboBoxModel<ModelEntry>();
     private boolean seenLight = false;
     private int termCount = 2; // how many terms to keep in ID string
@@ -59,14 +58,11 @@ public class NodeSelector extends JPanel  {
      * @param termCount Number of ID terms to include in the displayed ID
      */
     public NodeSelector(MimicNodeStore store, int termCount) {
+        super();
         this.store = store;
         this.termCount = termCount;
 
-        this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-
-        box = new JComboBox<ModelEntry>(model);
-        add(box);
-
+        this.setModel(model);
         // listen for newly arrived nodes
         propertyChangeListener = new PropertyChangeListener() {
             @Override
@@ -89,9 +85,9 @@ public class NodeSelector extends JPanel  {
 
         // If there are no nodes added, manually set the size
         // to a reasonable value
-        if (box.getItemCount() == 0) {
-            box.setPrototypeDisplayValue(new ModelEntry(new String(new char[70])));
-        }
+        //if (getItemCount() == 0) {
+            setPrototypeDisplayValue(new ModelEntry("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
+        //}
 
         addHierarchyListener(new HierarchyListener() {
             @Override
@@ -113,7 +109,6 @@ public class NodeSelector extends JPanel  {
 
         ModelEntry(MimicNodeStore.NodeMemo memo) {
             this.nodeMemo = memo;
-            //log.finest("registering listener for " + memo.getNodeID() + " " + memo.toString());
             memo.addPropertyChangeListener(this);
             updateDescription();
         }
@@ -191,6 +186,8 @@ public class NodeSelector extends JPanel  {
                         "vector.")
         public boolean equals(Object o) {
             if (o instanceof ModelEntry) {
+                if (nodeMemo == null &&  ((ModelEntry) o).nodeMemo == null) return true;
+                if (nodeMemo == null ||  ((ModelEntry) o).nodeMemo == null) return false;               
                 return getNodeID().equals(((ModelEntry) o).getNodeID());
             }
             if (o instanceof NodeID) {
@@ -213,7 +210,6 @@ public class NodeSelector extends JPanel  {
         }
 
         public void dispose() {
-            //log.warning("dispose of " + nodeMemo.getNodeID().toString());
             nodeMemo.removePropertyChangeListener(this);
         }
     }
@@ -221,7 +217,7 @@ public class NodeSelector extends JPanel  {
     // Notifies that the contents ofa given entry have changed. This will delete and re-add the
     // entry to the model, forcing a refresh of the box.
     private void updateComboBoxModelEntry(ModelEntry modelEntry) {
-        int idx = model.getIndexOf(modelEntry.getNodeID());
+        int idx = model.getIndexOf(modelEntry);
         if (idx < 0) {
             return;
         }
@@ -249,6 +245,11 @@ public class NodeSelector extends JPanel  {
             ++i;
         }
         model.insertElementAt(e, i);
+
+        if (getSelectedItem() == null) setSelectedItem(e);
+        
+        setPrototypeDisplayValue(e);
+        invalidate();
     }
 
     // Removes all entries from the model list, disposing them in the process.
@@ -264,8 +265,10 @@ public class NodeSelector extends JPanel  {
         store.removePropertyChangeListener(propertyChangeListener);
     }
 
-    public NodeID getSelectedItem() {
-        return ((ModelEntry) box.getSelectedItem()).getNodeID();
+    // There should always be a node selected
+    public NodeID getSelectedNodeID() {
+        ModelEntry me = (ModelEntry) super.getSelectedItem();
+        return me.getNodeID();
     }
 
     private static final Logger log = Logger.getLogger(NodeSelector.class.getName());
