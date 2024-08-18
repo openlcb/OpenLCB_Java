@@ -253,6 +253,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 entry = new EventEntry(name, (CdiRep.EventID) it, segment, origin);
             } else if (it instanceof CdiRep.StringRep) {
                 entry = new StringEntry(name, (CdiRep.StringRep) it, segment, origin);
+            } else if (it instanceof CdiRep.ActionButtonRep) {
+                entry = new ActionButtonEntry(name, (CdiRep.ActionButtonRep) it, segment, origin);
+            } else if (it instanceof CdiRep.UnknownRep) {
+                entry = new UnknownEntry(name, (CdiRep.UnknownRep) it, segment, origin);
             } else {
                 logger.log(Level.SEVERE, "could not process CDI entry type of {0}", it);
             }
@@ -303,12 +307,16 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 visitInt((IntegerEntry) e);
             } else if (e instanceof EventEntry) {
                 visitEvent((EventEntry) e);
+            } else if (e instanceof ActionButtonEntry) {
+                visitActionButton((ActionButtonEntry) e);
             } else if (e instanceof GroupRep) {
                 visitGroupRep((GroupRep) e);
             } else if (e instanceof GroupEntry) {
                 visitGroup((GroupEntry) e);
             } else if (e instanceof SegmentEntry) {
                 visitSegment((SegmentEntry) e);
+            } else if (e instanceof UnknownEntry) {
+                visitUnknown((UnknownEntry) e);
             } else if (e instanceof CdiContainer) {
                 visitContainer((CdiContainer) e);
             } else {
@@ -331,6 +339,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             visitLeaf(e);
         }
 
+        public void visitActionButton(ActionButtonEntry e) {
+            visitLeaf(e);
+        }
+
         public void visitGroupRep(GroupRep e) {
             visitContainer(e);
         }
@@ -341,6 +353,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         public void visitSegment(SegmentEntry e) {
             visitContainer(e);
+        }
+
+        public void visitUnknown(UnknownEntry e) {
+            visitLeaf(e);
         }
 
         public void visitContainer(CdiContainer c) {
@@ -697,6 +713,99 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             byte[] b = new byte[Math.min(size, f.length + 1)];
             System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
             cache.write(this.origin, b, this);
+        }
+    }
+
+    /**
+     * Represents an unknown variable, perhaps due to a more-recent schema
+     */
+    public class UnknownEntry extends CdiEntry {
+        public CdiRep.UnknownRep rep;
+
+        UnknownEntry(String name, CdiRep.UnknownRep rep, int segment, long origin) {
+            this.key = name;
+            this.space = segment;
+            this.origin = origin;
+            this.rep = rep;
+            this.size = rep.getSize();
+        }
+
+        @Override
+        public CdiRep.Item getCdiItem() {
+            return rep;
+        }
+
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = getValue();
+        }
+
+        @Override
+        public boolean isNullTerminated() {
+            return size > 64;
+        }
+
+        public String getValue() {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] b = cache.read(origin, size);
+            if (b == null) return null;
+            // We search for a terminating null byte and clip the string there.
+            int len = 0;
+            while (len < b.length && b[len] != 0) ++len;
+            byte[] rep = new byte[len];
+            System.arraycopy(b, 0, rep, 0, len);
+            String ret = new String(rep, UTF8);
+            return ret;
+        }
+
+        public void setValue(String value) {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] f;
+            f = value.getBytes(UTF8);
+            byte[] b = new byte[Math.min(size, f.length + 1)];
+            System.arraycopy(f, 0, b, 0, Math.min(f.length, b.length - 1));
+            cache.write(this.origin, b, this);
+        }
+    }
+
+    /**
+     * Represents an action button variable.
+     */
+    public class ActionButtonEntry extends CdiEntry {
+        public CdiRep.ActionButtonRep rep;
+
+        ActionButtonEntry(String name, CdiRep.ActionButtonRep rep, int segment, long origin) {
+            this.key = name;
+            this.space = segment;
+            this.origin = origin;
+            this.rep = rep;
+            this.size = rep.getSize();
+        }
+
+        @Override
+        public CdiRep.Item getCdiItem() {
+            return rep;
+        }
+
+        @Override
+        protected void updateVisibleValue() {
+            // does nothing in this class
+        }
+
+        public long getValue() {
+            // should not be called
+            logger.log(Level.SEVERE, "ActionButtonEntry.getValue should not be called");
+            return -1;
+        }
+
+        public void setValue(long value) {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] b = new byte[size];
+            for (int i = size - 1; i >= 0; --i) {
+                b[i] = (byte)(value & 0xff);
+                value >>= 8;
+            }
+            cache.write(origin, b, this);
         }
     }
 

@@ -79,23 +79,50 @@ public interface CdiRep {
          * @return a list of all user-visible values.
          */
         public java.util.List<String> getValues();
+        
+        /**
+         * Add an item to the map.  Useful if e.g. a non-mapped
+         * value is found in a location.
+         */
+        public void addItemToMap(String key, String entry);
     }
 
     public static interface EventID extends Item {
     }
+
     public static interface IntegerRep extends Item {
         public int getDefault();
         public long getMin();
         public long getMax();
 
         public int getSize();
+        
+        public boolean isSliderHint();
+        public int getSliderDivisions();
     }
+
     public static interface BitRep extends Item {
         public boolean getDefault();
 
         public int getSize();
     }
+
+    public static interface UnknownRep extends Item {
+        public boolean getDefault();
+
+        public int getSize();
+    }
+
     public static interface StringRep extends Item {  // "String" causes too many name conflicts
+
+        public int getSize();
+    }
+
+    public static interface ActionButtonRep extends Item {
+    
+        public long getValue();
+        public String getButtonText();
+        public String getDialogText();
 
         public int getSize();
     }

@@ -78,6 +78,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -219,6 +220,7 @@ public class CdiPanel extends JPanel {
         bottomPanel = new JPanel();
         //buttonBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         bottomPanel.setLayout(new WrapLayout());
+        
         JButton bb = new JButton("Refresh All");
         bb.setToolTipText("Discards all changes and loads the freshest value from the hardware for all entries.");
         bb.addActionListener(actionEvent -> reloadAll());
@@ -1376,6 +1378,12 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
+        public void visitUnknown(ConfigRepresentation.UnknownEntry e) {
+            currentLeaf = new UnknownPane(e);
+            super.visitUnknown(e);
+        }
+
+        @Override
         public void visitInt(ConfigRepresentation.IntegerEntry e) {
             currentLeaf = new IntPane(e);
             super.visitInt(e);
@@ -1385,6 +1393,12 @@ public class CdiPanel extends JPanel {
         public void visitEvent(ConfigRepresentation.EventEntry e) {
             currentLeaf = new EventIdPane(e);
             super.visitEvent(e);
+        }
+
+        @Override
+        public void visitActionButton(ConfigRepresentation.ActionButtonEntry e) {
+            currentLeaf = new ActionButtonPane(e);
+            super.visitActionButton(e);
         }
 
         @Override
@@ -1852,7 +1866,7 @@ public class CdiPanel extends JPanel {
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? item.getName() : defaultName);
             setBorder(BorderFactory.createTitledBorder(name));
-
+            
             createDescriptionPane(this, item.getDescription());
 
             p3 = new JPanel();
@@ -1982,25 +1996,28 @@ public class CdiPanel extends JPanel {
             });
             entry.fireUpdate();
 
-            JButton b;
-            b = factory.handleReadButton(new JButton("Refresh")); // was: read
-            b.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    entry.reload();
-                }
-            });
-            p3.add(b);
+            if (! (textComponent instanceof JButton ) // Buttons write themselves
+                 && ! (textComponent instanceof JLabel ) ) { // labels don't need to write
+                JButton b;
+                b = factory.handleReadButton(new JButton("Refresh")); // was: read
+                b.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                        entry.reload();
+                    }
+                });
+                p3.add(b);
 
-            writeButton = factory.handleWriteButton(new JButton("Write"));
-            writeButton.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-                    writeDisplayTextToNode();
-                }
-            });
-            p3.add(writeButton);
-
+                writeButton = factory.handleWriteButton(new JButton("Write"));
+                writeButton.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent e) {
+                        writeDisplayTextToNode();
+                    }
+                });
+                p3.add(writeButton);
+            }
+            
             additionalButtons();
 
             p3.add(Box.createHorizontalGlue());
@@ -2334,7 +2351,8 @@ public class CdiPanel extends JPanel {
 
     private class IntPane extends EntryPane {
         JTextField textField = null;
-        JComboBox box = null;
+        JComboBox<String> box = null;
+        JSlider slider = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
 
@@ -2355,16 +2373,48 @@ public class CdiPanel extends JPanel {
                 };
                 textComponent = box;
             } else {
-                // map not present, just an entry box
-                textField = new JTextField(24) {
-                    public java.awt.Dimension getMaximumSize() {
-                        return getPreferredSize();
+                // map not present - is it a slider?
+                if (entry.rep.isSliderHint()) {
+                    // display a slider
+                    slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
+                    if (entry.rep.getSliderDivisions() > 1) {
+                        // display divisions on the slider
+                        int divisionSpacing = 
+                            ((int)(entry.rep.getMax()-entry.rep.getMin()))/entry.rep.getSliderDivisions();
+                        slider.setMajorTickSpacing(divisionSpacing);
+                        slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
+                        slider.setPaintTicks(true);
+                        slider.setPaintLabels(true);
                     }
-                };
-                textComponent = textField;
-                textField.setToolTipText("Signed integer from "
-                        +entry.rep.getMin()+" to "+entry.rep.getMax()
-                        +" ("+entry.size+" bytes)");
+                    textComponent = slider;
+                    if (entry.rep.getMin() < 0) {
+                        slider.setToolTipText("Signed integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    } else {
+                        slider.setToolTipText("Unsigned integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    }
+                    
+                } else {
+                    // display an entry box
+                    textField = new JTextField(24) {
+                        public java.awt.Dimension getMaximumSize() {
+                            return getPreferredSize();
+                        }
+                    };
+                    textComponent = textField;
+                    if (entry.rep.getMin() < 0) {
+                        textField.setToolTipText("Signed integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    } else {
+                        textField.setToolTipText("Unsigned integer from "
+                            +entry.rep.getMin()+" to "+entry.rep.getMax()
+                            +" ("+entry.size+" bytes)");
+                    }
+                }
             }
 
             init();
@@ -2375,8 +2425,11 @@ public class CdiPanel extends JPanel {
             long value;
             if (textField != null) {
                 value = Long.parseLong(textField.getText());
+            } else if (slider != null) {
+                // get value from current slider position
+                value = slider.getValue();
             } else {
-                // have to get key from stored value
+                // have to get key from stored map value
                 String entry = (String) box.getSelectedItem();
                 String key = map.getKey(entry);
                 value = Long.parseLong(key);
@@ -2389,12 +2442,27 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
-            if (box != null) box.setSelectedItem(value);
+            if (slider != null) slider.setValue(Integer.parseInt(value));
+            if (box != null) { 
+                // check to see if item exists
+                box.setSelectedItem(value);
+                if (! box.getSelectedItem().equals(value)) {
+                    // not present per-se, see if need to add as reserved?
+                    String newValue = "Reserved value: "+value;
+                    box.setSelectedItem(newValue);
+                    if ( ! box.getSelectedItem().equals(newValue)) {
+                        box.addItem(newValue);
+                        box.setSelectedItem(newValue);
+                        map.addItemToMap(newValue, value);
+                    }
+                }
+            }
         }
 
         @NonNull
         @Override
         protected String getDisplayText() {
+            if (slider != null) return ""+slider.getValue();
             String s = (box == null) ? (String) textField.getText()
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
@@ -2409,6 +2477,8 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
+            if (slider != null) return ""+slider.getValue();
+            
             String s;
             if (box==null) {
                 s = (String) textField.getText();
@@ -2418,7 +2488,6 @@ public class CdiPanel extends JPanel {
             }
             return s == null ? "" : s;
         }
-        
 
         boolean isDataInvalid() {
             try {
@@ -2448,9 +2517,9 @@ public class CdiPanel extends JPanel {
             writeButton.setEnabled( ! isDataInvalid());
  
         }
-
     }
 
+    // Define font to be used in certain types of StringPanes
     Font textAreaFont;
     {
         Font existingFont = UIManager.getFont("TextArea.font");
@@ -2458,7 +2527,8 @@ public class CdiPanel extends JPanel {
         textAreaFont = new Font(Font.MONOSPACED, Font.PLAIN, size);
     }
     
-    private class StringPane extends EntryPane {
+    static final int MAX_SINGLE_LINE_ENTRY = 64; // somewhat arbitrary max length of single-line entry
+        private class StringPane extends EntryPane {
         JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
 
@@ -2476,8 +2546,8 @@ public class CdiPanel extends JPanel {
                 }
             };
 
-            if (entry.size <= 64) { // somewhat arbitrary maximum length of single-line entry
-                            
+            if (entry.size <= MAX_SINGLE_LINE_ENTRY) { 
+                // This case is a single line in a JTextField
                 JTextField jtf = new JTextField(doc, "", entry.size-1) { // -1 for trailing zero
                     public Dimension getMaximumSize() {
                         return getPreferredSize();
@@ -2485,6 +2555,7 @@ public class CdiPanel extends JPanel {
                 };
                 jtf.setFont(textAreaFont);
                 jtf = factory.handleStringValue(jtf);
+                jtf.getDocument().putProperty("filterNewlines", Boolean.FALSE); // needed so 0x0A doesn't become space
                    
                 textField = jtf;
             } else {
@@ -2519,6 +2590,86 @@ public class CdiPanel extends JPanel {
         protected String getDisplayText() {
             String s = textField.getText();
             return s == null ? "" : s;
+        }
+    }
+
+    private class UnknownPane extends EntryPane {
+        private final ConfigRepresentation.UnknownEntry entry;
+
+        UnknownPane(ConfigRepresentation.UnknownEntry e) {
+            super(e, "Unknown");
+            this.entry = e;
+
+            textComponent = new JLabel("Unknown Entry in the CDI Information");
+            textComponent.setToolTipText("Unknown element, perhaps from a later version of the CDI format?");
+            init();
+        }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+        }
+
+        @Override
+        protected void updateDisplayText(@NonNull String value) {
+        }
+
+        @NonNull
+        @Override
+        protected String getDisplayText() {
+            return "Unknown Element";
+        }
+    }
+
+    private class ActionButtonPane extends EntryPane {
+        JButton actionButton;
+        private final ConfigRepresentation.ActionButtonEntry entry;
+
+        ActionButtonPane(ConfigRepresentation.ActionButtonEntry e) {
+            super(e, "Action");
+            this.entry = e;
+
+            actionButton = new JButton(e.rep.getButtonText());
+            textComponent = actionButton;
+            textComponent.setToolTipText("Writes to node when pressed.");
+            actionButton.addActionListener(new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    writeDisplayTextToNode();
+                }
+            });
+
+            init();
+        }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+            if (entry.rep.getDialogText() == null || entry.rep.getDialogText().isEmpty()) {
+                entry.setValue((long)(entry.rep.getValue()));
+                _changeMade = true;
+                notifyTabColorRefresh();
+            } else {
+                // first, show a dialog box
+                int result = javax.swing.JOptionPane.showConfirmDialog(null, 
+                    entry.rep.getDialogText(),"",javax.swing.JOptionPane.OK_CANCEL_OPTION);
+                // if not OK, silently skip; if OK, act
+                if (result == 0) {
+                    entry.setValue((long)(entry.rep.getValue()));
+                    System.out.println(entry.rep.getValue());
+                    _changeMade = true;
+                    notifyTabColorRefresh();
+                }
+            }
+        }
+
+        @Override
+        protected void updateDisplayText(@NonNull String value) {
+            // does nothing
+        }
+
+        @NonNull
+        @Override
+        protected String getDisplayText() {
+            return entry.rep.getButtonText();
         }
     }
 

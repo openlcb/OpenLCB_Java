@@ -102,11 +102,33 @@ public class JdomCdiRep implements CdiRep {
             for (int i = 0; i<elements.size(); i++) {
                 // some elements aren't contained items
                 Element element = (Element)elements.get(i);
-                if ("group".equals(element.getName())) list.add(new Group(element));
-                else if ("bit".equals(element.getName())) list.add(new BitRep(element));
-                else if ("int".equals(element.getName())) list.add(new IntRep(element));
-                else if ("eventid".equals(element.getName())) list.add(new EventID(element));
-                else if ("string".equals(element.getName())) list.add(new StringRep(element));
+                switch (element.getName()) {
+                    case "group":
+                        list.add(new Group(element));
+                        break;
+                    case "bit":
+                        list.add(new BitRep(element));
+                        break;
+                    case "int":
+                        list.add(new IntRep(element));
+                        break;
+                    case "eventid":
+                        list.add(new EventID(element));
+                        break;
+                    case "string":
+                        list.add(new StringRep(element));
+                        break;
+                    case "action":
+                        list.add(new ActionButtonRep(element));
+                        break;
+                    case "repname":
+                    case "name":
+                    case "description":
+                        break;
+                    default:
+                        list.add(new UnknownRep(element));
+                        break;
+                }
             }
             return list;
         }
@@ -189,7 +211,19 @@ public class JdomCdiRep implements CdiRep {
             }
             return list;
         }
-        
+
+        public void addItemToMap(String key, String entry) {
+            Element relation = new Element("relation");
+            Element property = new Element("property");
+            Element value    = new Element("value");
+            
+            property.addContent(key);
+            value.addContent(entry);
+            relation.addContent(property);
+            relation.addContent(value);
+            map.addContent(relation);
+        }
+      
         Element map;
     }
 
@@ -229,7 +263,6 @@ public class JdomCdiRep implements CdiRep {
         public int getIndexInParent() {
             return e.getParent().indexOf(e);
         }
-
     }
 
     public static class Group extends Nested implements CdiRep.Group {
@@ -400,6 +433,47 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
+
+        @Override
+        public boolean isSliderHint() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return false;
+            return true;
+        }
+
+        @Override
+        public int getSliderDivisions() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return 1;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return 1;
+            Attribute divisions = slider.getAttribute("divisions");
+            if (divisions == null) return 1;
+            try { 
+                return divisions.getIntValue();
+            } catch (org.jdom2.DataConversionException e) { return 1; }
+        }
+
+    }
+
+    public static class UnknownRep extends Item implements CdiRep.UnknownRep {
+        UnknownRep(Element e) { super(e); }
+        
+        @Override
+        public boolean getDefault() { return false; }
+
+        @Override
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                // the `size` attribute is required to allocate space, so the 
+                // default value set here is zero
+                if (a == null) return 0;
+                else return a.getIntValue();
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
     }
     
     public static class BitRep extends Item implements CdiRep.BitRep {
@@ -430,6 +504,57 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
+    }
+
+    public static class ActionButtonRep extends Item implements CdiRep.ActionButtonRep {
+
+        ActionButtonRep(Element e) { super(e); }
+        
+        @Override
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) return 1;
+                else return a.getIntValue();
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
+
+        @Override
+        public long getValue() {
+            Element target = e.getChild("value");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for value element: "+text);
+                    // and return the default value from length
+                }
+            }
+            // otherwise, return default value of 0
+            return 0;
+        }
+
+        @Override
+        public String getButtonText() {
+            Element target = e.getChild("buttonText");
+            if (target != null) {
+                return target.getTextNormalize();
+            }
+            // otherwise, return empty value
+            return "";
+        }
+
+        @Override
+        public String getDialogText() {
+            Element target = e.getChild("dialogText");
+            if (target != null) {
+                return target.getTextNormalize();
+            }
+            // otherwise, return empty value
+            return "";
+        }
+
     }
 
     Element root;
