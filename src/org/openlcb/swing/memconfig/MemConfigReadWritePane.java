@@ -51,8 +51,7 @@ public class MemConfigReadWritePane extends JPanel {
     JTextField writeDataField = new JTextField(80);
     JTextField configNumberField = new JTextField("40");
     JTextField configAddressField = new JTextField("000000");
-    JComboBox<String> addrSpace = new JComboBox<String>(
-            new String[] {"CDI", "All", "Config", "None"});
+    JTextField addrSpace = new JTextField("255");
 
     /**
      * To be invoked after Swing component installation is complete,
@@ -88,8 +87,14 @@ public class MemConfigReadWritePane extends JPanel {
         
     }
     
+    private int getSelectedAddressSpace() {
+        String input = addrSpace.getText();
+        int retval = Integer.parseInt(input);
+        return retval;
+    }
+    
     public void readPerformed() {
-        int space = 0xFF - addrSpace.getSelectedIndex();
+        int space = getSelectedAddressSpace();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         int length = Integer.parseInt(configNumberField.getText());
         service.requestRead(node, space, addr, length,
@@ -107,7 +112,7 @@ public class MemConfigReadWritePane extends JPanel {
     }
 
     public void writePerformed() {
-        int space = 0xFF - addrSpace.getSelectedIndex();
+        int space = getSelectedAddressSpace();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         byte[] content = org.openlcb.Utilities.bytesFromHexString(writeDataField.getText());
         service.requestWrite(node, space, addr, content,
