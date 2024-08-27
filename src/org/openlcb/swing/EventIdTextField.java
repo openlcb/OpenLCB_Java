@@ -147,8 +147,23 @@ public class EventIdTextField extends JFormattedTextField  {
         });
              
         // create a submenu for well-known events
+        popup.add(makeWellKnownEventMenu(textfield));
+        
+        // Add the time events
+        popup.add( makeClockEventMenuItem(textfield));
+
+        // Add the accessory decoder events
+        popup.add(makeDccAccessoryEventMenuItem(textfield));
+        
+        // popup.add("Extended DCC accessory decoder events ...");
+        // popup.add("DCC turnout feedback events ...");
+        // popup.add("DCC system sensor feedback events ...");
+        
+        return popup;
+    }
+    
+    public static JMenu makeWellKnownEventMenu(JFormattedTextField textfield) {
         JMenu wkeMenu = new JMenu("Insert well-known event");
-        popup.add(wkeMenu);
         wkeMenu.add(new EventIdInserter(
             "Emergency off (de-energize)",           "01.00.00.00.05.00.FF.FF", textfield));
         wkeMenu.add(new EventIdInserter(
@@ -157,10 +172,11 @@ public class EventIdTextField extends JFormattedTextField  {
             "Emergency stop of all operations",      "01.00.00.00.05.00.FF.FD", textfield));
         wkeMenu.add(new EventIdInserter(
             "Clear emergency stop of all operations","01.00.00.00.00.00.FF.FC", textfield));
-        
-        // Add the time events
-        menuItem = new JMenuItem("Clock event...");
-        popup.add(menuItem);
+        return wkeMenu;
+    }
+    
+    public static JMenuItem makeClockEventMenuItem(JFormattedTextField textfield) {
+        JMenuItem menuItem = new JMenuItem("Insert Clock event...");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -200,10 +216,11 @@ public class EventIdTextField extends JFormattedTextField  {
                 dialog.setVisible(true);
             }
         });
+        return menuItem;
+    }
 
-        // Add the accessory decoder events
-        menuItem = new JMenuItem("DCC accessory decoder events ...");
-        popup.add(menuItem);
+    public static JMenuItem makeDccAccessoryEventMenuItem(JFormattedTextField textfield) {
+        JMenuItem menuItem = new JMenuItem("Insert DCC accessory decoder events ...");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -251,15 +268,9 @@ public class EventIdTextField extends JFormattedTextField  {
                 dialog.setVisible(true);
             }
         });
-
-        
-        // popup.add("Extended DCC accessory decoder events ...");
-        // popup.add("DCC turnout feedback events ...");
-        // popup.add("DCC system sensor feedback events ...");
-        
-        return popup;
+        return menuItem;
     }
-    
+  
     private static class EventIdInserter extends JMenuItem {
         public EventIdInserter(String name, String value, JFormattedTextField target) {
             super(name);
