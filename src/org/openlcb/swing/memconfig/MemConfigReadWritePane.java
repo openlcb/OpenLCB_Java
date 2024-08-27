@@ -88,12 +88,6 @@ public class MemConfigReadWritePane extends JPanel {
         
     }
     
-    private int getSelectedAddressSpace() {
-        String input = addrSpace.getText();
-        int retval = Integer.parseInt(input);
-        return retval;
-    }
-    
     public void readPerformed() {
         int space = addrSpace.getMemorySpace();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
