@@ -114,25 +114,22 @@ public class MemConfigDescriptionPane extends JPanel {
             new MemoryConfigurationService.McsAddrSpaceMemo(node, highSpace) {
                 @Override
                 public void handleAddrSpaceData(NodeID dest, int space, boolean present, long hiAddress, long lowAddress, int flags, String desc) {
-                    // new line with values
-                    JPanel p = new JPanel();
-                    p.setLayout(new FlowLayout(FlowLayout.LEFT));
-                    MemConfigDescriptionPane.this.add(p);
-                    p.add(new JLabel("Space: 0x"+Utilities.toHexPair(space)));
-                    String content;
                     if (present) {
-                        content = String.format("Low Address: 0x%010X High address: 0x%010X Length: %10d ", lowAddress, hiAddress, (hiAddress-lowAddress+1))
+                        // new line with values
+                        JPanel p = new JPanel();
+                        p.setLayout(new FlowLayout(FlowLayout.LEFT));
+                        MemConfigDescriptionPane.this.add(p);
+                        p.add(new JLabel("Space: 0x"+Utilities.toHexPair(space)));
+
+                        String content = String.format("Low Address: 0x%010X High address: 0x%010X Length: %10d ", lowAddress, hiAddress, (hiAddress-lowAddress+1))
                                             +(((flags&0x01) == 0) ? " Writable" : " Read Only");
 
                         // add description field if provided
                         if (desc != null && ! desc.isEmpty()) {
                             content += " \""+desc+"\"";
                         }
-                    } else {
-                        content = "Not Present";
-                    }
-
-                    p.add(new JLabel(content));
+                        p.add(new JLabel(content));
+                    } // don't display spaces that don't exist.
 
                     // resize frame to fit
                     ((JFrame) getRootPane().getParent()).pack();

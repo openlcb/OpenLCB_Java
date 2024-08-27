@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 import org.openlcb.MimicNodeStore;
 import org.openlcb.NodeID;
 import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.swing.MemorySpaceSelector;
 
 /**
  * Provide read/write access to a node
@@ -51,8 +52,7 @@ public class MemConfigReadWritePane extends JPanel {
     JTextField writeDataField = new JTextField(80);
     JTextField configNumberField = new JTextField("40");
     JTextField configAddressField = new JTextField("000000");
-    JComboBox<String> addrSpace = new JComboBox<String>(
-            new String[] {"CDI", "All", "Config", "None"});
+    MemorySpaceSelector addrSpace = new MemorySpaceSelector(255);
 
     /**
      * To be invoked after Swing component installation is complete,
@@ -89,7 +89,7 @@ public class MemConfigReadWritePane extends JPanel {
     }
     
     public void readPerformed() {
-        int space = 0xFF - addrSpace.getSelectedIndex();
+        int space = addrSpace.getMemorySpace();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         int length = Integer.parseInt(configNumberField.getText());
         service.requestRead(node, space, addr, length,
@@ -107,7 +107,7 @@ public class MemConfigReadWritePane extends JPanel {
     }
 
     public void writePerformed() {
-        int space = 0xFF - addrSpace.getSelectedIndex();
+        int space = addrSpace.getMemorySpace();
         long addr = Integer.parseInt(configAddressField.getText(), 16);
         byte[] content = org.openlcb.Utilities.bytesFromHexString(writeDataField.getText());
         service.requestWrite(node, space, addr, content,

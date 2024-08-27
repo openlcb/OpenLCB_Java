@@ -268,6 +268,7 @@ public class NodeSelector extends JComboBox<NodeSelector.ModelEntry>  {
     // There should always be a node selected
     public NodeID getSelectedNodeID() {
         ModelEntry me = (ModelEntry) super.getSelectedItem();
+        if (me == null) return null;
         return me.getNodeID();
     }
 
