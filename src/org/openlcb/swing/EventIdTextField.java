@@ -228,7 +228,7 @@ public class EventIdTextField extends JFormattedTextField  {
                 setButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        int from = Integer.parseInt(number.getText().strip());
+                        int from = Integer.parseInt(number.getText().trim());
                         
                         // See JMRI OlcnAddress line 89 for Event ID coding
                         int DD = (from-1) & 0x3;
