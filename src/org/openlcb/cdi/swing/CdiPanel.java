@@ -2246,6 +2246,18 @@ public class CdiPanel extends JPanel {
             });
             addButtonToEventidMoreFunctions(bAS);
 
+            eventidMoreMenu.add(
+                EventIdTextField.makeWellKnownEventMenu(textField)
+            );
+            
+            eventidMoreMenu.add(
+                EventIdTextField.makeClockEventMenuItem(textField)
+            );
+            
+            eventidMoreMenu.add(
+                EventIdTextField.makeDccAccessoryEventMenuItem(textField)
+            );
+            
             p3.add(Box.createHorizontalStrut(5));
             addCopyPasteButtons(p3, textField);
             p3.add(Box.createHorizontalStrut(5));
