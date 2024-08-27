@@ -28,6 +28,12 @@
         <blob size="10" mode="readwrite">
             <name>Blob to see if works in group element</name>
         </blob>
+        <float size="2">
+            <name>Float to see if works in group element</name>
+        </float>
+        <int size="4">
+            <name>Int of size 4 so that each group is 32 long</name>
+        </int>
     </group>
     <int size="2">
         <name>Sample integer variable</name>
