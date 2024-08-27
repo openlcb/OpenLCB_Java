@@ -29,8 +29,6 @@ public class MemorySpaceSelector extends JTextField  {
 
     /**
      * Constructor that sets the default value to 255
-     *
-     * @param initialValue value to display at start
      */
     public MemorySpaceSelector() {
         this(255);
