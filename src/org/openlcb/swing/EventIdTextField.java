@@ -100,9 +100,7 @@ public class EventIdTextField extends JFormattedTextField  {
     private static JPopupMenu createPopupMenu(JFormattedTextField textfield) {
         JPopupMenu popup = new JPopupMenu();
         
-        // add the usual copy and paste operators
-        // TODO: see CdiPanel line 1633 for how to properly copy and paste
-        
+        // add the usual copy and paste operators        
         JMenuItem menuItem = new JMenuItem("Copy");
         popup.add(menuItem);
         menuItem.addActionListener(new ActionListener() {
