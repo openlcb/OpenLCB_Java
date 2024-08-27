@@ -166,10 +166,17 @@ public class EventIdTextField extends JFormattedTextField  {
             "Emergency off (de-energize)",           "01.00.00.00.05.00.FF.FF", textfield));
         wkeMenu.add(new EventIdInserter(
             "Clear emergency off (energize)",        "01.00.00.00.00.00.FF.FE", textfield));
+
         wkeMenu.add(new EventIdInserter(
             "Emergency stop of all operations",      "01.00.00.00.05.00.FF.FD", textfield));
         wkeMenu.add(new EventIdInserter(
             "Clear emergency stop of all operations","01.00.00.00.00.00.FF.FC", textfield));
+
+        wkeMenu.add(new EventIdInserter(
+            "Start Default Fast Clock",              "01.01.00.00.01.00.F0.02", textfield));
+        wkeMenu.add(new EventIdInserter(
+            "Stop Default Fast Clock",               "01.01.00.00.01.00.F0.01", textfield));
+            
         return wkeMenu;
     }
     
