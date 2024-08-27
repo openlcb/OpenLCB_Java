@@ -10,7 +10,7 @@ package org.openlcb;
  * <P>
  * You have to manually keep this synchronized with the manifest file.
  * 
- * @author  Bob Jacobsen   Copyright 2011 - 2012
+ * @author  Bob Jacobsen   Copyright 2011 - 2024
  */
 
 public class Version {
@@ -25,15 +25,15 @@ public class Version {
      * Minor number changes with change that
      * effects interoperability
      */
-    static final public int minor = 7;
+    static final public int minor = 8;
      
     /* Specification modifier - updated periodically
      */
-    static final public int specMod = 4;
+    static final public int specMod = 1;
 
     /* Library modifier - updated periodically
      */
-    static final public int libMod = 39;
+    static final public int libMod = 1;
 
     /**
      * Checks if the current specification version is above a specific threshold.
