@@ -24,7 +24,7 @@ public class MemorySpaceSelector extends JTextField  {
      */
     public MemorySpaceSelector(int initialValue) {
         super();
-        setText(""+initialValue);
+        setText("0x"+Integer.toHexString(initialValue).toUpperCase());
     }
 
     /**
@@ -39,7 +39,15 @@ public class MemorySpaceSelector extends JTextField  {
      *
      */
     public int getMemorySpace() {
-        int value = Integer.parseInt(getText());
+        int value = 0;
+        String input = getText().trim().toLowerCase();
+        if (input.startsWith("0x")) {
+            // hexadecimal case
+            value = Integer.parseInt(input.substring(2), 16);
+        } else {
+            // decimal case
+            value = Integer.parseInt(input);
+        }
         if (value < 0 ) { 
             value = 0;
             setText(""+value);
