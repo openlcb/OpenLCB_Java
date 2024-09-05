@@ -52,6 +52,16 @@
             <slider divisions="5" />
         </hints>
     </int>
+    <int size="2">
+        <name>Immediate-write integer slider</name>
+        <description>Doesn't do anything either</description>
+        <min>0</min>
+        <max>1000</max>
+        <default>12</default>
+        <hints>
+            <slider divisions="5" immediate="yes" />
+        </hints>
+    </int>
 </segment>
 
 <segment origin="128" space="1">

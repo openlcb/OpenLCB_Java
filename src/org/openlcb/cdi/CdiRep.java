@@ -98,6 +98,8 @@ public interface CdiRep {
         public int getSize();
         
         public boolean isSliderHint();
+        // Does the slider itself immediately write its value on change?
+        public boolean isSliderImmediate();
         public int getSliderDivisions();
     }
 

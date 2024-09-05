@@ -2397,6 +2397,16 @@ public class CdiPanel extends JPanel {
                         slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
                         slider.setPaintTicks(true);
                         slider.setPaintLabels(true);
+                        // (optionally) listen for changes and immediately write
+                        if (entry.rep.isSliderImmediate()) {
+                            slider.addChangeListener(new javax.swing.event.ChangeListener(){
+                                public void stateChanged(javax.swing.event.ChangeEvent e) {
+                                    if (!slider.getValueIsAdjusting()) {
+                                        writeDisplayTextToNode();
+                                    }
+                                }
+                            });
+                        }
                     }
                     textComponent = slider;
                     if (entry.rep.getMin() < 0) {
