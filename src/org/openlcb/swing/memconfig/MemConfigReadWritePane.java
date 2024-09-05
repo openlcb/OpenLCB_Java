@@ -52,7 +52,7 @@ public class MemConfigReadWritePane extends JPanel {
     JTextField writeDataField = new JTextField(80);
     JTextField configNumberField = new JTextField("40");
     JTextField configAddressField = new JTextField("000000");
-    MemorySpaceSelector addrSpace = new MemorySpaceSelector(255);
+    MemorySpaceSelector addrSpace = new MemorySpaceSelector(0xfF);
 
     /**
      * To be invoked after Swing component installation is complete,
