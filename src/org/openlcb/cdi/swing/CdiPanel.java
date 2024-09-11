@@ -65,6 +65,7 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ComboBoxModel;
 import javax.swing.InputVerifier;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -1971,6 +1972,12 @@ public class CdiPanel extends JPanel {
                         updateColor();
                     }
                 });
+            } else if (textComponent instanceof JSlider) {
+                ((JSlider) textComponent).addChangeListener(new javax.swing.event.ChangeListener(){
+                    public void stateChanged(javax.swing.event.ChangeEvent e) {
+                        updateColor();
+                    }
+                });
             }
             entryListener = new PropertyChangeListener() {
                 @Override
@@ -2367,6 +2374,7 @@ public class CdiPanel extends JPanel {
         JSlider slider = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
+        boolean first = true; // used to suppress slider output on initial change
 
 
         IntPane(ConfigRepresentation.IntegerEntry e) {
@@ -2389,26 +2397,35 @@ public class CdiPanel extends JPanel {
                 if (entry.rep.isSliderHint()) {
                     // display a slider
                     slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
+                    slider.setOpaque(true); // so you can color it
                     if (entry.rep.getSliderDivisions() > 1) {
                         // display divisions on the slider
                         int divisionSpacing = 
-                            ((int)(entry.rep.getMax()-entry.rep.getMin()))/entry.rep.getSliderDivisions();
+                            (int)Math.round( 
+                                (entry.rep.getMax()-entry.rep.getMin()+0.0) // force float calculation
+                                    /entry.rep.getSliderDivisions()
+                                );
                         slider.setMajorTickSpacing(divisionSpacing);
                         slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
                         slider.setPaintTicks(true);
                         slider.setPaintLabels(true);
-                        // (optionally) listen for changes and immediately write
-                        if (entry.rep.isSliderImmediate()) {
-                            slider.addChangeListener(new javax.swing.event.ChangeListener(){
-                                public void stateChanged(javax.swing.event.ChangeEvent e) {
-                                    if (!slider.getValueIsAdjusting()) {
-                                        writeDisplayTextToNode();
-                                    }
-                                }
-                            });
-                        }
                     }
+
+                    // (optionally) listen for changes and immediately write
+                    if (entry.rep.isSliderImmediate()) {
+                        slider.addChangeListener(new javax.swing.event.ChangeListener(){
+                            public void stateChanged(javax.swing.event.ChangeEvent e) {
+                                if (!slider.getValueIsAdjusting()) {
+                                    if (!first) writeDisplayTextToNode();
+                                    first = false;
+                                }
+                            }
+                        });
+                    }
+                    
                     textComponent = slider;
+                    
+                    // set the tooltip to min and max values
                     if (entry.rep.getMin() < 0) {
                         slider.setToolTipText("Signed integer from "
                             +entry.rep.getMin()+" to "+entry.rep.getMax()
@@ -2453,7 +2470,7 @@ public class CdiPanel extends JPanel {
             } else {
                 // have to get key from stored map value
                 String entry = (String) box.getSelectedItem();
-                String key = map.getKey(entry);
+                String key = map.getKey(entry); 
                 value = Long.parseLong(key);
             }
             entry.setValue(value);
@@ -2471,12 +2488,21 @@ public class CdiPanel extends JPanel {
                 if (! box.getSelectedItem().equals(value)) {
                     // not present per-se, see if need to add as reserved?
                     String newValue = "Reserved value: "+value;
-                    box.setSelectedItem(newValue);
-                    if ( ! box.getSelectedItem().equals(newValue)) {
-                        box.addItem(newValue);
-                        box.setSelectedItem(newValue);
-                        map.addItemToMap(newValue, value);
+                    
+                    ComboBoxModel model = box.getModel();
+                    int size = model.getSize();
+                    boolean absent = true;
+                    for(int i=0;i<size;i++) {
+                        String element = (String) model.getElementAt(i);
+                        if (newValue == element) absent = false;
                     }
+
+                    if (absent) {
+                        // add new reserved element
+                        box.addItem(newValue);
+                        map.addItemToMap(value, newValue);
+                    }
+                    box.setSelectedItem(newValue);
                 }
             }
         }
@@ -2676,7 +2702,6 @@ public class CdiPanel extends JPanel {
                 // if not OK, silently skip; if OK, act
                 if (result == 0) {
                     entry.setValue((long)(entry.rep.getValue()));
-                    System.out.println(entry.rep.getValue());
                     _changeMade = true;
                     notifyTabColorRefresh();
                 }
