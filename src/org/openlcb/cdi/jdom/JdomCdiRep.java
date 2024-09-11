@@ -444,6 +444,18 @@ public class JdomCdiRep implements CdiRep {
         }
 
         @Override
+        public boolean isSliderImmediate() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return false;
+            Attribute immediate = slider.getAttribute("immediate");
+            if (immediate == null) return false;
+            if (! immediate.getValue().toLowerCase().equals("yes")) return false;
+            return true;
+        }
+
+        @Override
         public int getSliderDivisions() {
             Element hints = e.getChild("hints");
             if (hints == null) return 1;
