@@ -67,7 +67,7 @@ public class DatagramService extends MessageDecoder {
      */
     public void sendData(DatagramServiceTransmitMemo memo) {
         if (xmtMemo != null) {
-            logger.log(Level.SEVERE, "Overriding datagram transmit memo. old {0} new {1}", new Object[]{xmtMemo, memo}); //log
+            logger.log(Level.SEVERE, "Overriding datagram transmit memo. old {0} new {1}", new Object[]{xmtMemo, memo});
         }
         xmtMemo = memo;
         Message m = new DatagramMessage(here, memo.dest, memo.data);

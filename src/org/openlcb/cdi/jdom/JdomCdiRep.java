@@ -456,16 +456,16 @@ public class JdomCdiRep implements CdiRep {
         }
 
         @Override
-        public int getSliderDivisions() {
+        public int getSliderTickSpacing() {
             Element hints = e.getChild("hints");
-            if (hints == null) return 1;
+            if (hints == null) return 0;
             Element slider = hints.getChild("slider");
-            if (slider == null) return 1;
-            Attribute divisions = slider.getAttribute("divisions");
-            if (divisions == null) return 1;
+            if (slider == null) return 0;
+            Attribute tickSpacing = slider.getAttribute("tickSpacing");
+            if (tickSpacing == null) return 0;
             try { 
-                return divisions.getIntValue();
-            } catch (org.jdom2.DataConversionException e) { return 1; }
+                return tickSpacing.getIntValue();
+            } catch (org.jdom2.DataConversionException e) { return 0; }
         }
 
     }

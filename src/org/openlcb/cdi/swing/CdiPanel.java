@@ -2374,7 +2374,8 @@ public class CdiPanel extends JPanel {
         JSlider slider = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
-        boolean first = true; // used to suppress slider output on initial change
+        boolean suppressExternal = false; // used to suppress slider output when changed from read
+        boolean suppressInternal = false; // used to suppress slider output when changed internally
 
 
         IntPane(ConfigRepresentation.IntegerEntry e) {
@@ -2398,15 +2399,10 @@ public class CdiPanel extends JPanel {
                     // display a slider
                     slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
                     slider.setOpaque(true); // so you can color it
-                    if (entry.rep.getSliderDivisions() > 1) {
+                    if (entry.rep.getSliderTickSpacing() > 1) {
                         // display divisions on the slider
-                        int divisionSpacing = 
-                            (int)Math.round( 
-                                (entry.rep.getMax()-entry.rep.getMin()+0.0) // force float calculation
-                                    /entry.rep.getSliderDivisions()
-                                );
-                        slider.setMajorTickSpacing(divisionSpacing);
-                        slider.setLabelTable(slider.createStandardLabels(divisionSpacing));
+                        slider.setMajorTickSpacing(entry.rep.getSliderTickSpacing());
+                        slider.setLabelTable(slider.createStandardLabels(entry.rep.getSliderTickSpacing()));
                         slider.setPaintTicks(true);
                         slider.setPaintLabels(true);
                     }
@@ -2416,8 +2412,11 @@ public class CdiPanel extends JPanel {
                         slider.addChangeListener(new javax.swing.event.ChangeListener(){
                             public void stateChanged(javax.swing.event.ChangeEvent e) {
                                 if (!slider.getValueIsAdjusting()) {
-                                    if (!first) writeDisplayTextToNode();
-                                    first = false;
+                                    if (!suppressInternal && !suppressExternal) {
+                                        writeDisplayTextToNode();
+                                    }
+                                    if (suppressExternal) suppressExternal = false;
+                                    if (suppressInternal) suppressInternal = false;
                                 }
                             }
                         });
@@ -2466,6 +2465,7 @@ public class CdiPanel extends JPanel {
                 value = Long.parseLong(textField.getText());
             } else if (slider != null) {
                 // get value from current slider position
+                suppressInternal = true;  // will be set false once change works through
                 value = slider.getValue();
             } else {
                 // have to get key from stored map value
@@ -2473,6 +2473,7 @@ public class CdiPanel extends JPanel {
                 String key = map.getKey(entry); 
                 value = Long.parseLong(key);
             }
+            suppressExternal = true; // will be reset when the change returns
             entry.setValue(value);
             _changeMade = true;
             notifyTabColorRefresh();
@@ -2481,7 +2482,10 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
-            if (slider != null) slider.setValue(Integer.parseInt(value));
+            if (slider != null) { 
+                suppressInternal = true;
+                slider.setValue(Integer.parseInt(value));
+            }
             if (box != null) { 
                 // check to see if item exists
                 box.setSelectedItem(value);
@@ -2576,7 +2580,7 @@ public class CdiPanel extends JPanel {
     }
     
     static final int MAX_SINGLE_LINE_ENTRY = 64; // somewhat arbitrary max length of single-line entry
-        private class StringPane extends EntryPane {
+    private class StringPane extends EntryPane {
         JTextComponent textField;
         private final ConfigRepresentation.StringEntry entry;
 
