@@ -100,7 +100,7 @@ public interface CdiRep {
         public boolean isSliderHint();
         // Does the slider itself immediately write its value on change?
         public boolean isSliderImmediate();
-        public int getSliderDivisions();
+        public int getSliderTickSpacing();
     }
 
     public static interface BitRep extends Item {
