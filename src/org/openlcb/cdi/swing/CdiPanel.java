@@ -2415,9 +2415,9 @@ public class CdiPanel extends JPanel {
                                     if (!suppressInternal && !suppressExternal) {
                                         writeDisplayTextToNode();
                                     }
-                                    if (suppressExternal) suppressExternal = false;
-                                    if (suppressInternal) suppressInternal = false;
                                 }
+                                suppressExternal = false;
+                                suppressInternal = false;
                             }
                         });
                     }
