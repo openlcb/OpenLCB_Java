@@ -117,6 +117,8 @@ public class CdiMemConfigReader  {
                 retval.provideReader(new java.io.StringReader(xml));
             } catch (java.io.UnsupportedEncodingException e) {
                 logger.warning("UnsupportedEncodingException while preparing XML data");
+                // provide a stand-in
+                retval.provideReader(new java.io.StringReader(""));
             }
         }
     }
