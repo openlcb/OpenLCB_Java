@@ -97,9 +97,12 @@ public interface CdiRep {
 
         public int getSize();
         
+        // Did the CDI content hint that this value should be presented as a slider?
         public boolean isSliderHint();
-        // Does the slider itself immediately write its value on change?
+        // Should the slider itself immediately write its value on change?
         public boolean isSliderImmediate();
+        // Optionally specifies the 'distance' between tick marks on the slider.
+        // If 0 (default value), don't show tick marks.
         public int getSliderTickSpacing();
     }
 
