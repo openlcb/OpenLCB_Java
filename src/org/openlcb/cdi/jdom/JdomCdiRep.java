@@ -112,6 +112,9 @@ public class JdomCdiRep implements CdiRep {
                     case "int":
                         list.add(new IntRep(element));
                         break;
+                    case "float":
+                        list.add(new FloatRep(element));
+                        break;
                     case "eventid":
                         list.add(new EventID(element));
                         break;
@@ -364,6 +367,7 @@ public class JdomCdiRep implements CdiRep {
     public static class EventID extends Item implements CdiRep.EventID {
         EventID(Element e) { super(e); }
     }
+    
     public static class IntRep extends Item implements CdiRep.IntegerRep {
         IntRep(Element e) { super(e); }
                 
@@ -468,6 +472,82 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom2.DataConversionException e) { return 1; }
         }
 
+    }
+
+
+    public static class FloatRep extends Item implements CdiRep.FloatRep {
+        FloatRep(Element e) { super(e); }
+                
+        @Override
+        public double getDefault() {
+            Element target = e.getChild("default");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Double.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for default element: "+text);
+                    // and return the default value from length
+                }
+            }
+            // otherwise, return default value of 0
+            return 0.0;
+        }
+
+        @Override
+        public double getMin() { 
+            Element target = e.getChild("min");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Double.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for min element: "+text);
+                    // and return the default value
+                }
+            }
+            // otherwise, return default
+            return 0.0;
+        }
+
+        @Override
+        public double getMax() { 
+            Element target = e.getChild("max");
+            if (target != null) {
+                String text = target.getTextNormalize();
+                try {
+                    return Integer.valueOf(text);
+                } catch (NumberFormatException ex) {
+                    logger.severe("Invalid content for max element: "+text);
+                    // and return the value computed from length
+                }
+            }
+            // otherwise, return value computed from size
+            switch (getSize()) {
+                case 8:
+                    return Double.MAX_VALUE-1.0;
+                case 4:
+                    return Float.MAX_VALUE-1.0;
+                case 2:
+                    // Float16
+                    return 65504.0-1.0;
+                default:
+                    logger.severe("Invalid size when finding default max: "+getSize());
+                    return 1.0;
+            }
+        }
+
+        @Override
+        public int getSize() { 
+            Attribute a = e.getAttribute("size");
+            try {
+                if (a == null) {
+                    return 1;
+                } else {
+                    return a.getIntValue(); // this doesn't check value for validity, that's the Schema's job
+                }
+            } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
     }
 
     public static class UnknownRep extends Item implements CdiRep.UnknownRep {

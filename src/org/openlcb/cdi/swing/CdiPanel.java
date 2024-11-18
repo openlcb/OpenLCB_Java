@@ -1266,6 +1266,11 @@ public class CdiPanel extends JPanel {
                 }
 
                 @Override
+                public void visitFloat(ConfigRepresentation.FloatEntry e) {
+                   writeEntry(e.key, Double.toString(e.getValue()));
+                }
+
+                @Override
                 public void visitEvent(ConfigRepresentation.EventEntry e) {
                    writeEntry(e.key, org.openlcb.Utilities.toHexDotsString(e.getValue
                            ().getContents()));
@@ -1388,6 +1393,12 @@ public class CdiPanel extends JPanel {
         public void visitInt(ConfigRepresentation.IntegerEntry e) {
             currentLeaf = new IntPane(e);
             super.visitInt(e);
+        }
+
+        @Override
+        public void visitFloat(ConfigRepresentation.FloatEntry e) {
+            currentLeaf = new FloatPane(e);
+            super.visitFloat(e);
         }
 
         @Override
@@ -2540,6 +2551,92 @@ public class CdiPanel extends JPanel {
         boolean isDataInvalid() {
             try {
                 int value = Integer.valueOf(getCurrentValue());
+                if (value >= entry.rep.getMin() && value <= entry.rep.getMax() ) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } catch (NumberFormatException ex) {
+                return true;
+            }
+        }
+
+        /**
+         * check that the current (String) value is 
+         * valid and within the min and max range.
+         * Disable/Enable write button as appropriate.
+         */
+        @Override
+        void updateWriteButton() {
+            if (writeButton == null) {
+                // skip these until the write button has been created
+                return;
+            }
+                
+            writeButton.setEnabled( ! isDataInvalid());
+ 
+        }
+    }
+
+    private class FloatPane extends EntryPane {
+        JTextField textField = null;
+        private final ConfigRepresentation.FloatEntry entry;
+
+
+        FloatPane(ConfigRepresentation.FloatEntry e) {
+            super(e, "Float");
+            this.entry = e;
+
+            // display an entry box
+            textField = new JTextField(24) {
+                public java.awt.Dimension getMaximumSize() {
+                    return getPreferredSize();
+                }
+            };
+            textComponent = textField;
+            textField.setToolTipText("Float from "
+                +entry.rep.getMin()+" to "+entry.rep.getMax()
+                +" ("+entry.size+" bytes)");
+
+            init();
+        }
+
+        @Override
+        protected void writeDisplayTextToNode() {
+            double value = Double.parseDouble(textField.getText());
+            entry.setValue(value);
+            _changeMade = true;
+            notifyTabColorRefresh();
+        }
+
+        @Override
+        protected void updateDisplayText(@NonNull String value) {
+            textField.setText(value);
+        }
+
+        @NonNull
+        @Override
+        protected String getDisplayText() {
+            String s = textField.getText();
+            return s == null ? "" : s;
+        }
+
+        /**
+         * Get the current value as a numerical String.
+         * Usually, this is the display text, but in the case of a 
+         * a map it's the integer value of the 
+         * current selection.
+         * @return Current value for storage as a String.
+         */
+        @NonNull
+        protected String getCurrentValue() {
+            String s = (String) textField.getText();
+            return s == null ? "" : s;
+        }
+
+        boolean isDataInvalid() {
+            try {
+                double value = Double.valueOf(getCurrentValue());
                 if (value >= entry.rep.getMin() && value <= entry.rep.getMax() ) {
                     return false;
                 } else {
