@@ -574,6 +574,15 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 }
             }
         }
+        
+        public boolean isHideable() {
+            return group.isHideable();
+        }
+
+        public boolean isHidden() {
+            return group.isHidden();
+        }
+
     }
 
     /**

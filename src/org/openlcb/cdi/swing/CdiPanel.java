@@ -1101,14 +1101,14 @@ public class CdiPanel extends JPanel {
             super.visitGroup(e);
             factory.handleGroupPaneEnd(groupPane);
 
-            if (groupPane.getComponentCount() > 0) {
-                if (oldPane instanceof SegmentPane) {
-                    // we make toplevel groups collapsible.
+            if (groupPane.getComponentCount() > 0) { // empty groups are not collabsible
+                if (oldPane instanceof SegmentPane || e.isHideable()) { // we only make toplevel groups collapsible unless hint requests
                     groupPane.setBorder(null);
                     CollapsiblePanel cPanel = new CollapsiblePanel(groupPane.getName(), groupPane);
                     // cPanel.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
                     cPanel.setAlignmentY(Component.TOP_ALIGNMENT);
                     cPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    cPanel.setExpanded(!e.isHidden());
                     oldPane.add(cPanel);
                     addNavigationActions(cPanel);
                 } else {

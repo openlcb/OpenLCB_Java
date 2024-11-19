@@ -45,6 +45,8 @@ public interface CdiRep {
         public java.util.List<Item> getItems();
         public int getReplication();
         public String getRepName(int index, int replications);
+        public boolean isHideable();
+        public boolean isHidden();
     }
 
     public static interface Map {

@@ -17,23 +17,50 @@
     <group offset="0" replication="2">
         <name>Produced Events</name>
         <description>The EventIDs for the producers</description>
+        <hints>
+        <visibility hideable="yes" hidden="yes" />
+        </hints>
         <eventid/>
         <eventid/>
     </group>
     <group replication="2">
         <name>Consumed Events</name>
         <description>The EventIDs for the consumers</description>
+        <hints>
+        <visibility hideable="yes" hidden="yes" />
+        </hints>
         <eventid/>
         <eventid/>
         <blob size="10" mode="readwrite">
             <name>Blob to see if works in group element</name>
         </blob>
-        <float size="2">
+        <float size="8">
             <name>Float to see if works in group element</name>
         </float>
         <int size="4">
             <name>Int of size 4 so that each group is 32 long</name>
         </int>
+        <group collapsible="yes">
+            <name>Hideable and Hidden Nested Group</name>
+            <hints>
+            <visibility hideable="yes" hidden="true" />
+            </hints>
+            <eventid/>
+            <eventid/>
+        </group>
+        <group collapsible="yes">
+            <name>Hideable and Not Hidden Nested Group</name>
+            <hints>
+            <visibility hideable="yes" hidden="no" />
+            </hints>
+            <eventid/>
+            <eventid/>
+        </group>
+        <group>
+            <name>Non-hideable Nested Group</name>
+            <eventid/>
+            <eventid/>
+        </group>
     </group>
     <int size="2">
         <name>Sample integer variable</name>
@@ -42,14 +69,28 @@
         <max>999</max>
         <default>12</default>
     </int>
+    <float size="2">
+        <name>Sample float variable</name>
+        <description>Doesn't do anything</description>
+        <min>1</min>
+        <max>999</max>
+        <default>12</default>
+    </float>
+    <float size="2" offset="-2">
+        <name>Same float variable</name>
+        <description>Overlaps previous</description>
+        <min>0</min>
+        <max>10000</max>
+        <default>12</default>
+    </float>
     <int size="2">
         <name>Sample integer slider</name>
         <description>Doesn't do anything either</description>
-        <min>0</min>
-        <max>1000</max>
+        <min>1</min>
+        <max>250</max>
         <default>12</default>
         <hints>
-            <slider divisions="5" />
+            <slider tickSpacing="50" />
         </hints>
     </int>
     <int size="2">
@@ -59,9 +100,33 @@
         <max>1000</max>
         <default>12</default>
         <hints>
-            <slider divisions="5" immediate="yes" />
+            <slider tickSpacing="200" immediate="yes" />
         </hints>
     </int>
+</segment>
+
+<segment origin="400" space="12">
+    <name>Sample Single Group</name>
+      <group replication='1'>\n\
+        <hints>
+        <visibility hideable="yes" hidden="yes" />
+        </hints>
+        <int size='2'>\n\
+          <name>Output On Period</name>\n\
+        </int>\n\
+        <int size='2'>\n\
+          <name>Output Off Period</name>\n\
+        </int>\n\
+        <int size='1'>\n\
+          <name>Units</name>\n\
+          <default>"xstr(UNITS_DEFAULT)"</default>\n\
+          <map>\n\
+            <relation><property>"xstr(UNITS_MS)"</property><value>Milliseconds (ms)</value></relation>\n\
+            <relation><property>"xstr(UNITS_S)"</property><value>Seconds (s)</value></relation>\n\
+            <relation><property>"xstr(UNITS_M)"</property><value>Minutes (m)</value></relation>\n\
+          </map>\n\
+        </int>\n\
+      </group>\n\
 </segment>
 
 <segment origin="128" space="1">

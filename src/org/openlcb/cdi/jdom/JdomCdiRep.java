@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.jdom2.Attribute;
+import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import org.openlcb.cdi.CdiRep;
 
@@ -287,6 +288,38 @@ public class JdomCdiRep implements CdiRep {
                 if (a == null) return 0;
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
+        }
+
+        public boolean isHideable() {
+            // defaults to false
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element visibility = hints.getChild("visibility");
+            if (visibility == null) return false;
+            Attribute a = visibility.getAttribute("hideable");
+            if (a == null) return false;
+            try {
+                boolean value = a.getBooleanValue();
+                return value;
+            } catch (DataConversionException ex) {
+                return false;
+            }
+        }
+
+        public boolean isHidden() {
+            // defaults to false
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element visibility = hints.getChild("visibility");
+            if (visibility == null) return false;
+            Attribute a = visibility.getAttribute("hidden");
+            if (a == null) return false;
+            try {
+                boolean value = a.getBooleanValue();
+                return value;
+            } catch (DataConversionException ex) {
+                return false;
+            }
         }
 
         /**
