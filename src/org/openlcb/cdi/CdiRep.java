@@ -103,6 +103,14 @@ public interface CdiRep {
         public int getSliderDivisions();
     }
 
+    public static interface FloatRep extends Item {
+        public double getDefault();
+        public double getMin();
+        public double getMax();
+
+        public int getSize();
+    }
+
     public static interface BitRep extends Item {
         public boolean getDefault();
 

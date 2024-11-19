@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Reader;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,6 +25,7 @@ import org.openlcb.cdi.jdom.CdiMemConfigReader;
 import org.openlcb.cdi.jdom.JdomCdiReader;
 import org.openlcb.cdi.jdom.XmlHelper;
 import org.openlcb.implementations.MemoryConfigurationService;
+import org.openlcb.implementations.throttle.Float16;
 
 /**
  * Maintains a parsed cache of the CDI config of a remote node. Responsible for fetching the CDI,
@@ -249,6 +251,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 entry = new GroupEntry(name, (CdiRep.Group) it, segment, origin);
             } else if (it instanceof CdiRep.IntegerRep) {
                 entry = new IntegerEntry(name, (CdiRep.IntegerRep) it, segment, origin);
+            } else if (it instanceof CdiRep.FloatRep) {
+                entry = new FloatEntry(name, (CdiRep.FloatRep) it, segment, origin);
             } else if (it instanceof CdiRep.EventID) {
                 entry = new EventEntry(name, (CdiRep.EventID) it, segment, origin);
             } else if (it instanceof CdiRep.StringRep) {
@@ -305,6 +309,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 visitString((StringEntry) e);
             } else if (e instanceof IntegerEntry) {
                 visitInt((IntegerEntry) e);
+           } else if (e instanceof FloatEntry) {
+                visitFloat((FloatEntry) e);
             } else if (e instanceof EventEntry) {
                 visitEvent((EventEntry) e);
             } else if (e instanceof ActionButtonEntry) {
@@ -332,6 +338,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         }
 
         public void visitInt(IntegerEntry e) {
+            visitLeaf(e);
+        }
+
+        public void visitFloat(FloatEntry e) {
             visitLeaf(e);
         }
 
@@ -617,6 +627,70 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                 value >>= 8;
             }
             cache.write(origin, b, this);
+        }
+    }
+
+    /**
+     * Represents a float variable.
+     */
+    public class FloatEntry extends CdiEntry {
+        public CdiRep.FloatRep rep;
+
+        FloatEntry(String name, CdiRep.FloatRep rep, int segment, long origin) {
+            this.key = name;
+            this.space = segment;
+            this.origin = origin;
+            this.rep = rep;
+            this.size = rep.getSize();
+        }
+
+        @Override
+        public CdiRep.Item getCdiItem() {
+            return rep;
+        }
+
+        @Override
+        protected void updateVisibleValue() {
+            lastVisibleValue = Double.toString(getValue());
+        }
+
+        public double getValue() {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] b = cache.read(origin, size);
+            if (b == null) return 0.0;
+            switch (size) {
+                case 8:
+                    return ByteBuffer.wrap(b).getDouble();
+                case 4:
+                    return ByteBuffer.wrap(b).getFloat();
+                case 2:
+                    Float16 f = new Float16(b[0], b[1]);
+                    return f.getFloat();
+                    
+            }
+            return 0.0;
+        }
+
+        public void setValue(double value) {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] bytes;
+            switch (size) {
+                case 8:
+                    bytes = new byte[8];
+                    ByteBuffer.wrap(bytes).putDouble(value);
+                    cache.write(origin, bytes, this);
+                    break;
+                case 4:
+                    bytes = new byte[4];
+                    ByteBuffer.wrap(bytes).putFloat((float)value);
+                    cache.write(origin, bytes, this);
+                    break;
+                case 2:
+                    Float16 f = new Float16(value, value>=0.0);
+                    bytes = new byte[]{f.getByte1(), f.getByte2()};
+                    cache.write(origin, bytes, this);
+                    break;
+            }
         }
     }
 
