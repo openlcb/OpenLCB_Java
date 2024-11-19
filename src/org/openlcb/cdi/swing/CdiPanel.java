@@ -149,10 +149,22 @@ public class CdiPanel extends JPanel {
     private List<util.CollapsiblePanel> navPanels = new ArrayList<>();
     private final Color COLOR_BACKGROUND;
     private CollapsiblePanel sensorHelperPanel;
-    /// Panel at the bottom of the window with command buttons.
-    //private JPanel bottomPanel;
     /// To get focus to the bottom panel, this component needs to be activated.
     private JComponent bottomPanelHead;
+    
+    static private Font tabFont;    // this will be referenced in getTabLabel below
+    static {
+        // ensure that JTabbedPane pane labels use 
+        // the specific Dialog font
+        int size = 12;
+        Font defaultTabbedFont = UIManager.getFont("TabbedPane.font");
+        if (defaultTabbedFont != null) {
+            size = defaultTabbedFont.getSize();
+        } else {
+            logger.log(Level.WARNING, "Did not find default TabbedPane font, please report this.");
+        }
+        tabFont = new Font("Dialog", Font.PLAIN, size);
+    }
 
     public CdiPanel () {
         super();
@@ -1190,6 +1202,7 @@ public class CdiPanel extends JPanel {
          */
         protected JComponent getTabLabel(JTabbedPane parentTabbedPane, int index, String name, ConfigRepresentation.GroupRep rep) {
             JLabel tabLabel = new JLabel(name);
+            tabLabel.setFont(tabFont);
             
             tabLabel.addMouseListener(new MouseAdapter() {
 

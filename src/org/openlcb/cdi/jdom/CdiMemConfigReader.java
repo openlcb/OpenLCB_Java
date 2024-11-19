@@ -2,6 +2,7 @@
 
 package org.openlcb.cdi.jdom;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static java.util.logging.Logger.getLogger;
@@ -42,19 +43,19 @@ public class CdiMemConfigReader  {
 
 
     long nextAddress = 0;
-    StringBuffer buf;
+    ArrayList buf = new ArrayList();
 
     ReaderAccess retval;
     public void startLoadReader(ReaderAccess retval) {
         this.retval = retval;
         nextAddress = 0;
-        buf = new StringBuffer();
+        buf = new ArrayList();
         nextRequest();
     }
 
     void nextRequest() {
         if (retval != null) {
-            retval.progressNotify(buf.length(), -1);
+            retval.progressNotify(buf.size(), -1);
         }
         MemoryConfigurationService.McsReadHandler memo =
             new MemoryConfigurationService.McsReadHandler() {
@@ -92,7 +93,7 @@ public class CdiMemConfigReader  {
                             done();
                             return;  // don't do next request
                         }
-                        buf.append((char)data[i]);
+                        buf.add(data[i]);
                     }
                     // repeat if not done
                     nextAddress = nextAddress + LENGTH;
@@ -105,9 +106,20 @@ public class CdiMemConfigReader  {
     private void done() {
         // done, pass back a reader based on the current buffer contents
         if (retval != null) {
-            retval.progressNotify(buf.length(), buf.length());
-            logger.log(Level.FINE, "Retrieved XML: \n{0}", buf);
-            retval.provideReader(new java.io.StringReader(new String(buf)));
+            retval.progressNotify(buf.size(), buf.size());
+            byte[] byteArray = new byte[buf.size()];
+            for (int i = 0 ; i<buf.size(); i++) {
+                byteArray[i] = (byte)buf.get(i);
+            }
+            try {
+                String xml = new String(byteArray, "UTF-8");
+                logger.log(Level.FINE, "Retrieved XML: \n{0}", xml);
+                retval.provideReader(new java.io.StringReader(xml));
+            } catch (java.io.UnsupportedEncodingException e) {
+                logger.warning("UnsupportedEncodingException while preparing XML data");
+                // provide a stand-in
+                retval.provideReader(new java.io.StringReader(""));
+            }
         }
     }
 
