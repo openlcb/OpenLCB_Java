@@ -128,6 +128,7 @@ public class JdomCdiRep implements CdiRep {
                     case "repname":
                     case "name":
                     case "description":
+                    case "hints":
                         break;
                     default:
                         list.add(new UnknownRep(element));
