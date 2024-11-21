@@ -1909,16 +1909,20 @@ public class CdiPanel extends JPanel {
         protected void additionalButtons() {}
 
         protected void init() {
+            // a panel that may exist below the main component (textComponent)
+            // which, if present, gets the Refresh and Write buttons
+            JPanel subpanel = null;
+            
             if (textComponent instanceof JTextArea) {
-                JPanel lengthPanel = new JPanel();
+                subpanel = new JPanel();
                 
                 // include an auto-updating "remaining characters" field
-                lengthPanel.setLayout(new FlowLayout());
+                subpanel.setLayout(new FlowLayout());
                 JLabel lengthLabel = new JLabel("Remaining characters: ");
-                lengthPanel.add(lengthLabel);
+                subpanel.add(lengthLabel);
                 final JTextField countField = new JTextField(6);
                 countField.setText(""+(entry.size-1));
-                lengthPanel.add(countField);
+                subpanel.add(countField);
                 lengthLabel.setFont(countAreaFont);
                 countField.setFont(countAreaFont);
                 
@@ -1949,7 +1953,7 @@ public class CdiPanel extends JPanel {
                 };
                 spane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
                 combinedPanel.add(spane);
-                combinedPanel.add(lengthPanel);
+                combinedPanel.add(subpanel);
                 
                 p3.add(combinedPanel);
 
@@ -2053,8 +2057,12 @@ public class CdiPanel extends JPanel {
                         entry.reload();
                     }
                 });
-                p3.add(b);
-
+                if (subpanel != null ) {
+                    subpanel.add(b);
+                } else {
+                    p3.add(b);
+                }
+ 
                 writeButton = factory.handleWriteButton(new JButton("Write"));
                 writeButton.addActionListener(new java.awt.event.ActionListener() {
                     @Override
@@ -2062,7 +2070,11 @@ public class CdiPanel extends JPanel {
                         writeDisplayTextToNode();
                     }
                 });
-                p3.add(writeButton);
+                if (subpanel != null ) {
+                    subpanel.add(writeButton);
+                } else {
+                    p3.add(writeButton);
+                }
             }
             
             additionalButtons();
