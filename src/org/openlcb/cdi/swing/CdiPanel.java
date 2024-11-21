@@ -1924,15 +1924,31 @@ public class CdiPanel extends JPanel {
                 
                 JPanel combinedPanel = new JPanel();
                 combinedPanel.setLayout(new BoxLayout(combinedPanel, BoxLayout.Y_AXIS));
-                combinedPanel.add(new JScrollPane(textComponent){
+                JScrollPane spane = new JScrollPane(textComponent){
                     // Limit how small the layout will make the field
                     public Dimension getMinimumSize() {
                         Dimension superSize = super.getMinimumSize();
                         int width = superSize.width;
-                        int height = Math.max(superSize.height, 200);
+                        int height = Math.max(superSize.height, 50);
                         return new Dimension(width, height);
                     }
-                });
+                    public Dimension getPreferredSize() {
+                        Dimension superMin = super.getMinimumSize();
+                        Dimension superPref = super.getPreferredSize();
+                        int width = Math.max(superMin.width, superPref.width);
+                        int height = Math.max(superMin.height, superPref.height);
+                        return new Dimension(width, height);
+                    }
+                    public Dimension getMaximumSize() {
+                        Dimension superMax = super.getMaximumSize();
+                        Dimension superPref = super.getPreferredSize();
+                        int width = Math.max(superMax.width, superPref.width);
+                        int height = Math.max(superMax.height, superPref.height);
+                        return new Dimension(width, height);
+                    }
+                };
+                spane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+                combinedPanel.add(spane);
                 combinedPanel.add(lengthPanel);
                 
                 p3.add(combinedPanel);
@@ -2722,7 +2738,10 @@ public class CdiPanel extends JPanel {
                 textField = jtf;
             } else {
                 // Long string. Show multi-line editor
-                JTextArea jta = new JTextArea(doc, "", Math.min(40, (int)(entry.size / 40)), 80);// line count is heuristic
+                // For character count handling, see EntryPane#init() below
+                JTextArea jta = new JTextArea(doc, "", Math.min(40, (int)(entry.size / 32)), 80);
+                        // Line count estimate is heuristic
+                        // Limited to 40 lines to keep GUI under control
                 jta.setEditable(true);
                 jta.setLineWrap(true);
                 jta.setWrapStyleWord(true);
@@ -2731,7 +2750,7 @@ public class CdiPanel extends JPanel {
                 textField = jta;
             }
             textComponent = textField;
-            textComponent.setToolTipText("String of up to "+entry.size+" characters");
+            textComponent.setToolTipText("String of up to "+(entry.size-1)+" characters"); // -1 for terminating zero in field
             init();
         }
 
