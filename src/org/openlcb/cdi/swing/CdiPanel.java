@@ -1100,12 +1100,15 @@ public class CdiPanel extends JPanel {
             factory.handleGroupPaneStart(groupPane);
             if (e.isReadOnlyConfigured()) {
                 // mark the direct children of these, except groups, as readOnly
+                // when the direct child is a grouprep (repetitions > 1), mark those children
                 for (ConfigRepresentation.CdiEntry entry : e.getEntries()) {
                     if (! (entry instanceof ConfigRepresentation.GroupEntry) ) {
-                        System.out.println("Non Group Entry");
-                        entry.setFlaggedReadOnly(true);
-                    } else {
-                        System.out.println("Group Entry");
+                         entry.setFlaggedReadOnly(true);
+                        if (entry instanceof ConfigRepresentation.GroupRep ) {
+                            for (ConfigRepresentation.CdiEntry subentry : ((ConfigRepresentation.GroupRep)entry).getEntries()) {
+                                subentry.setFlaggedReadOnly(true);
+                            }
+                        }
                     }
                 }
             }
@@ -2087,7 +2090,8 @@ public class CdiPanel extends JPanel {
                 }
  
                 // write button is suppressed if flagged as read only
-                if (entry.isFlaggedReadOnly()) {
+                System.out.println("process "+entry.key);
+                if (! entry.isFlaggedReadOnly()) {
                     writeButton = factory.handleWriteButton(new JButton("Write"));
                     writeButton.addActionListener(new java.awt.event.ActionListener() {
                         @Override
