@@ -8,17 +8,21 @@
     <model>Model 123 Uniblab</model>
     <hardwareVersion>EC 415</hardwareVersion>
     <softwareVersion>1.2.3.4</softwareVersion>
+    <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
     <map>
         <relation><property>Size</property><value>8 cm by 12 cm</value></relation>
     </map>
 </identification>
 
 <segment origin="0" space="0">
+    <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
     <group offset="0" replication="2">
         <name>Produced Events</name>
         <description>The EventIDs for the producers</description>
+        <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
         <hints>
-        <visibility hideable="yes" hidden="yes" />
+            <visibility hideable="yes" hidden="yes" />
+            <readOnly />
         </hints>
         <eventid/>
         <eventid/>
@@ -27,7 +31,7 @@
         <name>Consumed Events</name>
         <description>The EventIDs for the consumers</description>
         <hints>
-        <visibility hideable="yes" hidden="yes" />
+            <visibility hideable="yes" hidden="yes" />
         </hints>
         <eventid/>
         <eventid/>
@@ -40,18 +44,18 @@
         <int size="4">
             <name>Int of size 4 so that each group is 32 long</name>
         </int>
-        <group collapsible="yes">
+        <group>
             <name>Hideable and Hidden Nested Group</name>
             <hints>
-            <visibility hideable="yes" hidden="true" />
+                <visibility hideable="yes" hidden="true" />
             </hints>
             <eventid/>
             <eventid/>
         </group>
-        <group collapsible="yes">
+        <group>
             <name>Hideable and Not Hidden Nested Group</name>
             <hints>
-            <visibility hideable="yes" hidden="no" />
+                <visibility hideable="yes" hidden="no" />
             </hints>
             <eventid/>
             <eventid/>
@@ -103,30 +107,6 @@
             <slider tickSpacing="200" immediate="yes" />
         </hints>
     </int>
-</segment>
-
-<segment origin="400" space="12">
-    <name>Sample Single Group</name>
-      <group replication='1'>\n\
-        <hints>
-        <visibility hideable="yes" hidden="yes" />
-        </hints>
-        <int size='2'>\n\
-          <name>Output On Period</name>\n\
-        </int>\n\
-        <int size='2'>\n\
-          <name>Output Off Period</name>\n\
-        </int>\n\
-        <int size='1'>\n\
-          <name>Units</name>\n\
-          <default>"xstr(UNITS_DEFAULT)"</default>\n\
-          <map>\n\
-            <relation><property>"xstr(UNITS_MS)"</property><value>Milliseconds (ms)</value></relation>\n\
-            <relation><property>"xstr(UNITS_S)"</property><value>Seconds (s)</value></relation>\n\
-            <relation><property>"xstr(UNITS_M)"</property><value>Minutes (m)</value></relation>\n\
-          </map>\n\
-        </int>\n\
-      </group>\n\
 </segment>
 
 <segment origin="128" space="1">

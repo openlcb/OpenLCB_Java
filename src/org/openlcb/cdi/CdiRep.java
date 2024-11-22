@@ -15,6 +15,8 @@ public interface CdiRep {
         public String getModel();
         public String getHardwareVersion();
         public String getSoftwareVersion();
+        public String getLinkText();
+        public String getLinkURL();
         public Map getMap();
     }
 
@@ -29,6 +31,8 @@ public interface CdiRep {
 
         public String getName();
         public String getDescription();
+        public String getLinkText();
+        public String getLinkURL();
         public Map getMap();
         public int getIndexInParent();
     }
@@ -44,9 +48,12 @@ public interface CdiRep {
     public static interface Group extends Item {
         public java.util.List<Item> getItems();
         public int getReplication();
+        public String getLinkText();
+        public String getLinkURL();
         public String getRepName(int index, int replications);
         public boolean isHideable();
         public boolean isHidden();
+        public boolean isReadOnly();
     }
 
     public static interface Map {

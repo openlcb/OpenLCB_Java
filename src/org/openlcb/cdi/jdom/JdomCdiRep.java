@@ -51,6 +51,22 @@ public class JdomCdiRep implements CdiRep {
         }
 
         @Override
+        public String getLinkText() {
+            Element c = id.getChild("link");
+            if (c == null) return null;
+            return c.getText();
+        }
+
+        @Override
+        public String getLinkURL() {
+            Element c = id.getChild("link");
+            if (c == null) return null;
+            Attribute a = c.getAttribute("ref");
+            if (a == null) return null;
+            return a.getValue();
+        }
+
+        @Override
         public Map getMap() {
             return new Map(id.getChild("map"));
         }
@@ -128,6 +144,7 @@ public class JdomCdiRep implements CdiRep {
                     case "repname":
                     case "name":
                     case "description":
+                    case "link":
                     case "hints":
                         break;
                     default:
@@ -166,6 +183,23 @@ public class JdomCdiRep implements CdiRep {
                 else return a.getIntValue();
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
+
+        @Override
+        public String getLinkText() {
+            Element c = e.getChild("link");
+            if (c == null) return null;
+            return c.getText();
+        }
+
+        @Override
+        public String getLinkURL() {
+            Element c = e.getChild("link");
+            if (c == null) return null;
+            Attribute a = c.getAttribute("ref");
+            if (a == null) return null;
+            return a.getValue();
+        }
+
     }
 
     public static class Map implements CdiRep.Map {
@@ -291,6 +325,23 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom2.DataConversionException e1) { return 0; }
         }
 
+        @Override
+        public String getLinkText() {
+            Element c = e.getChild("link");
+            if (c == null) return null;
+            return c.getText();
+        }
+
+        @Override
+        public String getLinkURL() {
+            Element c = e.getChild("link");
+            if (c == null) return null;
+            Attribute a = c.getAttribute("ref");
+            if (a == null) return null;
+            return a.getValue();
+        }
+
+        @Override
         public boolean isHideable() {
             // defaults to false
             Element hints = e.getChild("hints");
@@ -307,6 +358,7 @@ public class JdomCdiRep implements CdiRep {
             }
         }
 
+        @Override
         public boolean isHidden() {
             // defaults to false
             Element hints = e.getChild("hints");
@@ -321,6 +373,15 @@ public class JdomCdiRep implements CdiRep {
             } catch (DataConversionException ex) {
                 return false;
             }
+        }
+
+        @Override
+        public boolean isReadOnly() {
+            // defaults to false
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element readOnly = hints.getChild("readOnly");
+            return readOnly != null;
         }
 
         /**

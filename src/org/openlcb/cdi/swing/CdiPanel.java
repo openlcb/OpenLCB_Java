@@ -1098,6 +1098,17 @@ public class CdiPanel extends JPanel {
             }
 
             factory.handleGroupPaneStart(groupPane);
+            if (e.isReadOnlyConfigured()) {
+                // mark the direct children of these, except groups, as readOnly
+                for (ConfigRepresentation.CdiEntry entry : e.getEntries()) {
+                    if (! (entry instanceof ConfigRepresentation.GroupEntry) ) {
+                        System.out.println("Non Group Entry");
+                        entry.setFlaggedReadOnly(true);
+                    } else {
+                        System.out.println("Group Entry");
+                    }
+                }
+            }
             super.visitGroup(e);
             factory.handleGroupPaneEnd(groupPane);
 
@@ -1559,7 +1570,7 @@ public class CdiPanel extends JPanel {
 
         JPanel p1 = new JPanel();
         p.add(p1);
-        p1.setLayout(new util.javaworld.GridLayout2(4,2));
+        p1.setLayout(new util.javaworld.GridLayout2(5,2));
         p1.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         p1.add(new JLabel("Manufacturer: "));
@@ -1574,6 +1585,10 @@ public class CdiPanel extends JPanel {
         p1.add(new JLabel("Software Version: "));
         p1.add(new JLabel(id.getSoftwareVersion()));
 
+        if (id.getLinkText() != null && id.getLinkURL() != null) {
+            p1.add(new HtmlLabel(id.getLinkText(),id.getLinkURL()));
+        }
+        
         p1.setMaximumSize(p1.getPreferredSize());
 
         // include map if present
@@ -1629,7 +1644,8 @@ public class CdiPanel extends JPanel {
             //p.setBorder(BorderFactory.createTitledBorder(name));
 
             createDescriptionPane(this, item.getDescription());
-
+            createLinkPane(this, item.segment.getLinkText(), item.segment.getLinkURL());
+            
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
             if (p2 != null) p.add(p2);
@@ -1655,6 +1671,12 @@ public class CdiPanel extends JPanel {
         parent.add(area);
     }
 
+    void createLinkPane(JPanel parent, String text, String ref) {
+        if (text == null || ref == null) return;
+        parent.add(new HtmlLabel(text, ref));
+    }
+    
+    
     private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
         final JButton b = new JButton("Copy");
         final Color defaultColor = b.getBackground();
@@ -1858,6 +1880,7 @@ public class CdiPanel extends JPanel {
             setName(name);
 
             createDescriptionPane(this, item.getDescription());
+            createLinkPane(this, entry.group.getLinkText(), entry.group.getLinkURL());
 
             // include map if present
             JPanel p2 = createPropertyPane(item.getMap());
@@ -2063,17 +2086,20 @@ public class CdiPanel extends JPanel {
                     p3.add(b);
                 }
  
-                writeButton = factory.handleWriteButton(new JButton("Write"));
-                writeButton.addActionListener(new java.awt.event.ActionListener() {
-                    @Override
-                    public void actionPerformed(java.awt.event.ActionEvent e) {
-                        writeDisplayTextToNode();
+                // write button is suppressed if flagged as read only
+                if (entry.isFlaggedReadOnly()) {
+                    writeButton = factory.handleWriteButton(new JButton("Write"));
+                    writeButton.addActionListener(new java.awt.event.ActionListener() {
+                        @Override
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
+                            writeDisplayTextToNode();
+                        }
+                    });
+                    if (subpanel != null ) {
+                        subpanel.add(writeButton);
+                    } else {
+                        p3.add(writeButton);
                     }
-                });
-                if (subpanel != null ) {
-                    subpanel.add(writeButton);
-                } else {
-                    p3.add(writeButton);
                 }
             }
             
@@ -2965,6 +2991,37 @@ public class CdiPanel extends JPanel {
          */
         public JTextArea handleEditorValue(JTextArea value) {
             return value;
+        }
+    }
+    
+    /**
+     * Implements the "link" element by providing a line of 
+     * text that serves as an active hyperlink.
+     * Neither argument can be null.
+     */
+    class HtmlLabel extends javax.swing.JTextPane {
+        public HtmlLabel(String text, String ref) {
+            super();
+            setContentType("text/html");
+            String content = "<html><a href=\""+ref+"\">"+text+"</a></html>";
+            setText(content);
+            
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            setFont(UIManager.getFont("TextArea.font"));
+            setEditable(false);
+            setOpaque(false);
+            
+            this.addHyperlinkListener(new javax.swing.event.HyperlinkListener() {
+                public void hyperlinkUpdate(javax.swing.event.HyperlinkEvent e) {
+                    try {
+                        if (e.getEventType() == javax.swing.event.HyperlinkEvent.EventType.ACTIVATED) {
+                            if(java.awt.Desktop.isDesktopSupported()) {
+                                java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
+                            }
+                        }
+                    } catch (Exception ex) {}
+                }
+            });            
         }
     }
 }
