@@ -115,7 +115,7 @@ import static org.openlcb.implementations.BitProducerConsumer.nullEvent;
  *
  * Works with a CDI reader.
  *
- * @author  Bob Jacobsen   Copyright 2011
+ * @author  Bob Jacobsen   Copyright 2011, 2024
  * @author  Paul Bender Copyright 2016
  * @author  Balazs Racz Copyright 2016
  * @author  Pete Cressman Copyright 2020
@@ -2220,6 +2220,7 @@ public class CdiPanel extends JPanel {
             if (eventTable != null) {
                 add(eventNamesLabel);
             }
+            if (e.isFlaggedReadOnly()) textComponent.setEnabled(false);
         }
 
         /**
@@ -2533,6 +2534,17 @@ public class CdiPanel extends JPanel {
             }
         }
         
+        @Override
+        public void setEnabled(boolean state) {
+            super.setEnabled(state);
+            if (slider != null) {
+                slider.setEnabled(state);
+            }
+            if (textField != null) {
+                textField.setEnabled(state);
+            }
+        }
+        
         // copies the textfield value to the slider, handling errors
         void textToSlider() {
             try {
@@ -2650,6 +2662,7 @@ public class CdiPanel extends JPanel {
             }
 
             init();
+            if (e.isFlaggedReadOnly()) textComponent.setEnabled(false);
         }
 
         @Override
@@ -2786,6 +2799,7 @@ public class CdiPanel extends JPanel {
                 +" ("+entry.size+" bytes)");
 
             init();
+            if (e.isFlaggedReadOnly()) textComponent.setEnabled(false);
         }
 
         @Override
@@ -2906,6 +2920,7 @@ public class CdiPanel extends JPanel {
             textComponent = textField;
             textComponent.setToolTipText("String of up to "+(entry.size-1)+" characters"); // -1 for terminating zero in field
             init();
+            if (e.isFlaggedReadOnly()) textComponent.setEnabled(false);
         }
 
         @Override
