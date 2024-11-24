@@ -2090,7 +2090,6 @@ public class CdiPanel extends JPanel {
                 }
  
                 // write button is suppressed if flagged as read only
-                System.out.println("process "+entry.key);
                 if (! entry.isFlaggedReadOnly()) {
                     writeButton = factory.handleWriteButton(new JButton("Write"));
                     writeButton.addActionListener(new java.awt.event.ActionListener() {
