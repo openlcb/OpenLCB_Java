@@ -111,8 +111,10 @@ public interface CdiRep {
         // Should the slider itself immediately write its value on change?
         public boolean isSliderImmediate();
         // Optionally specifies the 'distance' between tick marks on the slider.
-        // If 0 (default value), don't show tick marks.
+        // If 0 (default value) or 1, don't show tick marks.
         public int getSliderTickSpacing();
+        // Optionally specifies if the slider value should be shown in text box
+        public boolean isSliderShowValue();
     }
 
     public static interface FloatRep extends Item {

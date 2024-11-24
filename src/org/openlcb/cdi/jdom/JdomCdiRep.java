@@ -550,8 +550,12 @@ public class JdomCdiRep implements CdiRep {
             if (slider == null) return false;
             Attribute immediate = slider.getAttribute("immediate");
             if (immediate == null) return false;
-            if (! immediate.getValue().toLowerCase().equals("yes")) return false;
-            return true;
+            try {
+                boolean value = immediate.getBooleanValue();
+                return value;
+            } catch (DataConversionException ex) {
+                return false;
+            }
         }
 
         @Override
@@ -567,6 +571,21 @@ public class JdomCdiRep implements CdiRep {
             } catch (org.jdom2.DataConversionException e) { return 0; }
         }
 
+        @Override
+        public boolean isSliderShowValue() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element slider = hints.getChild("slider");
+            if (slider == null) return false;
+            Attribute showValue = slider.getAttribute("showValue");
+            if (showValue == null) return false;
+            try {
+                boolean value = showValue.getBooleanValue();
+                return value;
+            } catch (DataConversionException ex) {
+                return false;
+            }
+        }
     }
 
 

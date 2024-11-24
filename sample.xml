@@ -94,7 +94,7 @@
         <max>250</max>
         <default>12</default>
         <hints>
-            <slider tickSpacing="50" />
+            <slider tickSpacing="50"/>
         </hints>
     </int>
     <int size="2">
@@ -104,7 +104,27 @@
         <max>1000</max>
         <default>12</default>
         <hints>
-            <slider tickSpacing="200" immediate="yes" />
+            <slider tickSpacing="200" immediate="yes"/>
+        </hints>
+    </int>
+    <int size="2">
+        <name>Sample integer slider with view</name>
+        <description>And another</description>
+        <min>1</min>
+        <max>250</max>
+        <default>12</default>
+        <hints>
+            <slider tickSpacing="50" showValue="true"/>
+        </hints>
+    </int>
+    <int size="2">
+        <name>Immediate-write integer slider with view</name>
+        <description>You guessed it!</description>
+        <min>0</min>
+        <max>1000</max>
+        <default>12</default>
+        <hints>
+            <slider tickSpacing="200" immediate="yes" showValue="1"/>
         </hints>
     </int>
 </segment>

@@ -32,7 +32,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -88,6 +91,8 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
@@ -2012,6 +2017,8 @@ public class CdiPanel extends JPanel {
                 p3.add(textComponent);
             }
             textComponent.setMaximumSize(textComponent.getPreferredSize());
+            
+            // Add color-setting listeners - this is here to avoid having lots of replicated code
             if (textComponent instanceof JTextComponent) {
                 ((JTextComponent) textComponent).getDocument().addDocumentListener(
                         new DocumentListener() {
@@ -2035,20 +2042,8 @@ public class CdiPanel extends JPanel {
                             }
                         }
                 );
-            } else if (textComponent instanceof JComboBox) {
-                ((JComboBox) textComponent).addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        updateColor();
-                    }
-                });
-            } else if (textComponent instanceof JSlider) {
-                ((JSlider) textComponent).addChangeListener(new javax.swing.event.ChangeListener(){
-                    public void stateChanged(javax.swing.event.ChangeEvent e) {
-                        updateColor();
-                    }
-                });
             }
+            
             entryListener = new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
@@ -2448,11 +2443,112 @@ public class CdiPanel extends JPanel {
         }
     }
 
+    // represent a slider with an optional text view
+    private class SliderWithView extends JPanel {
+        JSlider slider = null;
+        JTextField textField = null;
+        
+        SliderWithView(int min, int max, boolean showValue, int size) {
+            setLayout(new FlowLayout());
+            
+            // define the slider
+            slider = new JSlider(min, max);
+            slider.setOpaque(true); // so you can color it
 
+            // set a tooltip showing the valid range
+            if (min < 0) {
+                slider.setToolTipText("Signed integer from "
+                    +min+" to "+max
+                    +" ("+size+" bytes)");
+            } else {
+                slider.setToolTipText("Unsigned integer from "
+                    +min+" to "+max
+                    +" ("+size+" bytes)");
+            }
+
+            add(slider);
+            
+            // optionally define the text field
+            if (showValue) {
+                textField = new JTextField(2+(int)Math.log10(Math.max(1., Math.abs(max)))) {
+                    public java.awt.Dimension getMaximumSize() {
+                        return getPreferredSize();
+                    }
+                };
+                textField.setOpaque(true); // so you can color it
+
+                // set a tooltip showing the valid range
+                if (min < 0) {
+                    textField.setToolTipText("Signed integer from "
+                        +min+" to "+max
+                        +" ("+size+" bytes)");
+                } else {
+                    textField.setToolTipText("Unsigned integer from "
+                        +min+" to "+max
+                        +" ("+size+" bytes)");
+                }
+                
+                // add a listener to the slider to fill this
+                slider.addChangeListener(new ChangeListener() {
+                    @Override
+                    public void stateChanged(ChangeEvent e) {
+                        textField.setText(""+slider.getValue());
+                    }
+                });
+
+                // Add listeners to set slider. Value is considered
+                // final when the field is exited or Enter is hit.
+                // We do this instead of listening for a value
+                // change to avoid a possible back-and-forth
+                // setting loop between the text field and slider.
+                textField.addFocusListener(new FocusListener(){
+                    public void focusLost(FocusEvent e) {
+                        textToSlider();
+                    }
+                    public void focusGained(FocusEvent e) {
+                    }
+                });
+                textField.addKeyListener(new KeyAdapter() {
+                    @Override
+                    public void keyReleased(KeyEvent ke) {
+                        if (ke.getKeyCode() == KeyEvent.VK_ENTER) {
+                            textToSlider();
+                        }
+                    }
+                });
+                
+                add(textField);
+            }
+        }
+        
+        // setting background also colors slider
+        @Override
+        public void setBackground(Color color) {
+            // super.setBackground(..) would color whole block
+            if (slider != null) {
+                slider.setBackground(color);
+            }
+            if (textField != null) {
+                textField.setBackground(color);
+            }
+        }
+        
+        // copies the textfield value to the slider, handling errors
+        void textToSlider() {
+            try {
+                int current = (int)Double.parseDouble(textField.getText().trim());
+                slider.setValue(current);
+            } catch (NumberFormatException e) {
+                // don't set the value, load from current slider value
+                textField.setText(""+slider.getValue());
+            }
+        }
+    }
+    
     private class IntPane extends EntryPane {
         JTextField textField = null;
         JComboBox<String> box = null;
-        JSlider slider = null;
+        SliderWithView sliderView = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
         boolean suppressExternal = false; // used to suppress slider output when changed from read
@@ -2473,26 +2569,35 @@ public class CdiPanel extends JPanel {
                         return getPreferredSize();
                     }
                 };
+                
+                // add color listener
+                box.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        updateColor();
+                    }
+                });
+
                 textComponent = box;
             } else {
                 // map not present - is it a slider?
                 if (entry.rep.isSliderHint()) {
                     // display a slider
-                    slider = new JSlider((int)entry.rep.getMin(), (int)entry.rep.getMax());
-                    slider.setOpaque(true); // so you can color it
-                    if (entry.rep.getSliderTickSpacing() > 1) {
+                    sliderView = new SliderWithView((int)entry.rep.getMin(), (int)entry.rep.getMax(), entry.rep.isSliderShowValue(), entry.size);
+ 
+                    if (entry.rep.getSliderTickSpacing() > 0) { // default is zero
                         // display divisions on the slider
-                        slider.setMajorTickSpacing(entry.rep.getSliderTickSpacing());
-                        slider.setLabelTable(slider.createStandardLabels(entry.rep.getSliderTickSpacing()));
-                        slider.setPaintTicks(true);
-                        slider.setPaintLabels(true);
+                        sliderView.slider.setMajorTickSpacing(entry.rep.getSliderTickSpacing());
+                        sliderView.slider.setLabelTable(sliderView.slider.createStandardLabels(entry.rep.getSliderTickSpacing()));
+                        sliderView.slider.setPaintTicks(true);
+                        sliderView.slider.setPaintLabels(true);
                     }
 
                     // (optionally) listen for changes and immediately write
                     if (entry.rep.isSliderImmediate()) {
-                        slider.addChangeListener(new javax.swing.event.ChangeListener(){
+                        sliderView.slider.addChangeListener(new javax.swing.event.ChangeListener(){
                             public void stateChanged(javax.swing.event.ChangeEvent e) {
-                                if (!slider.getValueIsAdjusting()) {
+                                if (!sliderView.slider.getValueIsAdjusting()) {
                                     if (!suppressInternal && !suppressExternal) {
                                         writeDisplayTextToNode();
                                     }
@@ -2503,15 +2608,23 @@ public class CdiPanel extends JPanel {
                         });
                     }
                     
-                    textComponent = slider;
+                    
+                    // add the listener that handles changed color
+                    sliderView.slider.addChangeListener(new javax.swing.event.ChangeListener(){
+                        public void stateChanged(javax.swing.event.ChangeEvent e) {
+                            updateColor();
+                        }
+                    });
+
+                    textComponent = sliderView;
                     
                     // set the tooltip to min and max values
                     if (entry.rep.getMin() < 0) {
-                        slider.setToolTipText("Signed integer from "
+                        sliderView.setToolTipText("Signed integer from "
                             +entry.rep.getMin()+" to "+entry.rep.getMax()
                             +" ("+entry.size+" bytes)");
                     } else {
-                        slider.setToolTipText("Unsigned integer from "
+                        sliderView.setToolTipText("Unsigned integer from "
                             +entry.rep.getMin()+" to "+entry.rep.getMax()
                             +" ("+entry.size+" bytes)");
                     }
@@ -2544,10 +2657,10 @@ public class CdiPanel extends JPanel {
             long value;
             if (textField != null) {
                 value = Long.parseLong(textField.getText());
-            } else if (slider != null) {
+            } else if (sliderView != null) {
                 // get value from current slider position
                 suppressInternal = true;  // will be set false once change works through
-                value = slider.getValue();
+                value = sliderView.slider.getValue();
             } else {
                 // have to get key from stored map value
                 String entry = (String) box.getSelectedItem();
@@ -2563,9 +2676,9 @@ public class CdiPanel extends JPanel {
         @Override
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
-            if (slider != null) { 
+            if (sliderView != null) { 
                 suppressInternal = true;
-                slider.setValue(Integer.parseInt(value));
+                sliderView.slider.setValue(Integer.parseInt(value));
             }
             if (box != null) { 
                 // check to see if item exists
@@ -2595,7 +2708,7 @@ public class CdiPanel extends JPanel {
         @NonNull
         @Override
         protected String getDisplayText() {
-            if (slider != null) return ""+slider.getValue();
+            if (sliderView != null) return ""+sliderView.slider.getValue();
             String s = (box == null) ? (String) textField.getText()
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
@@ -2610,7 +2723,7 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
-            if (slider != null) return ""+slider.getValue();
+            if (sliderView != null) return ""+sliderView.slider.getValue();
             
             String s;
             if (box==null) {
