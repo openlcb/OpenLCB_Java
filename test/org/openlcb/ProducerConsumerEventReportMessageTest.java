@@ -85,6 +85,18 @@ public class ProducerConsumerEventReportMessageTest {
     }
 
     @Test   
+    public void testPayloadToString() {
+        ProducerConsumerEventReportMessage m1 = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1 );
+        
+        byte[] payload1 = new byte[]{0x12, 0x34};
+        ProducerConsumerEventReportMessage m2 = new ProducerConsumerEventReportMessage(
+                                nodeID1, eventID1, payload1 );
+        
+        Assert.assertEquals(" Producer/Consumer Event Report  EventID:01.00.00.00.00.00.01.00 payload of 2 : 12.34", m2.toString());
+    }
+
+    @Test   
     public void testPayloadHashAndEquals() {
         ProducerConsumerEventReportMessage mNone = new ProducerConsumerEventReportMessage(
                                 nodeID1, eventID1 );
