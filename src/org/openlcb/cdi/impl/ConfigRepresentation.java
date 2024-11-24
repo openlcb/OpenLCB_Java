@@ -412,6 +412,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             MemorySpaceCache cache = getCacheForSpace(space);
             cache.reload(origin, size, isNullTerminated());
         }
+        
+        boolean flaggedReadOnly = false;
+        public boolean isFlaggedReadOnly() { return flaggedReadOnly; }
+        public void setFlaggedReadOnly(boolean state) {flaggedReadOnly = state; }
     }
 
     public class Root implements CdiContainer {
@@ -573,6 +577,21 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                     size += e.size;
                 }
             }
+        }
+        
+        public boolean isHideable() {
+            return group.isHideable();
+        }
+
+        public boolean isHidden() {
+            return group.isHidden();
+        }
+
+        /**
+         * Does this entry carry the readOnly hint?
+         */
+        public boolean isReadOnlyConfigured() {
+            return group.isReadOnly();
         }
     }
 

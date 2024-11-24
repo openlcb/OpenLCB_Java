@@ -88,9 +88,19 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     
     @Override
     public String toString() {
-        return super.toString()
-                +" Producer/Consumer Event Report  "+eventID.toString()
-                +" payload of "+getPayloadSize();     
+        String retval = " Producer/Consumer Event Report  "+eventID.toString();
+        
+        if ( getPayloadSize() > 0 ) {
+            retval = retval + " payload of "+getPayloadSize()+" : ";
+            int n = getPayloadSize();
+            boolean first = true;
+            for (byte data : payload) {
+                if (!first) retval = retval + ".";
+                retval = retval + Integer.toHexString((int)(data&0xFF)).toUpperCase();
+                first = false;
+            }
+        }
+        return retval;    
     }
     
     public boolean equals(Object o) {
