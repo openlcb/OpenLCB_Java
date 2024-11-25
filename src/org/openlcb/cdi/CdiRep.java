@@ -115,6 +115,8 @@ public interface CdiRep {
         public int getSliderTickSpacing();
         // Optionally specifies if the slider value should be shown in text box
         public boolean isSliderShowValue();
+        // Did the CDI content hint that this value should be presented as a radio button?
+        public boolean isRadioButtonHint();
     }
 
     public static interface FloatRep extends Item {

@@ -586,6 +586,16 @@ public class JdomCdiRep implements CdiRep {
                 return false;
             }
         }
+
+        @Override
+        public boolean isRadioButtonHint() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element radiobutton = hints.getChild("radiobutton");
+            if (radiobutton == null) return false;
+            return true;
+        }
+
     }
 
 

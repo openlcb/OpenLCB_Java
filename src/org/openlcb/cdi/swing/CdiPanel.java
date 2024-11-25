@@ -52,6 +52,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +65,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
 import javax.swing.InputVerifier;
 import javax.swing.JButton;
@@ -87,6 +90,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.JRadioButton;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -2557,10 +2561,73 @@ public class CdiPanel extends JPanel {
         }
     }
     
+    // represents a set of radio buttons
+    private class RadioButtonPane extends JPanel {
+    
+        CdiRep.Map map;
+        ButtonGroup group = new ButtonGroup();
+        
+        RadioButtonPane(CdiRep.Map map, ActionListener action) {
+            this.map = map;
+            
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            // create the pane and fill with radio buttons
+            for (String v : map.getValues()) {
+                JRadioButton button = new JRadioButton(v);
+                button.setActionCommand(v);
+                add(button);
+                // add color listener
+                button.addActionListener(action);
+
+                group.add(button);
+            }
+        }
+        
+        long getCurrentValue() {
+            return Long.parseLong(getCurrentValueString());
+        }
+        
+        // value is a numeric string
+        void setCurrentValue(String value) {
+            String key = map.getKey(value);
+            
+            Enumeration<AbstractButton> e = group.getElements();
+            while (e.hasMoreElements()) {
+                AbstractButton b = e.nextElement();
+                if (b.getActionCommand().equals(value)) {
+                    b.setSelected(true);
+                    return;
+                }
+            }
+            // else set unselected
+            logger.log(Level.WARNING, "Value \""+value+"\" does not match a button value, taking 1st button");
+            group.clearSelection();
+        }
+        
+        String getCurrentValueString() {
+            String value = getDisplayText();
+            if (map.getKey(value) != null) {
+                return map.getKey(value);
+            } else {
+                logger.severe("Value \""+value+"\" does not match a button name");
+                return map.getKeys().get(0);
+            }
+        }
+        
+        String getDisplayText() {
+            if (group.getSelection() == null) {
+                return map.getValues().get(0);
+            } 
+            return group.getSelection().getActionCommand();
+        }
+
+    }
+    
     private class IntPane extends EntryPane {
         JTextField textField = null;
         JComboBox<String> box = null;
         SliderWithView sliderView = null;
+        RadioButtonPane radiobuttons = null;
         CdiRep.Map map = null;
         private final ConfigRepresentation.IntegerEntry entry;
         boolean suppressExternal = false; // used to suppress slider output when changed from read
@@ -2575,22 +2642,33 @@ public class CdiPanel extends JPanel {
             String[] labels;
             map = item.getMap();
             if ((map != null) && (map.getKeys().size() > 0)) {
-                // map present, make selection box
-                box = new JComboBox(map.getValues().toArray(new String[]{""})) {
-                    public java.awt.Dimension getMaximumSize() {
-                        return getPreferredSize();
-                    }
-                };
-                
-                // add color listener
-                box.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        updateColor();
-                    }
-                });
-
-                textComponent = box;
+                // map present, make selection box or radio buttons?
+                if (entry.rep.isRadioButtonHint()) {
+                    ActionListener action = new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent) {
+                            updateColor();
+                        }
+                    };
+                    radiobuttons = new RadioButtonPane(map, action);
+                    textComponent = radiobuttons;
+                } else {
+                    box = new JComboBox(map.getValues().toArray(new String[]{""})) {
+                        public java.awt.Dimension getMaximumSize() {
+                            return getPreferredSize();
+                        }
+                    };
+                    
+                    // add color listener
+                    box.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent actionEvent) {
+                            updateColor();
+                        }
+                    });
+    
+                    textComponent = box;
+                }
             } else {
                 // map not present - is it a slider?
                 if (entry.rep.isSliderHint()) {
@@ -2665,6 +2743,7 @@ public class CdiPanel extends JPanel {
             if (e.isFlaggedReadOnly()) textComponent.setEnabled(false);
         }
 
+        // Takes the current GUI content and writes it to the node
         @Override
         protected void writeDisplayTextToNode() {
             long value;
@@ -2674,6 +2753,8 @@ public class CdiPanel extends JPanel {
                 // get value from current slider position
                 suppressInternal = true;  // will be set false once change works through
                 value = sliderView.slider.getValue();
+            } else if (radiobuttons != null) {
+                value = radiobuttons.getCurrentValue(); 
             } else {
                 // have to get key from stored map value
                 String entry = (String) box.getSelectedItem();
@@ -2687,11 +2768,14 @@ public class CdiPanel extends JPanel {
         }
 
         @Override
+        // Sets a specific value into the GUI
         protected void updateDisplayText(@NonNull String value) {
             if (textField != null) textField.setText(value);
             if (sliderView != null) { 
                 suppressInternal = true;
                 sliderView.slider.setValue(Integer.parseInt(value));
+            } else if (radiobuttons != null) {
+                radiobuttons.setCurrentValue(value);
             }
             if (box != null) { 
                 // check to see if item exists
@@ -2720,8 +2804,16 @@ public class CdiPanel extends JPanel {
 
         @NonNull
         @Override
+        /* 
+         * Returns the current content of the GUI as a String
+         * This may be a number, but for a map (or buttons) it's the current label
+         */
         protected String getDisplayText() {
-            if (sliderView != null) return ""+sliderView.slider.getValue();
+            if (sliderView != null) {
+                return ""+sliderView.slider.getValue();
+            } else if (radiobuttons != null) {
+                return radiobuttons.getDisplayText();
+            }
             String s = (box == null) ? (String) textField.getText()
                     : (String) box.getSelectedItem();
             return s == null ? "" : s;
@@ -2736,7 +2828,11 @@ public class CdiPanel extends JPanel {
          */
         @NonNull
         protected String getCurrentValue() {
-            if (sliderView != null) return ""+sliderView.slider.getValue();
+            if (sliderView != null) {
+                return ""+sliderView.slider.getValue();
+            } else if (radiobuttons != null) {
+                return radiobuttons.getCurrentValueString();
+            }
             
             String s;
             if (box==null) {
