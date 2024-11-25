@@ -16,7 +16,7 @@
 
 <segment origin="0" space="0">
     <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
-    <group offset="0" replication="2">
+    <group replication="2">
         <name>Produced Events</name>
         <description>The EventIDs for the producers</description>
         <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
@@ -26,8 +26,23 @@
         </hints>
         <eventid/>
         <eventid/>
+        <int size="2"/>
+        <int size="2">
+            <min>1</min>
+            <max>250</max>
+            <default>12</default>
+            <hints>
+                <slider tickSpacing="50" showValue="true"/>
+            </hints>
+        </int>
+        <float size="4"/>
+        <string size="5">
+            <name>Status Field</name>
+            <description>As first string, this content will appear in the tab</description>
+        </string>
+        <string size="100"/>
     </group>
-    <group replication="2">
+    <group offset="0" replication="2">
         <name>Consumed Events</name>
         <description>The EventIDs for the consumers</description>
         <hints>
@@ -137,10 +152,13 @@
             Board must be restarted for this to take effect.
         </description>
         <map>
-            <relation><property>0</property><value>No reset (0)</value></relation>
+            <relation><property>10</property><value>No reset (10)</value></relation>
             <relation><property>85</property><value>Reset just EventIDs to defaults (85)</value></relation>
             <relation><property>170</property><value>Reset all to defaults (170)</value></relation>
         </map>
+        <hints>
+            <radiobutton/>
+        </hints>
     </int>
     <int size="1" offset="-1">
         <name>Reset Directly</name>
