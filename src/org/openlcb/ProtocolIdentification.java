@@ -105,7 +105,7 @@ public class ProtocolIdentification {
      * @param protocol enum representing the protocol bit to test
      * @return true if protocol is supported, false otherwise.
      */
-    boolean hasProtocol(Protocol protocol) {
+    public boolean hasProtocol(Protocol protocol) {
         return protocol.supports(value);
     }
 }

@@ -8,32 +8,78 @@
     <model>Model 123 Uniblab</model>
     <hardwareVersion>EC 415</hardwareVersion>
     <softwareVersion>1.2.3.4</softwareVersion>
+    <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
     <map>
         <relation><property>Size</property><value>8 cm by 12 cm</value></relation>
     </map>
 </identification>
 
 <segment origin="0" space="0">
-    <group offset="0" replication="2">
+    <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
+    <group replication="2">
         <name>Produced Events</name>
         <description>The EventIDs for the producers</description>
+        <link ref="http://openlcb.org">Link to OpenLCB.org documentation</link>
+        <hints>
+            <visibility hideable="yes" hidden="yes" />
+            <readOnly />
+        </hints>
         <eventid/>
         <eventid/>
+        <int size="2"/>
+        <int size="2">
+            <min>1</min>
+            <max>250</max>
+            <default>12</default>
+            <hints>
+                <slider tickSpacing="50" showValue="true"/>
+            </hints>
+        </int>
+        <float size="4"/>
+        <string size="5">
+            <name>Status Field</name>
+            <description>As first string, this content will appear in the tab</description>
+        </string>
+        <string size="100"/>
     </group>
-    <group replication="2">
+    <group offset="0" replication="2">
         <name>Consumed Events</name>
         <description>The EventIDs for the consumers</description>
+        <hints>
+            <visibility hideable="yes" hidden="yes" />
+        </hints>
         <eventid/>
         <eventid/>
         <blob size="10" mode="readwrite">
             <name>Blob to see if works in group element</name>
         </blob>
-        <float size="2">
+        <float size="8">
             <name>Float to see if works in group element</name>
         </float>
         <int size="4">
             <name>Int of size 4 so that each group is 32 long</name>
         </int>
+        <group>
+            <name>Hideable and Hidden Nested Group</name>
+            <hints>
+                <visibility hideable="yes" hidden="true" />
+            </hints>
+            <eventid/>
+            <eventid/>
+        </group>
+        <group>
+            <name>Hideable and Not Hidden Nested Group</name>
+            <hints>
+                <visibility hideable="yes" hidden="no" />
+            </hints>
+            <eventid/>
+            <eventid/>
+        </group>
+        <group>
+            <name>Non-hideable Nested Group</name>
+            <eventid/>
+            <eventid/>
+        </group>
     </group>
     <int size="2">
         <name>Sample integer variable</name>
@@ -42,14 +88,28 @@
         <max>999</max>
         <default>12</default>
     </int>
+    <float size="2">
+        <name>Sample float variable</name>
+        <description>Doesn't do anything</description>
+        <min>1</min>
+        <max>999</max>
+        <default>12</default>
+    </float>
+    <float size="2" offset="-2">
+        <name>Same float variable</name>
+        <description>Overlaps previous</description>
+        <min>0</min>
+        <max>10000</max>
+        <default>12</default>
+    </float>
     <int size="2">
         <name>Sample integer slider</name>
         <description>Doesn't do anything either</description>
-        <min>0</min>
-        <max>1000</max>
+        <min>1</min>
+        <max>250</max>
         <default>12</default>
         <hints>
-            <slider divisions="5" />
+            <slider tickSpacing="50"/>
         </hints>
     </int>
     <int size="2">
@@ -59,7 +119,27 @@
         <max>1000</max>
         <default>12</default>
         <hints>
-            <slider divisions="5" immediate="yes" />
+            <slider tickSpacing="200" immediate="yes"/>
+        </hints>
+    </int>
+    <int size="2">
+        <name>Sample integer slider with view</name>
+        <description>And another</description>
+        <min>1</min>
+        <max>250</max>
+        <default>12</default>
+        <hints>
+            <slider tickSpacing="50" showValue="true"/>
+        </hints>
+    </int>
+    <int size="2">
+        <name>Immediate-write integer slider with view</name>
+        <description>You guessed it!</description>
+        <min>0</min>
+        <max>1000</max>
+        <default>12</default>
+        <hints>
+            <slider tickSpacing="200" immediate="yes" showValue="1"/>
         </hints>
     </int>
 </segment>
@@ -72,10 +152,13 @@
             Board must be restarted for this to take effect.
         </description>
         <map>
-            <relation><property>0</property><value>No reset (0)</value></relation>
+            <relation><property>10</property><value>No reset (10)</value></relation>
             <relation><property>85</property><value>Reset just EventIDs to defaults (85)</value></relation>
             <relation><property>170</property><value>Reset all to defaults (170)</value></relation>
         </map>
+        <hints>
+            <radiobutton/>
+        </hints>
     </int>
     <int size="1" offset="-1">
         <name>Reset Directly</name>
