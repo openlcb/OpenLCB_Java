@@ -272,5 +272,14 @@ public class NodeSelector extends JComboBox<NodeSelector.ModelEntry>  {
         return me.getNodeID();
     }
 
+    public void setSelectedNodeID(NodeID nodeID) {
+        for (int i = 0; i < model.getSize(); ++i) {
+             if (model.getElementAt(i).getNodeID().equals(nodeID)) {
+                super.setSelectedItem(model.getElementAt(i));
+                break;
+            }
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(NodeSelector.class.getName());
 }
