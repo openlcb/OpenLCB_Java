@@ -29,11 +29,11 @@ public class Version {
      
     /* Specification modifier - updated periodically
      */
-    static final public int specMod = 1;
+    static final public int specMod = 2;
 
     /* Library modifier - updated periodically
      */
-    static final public int libMod = 1;
+    static final public int libMod = 2;
 
     /**
      * Checks if the current specification version is above a specific threshold.
