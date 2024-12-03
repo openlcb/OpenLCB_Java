@@ -80,6 +80,14 @@ public class CdiPanelDemo {
             fname = args[0];
             System.out.println("Using input file " + fname);
         }
+        
+        // configure a L&F
+        try {
+            // Set cross-platform Java L&F (also called "Metal")
+            javax.swing.UIManager.setLookAndFeel(
+                javax.swing.UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (Exception e) {};
+        
         d.displayFile(fname);
     }
 }
