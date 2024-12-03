@@ -48,6 +48,15 @@ public class EventID {
         System.arraycopy(data, 0, this.contents, 0, BYTECOUNT);
     }
 
+    // note long's 64th bit is a sign
+    @CheckReturnValue
+    public EventID(long value) {
+        this.contents = new byte[BYTECOUNT];
+        for (int index = 0; index < 8; index++) {
+            contents[index] = (byte)((value>>(8*(7-index))) & 0xFF);
+        }
+    }
+
     byte[] contents;
 
     @CheckReturnValue

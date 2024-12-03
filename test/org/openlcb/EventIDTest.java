@@ -152,4 +152,11 @@ public class EventIDTest {
         Assert.assertEquals(-2L, new EventID(new byte[]{(byte)0xff,(byte)0xff,(byte)0xff,(byte)0xff,
                 (byte)0xff,(byte)0xff,(byte)0xff,(byte)0xfe}).toLong());
     }
+    
+    @Test
+    public void testFromLong() {
+        EventID eid;
+        eid = new EventID(0x12345678);
+        Assert.assertEquals(0x12345678L, eid.toLong());
+    }
 }
