@@ -88,7 +88,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     
     @Override
     public String toString() {
-        String retval = " Producer/Consumer Event Report  "+eventID.toString();
+        String retval = super.toString() + " Producer/Consumer Event Report  "+eventID.toString();
         
         if ( getPayloadSize() > 0 ) {
             retval = retval + " payload of "+getPayloadSize()+" : ";
