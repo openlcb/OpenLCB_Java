@@ -159,4 +159,49 @@ public class EventIDTest {
         eid = new EventID(0x12345678);
         Assert.assertEquals(0x12345678L, eid.toLong());
     }
+    
+    @Test
+    public void testBoring() {
+        EventID eid = new EventID("02.02.59.00.00.00.00.00");
+        Assert.assertEquals("", eid.parse());
+    }
+
+    @Test
+    public void testDefault() {
+        EventID eid = new EventID("00.00.00.00.00.00.02.00");
+        Assert.assertEquals("Reserved 00.00.00.00.00.00.02.00", eid.parse());
+    }
+
+    @Test
+    public void testWellKnown() {
+        EventID eid = new EventID("01.00.00.00.00.00.FF.FE");
+        Assert.assertEquals("Clear Emergency Off", eid.parse());
+    }
+
+    @Test
+    public void testFastClock() {
+        EventID eid = new EventID("01.01.00.00.01.01.09.02");
+        Assert.assertEquals("Fast Clock 1 time 9:02", eid.parse());
+        eid = new EventID("01.01.00.00.01.01.09.32");
+        Assert.assertEquals("Fast Clock 1 time 9:50", eid.parse());
+        eid = new EventID("01.01.00.00.01.01.89.32");
+        Assert.assertEquals("Fast Clock 1 Set time 9:50", eid.parse());
+        eid = new EventID("01.01.00.00.01.01.F0.02");
+        Assert.assertEquals("Fast Clock 1 Start", eid.parse());
+    }
+
+    @Test
+    public void testRangeSuffix() {
+        EventID eid = new EventID("00.00.00.00.00.00.FF.FF");
+        Assert.assertEquals(0xFFFF, eid.rangeSuffix());
+        eid = new EventID("00.00.00.00.00.FF.00.00");
+        Assert.assertEquals(0xFFFF, eid.rangeSuffix());
+
+        eid = new EventID("00.00.00.00.00.FF.80.00");
+        Assert.assertEquals(0x7FFF, eid.rangeSuffix());
+
+        eid = new EventID("00.00.00.00.00.00.00.03");
+        Assert.assertEquals(0x03, eid.rangeSuffix());
+    }
+
 }
