@@ -93,7 +93,7 @@ public class ProducerConsumerEventReportMessageTest {
         ProducerConsumerEventReportMessage m2 = new ProducerConsumerEventReportMessage(
                                 nodeID1, eventID1, payload1 );
         
-        Assert.assertEquals(" Producer/Consumer Event Report  EventID:01.00.00.00.00.00.01.00 payload of 2 : 12.34", m2.toString());
+        Assert.assertEquals("01.02.03.04.05.06                     Producer/Consumer Event Report  EventID:01.00.00.00.00.00.01.00 payload of 2 : 12.34", m2.toString());
     }
 
     @Test   
