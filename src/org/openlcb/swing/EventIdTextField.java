@@ -49,37 +49,38 @@ import org.openlcb.EventID;
  * static method you call to get the field) rather than a subclass.
  *
  * @author	Bob Jacobsen   Copyright (C) 2012
- * @version	$Revision$
  */
 public class EventIdTextField extends JFormattedTextField  {
-    /** Comment for <code>serialVersionUID</code>. */
-    private static final long serialVersionUID = 44833863963351863L;
-
     private final static Logger logger = Logger.getLogger(EventIdTextField.class.getName());
 
-    public static JFormattedTextField getEventIdTextField() {
-        JFormattedTextField retval = new JFormattedTextField(
-                createFormatter("HH.HH.HH.HH.HH.HH.HH.HH"));
+    public EventIdTextField() {
+        this("HH.HH.HH.HH.HH.HH.HH.HH");
+    }
+    
+    public EventIdTextField(String mask) {
+        super(createFormatter(mask));
 
-        // Let's size the event ID fields for the longest event ID in pixels.
-        retval.setValue("DD.DD.DD.DD.DD.DD.DD.DD");
-        retval.setPreferredSize(retval.getPreferredSize());
-        retval.setMinimumSize(retval.getPreferredSize());
-        retval.setValue("00.00.00.00.00.00.00.00");
+        setValue("DD.DD.DD.DD.DD.DD.DD.DD");
+        setPreferredSize(getPreferredSize());
+        setMinimumSize(getPreferredSize());
+        setValue("00.00.00.00.00.00.00.00");
         
-        retval.setToolTipText("EventID as eight-byte dotted-hex string, "
+        setToolTipText("EventID as eight-byte dotted-hex string, "
                 + "e.g. 01.02.0A.AB.34.56.78.00 "
                 + "You can drag&drop or ctrl-click for more options");
                 
-        retval.setDragEnabled(true);
-        retval.setTransferHandler(new CustomTransferHandler());
+        setDragEnabled(true);
+        setTransferHandler(new CustomTransferHandler());
         
-        configurePopUp(retval);
-
-        return retval;
+        configurePopUp(this);
     }
     
-    private static void configurePopUp(JFormattedTextField textfield) {
+    @Deprecated
+    public static EventIdTextField getEventIdTextField() {
+        return new EventIdTextField();
+    }
+    
+    public static void configurePopUp(JTextComponent textfield) {
                 
         // JMRI's apps.Apps.java line 330 adds cut/copy/paste to all JTextComponents
         //  (Also serves as example of cut/copy/paste code)
@@ -90,7 +91,7 @@ public class EventIdTextField extends JFormattedTextField  {
         textfield.setInheritsPopupMenu(false);
     }
     
-    private static void checkAndShowPopup(JFormattedTextField textfield, MouseEvent event) {
+    private static void checkAndShowPopup(JTextComponent textfield, MouseEvent event) {
         if ( event.isPopupTrigger() ) {
             // user requested the popup menu
             JPopupMenu popup = createPopupMenu(textfield);
@@ -98,7 +99,7 @@ public class EventIdTextField extends JFormattedTextField  {
         }
     }
     
-    private static JPopupMenu createPopupMenu(JFormattedTextField textfield) {
+    public static JPopupMenu createPopupMenu(JTextComponent textfield) {
         JPopupMenu popup = new JPopupMenu();
         
         // add the usual copy and paste operators        
@@ -161,7 +162,7 @@ public class EventIdTextField extends JFormattedTextField  {
         return popup;
     }
     
-    public static JMenu makeWellKnownEventMenu(JFormattedTextField textfield) {
+    public static JMenu makeWellKnownEventMenu(JTextComponent textfield) {
         JMenu wkeMenu = new JMenu("Insert well-known event");
         wkeMenu.add(new EventIdInserter(
             "Emergency off (de-energize)",           "01.00.00.00.05.00.FF.FF", textfield));
@@ -181,7 +182,7 @@ public class EventIdTextField extends JFormattedTextField  {
         return wkeMenu;
     }
     
-    public static JMenuItem makeClockEventMenuItem(JFormattedTextField textfield) {
+    public static JMenuItem makeClockEventMenuItem(JTextComponent textfield) {
         JMenuItem menuItem = new JMenuItem("Insert Clock event...");
         menuItem.addActionListener(new ActionListener() {
             @Override
@@ -225,7 +226,7 @@ public class EventIdTextField extends JFormattedTextField  {
         return menuItem;
     }
 
-    public static JMenuItem makeDccAccessoryEventMenuItem(JFormattedTextField textfield) {
+    public static JMenuItem makeDccAccessoryEventMenuItem(JTextComponent textfield) {
         JMenuItem menuItem = new JMenuItem("Insert DCC accessory decoder events ...");
         menuItem.addActionListener(new ActionListener() {
             @Override
@@ -278,7 +279,7 @@ public class EventIdTextField extends JFormattedTextField  {
     }
   
     private static class EventIdInserter extends JMenuItem {
-        public EventIdInserter(String name, String value, JFormattedTextField target) {
+        public EventIdInserter(String name, String value, JTextComponent target) {
             super(name);
             this.value = value;
             this.target = target;
@@ -291,7 +292,7 @@ public class EventIdTextField extends JFormattedTextField  {
             });
         }
         final String value;
-        final JFormattedTextField target;
+        final JTextComponent target;
         
     }
     
