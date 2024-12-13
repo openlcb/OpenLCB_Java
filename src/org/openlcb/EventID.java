@@ -264,17 +264,23 @@ public class EventID {
     protected String dccRange() {
         String eid = this.toShortString();
         if (eid.startsWith("01.01.02.00.00.FF")) {
-            return "DCC Basic Acc Addr Activate "+(this.toLong()&0x7FFL);
+            return "DCC Acc Decoder "+parseAccDecoderNumber(this.toLong())+" active";
+            
         } else if (eid.startsWith("01.01.02.00.00.FE")) {
-            return "DCC Basic Acc Addr Deactivate "+(this.toLong()&0x7FFL);
+            return "DCC Acc Decoder "+parseAccDecoderNumber(this.toLong())+" inactive";
+            
         } else if (eid.startsWith("01.01.02.00.00.FD")) {
-            return "DCC Turnout Feedback On "+(this.toLong()&0x7FFL);
+            return "DCC Turnout Feedback "+(this.toLong()&0x7FFL)+" active";
+            
         } else if (eid.startsWith("01.01.02.00.00.FC")) {
-            return "DCC Turnout Feedback Off "+(this.toLong()&0x7FFL);
+            return "DCC Turnout Feedback "+(this.toLong()&0x7FFL)+" inactive";
+            
         } else if (eid.startsWith("01.01.02.00.00.FB")) {
-            return "DCC Sensor On "+(this.toLong()&0xFFFL);
+            return "DCC Sensor "+(this.toLong()&0xFFFL)+" active";
+            
         } else if (eid.startsWith("01.01.02.00.00.FA")) {
-            return "DCC Sensor Off "+(this.toLong()&0xFFFL);
+            return "DCC Sensor "+(this.toLong()&0xFFFL)+" inactive";
+            
         } else if (eid.startsWith("01.01.02.00.01")) {
             return "DCC Extended Accessory "
                 +((this.toLong()>>8)&0x7FFL)
@@ -282,6 +288,18 @@ public class EventID {
         } else {
             return "DCC Well-Known "+this;
         }
+    }
+    
+    protected String parseAccDecoderNumber(long event) {
+        int input = (int)(event&0xFFF);
+        
+        int result = (((input-8)>>1)+1)&0x7FF;
+        
+        if ((event & 0x01) !=0 )
+            return ""+result+" N/C/On ";
+        else {
+            return ""+result+" R/T/Off";
+        } 
     }
     
     protected String trainSearch() {

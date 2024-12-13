@@ -204,4 +204,66 @@ public class EventIDTest {
         Assert.assertEquals(0x03, eid.rangeSuffix());
     }
 
+    @Test
+    public void testTurnout() {
+        EventID eid = new EventID("01.01.02.00.00.FF.00.09");
+        Assert.assertEquals("DCC Acc Decoder 1 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.08");
+        Assert.assertEquals("DCC Acc Decoder 1 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.0B");
+        Assert.assertEquals("DCC Acc Decoder 2 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.0A");
+        Assert.assertEquals("DCC Acc Decoder 2 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.0F");
+        Assert.assertEquals("DCC Acc Decoder 4 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.0E");
+        Assert.assertEquals("DCC Acc Decoder 4 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.17");
+        Assert.assertEquals("DCC Acc Decoder 8 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.16");
+        Assert.assertEquals("DCC Acc Decoder 8 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.27");
+        Assert.assertEquals("DCC Acc Decoder 16 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.26");
+        Assert.assertEquals("DCC Acc Decoder 16 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.47");
+        Assert.assertEquals("DCC Acc Decoder 32 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.46");
+        Assert.assertEquals("DCC Acc Decoder 32 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.87");
+        Assert.assertEquals("DCC Acc Decoder 64 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.86");
+        Assert.assertEquals("DCC Acc Decoder 64 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.01.07");
+        Assert.assertEquals("DCC Acc Decoder 128 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.01.06");
+        Assert.assertEquals("DCC Acc Decoder 128 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.02.07");
+        Assert.assertEquals("DCC Acc Decoder 256 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.02.06");
+        Assert.assertEquals("DCC Acc Decoder 256 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.04.07");
+        Assert.assertEquals("DCC Acc Decoder 512 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.04.06");
+        Assert.assertEquals("DCC Acc Decoder 512 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.08.07");
+        Assert.assertEquals("DCC Acc Decoder 1024 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.08.06");
+        Assert.assertEquals("DCC Acc Decoder 1024 R/T/Off active", eid.parse());
+
+        eid = new EventID("01.01.02.00.00.FF.00.05");
+        Assert.assertEquals("DCC Acc Decoder 2047 N/C/On active", eid.parse());
+        eid = new EventID("01.01.02.00.00.FF.00.04");
+        Assert.assertEquals("DCC Acc Decoder 2047 R/T/Off active", eid.parse());
+    }
 }
