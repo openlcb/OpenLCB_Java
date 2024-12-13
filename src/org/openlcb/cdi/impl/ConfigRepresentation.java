@@ -60,7 +60,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     // Last time the progressbar was updated from the load.
     private long lastProgress;
 
-
+    public org.openlcb.cdi.swing.CdiPanel.GuiItemFactory factory = null;
+    
     /**
      * Connects to a node, populates the cache by fetching and parsing the CDI.
      * @param connection OpenLCB network.
@@ -734,19 +735,21 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         @Override
         protected void updateVisibleValue() {
-            EventID v = getValue();
+            String v = getValue();
             if (v != null) {
-                lastVisibleValue = Utilities.toHexDotsString(v.getContents());
+                lastVisibleValue = v;
             } else {
                 lastVisibleValue = "";
             }
         }
 
-        public EventID getValue() {
+        public String getValue() {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = cache.read(origin, size);
             if (b == null) return null;
-            return new EventID(b);
+            EventID eid = new EventID(b);
+            if (factory == null) return eid.toShortString();
+            return factory.getStringFromEventID(eid);
         }
 
         public void setValue(EventID event) {
