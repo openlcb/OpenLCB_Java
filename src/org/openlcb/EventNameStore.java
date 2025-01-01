@@ -1,7 +1,7 @@
 package org.openlcb;
 
 /**
- * Provide a mapping from EventID <-> User readable event names
+ * Provide a mapping from EventID from/to User readable event names
  *
  * Intended to be implemented and provided externally to this library.
  * The event names here obey some external syntax, and are sourced

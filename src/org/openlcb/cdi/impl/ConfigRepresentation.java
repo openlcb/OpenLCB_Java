@@ -590,6 +590,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
 
         /**
          * Does this entry carry the readOnly hint?
+         * @return true if it carries the readOnly hint
          */
         public boolean isReadOnlyConfigured() {
             return group.isReadOnly();

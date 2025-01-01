@@ -36,7 +36,8 @@ public class MemorySpaceSelector extends JTextField  {
 
     /**
      * Get the selected value, constrained to 0-255 inclusive
-     *
+     * 
+     * @return the selected memory space number
      */
     public int getMemorySpace() {
         int value = 0;

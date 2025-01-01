@@ -43,6 +43,7 @@ public class BackupConfig {
     /**
      * @param writer Receives output.  Flushed at end, but not closed.
      * @param repr Representation containing contents to be written.
+     * @throws IOException if trouble writing out
      */
     public static void writeConfigToWriter(BufferedWriter writer, ConfigRepresentation repr) throws
             IOException {

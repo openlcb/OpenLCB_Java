@@ -1222,6 +1222,7 @@ public class CdiPanel extends JPanel {
          * Generate the tab label for a group item.
          * Including any needed navigation, tooltip, popup menu, etc.
          * @param parentTabbedPane The tabbed pane which it to be navigated
+         * @param index number of tab
          * @param name The name to display
          * @param rep the configuration data representation
          * @return Tab label component
@@ -1275,6 +1276,8 @@ public class CdiPanel extends JPanel {
         
         /**
          * Perform a "copy" operation on a selected group tab
+         * @param index number of tab to copy
+         * @param rep GroupRep to copy
          */
         protected void performGroupReplCopy(int index, ConfigRepresentation.GroupRep rep) {
             String result = groupReplToString(rep);
@@ -1288,6 +1291,8 @@ public class CdiPanel extends JPanel {
                 
         /**
          * Copy an entire group replication to a String
+         * @param rep GroupRep to copy to String
+         * @return the GroupRep as a String
          */
         protected String groupReplToString(ConfigRepresentation.GroupRep rep) {
             StringBuilder result = new StringBuilder();
@@ -1330,6 +1335,8 @@ public class CdiPanel extends JPanel {
         
         /**
          * Perform a "paste" operation into a selected group tab
+         * @param index number of selected tab
+         * @param rep GroupRep to insert
          */
         protected void performGroupReplPaste(int index, ConfigRepresentation.GroupRep rep) {
             // retrieve from clipboard
@@ -2150,6 +2157,7 @@ public class CdiPanel extends JPanel {
         
         /**
          * For types that can check input for validity, e.g. in-range integer
+         * @return true if data meets criteria
          */
         boolean isDataInvalid() {
             // by default, this does nothing

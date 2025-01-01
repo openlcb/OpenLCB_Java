@@ -130,6 +130,7 @@ public class EventID {
     /**
      * Take the eventID from a range, and return
      * the lower flag bytes as a hex dotted string.
+     * @return the lower flag bytes
      */
     public long rangeSuffix() {
         // find the mask value

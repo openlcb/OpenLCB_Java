@@ -55,6 +55,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     /**
      * Get the size of the payload, which doesn't include
      * the eight bytes of the event ID itself
+     * @return payload size in bytes
      */
     public int getPayloadSize() {
         if (payload == null) return 0;

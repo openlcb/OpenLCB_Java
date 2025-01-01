@@ -222,6 +222,8 @@ public class Utilities {
     /** 
      * Find the longest starting substring of a List of Strings.
      * This is useful for finding e.g. the common prefix of a replication dump
+     * @param list of Strings to compare
+     * @return longest leading substring
      */
     @CheckReturnValue
     @NonNull
