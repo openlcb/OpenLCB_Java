@@ -269,9 +269,9 @@ public class CdiPanel extends JPanel {
         bottomPanel.add(bb);
 
         if (rep.getConnection() != null && rep.getRemoteNodeID() != null) {
-            bb = new JButton("Reboot");
+            bb = new JButton("Restart");
             bb.setToolTipText("Requests the configured node to restart.");
-            bb.addActionListener(actionEvent -> runReboot());
+            bb.addActionListener(actionEvent -> runRestart());
             addButtonToMoreFunctions(bb);
 
             bb = new JButton("Update Complete");
@@ -571,7 +571,7 @@ public class CdiPanel extends JPanel {
         _unsavedRestore = true;
     }
 
-    private void runReboot() {
+    private void runRestart() {
         rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
     }
 
