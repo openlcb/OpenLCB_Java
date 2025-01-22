@@ -4,9 +4,9 @@ Class-Path: lib/junit.jar lib/jdom2-2.0.6.jar lib/jlfgr-1_0.jar lib/xercesImpl.j
 
 Name: org.openlcb
 Specification-Title: OpenLCB
-Specification-Version: 0.8.4
+Specification-Version: 0.8.5
 Specification-Vendor: OpenLCB group
 Package-Title: openlcb
-Package-Version: 0.8.4
+Package-Version: 0.8.5
 Package-Vendor: OpenLCB group
  
