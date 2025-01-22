@@ -55,6 +55,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     /**
      * Get the size of the payload, which doesn't include
      * the eight bytes of the event ID itself
+     * @return payload size in bytes
      */
     public int getPayloadSize() {
         if (payload == null) return 0;
@@ -88,7 +89,7 @@ public class ProducerConsumerEventReportMessage extends EventMessage {
     
     @Override
     public String toString() {
-        String retval = " Producer/Consumer Event Report  "+eventID.toString();
+        String retval = super.toString() + " Producer/Consumer Event Report  "+eventID.toString();
         
         if ( getPayloadSize() > 0 ) {
             retval = retval + " payload of "+getPayloadSize()+" : ";

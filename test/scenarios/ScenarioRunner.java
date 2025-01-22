@@ -41,12 +41,26 @@ public class ScenarioRunner  {
             }
         });
         p.add(b);
+
         b = new JButton("Blue/Gold Configuration Demo");
         b.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     scenarios.BlueGoldCheck.main(new String[] {});
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        p.add(b);
+        
+        b = new JButton("Display CDI File");
+        b.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    org.openlcb.cdi.swing.CdiPanelDemo.main(new String[] {});
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

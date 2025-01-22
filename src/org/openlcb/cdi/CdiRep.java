@@ -92,6 +92,8 @@ public interface CdiRep {
         /**
          * Add an item to the map.  Useful if e.g. a non-mapped
          * value is found in a location.
+         * @param key to be added
+         * @param entry to be added
          */
         public void addItemToMap(String key, String entry);
     }

@@ -65,6 +65,8 @@ public class AliasMap {
     /**
      * Store a local alias which should be kept when 
      * the caches are cleared by an AME global
+     * @param alias alias of the local node to preserve
+     * @param nid NodeID of the local alias to preserve
      */
     public void insertLocalAlias(int alias, NodeID nid) {
         localAliases.put(alias, nid);

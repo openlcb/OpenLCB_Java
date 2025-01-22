@@ -77,7 +77,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -88,6 +87,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.text.JTextComponent;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.JRadioButton;
@@ -201,6 +201,7 @@ public class CdiPanel extends JPanel {
             task.run();
         }
         cleanupTasks.clear();
+        tabColorTimerStopped = true;
         tabColorTimer.cancel();
     }
 
@@ -225,7 +226,8 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
-
+        rep.factory = factory;
+        
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -267,9 +269,9 @@ public class CdiPanel extends JPanel {
         bottomPanel.add(bb);
 
         if (rep.getConnection() != null && rep.getRemoteNodeID() != null) {
-            bb = new JButton("Reboot");
+            bb = new JButton("Restart");
             bb.setToolTipText("Requests the configured node to restart.");
-            bb.addActionListener(actionEvent -> runReboot());
+            bb.addActionListener(actionEvent -> runRestart());
             addButtonToMoreFunctions(bb);
 
             bb = new JButton("Update Complete");
@@ -336,7 +338,7 @@ public class CdiPanel extends JPanel {
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
         lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Active / Thrown"));
-        JFormattedTextField activeTextField = factory.handleEventIdTextField(EventIdTextField
+        JTextComponent activeTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
         activeTextField.setMaximumSize(activeTextField.getPreferredSize());
         lineHelper.add(activeTextField);
@@ -348,7 +350,7 @@ public class CdiPanel extends JPanel {
         lineHelper.setAlignmentX(Component.LEFT_ALIGNMENT);
         lineHelper.setLayout(new BoxLayout(lineHelper, BoxLayout.X_AXIS));
         lineHelper.setBorder(BorderFactory.createTitledBorder("Event Id for Inactive / Closed"));
-        JFormattedTextField inactiveTextField = factory.handleEventIdTextField(EventIdTextField
+        JTextComponent inactiveTextField = factory.handleEventIdTextField(EventIdTextField
                 .getEventIdTextField());
         inactiveTextField.setMaximumSize(inactiveTextField.getPreferredSize());
         lineHelper.add(inactiveTextField);
@@ -569,7 +571,7 @@ public class CdiPanel extends JPanel {
         _unsavedRestore = true;
     }
 
-    private void runReboot() {
+    private void runRestart() {
         rep.getConnection().getDatagramService().sendData(rep.getRemoteNodeID(), new int[] {0x20, 0xA9});
     }
 
@@ -628,6 +630,7 @@ public class CdiPanel extends JPanel {
     SearchPane searchPane = new SearchPane();
 
     private Timer tabColorTimer;
+    private boolean tabColorTimerStopped = false;
     long lastColorRefreshNeeded = 0; // guarded by tabColorTimer
     long lastColorRefreshDone = Long.MAX_VALUE; // guarded by tabColorTimer
 
@@ -637,7 +640,7 @@ public class CdiPanel extends JPanel {
             currentTick = ++lastColorRefreshNeeded;
         }
         final long actualRequest = currentTick;
-        tabColorTimer.schedule(new TimerTask() {
+        if (!tabColorTimerStopped) tabColorTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 EventQueue.invokeLater(() -> performTabColorRefresh(actualRequest));
@@ -1219,6 +1222,7 @@ public class CdiPanel extends JPanel {
          * Generate the tab label for a group item.
          * Including any needed navigation, tooltip, popup menu, etc.
          * @param parentTabbedPane The tabbed pane which it to be navigated
+         * @param index number of tab
          * @param name The name to display
          * @param rep the configuration data representation
          * @return Tab label component
@@ -1272,6 +1276,8 @@ public class CdiPanel extends JPanel {
         
         /**
          * Perform a "copy" operation on a selected group tab
+         * @param index number of tab to copy
+         * @param rep GroupRep to copy
          */
         protected void performGroupReplCopy(int index, ConfigRepresentation.GroupRep rep) {
             String result = groupReplToString(rep);
@@ -1285,6 +1291,8 @@ public class CdiPanel extends JPanel {
                 
         /**
          * Copy an entire group replication to a String
+         * @param rep GroupRep to copy to String
+         * @return the GroupRep as a String
          */
         protected String groupReplToString(ConfigRepresentation.GroupRep rep) {
             StringBuilder result = new StringBuilder();
@@ -1308,8 +1316,7 @@ public class CdiPanel extends JPanel {
 
                 @Override
                 public void visitEvent(ConfigRepresentation.EventEntry e) {
-                   writeEntry(e.key, org.openlcb.Utilities.toHexDotsString(e.getValue
-                           ().getContents()));
+                   writeEntry(e.key, e.getValue());
                 }
                 
                 protected void writeEntry(String key, String entry) {
@@ -1328,6 +1335,8 @@ public class CdiPanel extends JPanel {
         
         /**
          * Perform a "paste" operation into a selected group tab
+         * @param index number of selected tab
+         * @param rep GroupRep to insert
          */
         protected void performGroupReplPaste(int index, ConfigRepresentation.GroupRep rep) {
             // retrieve from clipboard
@@ -1689,7 +1698,7 @@ public class CdiPanel extends JPanel {
     }
     
     
-    private void addCopyPasteButtons(JPanel linePanel, JTextField textField) {
+    private void addCopyPasteButtons(JPanel linePanel, JTextComponent textField) {
         final JButton b = new JButton("Copy");
         final Color defaultColor = b.getBackground();
         b.addActionListener(new ActionListener() {
@@ -1742,7 +1751,7 @@ public class CdiPanel extends JPanel {
     private class SearchPane extends JPanel {
         JPanel parent = null;
         JTextField textField;
-        JTextField outputField;
+        JTextComponent outputField;
         JPopupMenu suggestMenu = null;
         SearchPane() {
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -1864,7 +1873,7 @@ public class CdiPanel extends JPanel {
             }
         }
 
-        void attachParent(JPanel parentPane, JTextField output) {
+        void attachParent(JPanel parentPane, JTextComponent output) {
             if (parent != null) {
                 cancelSearch();
             }
@@ -2148,6 +2157,7 @@ public class CdiPanel extends JPanel {
         
         /**
          * For types that can check input for validity, e.g. in-range integer
+         * @return true if data meets criteria
          */
         boolean isDataInvalid() {
             // by default, this does nothing
@@ -2183,7 +2193,7 @@ public class CdiPanel extends JPanel {
 
     private class EventIdPane extends EntryPane {
         private final ConfigRepresentation.EventEntry entry;
-        JFormattedTextField textField;
+        JTextComponent textField;
         JLabel eventNamesLabel = null;
         EventTable.EventTableEntryHolder eventTableEntryHolder = null;
         String lastEventText;
@@ -2310,7 +2320,7 @@ public class CdiPanel extends JPanel {
         @Override
         protected void additionalButtons() {
 
-            final JTextField tf = textField;
+            final JTextComponent tf = textField;
 
             JButton bb = factory.handleProduceButton(new JButton("Trigger"));
             bb.setToolTipText("Click to fire this event.");
@@ -2318,7 +2328,7 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     NodeID node = rep.getConnection().getNodeId();
-                    EventID ev = new EventID(org.openlcb.Utilities.bytesFromHexString((String)textField.getText()));
+                    EventID ev = factory.getEventIDFromString(textField.getText());
                     rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), rep.getConnection().getOutputConnection());
                 }
             });
@@ -2388,16 +2398,16 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void writeDisplayTextToNode() {
-            byte[] contents = org.openlcb.Utilities.bytesFromHexString((String) textField
-                    .getText());
-            entry.setValue(new EventID(contents));
+            entry.setValue(factory.getEventIDFromString(textField.getText()));
             _changeMade = true;
             notifyTabColorRefresh();
         }
 
         @Override
         protected void updateDisplayText(@NonNull String value) {
-            textField.setText(value);
+            EventID eid = factory.getEventIDFromString(value);
+            String retval = factory.getStringFromEventID(eid);
+            textField.setText(retval);
         }
 
         @NonNull
@@ -2418,19 +2428,22 @@ public class CdiPanel extends JPanel {
             }
             lastEventText = s;
             EventID id;
+            
             try {
-                 id = new EventID(s);
-            } catch(RuntimeException e) {
+//                id = new EventID(s);
+                id = factory.getEventIDFromString(s);
+            } catch (RuntimeException e) {
                 // Event is not in the right format. Ignore.
                 return;
             }
+            
             if (eventTableEntryHolder != null) {
                 if (eventTableEntryHolder.getEntry().getEvent().equals(id)) {
                     return;
                 }
                 releaseListener();
             }
-            if (id.equals(nullEvent)) {
+            if (id == null || id.equals(nullEvent)) {
                 // Ignore event if it is the null event.
                 eventNamesLabel.setVisible(false);
                 return;
@@ -3199,7 +3212,7 @@ public class CdiPanel extends JPanel {
          * @param field The proposed EventID entry field
          * @return The EventID entry field to use
          */
-        public JFormattedTextField handleEventIdTextField(JFormattedTextField field) {
+        public JTextComponent handleEventIdTextField(EventIdTextField field) {
             return field;
         }
         
@@ -3219,6 +3232,24 @@ public class CdiPanel extends JPanel {
         public JTextArea handleEditorValue(JTextArea value) {
             return value;
         }
+        
+        /** Convert a String into an EventID, doing any additional local
+         * dealiasing required.
+         * @param content Content to convert, e.g. from a text component
+         * @return eventID that represents the content
+         */
+         public EventID getEventIDFromString(String content) {
+            return new EventID(content);
+         }
+
+        /** Convert an EventID into a String, doing any additional local
+         * aliasing required.
+         * @param event EventID to convert, e.g. from reading a node
+         * @return local representation fo that EventID, often just the dotted hex
+         */
+         public String getStringFromEventID(EventID event) {
+            return event.toShortString();  
+         }
     }
     
     /**

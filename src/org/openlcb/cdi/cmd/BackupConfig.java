@@ -43,6 +43,7 @@ public class BackupConfig {
     /**
      * @param writer Receives output.  Flushed at end, but not closed.
      * @param repr Representation containing contents to be written.
+     * @throws IOException if trouble writing out
      */
     public static void writeConfigToWriter(BufferedWriter writer, ConfigRepresentation repr) throws
             IOException {
@@ -61,8 +62,7 @@ public class BackupConfig {
 
                        @Override
                        public void visitEvent(ConfigRepresentation.EventEntry e) {
-                           writeEntry(finalWriter, e.key, Utilities.toHexDotsString(e.getValue
-                                   ().getContents()));
+                           writeEntry(finalWriter, e.key, e.getValue());
                        }
                    }
         );
