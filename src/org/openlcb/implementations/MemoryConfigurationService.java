@@ -7,6 +7,7 @@ import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -25,7 +26,6 @@ import org.openlcb.Utilities;
  *
  * @author  Bob Jacobsen   Copyright 2012
  * @author  David Harris   Copyright 2016
- * @version $Revision: -1 $
  */
 public class MemoryConfigurationService {
     private static final Logger logger = Logger.getLogger(MemoryConfigurationService.class.getName());
@@ -72,8 +72,17 @@ public class MemoryConfigurationService {
             @Override
             public synchronized void handleData(NodeID dest, int[] data, DatagramService.ReplyMemo
                     service) {
-                //log System.out.println("OLCB: handleData");
+
+                // there should be one retryTimer running, cancel it
+                if (tt != null) {
+                    logger.log(Level.FINE, "timer cancel");
+                    tt.cancel();
+                    tt = null;
+                }
+                
                 service.acceptData(0);
+                
+                // decode the current outstanding memo and process reply
                 if (addrSpaceMemo != null) {
                     boolean present = (data[1] == 0x87);
 
@@ -160,14 +169,14 @@ public class MemoryConfigurationService {
                             logger.warning("Spurious MemCfg response datagram " + Utilities
                                     .toHexSpaceString(data)+": expected source " + rqMemo.getDest()
                                     + " actual source " + dest);
-                            delayRetryMemo(rqMemo);
+                            retryMemo(rqMemo);
                             return;
                         }
                         if (!(rqMemo instanceof RequestWithReplyDatagram)) {
                             logger.warning("Spurious MemCfg response datagram " + Utilities.toHexSpaceString(data)+
                                     ": the request memo does not support response datagrams. " +
                                     "Memo: " + rqMemo);
-                            delayRetryMemo(rqMemo);
+                            retryMemo(rqMemo);
                             return;
                         }
                         memo = (RequestWithReplyDatagram) rqMemo;
@@ -175,7 +184,7 @@ public class MemoryConfigurationService {
                             logger.warning("Unexpected MemCfg response datagram from " + dest
                                     .toString() + ": " + memo + " payload " + Utilities
                                     .toHexSpaceString(data));
-                            delayRetryMemo(rqMemo);
+                            retryMemo(rqMemo);
                             return;
                         } else {
                             checkAndPopMemo(rqMemo);
@@ -198,6 +207,7 @@ public class MemoryConfigurationService {
     NodeID here;
     DatagramService downstream;
     private Timer retryTimer;
+    private TimerTask  tt;
 
     public MemoryConfigurationService(MemoryConfigurationService mcs) {
         this(mcs.here, mcs.downstream);
@@ -208,11 +218,12 @@ public class MemoryConfigurationService {
     }
 
     /**
-     * Waits to ensure that all pending timer tasks are complete. Used for testing.
+     * Waits to ensure that all pending timer tasks are complete. 
+     * Only used for testing, hence package private
      *
      * @throws java.lang.InterruptedException if interrupted
      */
-    public void waitForTimer() throws InterruptedException {
+    void waitForTimer() throws InterruptedException {
         final Semaphore s = new Semaphore(0);
         retryTimer.schedule(new TimerTask() {
             @Override
@@ -453,6 +464,7 @@ public class MemoryConfigurationService {
                 memo = null;
             }
         }
+        // at this point, a non-null `memo` value is the next request, start it
         if (memo != null) {
             sendRequest(memo);
         }
@@ -471,28 +483,66 @@ public class MemoryConfigurationService {
     }
 
     /**
-     * Starts a timer and re-tries a request if the timer expired without seeing a response.
+     * Re-tries a request either due to a timer expired or an unexpected error response
      * @param memo request memo with expected response.
      */
-    private void delayRetryMemo(final McsRequestMemo memo) {
+    private void retryMemo(final McsRequestMemo memo) {
+        // Don't persist if there have been enough retries already
+        logger.log(Level.FINE, "retryMemo with numTries "+memo.numTries);
         if (memo.numTries >= MAX_TRIES) {
-            // TODO: add proper error code.
+            // move on to next memo, and fail this request
             checkAndPopMemo(memo);
-            memo.failureCallback.handleFailure(0x1000);
+            memo.failureCallback.handleFailure(0x1000); // TODO: add proper error code.
         }
-        TimerTask tt = new TimerTask() {
+        // request still pending, retry it
+        startTimer(memo);
+        sendRequest(memo);
+    }
+
+    private void startTimer(final McsRequestMemo memo) {
+        logger.log(Level.FINE, "startTimer");
+        
+        tt = new TimerTask() {
             @Override
             public void run() {
-                if (memo.foundResponse) return;
-                if (!isBlockingPendingQueue(memo)) return;
-                sendRequest(memo);
+                timeoutRetry(memo);
             }
         };
         retryTimer.schedule(tt, timeoutMillis);
     }
-
+    
+    private void restartTimeout(final McsRequestMemo memo, int timeout) {
+        logger.log(Level.FINE, "restartTimeout for "+timeout);
+        if (tt != null) {
+            tt.cancel();
+        } else {
+            logger.log(Level.FINE, "** Unexpected restartTimeout with null tt");
+        }
+        tt = new TimerTask() {
+            @Override
+            public void run() {
+                timeoutRetry(memo);
+            }
+        };
+        retryTimer.schedule(tt, timeout);
+    }
+    
+    // invoked when retryTimer times out
+    private void timeoutRetry(final McsRequestMemo memo) {
+        logger.log(Level.FINE, "timeoutRetry entry");
+        if (memo.foundResponse) return;
+        if (!isBlockingPendingQueue(memo)) return;
+        logger.log(Level.FINE, "timeoutRetry retryMemo");
+        retryMemo(memo);
+    }
+    
     private void sendRequest(final McsRequestMemo memo) {
+        logger.log(Level.FINE, "sendRequest with numTries "+memo.numTries);
+        // get ready in case a retry is needed
         ++memo.numTries;
+        startTimer(memo);
+        
+        // send the datagram request
         downstream.sendData(new DatagramService.DatagramServiceTransmitMemo(memo.getDest(), memo.renderTransmitDatagram()) {
             @Override
             public void handleSuccess(int flags) {
@@ -504,7 +554,12 @@ public class MemoryConfigurationService {
                 }
                 if (memo instanceof RequestWithReplyDatagram &&
                         ((flags & DatagramService.FLAG_REPLY_PENDING) != 0)) {
-                    // Leave the memo in the pending, wait for reply datagram.
+                    // Leave the memo in the pending, will wait for reply datagram.
+                    logger.fine("rcvd RequestWithReplyDatagram with flags "+flags);
+                    int timeout = 1 << (flags & 0x0F);
+                    timeout = timeout * 1000; // to milliseconds
+                    logger.fine("            and timeout  "+timeout+", restarting");
+                    restartTimeout(memo, timeout);
                     return;
                 }
                 // Now: something is fishy.
@@ -524,10 +579,11 @@ public class MemoryConfigurationService {
                 checkAndPopMemo(memo);
                 memo.failureCallback.handleFailure(errorCode);
             }
-        });
+        });        
     }
 
     public void request(McsRequestMemo memo) {
+        logger.log(Level.FINE, "request");
         synchronized(this) {
             int rqCode = memo.getRequestCode();
             if (pendingRequests.containsKey(rqCode)) {
@@ -675,8 +731,6 @@ public class MemoryConfigurationService {
     McsWriteStreamMemo writeStreamMemo;
     public void request(McsWriteStreamMemo memo) {
         // forward as write Datagram
-                                      //System.out.println("writeStreamMemo: "+memo.dest+","+memo.space+","+memo.address);
-                                      // System.out.println("writeStreamMemo: "+memo.dest);
         writeStreamMemo = memo;
         WriteStreamMemo dg = new WriteStreamMemo(memo.dest, memo.space, memo.address, memo.srcStreamId,
                 memo);
