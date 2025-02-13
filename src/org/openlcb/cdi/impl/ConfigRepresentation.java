@@ -746,7 +746,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         }
 
         /**
-         * @returns if `eventNameStore` exists, return the name of the contained event
+         * @return if `eventNameStore` exists, return the name of the contained event
          *          otherwise return the numerical event ID in dotted-hex form.
          */
         public String getValue() {
@@ -759,7 +759,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
         }
 
         /**
-         * @returns the numerical event ID in dotted-hex form,
+         * @return the numerical event ID in dotted-hex form,
          *          ignoring any conversion eventNameStore that might exist
          */
         public String getNumericalEventValue() {
