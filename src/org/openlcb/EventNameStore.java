@@ -25,7 +25,7 @@ public interface EventNameStore {
     public EventID getEventID(String eventName);
     
     /**
-     * @param A valid event ID, not null
+     * @param eventID A valid event ID, not null
      * @return If a name has been associated with this event ID, return that name, 
      *      otherwise an event ID from parsing the eventName as dotted-hex.
      */
