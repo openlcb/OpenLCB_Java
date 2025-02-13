@@ -226,7 +226,6 @@ public class CdiPanel extends JPanel {
         setAlignmentX(Component.LEFT_ALIGNMENT);
         this.rep = rep;
         this.factory = factory;
-        rep.factory = factory;
         
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -2328,7 +2327,7 @@ public class CdiPanel extends JPanel {
                 @Override
                 public void actionPerformed(java.awt.event.ActionEvent e) {
                     NodeID node = rep.getConnection().getNodeId();
-                    EventID ev = factory.getEventIDFromString(textField.getText());
+                    EventID ev = rep.eventNameStore.getEventID(textField.getText());
                     rep.getConnection().getOutputConnection().put(new ProducerConsumerEventReportMessage(node, ev), rep.getConnection().getOutputConnection());
                 }
             });
@@ -2398,15 +2397,18 @@ public class CdiPanel extends JPanel {
 
         @Override
         protected void writeDisplayTextToNode() {
-            entry.setValue(factory.getEventIDFromString(textField.getText()));
+            entry.setValue(rep.eventNameStore.getEventID(textField.getText()));
             _changeMade = true;
             notifyTabColorRefresh();
         }
 
         @Override
         protected void updateDisplayText(@NonNull String value) {
-            EventID eid = factory.getEventIDFromString(value);
-            String retval = factory.getStringFromEventID(eid);
+            String retval = "";
+            if (!value.isEmpty()) {
+                EventID eid = rep.eventNameStore.getEventID(value);
+                retval = rep.eventNameStore.getEventName(eid);
+            }
             textField.setText(retval);
         }
 
@@ -2431,7 +2433,7 @@ public class CdiPanel extends JPanel {
             
             try {
 //                id = new EventID(s);
-                id = factory.getEventIDFromString(s);
+                id = rep.eventNameStore.getEventID(s);
             } catch (RuntimeException e) {
                 // Event is not in the right format. Ignore.
                 return;
@@ -2460,6 +2462,8 @@ public class CdiPanel extends JPanel {
             eventTableEntryHolder = null;
         }
     }
+
+
 
     // represent a slider with an optional text view
     private class SliderWithView extends JPanel {
@@ -3232,24 +3236,6 @@ public class CdiPanel extends JPanel {
         public JTextArea handleEditorValue(JTextArea value) {
             return value;
         }
-        
-        /** Convert a String into an EventID, doing any additional local
-         * dealiasing required.
-         * @param content Content to convert, e.g. from a text component
-         * @return eventID that represents the content
-         */
-         public EventID getEventIDFromString(String content) {
-            return new EventID(content);
-         }
-
-        /** Convert an EventID into a String, doing any additional local
-         * aliasing required.
-         * @param event EventID to convert, e.g. from reading a node
-         * @return local representation fo that EventID, often just the dotted hex
-         */
-         public String getStringFromEventID(EventID event) {
-            return event.toShortString();  
-         }
     }
     
     /**
