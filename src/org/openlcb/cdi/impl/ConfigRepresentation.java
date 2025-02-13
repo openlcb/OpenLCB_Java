@@ -776,6 +776,13 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             if (b == null) return;
             cache.write(origin, b, this);
         }
+
+        public void setValue(String eventName) {
+            EventID event;
+            if (eventNameStore == null) event = new EventID(eventName);
+            else event = eventNameStore.getEventID(eventName);
+            setValue(event);
+        }
     }
 
     /**
