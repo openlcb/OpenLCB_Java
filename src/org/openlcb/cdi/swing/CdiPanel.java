@@ -2432,7 +2432,6 @@ public class CdiPanel extends JPanel {
             EventID id;
             
             try {
-//                id = new EventID(s);
                 id = rep.eventNameStore.getEventID(s);
             } catch (RuntimeException e) {
                 // Event is not in the right format. Ignore.
