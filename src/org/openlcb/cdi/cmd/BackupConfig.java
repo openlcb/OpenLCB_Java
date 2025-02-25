@@ -62,7 +62,7 @@ public class BackupConfig {
 
                        @Override
                        public void visitEvent(ConfigRepresentation.EventEntry e) {
-                           writeEntry(finalWriter, e.key, e.getValue());
+                           writeEntry(finalWriter, e.key, e.getNumericalEventValue());
                        }
                    }
         );

@@ -16,8 +16,19 @@ package org.openlcb;
  */
 public interface EventNameStore {
 
+    /**
+     * @param eventName Either a previously stored event name that is 
+     *      is associated to an event ID, or the dotted-hex form of an Event ID
+     * @return an eventID from tne matching name, if any
+     *          otherwise directly return the doted-hex input.
+     */
     public EventID getEventID(String eventName);
     
+    /**
+     * @param eventID A valid event ID, not null
+     * @return If a name has been associated with this event ID, return that name, 
+     *      otherwise an event ID from parsing the eventName as dotted-hex.
+     */
     public String getEventName(EventID eventID);
     
 }

@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openlcb.DefaultPropertyListenerSupport;
 import org.openlcb.EventID;
+import org.openlcb.EventNameStore;
 import org.openlcb.NodeID;
 import org.openlcb.OlcbInterface;
 import org.openlcb.Utilities;
@@ -60,7 +61,7 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     // Last time the progressbar was updated from the load.
     private long lastProgress;
 
-    public org.openlcb.cdi.swing.CdiPanel.GuiItemFactory factory = null;
+    public EventNameStore eventNameStore;
     
     /**
      * Connects to a node, populates the cache by fetching and parsing the CDI.
@@ -744,13 +745,29 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             }
         }
 
+        /**
+         * @return if `eventNameStore` exists, return the name of the contained event
+         *          otherwise return the numerical event ID in dotted-hex form.
+         */
         public String getValue() {
             MemorySpaceCache cache = getCacheForSpace(space);
             byte[] b = cache.read(origin, size);
             if (b == null) return null;
             EventID eid = new EventID(b);
-            if (factory == null) return eid.toShortString();
-            return factory.getStringFromEventID(eid);
+            if (eventNameStore == null) return eid.toShortString();
+            return eventNameStore.getEventName(eid);
+        }
+
+        /**
+         * @return the numerical event ID in dotted-hex form,
+         *          ignoring any conversion eventNameStore that might exist
+         */
+        public String getNumericalEventValue() {
+            MemorySpaceCache cache = getCacheForSpace(space);
+            byte[] b = cache.read(origin, size);
+            if (b == null) return null;
+            EventID eid = new EventID(b);
+            return eid.toShortString();
         }
 
         public void setValue(EventID event) {
@@ -758,6 +775,13 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             byte[] b = event.getContents();
             if (b == null) return;
             cache.write(origin, b, this);
+        }
+
+        public void setValue(String eventName) {
+            EventID event;
+            if (eventNameStore == null) event = new EventID(eventName);
+            else event = eventNameStore.getEventID(eventName);
+            setValue(event);
         }
     }
 
