@@ -13,7 +13,7 @@ import net.jcip.annotations.*;
  * @author Bob Jacobsen   Copyright (C) 2025
  */
  
-class LocationServiceUtils {
+public class LocationServiceUtils {
 
     static public Content parse(Message inputMessage) {
     
@@ -103,11 +103,11 @@ class LocationServiceUtils {
     }
     
     /**
-     * Generic accessor for the contents of a particular Block
+     * Generic accessor for the contents of a Block
      */
     @Immutable
     static public class Block {
-        enum Type {
+        public enum Type {
             RESERVED(0, "Reserved"),
             READABLE(1, "Readable"),
             RFID(2, "RFID"),
@@ -154,19 +154,42 @@ class LocationServiceUtils {
          }
         
         int length;
-        int getLength() { return length; }
+        public int getLength() { return length; }
         Type type;
-        Type getType() { return type; }
+        public Type getType() { return type; }
         byte[] content;
-        byte[] getContent() { return content; }
+        public byte[] getContent() { return content; }
     }
 
+
     /**
-     * Accessor for the contents of a particular Block with Analog contents
+     * Accessor for the contents of a Block with Readable (String) contents
+     */
+    @Immutable
+    static public class ReadableBlock extends Block {
+            
+        ReadableBlock(byte[] content) {
+            super(Block.Type.READABLE, content);
+            
+            // [1] through end are the user string (UTF8)
+            try {
+                text = new String(Arrays.copyOfRange(content, 1, content.length),"UTF-8");
+            } catch (java.io.UnsupportedEncodingException ex) {
+                text = "<UTF8 Error>";
+            }
+        }
+
+        String text;
+        public String getText() { return text; }
+    }
+
+
+    /**
+     * Accessor for the contents of a Block with Analog contents
      */
     @Immutable
     static public class AnalogBlock extends Block {
-        enum Unit {
+        public enum Unit {
             UNKNOWN(0, "Unknown"),
             VOLTS(1, "Volts"),
             AMPERES(2, "Amperes"),
@@ -228,11 +251,11 @@ class LocationServiceUtils {
         }
         
         Unit unit;
-        Unit getUnit() { return unit; }
+        public Unit getUnit() { return unit; }
         double value;
-        double getValue() { return value; }
+        public double getValue() { return value; }
         String text;
-        String getText() { return text; }
+        public String getText() { return text; }
     }
      
 }
