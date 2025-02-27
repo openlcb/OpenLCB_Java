@@ -251,11 +251,11 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 2, list.size());
         
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x195B7123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19F16123), toHexString(f0.getHeader()));
         compareContent(event.getContents(), f0);
 
         CanFrame f1 = list.get(1);
-        Assert.assertEquals("header", toHexString(0x195B5123), toHexString(f1.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19F14123), toHexString(f1.getHeader()));
         compareContent(data, f1);
 
         // check that the frames code back to the original Message
@@ -275,15 +275,15 @@ public class MessageBuilderTest  {
         Assert.assertEquals("count", 3, list.size());
         
         CanFrame f0 = list.get(0);
-        Assert.assertEquals("header", toHexString(0x195B7123), toHexString(f0.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19F16123), toHexString(f0.getHeader()));
         compareContent(event.getContents(), f0);
 
         CanFrame f1 = list.get(1);
-        Assert.assertEquals("header", toHexString(0x195B6123), toHexString(f1.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19F15123), toHexString(f1.getHeader()));
         compareContent(new byte[]{1,2,3,4,5,6,7,8}, f1);
 
         CanFrame f2 = list.get(2);
-        Assert.assertEquals("header", toHexString(0x195B5123), toHexString(f2.getHeader()));
+        Assert.assertEquals("header", toHexString(0x19F14123), toHexString(f2.getHeader()));
         compareContent(new byte[]{9}, f2);
 
         // check that the frames code back to the original Message
@@ -815,7 +815,7 @@ public class MessageBuilderTest  {
     }
 
     @Test
-    public void testAccumulateSniipReply() {
+    public void testAccumulateSnipReply() {
         // start frame
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
         frame.setHeader(0x19A08071);
@@ -860,7 +860,7 @@ public class MessageBuilderTest  {
     }
 
     @Test
-    public void testAccumulateLongSniipReply() {
+    public void testAccumulateLongSnipReply() {
         // note short frame at end of MFG info
         // as seen from real Signal32
 
