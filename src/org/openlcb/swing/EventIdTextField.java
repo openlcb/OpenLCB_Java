@@ -145,20 +145,7 @@ public class EventIdTextField extends JFormattedTextField  {
                 }
             }
         });
-             
-        // create a submenu for well-known events
-        popup.add(makeWellKnownEventMenu(textfield));
-        
-        // Add the time events
-        popup.add( makeClockEventMenuItem(textfield));
-
-        // Add the accessory decoder events
-        popup.add(makeDccAccessoryEventMenuItem(textfield));
-        
-        // popup.add("Extended DCC accessory decoder events ...");
-        // popup.add("DCC turnout feedback events ...");
-        // popup.add("DCC system sensor feedback events ...");
-        
+                             
         return popup;
     }
     
@@ -179,6 +166,21 @@ public class EventIdTextField extends JFormattedTextField  {
         wkeMenu.add(new EventIdInserter(
             "Stop Default Fast Clock",               "01.01.00.00.01.00.F0.01", textfield));
             
+        // Add the time events
+        wkeMenu.add( makeClockEventMenuItem(textfield));
+
+        // Add the accessory decoder events
+        wkeMenu.add(makeDccAccessoryEventMenuItem(textfield));
+        
+        // Add the sensor events
+        wkeMenu.add(makeDccSensorEventMenuItem(textfield));
+        
+        // wkeMenu.add("Extended DCC accessory decoder events ...");
+        // wkeMenu.add("DCC turnout feedback events ...");
+
+        // create a submenu for well-known events
+        wkeMenu.add(makeWellKnownEventMenu(textfield));
+
         return wkeMenu;
     }
     
@@ -232,7 +234,7 @@ public class EventIdTextField extends JFormattedTextField  {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JDialog dialog = new JDialog();
-                dialog.setTitle("Select DCC Accessory Decoder");
+                dialog.setTitle("Select DCC Accessory Decoder Address");
 
                 JPanel innerPanel = new JPanel(new FlowLayout());
 
@@ -254,12 +256,65 @@ public class EventIdTextField extends JFormattedTextField  {
                     public void actionPerformed(ActionEvent e) {
                         int from = Integer.parseInt(number.getText().trim());
                         
-                        // See JMRI OlcnAddress line 89 for Event ID coding
-                        int DD = (from-1) & 0x3;
-                        int aaaaaa = (( (from-1) >> 2)+1 ) & 0x3F;
-                        int AAA = ( (from) >> 8) & 0x7;
-                        long event = 0x0101020000FF0000L | (AAA << 9) | (aaaaaa << 3) | (DD << 1);
+                        // See JMRI OlcnAddress line 111 for Event ID coding
+                        if (from >= 2045) from = from-2045;
+                        else from = from + 3;
+                        long event = 0x0101020000FF0000L | (from<<1);
+
                         event |= onOffBox.getSelectedIndex();
+ 
+                        EventID id = new EventID(String.format("%016X", event));
+                        textfield.setText(id.toShortString());
+                        dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
+                    }
+                });
+        
+                dialog.add(innerPanel);
+                dialog.setModal(true);
+                dialog.pack();
+                dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        
+                dialog.setVisible(true);
+            }
+        });
+        return menuItem;
+    }
+  
+    public static JMenuItem makeDccSensorEventMenuItem(JTextComponent textfield) {
+        JMenuItem menuItem = new JMenuItem("Insert DCC sensor events ...");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog dialog = new JDialog();
+                dialog.setTitle("Select DCC Sensor Address");
+
+                JPanel innerPanel = new JPanel(new FlowLayout());
+
+                JTextField number = new JTextField(12);
+                number.setText("1");
+                innerPanel.add(number);
+
+                JComboBox<String> onOffBox = new JComboBox<String>(
+                        new String[]{
+                            "Inactive/Off",
+                            "Active/On"
+                });
+                innerPanel.add(onOffBox);
+
+                JButton setButton = new JButton("Set");
+                innerPanel.add(setButton);
+                setButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        int from = Integer.parseInt(number.getText().trim());
+                        
+                        // See JMRI OlcnAddress line 126 for Event ID coding
+                        from = 0xFFF & (from - 1); // 1 based name to 0 based network, 12 bit value
+                        
+                        long eventActive = 0x0101020000FB0000L | from; // active/on
+                        long eventInactive = 0x0101020000FA0000L | from; // inactive/off
+
+                        long event = onOffBox.getSelectedIndex() == 0 ? eventInactive : eventActive;
  
                         EventID id = new EventID(String.format("%016X", event));
                         textfield.setText(id.toShortString());
