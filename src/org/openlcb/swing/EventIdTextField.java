@@ -146,6 +146,9 @@ public class EventIdTextField extends JFormattedTextField  {
             }
         });
                              
+        // create a submenu for well-known events
+        popup.add(makeWellKnownEventMenu(textfield));
+
         return popup;
     }
     
@@ -177,9 +180,6 @@ public class EventIdTextField extends JFormattedTextField  {
         
         // wkeMenu.add("Extended DCC accessory decoder events ...");
         // wkeMenu.add("DCC turnout feedback events ...");
-
-        // create a submenu for well-known events
-        wkeMenu.add(makeWellKnownEventMenu(textfield));
 
         return wkeMenu;
     }
