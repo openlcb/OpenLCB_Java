@@ -2406,8 +2406,12 @@ public class CdiPanel extends JPanel {
         protected void updateDisplayText(@NonNull String value) {
             String retval = "";
             if (!value.isEmpty()) {
-                EventID eid = rep.eventNameStore.getEventID(value);
-                retval = rep.eventNameStore.getEventName(eid);
+                if (rep.eventNameStore != null ) {
+                    EventID eid = rep.eventNameStore.getEventID(value);
+                    retval = rep.eventNameStore.getEventName(eid);
+                } else {
+                    retval = value;
+                }
             }
             textField.setText(retval);
         }
