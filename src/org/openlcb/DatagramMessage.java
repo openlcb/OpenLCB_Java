@@ -91,11 +91,7 @@ public class DatagramMessage extends AddressedMessage {
         int n = getData().length;
         value.append("("+n+") ");
         boolean first = true;
-        for (int i = 0; i<n; i++) {
-            if (!first) value.append(".");
-            value.append(Integer.toHexString((int)(data[i]&0xFF)).toUpperCase());
-            first = false;
-        }
+        value.append(Utilities.toHexDotsString(data));
         return new String(value);   
     }
 }
