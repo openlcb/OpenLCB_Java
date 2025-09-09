@@ -27,7 +27,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
       - name: Publish Package
-        uses: fjogeleit/http-request-action@v2
+        uses: fjogeleit/http-request-action@v1
         with:
           url: 'https://central.sonatype.com/publishing/namespaces/manual/upload/defaultRepository/org.openlcb'
           method: 'POST'
