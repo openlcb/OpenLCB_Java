@@ -44,7 +44,7 @@
         <pathelement location="lib/byte-buddy-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/byte-buddy-agent-1.5.0.jar" /> <!-- only needed for tests compile and run -->
         <pathelement location="lib/objenesis-2.4.jar" /> <!-- only needed for tests compile and run -->
-        <pathelement location="lib/jdom2-2.0.6.jar" />
+        <pathelement location="lib/jdom2-2.0.6.1.jar" />
         <pathelement location="lib/jlfgr-1_0.jar" />
         <pathelement location="lib/jcip-annotations-1.0.jar" /> <!-- only needed for compile -->
         <pathelement location="lib/jsr305.jar" /> <!-- only needed for compile -->
@@ -181,6 +181,35 @@
                 <istrue value="${test.failed}" />
             </condition>
         </fail>
+    </target>
+
+    <target name="singletest" depends="compile, tests" description="build and run one test file (edited in build.xml)">
+        <mkdir dir="${testreporttarget}"/>
+        <junit haltonerror="false" haltonfailure="false" showoutput="yes" printsummary="yes" fork="yes" dir="." timeout="3600000" errorProperty="test.failed" failureProperty="test.failed">
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
+            <formatter type="xml"/>
+            <test name="org.openlcb.implementations.LocationServiceUtilsTest"/>
+<!-- 
+            <test name="org.openlcb.ProducerConsumerEventReportMessageTest"/>
+            <test name="org.openlcb.can.MessageBuilderTest"/>
+            <test name="org.openlcb.DatagramAcknowledgedMessageTest"/>
+ -->
+        </junit>
+        <fail>
+            <condition>
+                <istrue value="${test.failed}" />
+            </condition>
+        </fail>
+    </target>
+
+    <target name="singledemo" depends="compile, tests" description="build and run one demo file (edited in build.xml)">
+        <java fork="yes" classname="org.openlcb.cdi.swing.CdiPanelDemo">
+            <classpath refid="project.class.path"    />
+            <sysproperty key="java.security.policy" value="lib/security.policy"/> 
+            <sysproperty key="java.library.path" path=".:lib/"/>       
+        </java>
     </target>
 
     <target name="run-coverage" depends="compile, tests" description="build and run test suite, generating coverage report.">

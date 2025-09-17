@@ -5,7 +5,7 @@ Contents:
 
 Specific components:
 
-jdom-2.0.6.jar
+jdom-2.0.6.1.jar
  Used for testing only, not in main jar
  from <jdom.org>
 
