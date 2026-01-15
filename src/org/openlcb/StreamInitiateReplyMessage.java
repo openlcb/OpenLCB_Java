@@ -15,13 +15,15 @@ import edu.umd.cs.findbugs.annotations.*;
 public class StreamInitiateReplyMessage extends AddressedPayloadMessage {
     
     public StreamInitiateReplyMessage(NodeID source, NodeID dest,
-            int bufferSize, byte sourceStreamID, byte destStreamID) {
-        super(source, dest, toPayload(bufferSize, sourceStreamID, destStreamID));
+            int flags, int bufferSize, byte sourceStreamID, byte destStreamID) {
+        super(source, dest, toPayload(flags, bufferSize, sourceStreamID, destStreamID));
+        this.flags = flags;
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
         this.destStreamID = destStreamID;
     }
     
+    int flags;
     int bufferSize;
     byte sourceStreamID;
     byte destStreamID;
@@ -30,8 +32,9 @@ public class StreamInitiateReplyMessage extends AddressedPayloadMessage {
     public byte getDestinationStreamID() { return destStreamID; }
     public byte getSourceStreamID() { return sourceStreamID; } //dph 20151229
 
-    static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
+    static byte[] toPayload(int flags, int bufferSize, byte sourceStreamID, byte destStreamID) {
         byte[] b = new byte[]{0, 0, 0, 0, sourceStreamID, destStreamID};
+        Utilities.HostToNetworkUint16(b, 2, flags);
         Utilities.HostToNetworkUint16(b, 0, bufferSize);
         return b;
     }

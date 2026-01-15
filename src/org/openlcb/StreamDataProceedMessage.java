@@ -15,14 +15,16 @@ import edu.umd.cs.findbugs.annotations.*;
 public class StreamDataProceedMessage extends AddressedPayloadMessage {
     
     public StreamDataProceedMessage(NodeID source, NodeID dest, 
-                        byte sourceStreamID, byte destStreamID) {
-        super(source, dest, new byte[] {sourceStreamID, destStreamID});
+                        byte sourceStreamID, byte destStreamID, int flags) {
+        super(source, dest, new byte[] {sourceStreamID, destStreamID, (byte)((flags>>8)&0xFF), (byte)(flags&0xFF)});
         this.sourceStreamID = sourceStreamID;
         this.destStreamID = destStreamID;
+        this.flags = flags;
     }
         
     byte sourceStreamID;
     byte destStreamID;
+    int flags;
     
     public byte getSourceStreamID() { return sourceStreamID; }
     public byte getDestinationStreamID() { return destStreamID; }

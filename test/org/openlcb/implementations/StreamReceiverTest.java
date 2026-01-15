@@ -31,13 +31,13 @@ public class StreamReceiverTest {
         Assert.assertTrue(messagesReceived.size() == 0); // no startup messages
         
         // start operation
-        Message m = new StreamInitiateRequestMessage(farID, hereID, (byte)64, (byte)11, (byte)0 );
+        Message m = new StreamInitiateRequestMessage(farID, hereID, 0, (byte)64, (byte)11, (byte)0 );
         
         rcv.put(m, null);
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitiateReplyMessage(hereID, farID, (byte)64, (byte)11, (byte)3)));
+                           .equals(new StreamInitiateReplyMessage(hereID, farID, 0, (byte)64, (byte)11, (byte)3)));
     }
 
     @Test   
@@ -55,13 +55,13 @@ public class StreamReceiverTest {
         Assert.assertTrue(messagesReceived.size() == 0); // no startup messages
         
         // start operation
-        Message m = new StreamInitiateRequestMessage(farID, hereID, 64, (byte)12, (byte)0);
+        Message m = new StreamInitiateRequestMessage(farID, hereID, 0, 64, (byte)12, (byte)0);
         
         rcv.put(m, null);
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamInitiateReplyMessage(hereID, farID, 64, (byte)12, (byte)3)));
+                           .equals(new StreamInitiateReplyMessage(hereID, farID, 0, 64, (byte)12, (byte)3)));
 
         // send one data message
         messagesReceived = new java.util.ArrayList<Message>();
@@ -71,6 +71,6 @@ public class StreamReceiverTest {
         
         Assert.assertTrue(messagesReceived.size() == 1);
         Assert.assertTrue(messagesReceived.get(0)
-                           .equals(new StreamDataProceedMessage(hereID, farID, (byte)12, (byte)3)));
+                           .equals(new StreamDataProceedMessage(hereID, farID, (byte)12, (byte)3, 0)));
     }
 }

@@ -37,7 +37,7 @@ public class StreamTransmitterTest {
                                                     
         Assert.assertTrue(messagesReceived.size() == 1); // startup message
         Assert.assertEquals(new StreamInitiateRequestMessage(
-                hereID, farID, 64, (byte)4, (byte)0), messagesReceived.get(0));
+                hereID, farID, 0, 64, (byte)4, (byte)0), messagesReceived.get(0));
     }
     
     @Test 
@@ -56,10 +56,10 @@ public class StreamTransmitterTest {
                                                     
         Assert.assertEquals("init messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                .equals(new StreamInitiateRequestMessage(hereID, farID, 256, (byte)4, (byte)0)));
+                .equals(new StreamInitiateRequestMessage(hereID, farID, 0, 256, (byte)4, (byte)0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)4, destID);
+        Message m = new StreamInitiateReplyMessage(farID, hereID, 0, 256, (byte)4, destID);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -87,10 +87,10 @@ public class StreamTransmitterTest {
                                                     
         Assert.assertEquals("init messages", 1, messagesReceived.size());
         Assert.assertTrue(messagesReceived.get(0)
-                .equals(new StreamInitiateRequestMessage(hereID, farID, 256, (byte)4, (byte)0)));
+                .equals(new StreamInitiateRequestMessage(hereID, farID, 0, 256, (byte)4, (byte)0)));
                            
         // OK 256 byte buffers
-        Message m = new StreamInitiateReplyMessage(farID, hereID, 256, (byte)4, (byte)13);
+        Message m = new StreamInitiateReplyMessage(farID, hereID, 0, 256, (byte)4, (byte)13);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);
@@ -101,7 +101,7 @@ public class StreamTransmitterTest {
                 .equals(new StreamDataSendMessage(hereID, farID, (byte)13, new int[256])));
 
         // reply to proceed
-        m = new StreamDataProceedMessage(farID, hereID, (byte)4, (byte)0);
+        m = new StreamDataProceedMessage(farID, hereID, (byte)4, (byte)0, 0);
         messagesReceived = new java.util.ArrayList<Message>();
 
         xmt.put(m, null);

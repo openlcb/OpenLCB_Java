@@ -29,7 +29,8 @@ public class StreamReceiver extends MessageDecoder {
         int len = msg.getBufferSize();
         sourceStreamID = msg.getSourceStreamID();
 
-        Message m = new StreamInitiateReplyMessage(here, far, len, sourceStreamID, destStreamID);
+        // flags are 0
+        Message m = new StreamInitiateReplyMessage(here, far, 0, len, sourceStreamID, destStreamID);
         connection.put(m, this);
     }
 
@@ -38,7 +39,7 @@ public class StreamReceiver extends MessageDecoder {
      */
     public void handleStreamDataSend(StreamDataSendMessage msg, Connection sender){
         // send proceed reply
-        Message m = new StreamDataProceedMessage(here, far, sourceStreamID, destStreamID);
+        Message m = new StreamDataProceedMessage(here, far, sourceStreamID, destStreamID, 0);
         connection.put(m, this);
     }
 
