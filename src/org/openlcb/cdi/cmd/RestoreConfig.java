@@ -40,6 +40,7 @@ public class RestoreConfig {
         try {
             while ((line = reader.readLine()) != null) {
                 if (line.charAt(0) == '#') continue;
+                if (line.isEmpty()) continue;
                 int pos = line.indexOf('=');
                 if (pos < 0) {
                     logger.log(Level.WARNING, "Failed to parse line: {0}", line);
