@@ -7,7 +7,7 @@ import edu.umd.cs.findbugs.annotations.*;
 /**
  * Stream Initialization Request message implementation
  *
- * @author  Bob Jacobsen   Copyright 2009
+ * @author  Bob Jacobsen   Copyright 2009, 2026
  * @version $Revision$
  */
 @Immutable
@@ -15,13 +15,15 @@ import edu.umd.cs.findbugs.annotations.*;
 public class StreamInitiateRequestMessage extends AddressedPayloadMessage {
     
     public StreamInitiateRequestMessage(NodeID source, NodeID dest,
-                    int bufferSize, byte sourceStreamID, byte destinationStreamID) {
-        super(source, dest, toPayload(bufferSize, sourceStreamID, destinationStreamID));
+                    int flags, int bufferSize, byte sourceStreamID, byte destinationStreamID) {
+        super(source, dest, toPayload(flags, bufferSize, sourceStreamID, destinationStreamID));
+        this.flags = flags;
         this.bufferSize = bufferSize;
         this.sourceStreamID = sourceStreamID;
         this.destinationStreamID = destinationStreamID;
     }
     
+    int flags;
     int bufferSize;
     byte sourceStreamID;
     byte destinationStreamID;
@@ -30,9 +32,10 @@ public class StreamInitiateRequestMessage extends AddressedPayloadMessage {
     public byte getSourceStreamID() { return sourceStreamID; }
     public byte getDestinationStreamID() { return destinationStreamID; }
 
-    static byte[] toPayload(int bufferSize, byte sourceStreamID, byte destStreamID) {
+    static byte[] toPayload(int flags, int bufferSize, byte sourceStreamID, byte destStreamID) {
         byte[] b = new byte[]{0, 0, 0, 0, sourceStreamID, destStreamID};
         Utilities.HostToNetworkUint16(b, 0, bufferSize);
+        Utilities.HostToNetworkUint16(b, 2, flags);
         return b;
     }
 

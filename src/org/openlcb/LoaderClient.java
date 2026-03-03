@@ -222,7 +222,8 @@ public class LoaderClient extends MessageDecoder {
     private void sendStream() {
                                       // System.out.println("lSend Stream ");
         // @todo the destStreamID is probably bogus at this point. Check why it is needed here.
-        StreamInitiateRequestMessage m = new StreamInitiateRequestMessage(src, dest, bufferSize, SRC_STREAM_ID, destStreamID);
+        // flags are 0 here by default
+        StreamInitiateRequestMessage m = new StreamInitiateRequestMessage(src, dest, 0, bufferSize, SRC_STREAM_ID, destStreamID);
         connection.put(m, this);
         startTimeout(STREAM_INIT_TIMEOUT_MSEC);
     }

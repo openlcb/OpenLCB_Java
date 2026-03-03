@@ -815,6 +815,44 @@ public class MessageBuilderTest  {
     }
 
     @Test
+    public void testStreamInitiateRequest() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19CC8123);
+        frame.setData(new byte[]{0x02, 0x02,   1,2,3,4,5,6});
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof StreamInitiateRequestMessage);
+        Assert.assertEquals("01.02.03.04.05.06 - 00.00.00.00.00.00 StreamInitiateRequest with payload 01 02 03 04 05 06 SSID 5 DSID 6 bsize 258",
+                            msg.toString());
+        Assert.assertEquals((1<<8)+2, ((StreamInitiateRequestMessage)msg).getBufferSize());
+    }
+
+    @Test
+    public void testStreamInitiateReply() {
+        OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);
+        frame.setHeader(0x19868123);
+        frame.setData(new byte[]{0x02, 0x02,   1,2,3,4,5,6});
+
+        MessageBuilder b = new MessageBuilder(map);
+
+        List<Message> list = b.processFrame(frame);
+
+        Assert.assertEquals("count", 1, list.size());
+        Message msg = list.get(0);
+
+        Assert.assertTrue(msg instanceof StreamInitiateReplyMessage);
+        Assert.assertEquals("01.02.03.04.05.06 - 00.00.00.00.00.00 StreamInitiateReply with payload 01 02 03 04 05 06 SSID 5 DSID 6 bsize 258",
+                            msg.toString());
+        Assert.assertEquals((1<<8)+2, ((StreamInitiateReplyMessage)msg).getBufferSize());
+    }
+
+    @Test
     public void testAccumulateSnipReply() {
         // start frame
         OpenLcbCanFrame frame = new OpenLcbCanFrame(0x123);

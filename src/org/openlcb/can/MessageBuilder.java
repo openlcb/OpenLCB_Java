@@ -376,15 +376,20 @@ public class MessageBuilder implements AliasMap.Watcher {
                 return retlist;
             // add all stream messages reply and proceed.
             case StreamInitiateRequest:
-                retlist.add(new StreamInitiateRequestMessage(source,dest,Utilities.NetworkToHostUint16(content, 2),content[4],
+                retlist.add(new StreamInitiateRequestMessage(source,dest,
+                        Utilities.NetworkToHostUint16(content, 2),
+                        Utilities.NetworkToHostUint16(content, 0),content[4],
                         (content.length > 5 ? content[5] : -1)));
                 return retlist;
             case StreamInitiateReply:
-                retlist.add(new StreamInitiateReplyMessage(source,dest,Utilities.NetworkToHostUint16(content, 0),content[4], content[5]));
+                retlist.add(new StreamInitiateReplyMessage(source,dest,
+                                Utilities.NetworkToHostUint16(content, 2),Utilities.NetworkToHostUint16(content, 0),
+                                content[4], content[5]));
                 return retlist;
             // case StreamData is Format 7
             case StreamDataProceed:
-                retlist.add(new StreamDataProceedMessage(source,dest,content[2], content[3]));
+                int sdpflags = (int)(content[2])<<8+(int)content[3];
+                retlist.add(new StreamDataProceedMessage(source,dest,content[0], content[1], sdpflags));
                 return retlist;
             case StreamDataComplete:
                 retlist.add(new StreamDataCompleteMessage(source,dest,content.length > 2 ?

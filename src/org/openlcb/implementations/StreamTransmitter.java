@@ -28,8 +28,8 @@ public class StreamTransmitter extends MessageDecoder {
         // not be right, but we don't have a value passed to this method.
         destStreamID = 0;
 
-        // start negotiation
-        StreamInitiateRequestMessage m = new StreamInitiateRequestMessage(here, far, bufferSize, sourceStreamID, destStreamID);
+        // start negotiation - flags are 0 here
+        StreamInitiateRequestMessage m = new StreamInitiateRequestMessage(here, far, 0, bufferSize, sourceStreamID, destStreamID);
         connection.put(m, this);
     }
     
