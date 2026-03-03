@@ -60,6 +60,8 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
     private final Map<String, CdiEntry> variables = new HashMap<>();
     // Last time the progressbar was updated from the load.
     private long lastProgress;
+    
+    private int cacheMemoryRead;
 
     public EventNameStore eventNameStore;
     
@@ -98,10 +100,10 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
             public void progressNotify(long bytesRead, long totalBytes) {
                 lastProgress = new Date().getTime();
                 if (totalBytes > 0) {
-                    setState(String.format("Loading: %.2f%% complete", bytesRead * 100.0 /
+                    setState(String.format("Loading display format: %.2f%% complete", bytesRead * 100.0 /
                             totalBytes));
                 } else {
-                    setState(String.format("Loading: %d bytes complete", bytesRead));
+                    setState(String.format("Loading display format: %d bytes complete", bytesRead));
                 }
             }
 
@@ -139,12 +141,18 @@ public class ConfigRepresentation extends DefaultPropertyListenerSupport {
                     .UPDATE_LOADING_COMPLETE)) {
                 synchronized (this) {
                     if (--pendingCacheFills == 0) {
-                        firePropertyChange(UPDATE_CACHE_COMPLETE, null, null);
+                        firePropertyChange(UPDATE_CACHE_COMPLETE, null, 1);
                         for (MemorySpaceCache sp : spaces.values()) {
                             sp.removePropertyChangeListener(prefillListener);
                         }
                     }
                 }
+            } else if (propertyChangeEvent.getPropertyName().equals(MemorySpaceCache
+                    .LOADING_RANGE)) {
+                cacheMemoryRead += (Integer)propertyChangeEvent.getNewValue();
+                setState(String.format("Loading configuration data: %d bytes complete", cacheMemoryRead));
+                firePropertyChange(UPDATE_STATE, null, cacheMemoryRead);
+                
             }
         }
     };

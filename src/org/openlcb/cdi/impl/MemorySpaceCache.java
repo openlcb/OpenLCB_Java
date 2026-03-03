@@ -24,6 +24,8 @@ import org.openlcb.implementations.MemoryConfigurationService;
 public class MemorySpaceCache {
     // This event will be fired when the cache is completely pre-filled.
     public static final String UPDATE_LOADING_COMPLETE = "UPDATE_LOADING_COMPLETE";
+    // This event will be fired as each range is read
+    public static final String LOADING_RANGE = "LOADING_RANGE";
     // This event will be fired on the registered data listeners.
     public static final String UPDATE_DATA = "UPDATE_DATA";
     private static final Logger logger = Logger.getLogger(MemorySpaceCache.class.getName());
@@ -224,6 +226,7 @@ public class MemorySpaceCache {
         if (count > 64) {
             count = 64;
         }
+        firePropertyChange(LOADING_RANGE, null, count);
         final int fcount = count;
         access.doRead(currentRangeNextOffset, space, count,
                 new MemoryConfigurationService.McsReadHandler() {

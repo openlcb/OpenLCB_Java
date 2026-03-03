@@ -45,7 +45,7 @@ public class ConfigRepresentationTest {
         ConfigRepresentation rep = new ConfigRepresentation(iface, remoteNode);
         // Since all of our memory configuration commands execute inline, the representation will
         // be ready by the time it returns.
-        Assert.assertEquals("Representation complete.", rep.getStatus());
+        Assert.assertEquals("Loading configuration data: 73 bytes complete", rep.getStatus());
         Assert.assertNotNull(rep.getRoot());
 
         ConfigRepresentation.CdiContainer cont = rep.getRoot();

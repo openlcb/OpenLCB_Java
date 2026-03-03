@@ -108,6 +108,7 @@ import javax.swing.text.PlainDocument;
 import util.CollapsiblePanel;
 import util.WrapLayout;
 
+import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_CACHE_COMPLETE;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_ENTRY_DATA;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_REP;
 import static org.openlcb.cdi.impl.ConfigRepresentation.UPDATE_STATE;
@@ -670,7 +671,7 @@ public class CdiPanel extends JPanel {
             loadingListener = new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent event) {
-                    if (event.getPropertyName().equals(UPDATE_REP)) {
+                    if (event.getPropertyName().equals(UPDATE_CACHE_COMPLETE)) {
                         displayCdi();
                     } else if (event.getPropertyName().equals(UPDATE_STATE)) {
                         loadingText.setText(rep.getStatus());
