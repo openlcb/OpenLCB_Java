@@ -89,10 +89,7 @@ public class CollapsiblePanel extends JPanel {
 		}
 
 		@Override
-        public void mouseClicked(MouseEvent e) {
-			requestFocus();
-			toggleSelection();
-		}
+        public void mouseClicked(MouseEvent e) { }
 
 		@Override
         public void mouseEntered(MouseEvent e) { }
@@ -101,7 +98,15 @@ public class CollapsiblePanel extends JPanel {
         public void mouseExited(MouseEvent e) { }
 
 		@Override
-        public void mousePressed(MouseEvent e) { }
+        public void mousePressed(MouseEvent e) {
+			// Use mousePressed instead of mouseClicked. MOUSE_CLICKED is only
+			// delivered when the press and release occur at the same pixel; on
+			// macOS (especially high-DPI / trackpad systems like Apple Silicon)
+			// a sub-pixel finger movement during the click suppresses the event,
+			// making the disclosure header feel unresponsive.
+			requestFocus();
+			toggleSelection();
+		}
 
 		@Override
         public void mouseReleased(MouseEvent e) { }
