@@ -556,8 +556,8 @@ public class MemoryConfigurationService {
                         ((flags & DatagramService.FLAG_REPLY_PENDING) != 0)) {
                     // Leave the memo in the pending, will wait for reply datagram.
                     logger.fine("rcvd RequestWithReplyDatagram with flags "+flags);
-                    int timeout = 1 << (flags & 0x0F);
-                    timeout = timeout * 1000; // to milliseconds
+                    int timeout = 1 << (flags & 0x0F) * 1000; // to msec
+                    if ((flags & 0x0F) == 0) timeout = 3000;  // no timeout specified, 3 seconds is default
                     logger.fine("            and timeout  "+timeout+", restarting");
                     restartTimeout(memo, timeout);
                     return;
