@@ -82,7 +82,8 @@ public enum MessageTypeIdentifier {
         StreamDataProceed           ( true,  false, false, 0, 2,   4, 0, "StreamDataProceed"),
         StreamDataComplete          ( true,  false, false, 0, 2,   5, 0, "StreamDataComplete"),
 
-        UnknownMTI                  ( true,  false, false, 0, 0,   0, 0, "UnknownMTI");                 // invalid external MTI, used internally
+        UnknownMTI                  ( true,  false, false, 0, 0,   0, 0, "UnknownAddressedMTI"),        // invalid external MTI, used internally
+        UnknownGlobalMTI            ( false, false, false, 0, 0,   0, 0, "UnknownGlobalMTI");           // invalid external MTI, used internally
        
         private static java.util.Map<Integer, MessageTypeIdentifier> mapping;
         private static  java.util.Map<Integer, MessageTypeIdentifier> getMap() {

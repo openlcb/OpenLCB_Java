@@ -302,11 +302,20 @@ public class MessageDecoder extends AbstractConnection {
     }
 
     /**
-     * Handle internal "Unknown MTI" message
+     * Handle internal "Unknown MTI" addressed message
      * @param msg       message to handle
      * @param sender    connection where it came from
      */
     public void handleUnknownMTI(UnknownMtiMessage msg, Connection sender) {
+        defaultHandler(msg, sender);
+    }
+
+    /**
+     * Handle internal "Unknown MTI" global message
+     * @param msg       message to handle
+     * @param sender    connection where it came from
+     */
+    public void handleUnknownGlobalMTI(UnknownGlobalMtiMessage msg, Connection sender) {
         defaultHandler(msg, sender);
     }
 

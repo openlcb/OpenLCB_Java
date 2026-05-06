@@ -231,7 +231,11 @@ public class MessageBuilder implements AliasMap.Watcher {
             logger.log(Level.SEVERE, "Failed to parse MTI 0x{0}", mtiString);
 
             // return internal-only message
-            retlist.add(new UnknownMtiMessage(source, dest, mti, content ) );
+            if (dest != null) {
+                retlist.add(new UnknownMtiMessage(source, dest, mti, content ) );
+            } else {
+                retlist.add(new UnknownGlobalMtiMessage(source, mti, content ) );
+            }
             return retlist;
         }
 

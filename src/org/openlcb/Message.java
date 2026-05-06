@@ -67,5 +67,8 @@ abstract public class Message implements OpenLcb {
         return getSourceNodeID().toString()+"                    ";  
      }
 
+     /**
+      * Get the numerical value of the MTI
+      */
      abstract public int getMTI();
 }
