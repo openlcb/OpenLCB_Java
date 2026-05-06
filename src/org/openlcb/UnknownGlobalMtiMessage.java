@@ -6,10 +6,9 @@ import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe; 
 
 /**
- * Message with unknown/unrecognized/unprocessed MTI
- * Only relevant for addressed case; unrecognized globals are ignored in proessing.
+ * Global message with unknown/unrecognized/unprocessed MTI
  *
- * @author  Bob Jacobsen   Copyright 2024
+ * @author  Bob Jacobsen   Copyright 2024, 2026
  */
 @Immutable
 @ThreadSafe
@@ -60,7 +59,7 @@ public class UnknownGlobalMtiMessage extends Message {
     @Override
     public String toString() {
         StringBuilder value = new StringBuilder(super.toString());
-        value.append(" Unknown MTI message for MTI 0x");  
+        value.append(" Unknown global MTI message for MTI 0x");  
         value.append(Integer.toHexString(getOriginalMTI()&0xFFF).toUpperCase());  
         return new String(value);   
     }
