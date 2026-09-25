@@ -166,9 +166,10 @@ public class CollapsiblePanel extends JPanel {
 		selected = !selected;
 		contentPanel_.setVisible(selected);
 
-		validate();
-		javax.swing.JFrame top = (javax.swing.JFrame)getTopLevelAncestor();
-		if (top != null) top.pack();
+		revalidate();
+		
+		// javax.swing.JFrame top = (javax.swing.JFrame)getTopLevelAncestor();
+		// if (top != null) top.pack();
 
 		headerPanel_.repaint();
 	}
