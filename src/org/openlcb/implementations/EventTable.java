@@ -23,13 +23,33 @@ import net.jcip.annotations.ThreadSafe;
  */
 
 @ThreadSafe
-public class EventTable {
+public class EventTable extends DefaultPropertyListenerSupport {
     private final HashMap<Long, EventInfo> entries = new HashMap<>();
 
     /// This property change notification is produced when the list of descriptions registered
     /// for a given event ID has changed (due to addition, removal or description change).
     public final static String UPDATED_EVENT_LIST = "UPDATED_EVENT_LIST";
 
+    /// This property change notification is produced in addition to UPDATED_EVENT_LIST
+    /// when a given eventID is removed.
+    public final static String DESCRIPTION_ADDED = "DESCRIPTION_ADDED";
+    
+    /// This property change notification is produced in addition to UPDATED_EVENT_LIST
+    /// when a given eventID holder is removed, e.g. when closing a CDI window.
+    public final static String DESCRIPTION_REMOVED = "DESCRIPTION_REMOVED";
+
+    /// This property change notification is produced in addition to UPDATED_EVENT_LIST
+    /// when a given eventID description has been erased, e.g. the event ID description is permanently changed
+    public final static String DESCRIPTION_ERASED = "DESCRIPTION_ERASED";
+
+    /// This property change notification is produced in addition to UPDATED_EVENT_LIST
+    /// when a given eventID is removed.
+    public final static String DESCRIPTION_UPDATED = "DESCRIPTION_UPDATED";
+
+    /// This property change notification is produced when a new EventID-description
+    /// pair is added via the addEvent method
+    public final static String EVENT_ENTRY_ADDED = "EVENT_ENTRY_ADDED";
+    
     /**
      * Looks up a given event ID and tells what we know about it.
      *
@@ -59,7 +79,19 @@ public class EventTable {
      * keep this and call the release method before going out of scope.
      */
     public EventTableEntryHolder addEvent(EventID event, String description) {
-        return getEventInfo(event).add(description);
+        synchronized (entries) {        
+            EventTableEntryHolder holder =  getEventInfo(event).add(description);
+            notifyUpdated(holder);  // notify _after_ the entry is added
+            return holder;
+        }
+    }
+
+
+    /**
+     * Helper function used by the modifying functions.
+     */
+    void notifyUpdated(EventTableEntryHolder holder) {
+        firePropertyChange(EVENT_ENTRY_ADDED, null, holder);
     }
 
     /**
@@ -230,13 +262,15 @@ public class EventTable {
             synchronized (entries) {
                 entries.add(newEntry);
             }
-            notifyUpdated();
+            notifyEventUpdated(DESCRIPTION_ADDED);
             return h;
         }
 
         /**
-         * Removes the entry represented by a given holder object. This method is not public,
-         * please use Holder.release() as the client API.
+         * Removes the entry represented by a given holder object. 
+         * To be used e.g, when a CDI window is closed to drop the connection to the
+         * event description, without implying that the description has been erased.
+         * This method is not public, please use Holder.release() as the client API.
          *
          * @param h the holder object.
          */
@@ -249,14 +283,37 @@ public class EventTable {
                     }
                 }
             }
-            notifyUpdated();
+            notifyEventUpdated(DESCRIPTION_REMOVED);
+        }
+
+        /**
+         * Removes the entry represented by a given holder object. 
+         * To be used e.g, when an event ID in an input field has changed, implying 
+         * that the associated description is no longer relevant for the event ID.
+         * This method is not public, please use Holder.release() as the client API.
+         *
+         * @param h the holder object.
+         */
+        void erase(EventTableEntryHolder h) {
+            synchronized (entries) {
+                for (int i = 0; i < entries.size(); ++i) {
+                    if (entries.get(i).h == h) {
+                        entries.remove(i);
+                        --i;
+                    }
+                }
+            }
+            notifyEventUpdated(DESCRIPTION_ERASED);
         }
 
         /**
          * Helper function used by the modifying functions.
          */
-        void notifyUpdated() {
+        void notifyEventUpdated(String reason) {
+            // fired first for every notification
             firePropertyChange(UPDATED_EVENT_LIST, null, this);
+            // then fire the specific reason
+            firePropertyChange(reason, null, this);            
         }
 
         /**
@@ -320,7 +377,7 @@ public class EventTable {
                 if (description.equals(newDescription)) return;
                 description = newDescription;
             }
-            h.event.notifyUpdated();
+            h.event.notifyEventUpdated(DESCRIPTION_UPDATED);
         }
     }
 
@@ -340,9 +397,19 @@ public class EventTable {
 
         /**
          * Removes the pointed entry from the event table.
+         * This is used for transitent removals, e.g. closing a CDI window.
          */
         public void release() {
             event.remove(this);
+        }
+
+        /**
+         * Removes the pointed entry from the event table.
+         * This is used for permenent removal of a description, 
+         * e.g. while editing an EventID field
+         */
+        public void erase() {
+            event.erase(this);
         }
 
         /**

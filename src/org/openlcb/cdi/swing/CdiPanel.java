@@ -2447,7 +2447,7 @@ public class CdiPanel extends JPanel {
                 if (eventTableEntryHolder.getEntry().getEvent().equals(id)) {
                     return;
                 }
-                releaseListener();
+                eraseListener();
             }
             if (id == null || id.equals(nullEvent)) {
                 // Ignore event if it is the null event.
@@ -2465,8 +2465,14 @@ public class CdiPanel extends JPanel {
             eventTableEntryHolder.release();
             eventTableEntryHolder = null;
         }
-    }
 
+        private void eraseListener() {
+            if (eventTableEntryHolder == null) return;
+            eventTableEntryHolder.getList().removePropertyChangeListener(eventListUpdateListener);
+            eventTableEntryHolder.erase();
+            eventTableEntryHolder = null;
+        }
+    }
 
 
     // represent a slider with an optional text view

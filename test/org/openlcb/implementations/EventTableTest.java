@@ -63,27 +63,29 @@ public class EventTableTest {
     }
 
     class FakeListener implements PropertyChangeListener {
-        EventTable.EventInfo newValue = null;
+        int calls = 0;
+        String expectedCall;
         @Override
         public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-            Assert.assertEquals(EventTable.UPDATED_EVENT_LIST, propertyChangeEvent.getPropertyName());
+            if (! propertyChangeEvent.getPropertyName().equals(expectedCall) &&
+                ! propertyChangeEvent.getPropertyName().equals(EventTable.UPDATED_EVENT_LIST))
+                    Assert.fail(propertyChangeEvent.getPropertyName()+" unexpected");
+            
+            
             Assert.assertNull(propertyChangeEvent.getOldValue());
-
-            Assert.assertNull("duplicate listener call", newValue);
-            newValue = (EventTable.EventInfo) propertyChangeEvent.getNewValue();
-            Assert.assertNotNull(newValue);
+            
+            calls = calls+1;
         }
 
-        public void reset() { newValue = null; }
+        public void reset() { calls = 0; }
 
         public void verifyCall(EventTable.EventInfo expected) {
-            Assert.assertNotNull("Expected call, but did not happen.", newValue);
-            Assert.assertTrue("Incorrect newValue passed to property listener", newValue == expected);
+            Assert.assertEquals("Expected call, but did not happen.", 2, calls);
             reset();
         }
 
         public void verifyNoInteraction() {
-            Assert.assertNull("Expected no call, got one.", newValue);
+            Assert.assertTrue("Expected no call, got one.", calls == 0);
         }
     }
 
@@ -94,18 +96,23 @@ public class EventTableTest {
 
         elist.addPropertyChangeListener(l);
         l.verifyNoInteraction();
+
+        l.expectedCall = EventTable.DESCRIPTION_ADDED;
         EventTable.EventTableEntryHolder h1 = elist.add("teste3");
         l.verifyCall(elist);
 
         elist.add("teste3alt");
         l.verifyCall(elist);
 
+        l.expectedCall = EventTable.DESCRIPTION_REMOVED;
         h1.release();
         l.verifyCall(elist);
 
+        l.expectedCall = EventTable.DESCRIPTION_ADDED;
         h1 = elist.add("testf3");
         l.verifyCall(elist);
 
+        l.expectedCall = EventTable.DESCRIPTION_UPDATED;
         h1.getEntry().updateDescription("testf3bar");
         l.verifyCall(elist);
     }
