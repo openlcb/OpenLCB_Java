@@ -702,4 +702,20 @@ public class MemoryConfigurationServiceTest {
                 
     }
 
+    @Test
+    public void testComputeTimeout() {
+        // Exponent 0: default 3000 ms
+        Assert.assertEquals(3000, MemoryConfigurationService.computeTimeout(0));
+        Assert.assertEquals(3000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 0));
+
+        // Exponents 1..4: 2^N seconds in milliseconds
+        Assert.assertEquals(2000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 1));
+        Assert.assertEquals(4000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 2));
+        Assert.assertEquals(8000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 3));
+        Assert.assertEquals(16000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 4));
+
+        // Max exponent 15: 2^15 seconds in milliseconds
+        Assert.assertEquals(32768000, MemoryConfigurationService.computeTimeout(DatagramService.FLAG_REPLY_PENDING | 15));
+    }
+
 }

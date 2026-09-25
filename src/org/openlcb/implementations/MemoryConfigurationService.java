@@ -527,6 +527,14 @@ public class MemoryConfigurationService {
         retryTimer.schedule(tt, timeout);
     }
     
+    static int computeTimeout(int flags) {
+        int timeoutExp = flags & 0x0F;
+        if (timeoutExp == 0) {
+            return 3000;  // no timeout specified, 3 seconds is default
+        }
+        return (1 << timeoutExp) * 1000; // 2^N seconds to msec
+    }
+
     // invoked when retryTimer times out
     private void timeoutRetry(final McsRequestMemo memo) {
         logger.log(Level.FINE, "timeoutRetry entry");
@@ -556,8 +564,7 @@ public class MemoryConfigurationService {
                         ((flags & DatagramService.FLAG_REPLY_PENDING) != 0)) {
                     // Leave the memo in the pending, will wait for reply datagram.
                     logger.fine("rcvd RequestWithReplyDatagram with flags "+flags);
-                    int timeout = 1 << (flags & 0x0F) * 1000; // to msec
-                    if ((flags & 0x0F) == 0) timeout = 3000;  // no timeout specified, 3 seconds is default
+                    int timeout = computeTimeout(flags);
                     logger.fine("            and timeout  "+timeout+", restarting");
                     restartTimeout(memo, timeout);
                     return;
