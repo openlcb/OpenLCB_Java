@@ -596,6 +596,15 @@ public class JdomCdiRep implements CdiRep {
             return true;
         }
 
+        @Override
+        public boolean isCheckboxHint() {
+            Element hints = e.getChild("hints");
+            if (hints == null) return false;
+            Element checkbox = hints.getChild("checkbox");
+            if (checkbox == null) return false;
+            return true;
+        }
+
     }
 
 

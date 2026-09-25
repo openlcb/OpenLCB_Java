@@ -34,8 +34,10 @@ public class CdiPanelDemo {
             // find file & load file
             fci.setDialogTitle("Find desired CDI file");
             fci.rescanCurrentDirectory();
-
-            int retVal = fci.showOpenDialog(null);
+            
+            f.pack();
+            f.setVisible(true);        
+            int retVal = fci.showOpenDialog(f);
             // handle selection or cancel
             if (retVal != JFileChooser.APPROVE_OPTION) {
                 // Run the script from it's filename

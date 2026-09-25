@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jdom2.Document;
@@ -20,20 +21,32 @@ public class DemoReadWriteAccess extends ReadWriteAccess {
 
     private final static Logger logger = Logger.getLogger(DemoReadWriteAccess.class.getName());
     
+    // store written values for later reading
+    private long getAddressHash(long address, int space, int length) {
+        return address+1000000*space+1000000000*length;
+    }
+    
+    private final static HashMap<Long, byte[]> contents = new HashMap<>();
+    
     @Override
     public void doWrite(long address, int space, byte[] data, MemoryConfigurationService.McsWriteHandler handler) {
-        logger.log(Level.INFO, "Wrote {0} bytes", data.length);
-        logger.log(Level.INFO, "write {0} {1}: {2}", new Object[]{address, space, org.openlcb.Utilities.toHexDotsString(data)});
+        logger.log(Level.INFO, "write {0} {1} with {2} bytes: {3}", new Object[]{address, space, data.length, org.openlcb.Utilities.toHexDotsString(data)});
+        
+        contents.put(getAddressHash(address, space, data.length), data);
     }
 
     @Override
     public void doRead(long address, int space, int length, MemoryConfigurationService.McsReadHandler handler) {
-        byte[] resp = new byte[length];
-        for (int i = 0; i < resp.length; ++i) {
-            resp[i] = (byte)(((address + i) % 91) + 32);
+        byte[] resp = contents.get(getAddressHash(address, space, length));
+        if (resp == null) {
+            // no prior write, load with ascii letters
+            resp = new byte[length];
+            for (int i = 0; i < resp.length; ++i) {
+                resp[i] = (byte)(((address + i) % 91) + 32);
+            }
         }
         handler.handleReadData(null, space, address, resp);
-        logger.log(Level.INFO, "read {0} {1}", new Object[]{address, space});
+        logger.log(Level.INFO, "read {0} {1} with {2} bytes: {3}", new Object[]{address, space, resp.length, org.openlcb.Utilities.toHexDotsString(resp)});
     }
 
     static public ConfigRepresentation demoRepFromSample(Element root) {

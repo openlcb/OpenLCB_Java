@@ -119,6 +119,8 @@ public interface CdiRep {
         public boolean isSliderShowValue();
         // Did the CDI content hint that this value should be presented as a radio button?
         public boolean isRadioButtonHint();
+        // Did the CDI content hint that this value should be presented as a checkbox?
+        public boolean isCheckboxHint();
     }
 
     public static interface FloatRep extends Item {
