@@ -615,6 +615,9 @@ public class CdiPanel extends JPanel {
     private final List<EntryPane> allEntries = new ArrayList<>();
     private final Map<String, EntryPane> entriesByKey = new HashMap<>();
     private final Map<String, JTabbedPane> tabsByKey = new HashMap<>();
+    private final Map<String, CollapsiblePanel> segmentTitlesByKey = new HashMap<>();
+    private final Map<String, GroupPane> groupTitlesByKey = new HashMap<>();
+    private final Map<String, CollapsiblePanel> collapsibleGroupTitlesByKey = new HashMap<>();
     // These need to be executed when closing the window.
     private final ArrayList<Runnable> cleanupTasks = new ArrayList<>();
     // Deferred callbacks that came during the rendering of the window.
@@ -983,6 +986,43 @@ public class CdiPanel extends JPanel {
             boolean isDirty = false;
             boolean isInvalid = false;
 
+            private void colorTitle(String key, boolean dirty, boolean invalid) {
+                Color color = invalid ? COLOR_INVALID : dirty ? COLOR_EDITED : null;
+                CollapsiblePanel segment = segmentTitlesByKey.get(key);
+                if (segment != null) segment.setTitleBackground(color);
+                CollapsiblePanel collapsibleGroup = collapsibleGroupTitlesByKey.get(key);
+                if (collapsibleGroup != null) collapsibleGroup.setTitleBackground(color);
+                GroupPane group = groupTitlesByKey.get(key);
+                if (group != null && group.titleBorder != null) {
+                    group.titleBorder.setTitleBackground(color);
+                    group.repaint();
+                }
+            }
+
+            @Override
+            public void visitSegment(ConfigRepresentation.SegmentEntry e) {
+                boolean oldDirty = isDirty;
+                boolean oldInvalid = isInvalid;
+                isDirty = false;
+                isInvalid = false;
+                super.visitSegment(e);
+                colorTitle(e.key, isDirty, isInvalid);
+                isDirty |= oldDirty;
+                isInvalid |= oldInvalid;
+            }
+
+            @Override
+            public void visitGroup(ConfigRepresentation.GroupEntry e) {
+                boolean oldDirty = isDirty;
+                boolean oldInvalid = isInvalid;
+                isDirty = false;
+                isInvalid = false;
+                super.visitGroup(e);
+                colorTitle(e.key, isDirty, isInvalid);
+                isDirty |= oldDirty;
+                isInvalid |= oldInvalid;
+            }
+
             @Override
             public void visitGroupRep(ConfigRepresentation.GroupRep e) {
                 boolean oldDirty = isDirty;
@@ -1085,6 +1125,7 @@ public class CdiPanel extends JPanel {
 
             String name = "Segment" + (e.getName() != null ? (": " + e.getName()) : "");
             util.CollapsiblePanel cPanel = new util.CollapsiblePanel(name, currentPane);
+            segmentTitlesByKey.put(e.key, cPanel);
             segmentPanels.add(cPanel);
             addNavigationActions(cPanel);
             // cPanel.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
@@ -1103,6 +1144,7 @@ public class CdiPanel extends JPanel {
             JTabbedPane oldTabbed = currentTabbedPane;
 
             GroupPane groupPane = new GroupPane(e);
+            groupTitlesByKey.put(e.key, groupPane);
             currentPane = groupPane;
             if (e.group.getReplication() > 1) {
                 currentTabbedPane = new JTabbedPane();
@@ -1132,6 +1174,7 @@ public class CdiPanel extends JPanel {
                 if (oldPane instanceof SegmentPane || e.isHideable()) { // we only make toplevel groups collapsible unless hint requests
                     groupPane.setBorder(null);
                     CollapsiblePanel cPanel = new CollapsiblePanel(groupPane.getName(), groupPane);
+                    collapsibleGroupTitlesByKey.put(e.key, cPanel);
                     // cPanel.setBorder(BorderFactory.createLineBorder(java.awt.Color.RED)); //debugging
                     cPanel.setAlignmentY(Component.TOP_ALIGNMENT);
                     cPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1892,13 +1935,15 @@ public class CdiPanel extends JPanel {
     public class GroupPane extends JPanel {
         private final ConfigRepresentation.GroupEntry entry;
         private final CdiRep.Item item;
+        private final CdiTitleBorder titleBorder;
         GroupPane(ConfigRepresentation.GroupEntry e) {
             entry = e;
             item = e.getCdiItem();
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentX(Component.LEFT_ALIGNMENT);
             String name = (item.getName() != null ? (item.getName()) : "Group");
-            setBorder(BorderFactory.createTitledBorder(name));
+            titleBorder = new CdiTitleBorder(name);
+            setBorder(titleBorder);
             setName(name);
 
             createDescriptionPane(this, item.getDescription());
@@ -1909,6 +1954,36 @@ public class CdiPanel extends JPanel {
             if (p2 != null) {
                 add(p2);
             }
+        }
+    }
+
+    /** Titled border that can fill the title area to match repeated-group tabs. */
+    private static class CdiTitleBorder extends javax.swing.border.TitledBorder {
+        private Color titleBackground;
+
+        CdiTitleBorder(String title) {
+            super(title);
+        }
+
+        void setTitleBackground(Color color) {
+            titleBackground = color;
+        }
+
+        @Override
+        public void paintBorder(Component component, java.awt.Graphics graphics,
+                                int x, int y, int width, int height) {
+            if (titleBackground != null) {
+                java.awt.Graphics2D g = (java.awt.Graphics2D) graphics.create();
+                Font font = getTitleFont() != null ? getTitleFont() : component.getFont();
+                g.setFont(font);
+                java.awt.FontMetrics metrics = g.getFontMetrics();
+                int titleX = x + 9;
+                int titleY = y + 1;
+                g.setColor(titleBackground);
+                g.fillRect(titleX, titleY, metrics.stringWidth(getTitle()) + 8, metrics.getHeight());
+                g.dispose();
+            }
+            super.paintBorder(component, graphics, x, y, width, height);
         }
     }
 

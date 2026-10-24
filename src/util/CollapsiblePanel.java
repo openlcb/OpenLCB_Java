@@ -37,6 +37,7 @@ public class CollapsiblePanel extends JPanel {
 	HeaderPanel headerPanel_;
 	// The width given by the parent which we should try to set as a maximum width for the layout.
 	private int setWidth_ = Integer.MAX_VALUE;
+	private Color titleBackground;
 
 	private class HeaderPanel extends JPanel implements MouseListener, FocusListener, KeyListener {
 		/** Comment for <code>serialVersionUID</code>. */
@@ -85,6 +86,12 @@ public class CollapsiblePanel extends JPanel {
 			float height = lm.getAscent() + lm.getDescent();
 			float x = OFFSET;
 			float y = (h + height) / 2 - lm.getDescent();
+			if (titleBackground != null) {
+				g2.setColor(titleBackground);
+				g2.fillRect((int) x - 3, (int) (y - lm.getAscent()),
+						(int) font.getStringBounds(text_, frc).getWidth() + 6, (int) height);
+			}
+			g2.setColor(UIManager.getColor("Label.foreground"));
 			g2.drawString(text_, x, y);
 		}
 
@@ -160,6 +167,12 @@ public class CollapsiblePanel extends JPanel {
 
 	public JPanel getHeader() {
 		return headerPanel_;
+	}
+
+	/** Sets the background color behind the panel title, or null for no fill. */
+	public void setTitleBackground(Color color) {
+		titleBackground = color;
+		headerPanel_.repaint();
 	}
 
 	public void toggleSelection() {
